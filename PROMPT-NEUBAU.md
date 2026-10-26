@@ -313,8 +313,11 @@ und trotzdem für Betreuer sofort verständlich und seriös wirken.
 
 ### 8.2 Markenelemente
 - App-Name: **„Mister X – Rote Falken“**.
-- **Logos** der Roten Falken und Kinderfreunde liegen im Repo unter **`assets/logos/`** (der Organisator legt sie dort ab –
-  falls sie fehlen, frag nach; bis dahin neutraler Platzhalter). Logos auf Startseite, Splash, Großbild, Auswertung.
+- **Logos** liegen im Repo unter **`assets/logos/`**:
+  - `kinderfreunde-ooe.png` – Die Kinderfreunde Oberösterreich (260 × 60 px, transparent; Rot mit Herz-Symbol, blauer Schriftzug).
+    Für scharfe Darstellung nach einer Vektor-/größeren Version fragen.
+  - Rote-Falken-Logo fehlt noch – nachfragen; bis dahin neutraler Platzhalter.
+  Logos auf Startseite, Splash, Großbild, Auswertung. **Exakte Farben (Rot, Blau) aus dem Logo übernehmen.**
 - Farben grob (verfeinern, als Design-Tokens): Rote-Falken-Rot (ca. `#C8102E`, aus Logo exakt übernehmen), Weiß,
   tiefes Nacht-Blau/Anthrazit als Spiel-Hintergrund, Signalfarben: Gelb (Warnung), Grün (ok/frei), Blau (Info, eigenes Team).
 - Fahne als zentrales Symbol (Mister X = Fahne).
