@@ -26,17 +26,18 @@ Danach läuft die App unter **https://mr-x-ooe.web.app**.
 
 ## Erster Start
 
-1. Spielleitung registriert sich über **„Ich bin Spielleitung“ → „Als Spielleitung registrieren“**.
-   Beim allerersten Mal ohne Code. Danach legt die Spielleitung unter „Rollen“ einen **Spielleitungs-Code** fest –
-   weitere Spielleitungen brauchen beim Registrieren diesen Code (oder werden unter „Rollen“ freigeschaltet).
-2. Schiris registrieren sich, die Spielleitung macht sie unter „Schiris“ zum Schiri.
-3. Jede Ortsgruppe registriert sich mit Teamname + Passwort auf **einem** Handy.
-4. Spielleitung wählt den Start-Mister-X und drückt **„Spiel starten“**.
+1. **„Ich bin Admin“** antippen und ein Admin-Passwort eingeben. Beim allerersten Mal wird damit das Admin-Konto
+   angelegt – danach gilt genau dieses Passwort (im Dashboard änderbar).
+2. Im Dashboard unter **„Team-Passwort“** ein Passwort festlegen und an die Teams weitergeben.
+3. Jede Ortsgruppe meldet sich auf **einem** Handy mit Teamname + Team-Passwort an.
+   Schiris melden sich genauso an, der Admin macht sie unter „Teams & Schiris“ zum Schiri.
+4. Admin wählt den Start-Mister-X und drückt **„Spiel starten“**.
 5. Nach Spielende wird das Spiel archiviert (Auswertung, Route von Mister X, Chat) und ist unter
    **„Vergangene Spiele“** nachschaubar. Ein neues Spiel kann direkt gestartet werden.
-6. **„Neue Runde vorbereiten“** meldet alle Teams und Schiris ab: ihre Logins werden ungültig, sie registrieren sich
-   neu (gleiche Namen erlaubt, neue Passwörter). Spielleitung und vergangene Spiele bleiben.
-   Die alten Konten bleiben in Firebase → Authentication liegen und können dort bei Bedarf gelöscht werden.
+6. **„Neue Runde vorbereiten“** meldet alle Teams und Schiris ab und löscht das Team-Passwort.
+   Danach ein neues Team-Passwort festlegen. Admin und vergangene Spiele bleiben.
+
+In Firebase muss unter Authentication → Anmeldemethode **„Anonym“** und **„E-Mail-Adresse/Passwort“** aktiviert sein.
 
 ## Testen
 

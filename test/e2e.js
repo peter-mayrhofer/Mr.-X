@@ -1,5 +1,5 @@
 // End-to-end-Test gegen den Firebase-Emulator (Anleitung siehe README).
-// Simuliert Spielleitung, Schiri und drei Team-Handys und prüft Rechte, Meldungen, Übergabe, Chat und Auswertung.
+// Simuliert Admin, Schiri und drei Team-Handys und prüft Login, Rechte, Meldungen, Übergabe, Chat, Archiv und neue Runde.
 const { chromium } = require("playwright");
 const assert = require("assert");
 const URL = "http://localhost:8080/index.html?emu";
@@ -12,19 +12,26 @@ async function phone(browser, name, lat, lng) {
   page.on("dialog", (d) => d.accept().catch(() => {}));
   page.on("pageerror", (e) => console.log(name, "PAGEERROR", e.message));
   await page.goto(URL);
-  await page.fill("#lname", name);
-  await page.fill("#lpass", "geheim123");
-  await page.click("#btnRegister");
-  await page.waitForSelector("#app:not([hidden])");
+  if (name) await teamLogin(page, name, "team123");
   return { ctx, page };
 }
+async function teamLogin(page, name, pw) {
+  await page.fill("#lname", name);
+  await page.fill("#lpass", pw);
+  await page.click("#btnLogin");
+  await page.waitForSelector("#app:not([hidden])");
+}
+async function adminLogin(page, pw) {
+  await page.click("#btnShowAdmin");
+  await page.fill("#apass", pw);
+  await page.click("#btnAdminLogin");
+}
 
-async function token(name) {
-  const r = await fetch("http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=x", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@r0.mrx-team.app`, password: "geheim123", returnSecureToken: true }),
-  });
-  return (await r.json()).idToken;
+// anonymes Konto per REST (wie ein fremdes Handy) für Rechte-Prüfungen
+async function anonToken() {
+  const r = await fetch("http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=x", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ returnSecureToken: true }) });
+  return r.json();
 }
 const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.json?ns=${NS}&auth=${tok}`)).status;
 
@@ -33,23 +40,38 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   await fetch(`http://localhost:9000/.json?ns=${NS}`, { method: "PUT", body: "null", headers: { Authorization: "Bearer owner" } });
   await fetch("http://localhost:9099/emulator/v1/projects/mr-x-ooe/accounts", { method: "DELETE" });
   const browser = await chromium.launch();
-  const L = await phone(browser, "Leitung", 48.3000, 14.2900);
-  await L.page.click("#btnClaim");
-  await L.page.waitForSelector("#leitung:not([hidden])");
+  const L = await phone(browser, null, 48.3000, 14.2900);
+  await adminLogin(L.page, "admin123"); // erstes Mal: Admin-Konto wird angelegt
+  await L.page.waitForSelector("#admin:not([hidden])");
+  // falsches Admin-Passwort von einem anderen Handy
+  const X = await phone(browser, null, 48.30, 14.29);
+  await adminLogin(X.page, "falsch99");
+  await X.page.waitForFunction(() => document.querySelector("#lerr").textContent.includes("falsch"));
+  // ohne Team-Passwort kein Team-Login
+  await X.page.click("#btnShowTeam");
+  await X.page.fill("#lname", "Frech"); await X.page.fill("#lpass", "irgendwas");
+  await X.page.click("#btnLogin");
+  await X.page.waitForFunction(() => document.querySelector("#lerr").textContent.includes("Team-Passwort falsch"));
+  await L.page.fill("#sTeamPw", "team123");
+  await L.page.click("#btnTeamPw");
+  await sleep(500);
   const R = await phone(browser, "Schiri Eins", 48.3001, 14.2901);
   const A = await phone(browser, "Team A", 48.3010, 14.2920);
   const B = await phone(browser, "Team B", 48.3011, 14.2921); // ~15 m neben A
   const C = await phone(browser, "Team C", 48.2980, 14.2880); // weit weg
 
   await L.page.waitForFunction(() => document.querySelectorAll("#rTeam option").length === 4);
+  assert(!(await L.page.textContent("#rTeam")).includes("Frech"), "falsches Team-Passwort -> kein Team");
   await L.page.selectOption("#rTeam", { label: "Schiri Eins" });
   await L.page.click("#btnSchiri");
   await R.page.waitForSelector("#staff:not([hidden])");
 
   // Rechte: Teams dürfen keine Live-Standorte lesen, Schiri schon
-  assert.equal(await read("pos", await token("Team B")), 401, "Team darf pos nicht lesen");
-  assert.equal(await read("pos", await token("Schiri Eins")), 200, "Schiri darf pos lesen");
-  assert.equal(await read("secret", await token("Schiri Eins")), 401, "Schiri darf secret nicht lesen");
+  const anon = await anonToken();
+  assert.equal(await read("pos", anon.idToken), 401, "Team darf pos nicht lesen");
+  assert.equal(await read("secret", anon.idToken), 401, "Team darf secret nicht lesen");
+  const sneak = await fetch(`http://localhost:9000/roles/${anon.localId}.json?ns=${NS}&auth=${anon.idToken}`, { method: "PUT", body: '"admin"' });
+  assert.equal(sneak.status, 401, "Team kann sich nicht selbst zum Admin machen");
 
   await L.page.fill("#sInterval", "0.1"); // 6 s statt 10 min
   await L.page.click("#btnSave");
@@ -75,14 +97,14 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   await C.page.fill("#chatText", "Hallo alle");
   await C.page.click("#chatForm button");
   await C.page.click("#tabDm");
-  await C.page.fill("#chatText", "Frage an Leitung");
+  await C.page.fill("#chatText", "Frage an Admin");
   await C.page.click("#chatForm button");
   await A.page.waitForFunction(() => document.querySelector("#msgs").textContent.includes("Hallo alle"));
   await L.page.click("#tabDm");
   await L.page.selectOption("#dmTeam", { label: "Team C" });
-  await L.page.waitForFunction(() => document.querySelector("#msgs").textContent.includes("Frage an Leitung"));
+  await L.page.waitForFunction(() => document.querySelector("#msgs").textContent.includes("Frage an Admin"));
   await A.page.click("#tabDm");
-  assert(!(await A.page.textContent("#msgs")).includes("Frage an Leitung"), "DM privat");
+  assert(!(await A.page.textContent("#msgs")).includes("Frage an Admin"), "DM privat");
 
   // Rückgängig
   await R.page.click("#btnUndo");
@@ -111,27 +133,6 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   await A.page.waitForFunction(() => document.querySelector("#archView").textContent.includes("Letzter Mister X: Team A"));
   console.log("Archiv:", (await A.page.textContent("#archView")).replace(/\s+/g, " ").slice(0, 160));
 
-  // Neue Spielleitung: falscher Code -> normales Team, richtiger Code -> Spielleitung
-  await L.page.fill("#sCode", "geheimcode");
-  await L.page.click("#btnCode");
-  async function regLeitung(n, code) {
-    const ctx = await browser.newContext({ geolocation: { latitude: 48.30, longitude: 14.29 }, permissions: ["geolocation"] });
-    const page = await ctx.newPage();
-    page.on("dialog", (d) => d.accept().catch(() => {}));
-    await page.goto(URL);
-    await page.fill("#lname", n); await page.fill("#lpass", "geheim123");
-    await page.click("details summary"); await page.fill("#lcode", code);
-    await page.click("#btnRegLeitung");
-    await sleep(4000);
-    return page.isVisible("#leitung");
-  }
-  assert.equal(await regLeitung("Falsch", "nein123"), false, "falscher Code");
-  const gone = await (await fetch("http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=x", {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: "falsch@mrx-team.app", password: "geheim123", returnSecureToken: true }) })).json();
-  assert(gone.error, "Konto mit falschem Code ist gelöscht");
-  assert.equal(await regLeitung("Leitung Zwei", "geheimcode"), true, "richtiger Code");
-
   // Neues Spiel: Chat leer, Archiv bleibt
   await L.page.selectOption("#sStart", { label: "Team B" });
   await L.page.click("#btnStart");
@@ -141,22 +142,31 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   const arch = await (await fetch(`http://localhost:9000/archive.json?ns=${NS}`, { headers: { Authorization: "Bearer owner" } })).json();
   assert.equal(Object.keys(arch).length, 1, "Archiv bleibt");
 
-  // Neue Runde: Teams und Schiris fliegen raus, Spielleitung bleibt, Namen sind wieder frei
+  // Team entfernen: C wird abgemeldet
+  await L.page.selectOption("#rTeam", { label: "Team C" });
+  await L.page.click("#btnKick");
+  await C.page.waitForSelector("#login:not([hidden])", { timeout: 15000 });
+
+  // Neue Runde: Teams und Schiris fliegen raus, Team-Passwort weg, Admin bleibt
   await L.page.click("#btnStop");
   await L.page.click("#btnReset");
   await A.page.waitForSelector("#login:not([hidden])", { timeout: 15000 });
   await R.page.waitForSelector("#login:not([hidden])", { timeout: 15000 });
   await sleep(1500);
-  assert(await L.page.isVisible("#leitung"), "Spielleitung bleibt angemeldet");
-  await A.page.fill("#lname", "Team A"); await A.page.fill("#lpass", "neuespw1");
-  await A.page.click("#btnRegister");
-  await A.page.waitForSelector("#app:not([hidden])");
+  assert(await L.page.isVisible("#admin"), "Admin bleibt angemeldet");
+  await A.page.fill("#lname", "Team A"); await A.page.fill("#lpass", "team123");
+  await A.page.click("#btnLogin");
+  await A.page.waitForFunction(() => document.querySelector("#lerr").textContent.includes("Team-Passwort falsch"));
+  await L.page.fill("#sTeamPw", "runde2");
+  await L.page.click("#btnTeamPw");
+  await sleep(500);
+  await teamLogin(A.page, "Team A", "runde2");
   await L.page.waitForFunction(() => [...document.querySelectorAll("#sStart option")].map((o) => o.textContent).join() === "Team A");
-  // altes Passwort der alten Runde gilt nicht mehr
-  await B.page.reload();
-  await B.page.fill("#lname", "Team B"); await B.page.fill("#lpass", "geheim123");
-  await B.page.click("#btnLogin");
-  await B.page.waitForFunction(() => document.querySelector("#lerr").textContent.length > 0);
+  // Admin meldet sich neu an
+  await L.page.click("#btnLogout");
+  await L.page.waitForSelector("#login:not([hidden])");
+  await adminLogin(L.page, "admin123");
+  await L.page.waitForSelector("#admin:not([hidden])");
   await browser.close();
   console.log("OK");
 })().catch((e) => { console.error(e); process.exit(1); });

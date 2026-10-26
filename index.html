@@ -20,7 +20,7 @@
     button { background: var(--rot); color: #fff; border: 0; cursor: pointer; }
     button.alt { background: #555; }
     .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
-    .row > input:not([type=number]) { flex: 1; min-width: 0; }
+    .row > input:not([type=number]):not([type=checkbox]) { flex: 1; min-width: 0; }
     input[type=number] { width: 90px; }
     #map { height: 55vh; border-radius: 10px; margin-bottom: 12px; }
     .banner { padding: 12px; border-radius: 10px; margin-bottom: 12px; font-weight: bold; text-align: center; }
@@ -43,24 +43,22 @@
   <header><b>Mister X</b><span id="who"></span></header>
   <main>
     <section id="login">
-      <h2>Anmelden</h2>
-      <div class="row"><input id="lname" placeholder="Teamname (z. B. Ortsgruppe Urfahr)" autocomplete="username"></div>
-      <div class="row"><input id="lpass" type="password" placeholder="Passwort (mind. 6 Zeichen)" autocomplete="current-password"></div>
-      <div class="row"><button id="btnLogin">Anmelden</button><button id="btnRegister" class="alt">Neues Team registrieren</button></div>
-      <details>
-        <summary class="muted">Ich bin Spielleitung</summary>
-        <div class="row"><input id="lcode" type="password" placeholder="Spielleitungs-Code (beim allerersten Mal leer lassen)"></div>
-        <div class="row"><button id="btnRegLeitung" class="alt">Als Spielleitung registrieren</button></div>
-      </details>
+      <div id="teamLogin">
+        <h2>Team anmelden</h2>
+        <div class="row"><input id="lname" placeholder="Teamname (z. B. Ortsgruppe Urfahr)" maxlength="40"></div>
+        <div class="row"><input id="lpass" type="password" placeholder="Team-Passwort (bekommt ihr vom Admin)"></div>
+        <div class="row"><button id="btnLogin">Anmelden</button><button id="btnShowAdmin" class="alt">Ich bin Admin</button></div>
+      </div>
+      <div id="adminLogin" hidden>
+        <h2>Admin anmelden</h2>
+        <div class="row"><input id="apass" type="password" placeholder="Admin-Passwort" autocomplete="current-password"></div>
+        <div class="row"><button id="btnAdminLogin">Anmelden</button><button id="btnShowTeam" class="alt">Zurück</button></div>
+      </div>
       <p id="lerr" class="muted"></p>
     </section>
 
     <div id="app" hidden>
       <div id="banners"></div>
-      <section id="claim" hidden>
-        <p class="muted">Noch keine Spielleitung festgelegt.</p>
-        <button id="btnClaim">Ich bin die Spielleitung</button>
-      </section>
       <div id="map"></div>
 
       <section id="results" hidden></section>
@@ -83,8 +81,8 @@
         <ul id="teamList"></ul>
       </section>
 
-      <section id="leitung" hidden>
-        <h2>Spielleitung</h2>
+      <section id="admin" hidden>
+        <h2>Admin</h2>
         <div class="row">Meldung alle <input id="sInterval" type="number" min="1" step="any"> Min</div>
         <div class="row">Wartezeit <input id="sWait" type="number" min="0" step="any"> Min im Umkreis von <input id="sRadius" type="number" min="0"> m</div>
         <div>Gesperrte Bereiche:<div id="sCuts"></div></div>
@@ -94,14 +92,17 @@
         <div class="row">Start-Mister-X <select id="sStart"></select><button id="btnStart">Spiel starten</button></div>
         <div class="row"><button id="btnStop">Notstopp: Spiel beenden</button><button id="btnReset" class="alt">Neue Runde vorbereiten</button></div>
         <p id="endInfo" class="muted"></p>
-        <h2>Rollen</h2>
-        <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnLeitung" class="alt">zur Spielleitung machen</button><button id="btnUnSchiri" class="alt">Rolle entfernen</button></div>
-        <div class="row"><input id="sCode" type="password" placeholder="neuer Spielleitungs-Code"><button id="btnCode" class="alt">Code festlegen</button></div>
-        <p class="muted">Mit diesem Code kann sich eine neue Spielleitung selbst registrieren.</p>
+        <h2>Team-Passwort</h2>
+        <p class="muted" id="teamPwInfo"></p>
+        <div class="row"><input id="sTeamPw" placeholder="Team-Passwort"><button id="btnTeamPw" class="alt">Speichern</button><button id="btnTeamPwDel" class="alt">Löschen</button></div>
+        <h2>Admin-Passwort</h2>
+        <div class="row"><input id="sAdminPw" type="password" placeholder="neues Admin-Passwort (mind. 6 Zeichen)"><button id="btnAdminPw" class="alt">Ändern</button></div>
+        <h2>Teams &amp; Schiris</h2>
+        <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnUnSchiri" class="alt">Schiri-Rolle entfernen</button><button id="btnKick" class="alt">Team entfernen</button></div>
       </section>
 
       <section>
-        <div class="row tabs"><button id="tabAll" class="on">Alle</button><button id="tabDm">Spielleitung</button><select id="dmTeam" hidden></select></div>
+        <div class="row tabs"><button id="tabAll" class="on">Alle</button><button id="tabDm">Admin</button><select id="dmTeam" hidden></select></div>
         <div id="msgs" class="msgs"></div>
         <form id="chatForm" class="row"><input id="chatText" maxlength="500" placeholder="Nachricht …"><button>Senden</button></form>
       </section>
