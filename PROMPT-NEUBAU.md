@@ -315,8 +315,9 @@ und trotzdem für Betreuer sofort verständlich und seriös wirken.
 - App-Name: **„Mister X – Rote Falken“**.
 - **Logos** liegen im Repo unter **`assets/logos/`**:
   - `kinderfreunde-ooe.png` – Die Kinderfreunde Oberösterreich (260 × 60 px, transparent; Rot mit Herz-Symbol, blauer Schriftzug).
+  - `rote-falken.png` – Rote Falken (200 × 88 px, weißer Hintergrund; roter Falke im Kreis, „rote“ rot, „falken“ dunkelblau, Kinderfreunde-Herz).
+    Für dunkle Flächen freistellen bzw. eine transparente Version anfragen.
   Beide sind klein – für scharfe Darstellung (Splash, Großbild) nach Vektor-/größeren Versionen fragen.
-  - `rote-falken.png` – Rote Falken (200 × 88 px; roter Falke im Kreis, Schriftzug „rote“ rot, „falken“ dunkelblau, Kinderfreunde-Herz).
   Logos auf Startseite, Splash, Großbild, Auswertung. **Exakte Farben (Rot, Blau) aus dem Logo übernehmen.**
 - Farben grob (verfeinern, als Design-Tokens): Rote-Falken-Rot und das Dunkelblau aus dem Schriftzug (exakt aus den Logos übernehmen), Weiß,
   tiefes Nacht-Blau/Anthrazit als Spiel-Hintergrund, Signalfarben: Gelb (Warnung), Grün (ok/frei), Blau (Info, eigenes Team).
