@@ -10,5 +10,6 @@ t("Hessenplatz gesperrt bei Mitte-Ost", { lat: 48.2995, lng: 14.2955 }, [2], fal
 t("Hessenplatz ok bei nur Ost", { lat: 48.2995, lng: 14.2955 }, [1], true);
 t("Baumbachstraße gesperrt bei West", { lat: 48.3005, lng: 14.2840 }, [3], false);
 t("auf der Humboldtstraße noch drinnen", { lat: 48.2985, lng: 14.29495 }, [2], true);
+t("Böhmerwaldstraße (Dreieck beim Bahnhof) drinnen", { lat: 48.2925, lng: 14.2905 }, [0, 1, 2, 3], true);
 t("Urfahr draußen", { lat: 48.3120, lng: 14.2850 }, [], false);
 t("Hauptbahnhof draußen", { lat: 48.2905, lng: 14.2915 }, [], false);
