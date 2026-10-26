@@ -32,6 +32,21 @@
     .msg.sys { background: #fff3cd; color: #000; }
     .msg small { color: var(--muted); }
     .msg.sys small { color: #555; }
+    .msg.ann, .banner.ann { background: #c8102e; color: #fff; font-weight: bold; }
+    .msg.ann small { color: #fdd; }
+    .rules li { margin: 4px 0; }
+    /* Großbild für Laptop/Beamer in der Zentrale */
+    body.screen main { max-width: none; padding: 8px; }
+    @media (min-width: 900px) {
+      body.screen #app:not([hidden]) { display: grid; grid-template-columns: 1fr 420px; grid-template-rows: auto 1fr 1fr; gap: 8px; height: calc(100vh - 64px); }
+      body.screen #banners { grid-column: 1 / 3; }
+      body.screen #map { grid-column: 1; grid-row: 2 / 4; height: auto; margin: 0; }
+      body.screen #staff { grid-column: 2; grid-row: 2; overflow-y: auto; margin: 0; }
+      body.screen #chatBox { grid-column: 2; grid-row: 3; overflow-y: auto; margin: 0; }
+      body.screen #chatBox .msgs { max-height: none; }
+    }
+    body.screen .ctl, body.screen #results, body.screen #archive, body.screen #admin, body.screen #rules, body.screen #footer { display: none !important; }
+    body.screen .leaflet-tooltip { font-size: 15px; font-weight: bold; }
     .tabs button { background: #888; }
     .tabs button.on { background: var(--rot); }
     ul { padding-left: 20px; margin: 4px 0; }
@@ -70,19 +85,24 @@
       </section>
 
       <section id="staff" hidden>
-        <h2>Übergabe (Schiri)</h2>
-        <div class="row">
-          <select id="hTo"></select>
-          <select id="hType"><option value="fang">Gefangen</option><option value="strafe">Strafübergabe</option></select>
-          <button id="btnHand">Fahne übergeben</button>
+        <div class="ctl">
+          <h2>Übergabe (Schiri)</h2>
+          <div class="row">
+            <select id="hTo"></select>
+            <select id="hType"><option value="fang">Gefangen</option><option value="strafe">Strafübergabe</option></select>
+            <button id="btnHand">Fahne übergeben</button>
+          </div>
+          <div class="row"><button id="btnUndo" class="alt">Letzte Übergabe rückgängig</button></div>
         </div>
-        <div class="row"><button id="btnUndo" class="alt">Letzte Übergabe rückgängig</button></div>
         <h2>Teams live</h2>
         <ul id="teamList"></ul>
       </section>
 
       <section id="admin" hidden>
         <h2>Admin</h2>
+        <div class="row"><input id="annText" maxlength="300" placeholder="Durchsage an alle …"><button id="btnAnn">📢 Durchsage</button></div>
+        <div class="row"><button id="btnNow">📍 Mister X sofort melden</button><button id="btnScreen" class="alt">🖥️ Großbild öffnen</button></div>
+        <hr>
         <div class="row">Meldung alle <input id="sInterval" type="number" min="1" step="any"> Min</div>
         <div class="row">Wartezeit <input id="sWait" type="number" min="0" step="any"> Min im Umkreis von <input id="sRadius" type="number" min="0"> m</div>
         <div>Gesperrte Bereiche:<div id="sCuts"></div></div>
@@ -101,13 +121,33 @@
         <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnUnSchiri" class="alt">Schiri-Rolle entfernen</button><button id="btnKick" class="alt">Team entfernen</button></div>
       </section>
 
-      <section>
+      <section id="chatBox">
         <div class="row tabs"><button id="tabAll" class="on">Alle</button><button id="tabDm">Admin</button><select id="dmTeam" hidden></select></div>
         <div id="msgs" class="msgs"></div>
         <form id="chatForm" class="row"><input id="chatText" maxlength="500" placeholder="Nachricht …"><button>Senden</button></form>
       </section>
 
-      <p class="row"><button id="btnLogout" class="alt">Abmelden</button><span class="muted">Bildschirm bitte anlassen, sonst wird kein Standort gesendet.</span></p>
+      <section id="rules">
+        <details>
+          <summary><b>📜 Spielregeln</b></summary>
+          <ul class="rules">
+            <li>Mister X startet zuerst. Nach der ersten automatischen Standortmeldung dürfen alle anderen Teams los.</li>
+            <li><b>Fangen:</b> Es genügt, einer Person der Mister-X-Gruppe ein „Tapperl“ zu geben.</li>
+            <li>Der Schiri übergibt dann die Fahne in der App. Die ehemalige Mister-X-Gruppe und alle Gruppen in der Nähe des Fangortes warten (Countdown in der App), damit Mister X einen Vorsprung hat.</li>
+            <li>Der Standort von Mister X wird automatisch gemeldet – alle 10 Minuten, bei Regeländerung auch öfter.</li>
+            <li>Die Gruppe muss zusammenbleiben (Sichtkontakt ca. 20 m).</li>
+            <li>Mister X darf sich nicht in Gebäuden aufhalten und muss die Fahne sichtbar tragen.</li>
+            <li><b>Öffis:</b> Pro Fahrt höchstens drei Stationen (die Einstiegshaltestelle zählt nicht). Halstücher gut sichtbar tragen – sie sind eure Fahrscheine! Nehmt Rücksicht auf die anderen Fahrgäste.</li>
+            <li>Die Straßen, die das Spielfeld begrenzen, gehören noch zum Spielfeld. Grau auf der Karte = außerhalb oder gesperrt.</li>
+            <li>Das Spielfeld kann während des Spiels verkleinert werden – achtet auf die Meldungen.</li>
+            <li>Bei Uneinigkeiten entscheidet der Schiri bzw. der Admin.</li>
+            <li>Keine Privatgespräche im Chat.</li>
+            <li>Bildschirm anlassen, sonst sendet das Handy keinen Standort.</li>
+          </ul>
+        </details>
+      </section>
+
+      <p class="row" id="footer"><button id="btnLogout" class="alt">Abmelden</button><button id="btnSound" class="alt">🔔 Ton testen</button><span class="muted">Bildschirm bitte anlassen, sonst wird kein Standort gesendet.</span></p>
     </div>
   </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

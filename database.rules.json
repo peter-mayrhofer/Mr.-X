@@ -70,7 +70,7 @@
       ".read": "auth != null",
       ".write": "root.child('roles').child(auth.uid).val() === 'admin'",
       "$id": {
-        ".write": "!data.exists() && newData.child('uid').val() === auth.uid && (newData.child('sys').val() !== true || root.child('roles').child(auth.uid).exists() || root.child('game/mrx').val() === auth.uid)",
+        ".write": "!data.exists() && newData.child('uid').val() === auth.uid && (newData.child('sys').val() !== true || root.child('roles').child(auth.uid).exists() || root.child('game/mrx').val() === auth.uid) && (newData.child('ann').val() !== true || root.child('roles').child(auth.uid).val() === 'admin')",
         ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 500"
       }
     },

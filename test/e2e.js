@@ -106,6 +106,28 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   await A.page.click("#tabDm");
   assert(!(await A.page.textContent("#msgs")).includes("Frage an Admin"), "DM privat");
 
+  // Admin-Extras: Durchsage (Banner bei allen), Sofort-Meldung, Team darf keine Durchsage fälschen
+  await L.page.fill("#annText", "Treffpunkt Hauptplatz");
+  await L.page.click("#btnAnn");
+  await C.page.waitForFunction(() => document.querySelector("#banners .ann")?.textContent.includes("Treffpunkt"));
+  const nReports = Object.keys(await (await fetch(`http://localhost:9000/reports.json?ns=${NS}`, { headers: { Authorization: "Bearer owner" } })).json()).length;
+  await L.page.click("#btnNow");
+  await C.page.click("#tabAll");
+  await C.page.waitForFunction(() => document.querySelector("#msgs").textContent.includes("Sofort-Meldung"));
+  const nReports2 = Object.keys(await (await fetch(`http://localhost:9000/reports.json?ns=${NS}`, { headers: { Authorization: "Bearer owner" } })).json()).length;
+  assert(nReports2 > nReports, "Sofort-Meldung erzeugt Meldung");
+  const fake = await fetch(`http://localhost:9000/chat/fake.json?ns=${NS}&auth=${anon.idToken}`, {
+    method: "PUT", body: JSON.stringify({ uid: anon.localId, name: "x", text: "Fake", t: 1, sys: true, ann: true }) });
+  assert.equal(fake.status, 401, "Team kann keine Durchsage fälschen");
+
+  // Großbild in eigenem Tab (gleiche Anmeldung)
+  const big = await L.ctx.newPage();
+  await big.setViewportSize({ width: 1400, height: 850 });
+  await big.goto(URL + "&screen");
+  await big.waitForSelector("#staff:not([hidden])");
+  assert(await big.isVisible("#map") && !(await big.isVisible("#admin")) && await big.isVisible("#teamList"), "Großbild-Layout");
+  await big.close();
+
   // Rückgängig
   await R.page.click("#btnUndo");
   await A.page.waitForSelector(".banner.mrx");

@@ -37,6 +37,11 @@ Danach läuft die App unter **https://mr-x-ooe.web.app**.
 6. **„Neue Runde vorbereiten“** meldet alle Teams und Schiris ab und löscht das Team-Passwort.
    Danach ein neues Team-Passwort festlegen. Admin und vergangene Spiele bleiben.
 
+**Admin-Extras:** Durchsage an alle (bleibt 3 Min oben stehen, mit Ton), „Mister X sofort melden“,
+Warnung bei Teams ohne Standort seit 3 Min, **„Großbild öffnen“** für Laptop/Beamer (Karte + Teams + Chat).
+Handys piepen und vibrieren bei Meldungen, Übergaben, Durchsagen und Admin-Nachrichten
+(Ton erst nach dem ersten Antippen der Seite – Browser-Vorgabe; „🔔 Ton testen“ unten).
+
 In Firebase muss unter Authentication → Anmeldemethode **„Anonym“** und **„E-Mail-Adresse/Passwort“** aktiviert sein.
 
 ## Testen

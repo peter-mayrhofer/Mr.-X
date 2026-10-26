@@ -23,9 +23,11 @@ if (new URLSearchParams(location.search).has("emu")) {
 }
 
 const DEFAULTS = { interval: 10, wait: 5, radius: 200, cuts: [] };
+const PARAMS = new URLSearchParams(location.search);
+if (PARAMS.has("screen")) document.body.classList.add("screen");
 const S = {
   me: null, teams: {}, roles: {}, game: {}, pos: {}, reports: {}, handovers: {}, locks: {}, stats: {},
-  chat: {}, dm: {}, secret: {}, offset: 0, myPos: null, sent: null, dist: 0, tab: "all", staffSubs: false,
+  chat: {}, dm: {}, secret: {}, offset: 0, myPos: null, sent: null, dist: 0, tab: "all", staffSubs: false, seen: {},
 };
 const $ = (id) => document.getElementById(id);
 const now = () => Date.now() + S.offset;
@@ -123,14 +125,19 @@ function start() {
     renderAll();
   });
   sub("archive", "archive", renderArchive);
-  sub("chat", "chat", renderChat);
+  sub("chat", "chat", () => {
+    const neu = fresh("chat", S.chat).filter((m) => m.uid !== S.me && (m.sys || m.ann));
+    if (neu.length) alarm(neu.some((m) => m.ann));
+    renderChat();
+  });
   sub("roles", "roles", () => {
     if (isStaff() && !S.staffSubs) {
       S.staffSubs = true;
       sub("pos", "pos", renderMap);
-      if (isAdmin()) { sub("secret", "secret"); sub("dm", "dm", renderChat); }
+      if (isAdmin()) sub("secret", "secret");
+      if (isAdmin()) sub("dm", "dm", () => { dmAlarm(Object.assign({}, ...Object.values(S.dm))); renderChat(); });
     }
-    if (!isAdmin() && !S.dmSub) { S.dmSub = true; sub(`dm/${S.me}`, "dmMine", renderChat); }
+    if (!isAdmin() && !S.dmSub) { S.dmSub = true; sub(`dm/${S.me}`, "dmMine", () => { dmAlarm(S.dmMine); renderChat(); }); }
     renderAll();
   });
   sub(`stats/${S.me}`, "myStats", () => { S.dist = S.myStats.dist ?? 0; });
@@ -139,6 +146,31 @@ function start() {
   keepAwake();
   setInterval(tick, 1000);
 }
+
+// ---------- Ton + Vibration ----------
+// Browser erlauben Ton erst nach einer Berührung – der erste Tipp irgendwo schaltet ihn frei.
+let audio;
+document.addEventListener("pointerdown", () => { audio ??= new AudioContext(); audio.resume(); });
+function alarm(strong = false) {
+  navigator.vibrate?.(strong ? [400, 150, 400, 150, 400] : [200, 100, 200]);
+  if (!audio) return;
+  (strong ? [0, 0.25, 0.5] : [0, 0.25]).forEach((d) => {
+    const o = audio.createOscillator(), v = audio.createGain();
+    o.frequency.value = strong ? 660 : 880;
+    v.gain.value = 0.25;
+    o.connect(v).connect(audio.destination);
+    o.start(audio.currentTime + d);
+    o.stop(audio.currentTime + d + 0.15);
+  });
+}
+// liefert nur Einträge, die seit dem letzten Aufruf dazugekommen sind (beim ersten Laden: keine)
+function fresh(key, obj) {
+  const ids = Object.keys(obj ?? {}), old = S.seen[key];
+  S.seen[key] = new Set(ids);
+  return old ? ids.filter((id) => !old.has(id)).map((id) => obj[id]) : [];
+}
+const dmAlarm = (msgs) => { if (fresh("dm", msgs).some((m) => m.uid !== S.me)) alarm(); };
+$("btnSound").onclick = () => setTimeout(() => alarm(true), 50);
 
 // ---------- GPS ----------
 function watchGps() {
@@ -305,6 +337,20 @@ $("btnAdminPw").onclick = () => {
     .then(() => { $("sAdminPw").value = ""; alert("Admin-Passwort geändert."); })
     .catch(() => alert("Aus Sicherheitsgründen bitte kurz ab- und wieder anmelden und dann nochmal ändern."));
 };
+$("btnAnn").onclick = () => {
+  const text = $("annText").value.trim();
+  if (!text) return;
+  push(ref(db, "chat"), { uid: S.me, name: name(S.me), text: `📢 ${text}`, t: now(), sys: true, ann: true });
+  $("annText").value = "";
+};
+$("btnNow").onclick = async () => {
+  const G = g(), p = S.pos[G.mrx];
+  if (G.status !== "running" || !p) return alert("Kein Standort von Mister X vorhanden.");
+  if (!confirm(`Standort von ${name(G.mrx)} jetzt sofort an alle melden?`)) return;
+  await set(ref(db, `reports/x${now()}`), { team: G.mrx, lat: p.lat, lng: p.lng, pt: p.t, t: now() });
+  say(`📍 Sofort-Meldung: Standort von Mister X (${name(G.mrx)}) auf Anweisung des Admins.`, true);
+};
+$("btnScreen").onclick = () => window.open(`?screen${PARAMS.has("emu") ? "&emu" : ""}`, "_blank");
 $("archSel").onchange = () => { renderArchive(); renderMap(); };
 $("tabAll").onclick = () => { S.tab = "all"; renderChat(); };
 $("tabDm").onclick = () => { S.tab = "dm"; renderChat(); };
@@ -350,7 +396,7 @@ function renderMap() {
   G.cuts.forEach((i) => L.polygon(CUTS[i].poly, { stroke: false, fillColor: "#555", fillOpacity: 0.5, interactive: false }).addTo(zoneLayer));
 
   markers.forEach((m) => { m.seen = false; });
-  if (S.myPos) dot("me", S.myPos, "#2b6cb0", "Wir");
+  if (S.myPos && !isAdmin()) dot("me", S.myPos, "#2b6cb0", "Wir");
   if (isStaff()) {
     for (const uid of teamIds()) if (S.pos[uid] && uid !== S.me)
       dot(uid, S.pos[uid], uid === G.mrx ? "#c8102e" : "#666", `${uid === G.mrx ? "🚩 " : ""}${name(uid)} ${clock(S.pos[uid].t)}`);
@@ -382,8 +428,16 @@ function renderStatus() {
     if (S.locks[S.me] > now()) banner("warn", `⏳ Wartezeit: noch ${mmss(S.locks[S.me] - now())}, bitte stehen bleiben!`);
     if (G.mrx === S.me && S.myPos && !inZone(S.myPos, G.cuts)) banner("warn", "⚠️ Ihr seid außerhalb des Spielfelds! Sofort zurück!");
     if (isStaff() && S.pos[G.mrx] && !inZone(S.pos[G.mrx], G.cuts)) banner("warn", `⚠️ Mister X (${name(G.mrx)}) ist außerhalb des Spielfelds!`);
+    if (isStaff()) {
+      const off = teamIds().filter((uid) => !S.pos[uid] || now() - S.pos[uid].t > 180000)
+        .map((uid) => `${name(uid)} (${S.pos[uid] ? `seit ${clock(S.pos[uid].t)}` : "nie"})`);
+      if (off.length) banner("warn", `📵 Kein Standort: ${off.join(", ")}`);
+    }
   } else if (G.status === "ended") banner("mrx", `🏁 Spiel vorbei! Gewinner: ${name(G.mrx)}`);
   else banner("info", "Warten auf den Spielstart …");
+  // Durchsagen bleiben 3 Minuten oben stehen
+  const ann = sorted(S.chat).filter((m) => m.ann && now() - m.t < 180000).at(-1);
+  if (ann) banner("ann", ann.text);
   if (isAdmin() && S.secret.endAt && G.status === "running") $("endInfo").textContent = `Geheimes Spielende: ${clock(S.secret.endAt)}`;
 }
 
@@ -479,6 +533,6 @@ function renderChat() {
   const src = S.tab === "all" ? S.chat : isAdmin() ? S.dm[$("dmTeam").value] ?? {} : S.dmMine ?? {};
   const box = $("msgs"), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
   box.innerHTML = sorted(src).slice(-200).map((m) =>
-    `<div class="msg${m.sys ? " sys" : ""}"><small>${clock(m.t)} ${esc(m.name)}</small><br>${esc(m.text)}</div>`).join("");
-  if (atBottom) box.scrollTop = box.scrollHeight;
+    `<div class="msg${m.ann ? " ann" : m.sys ? " sys" : ""}"><small>${clock(m.t)} ${esc(m.name)}</small><br>${esc(m.text)}</div>`).join("");
+  if (atBottom || PARAMS.has("screen")) box.scrollTop = box.scrollHeight;
 }
