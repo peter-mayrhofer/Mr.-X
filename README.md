@@ -8,9 +8,10 @@ Handy-Web-App für das Live-Spiel „Mister X“ in der Linzer Innenstadt. Spezi
 |---|---|
 | `index.html` | Oberfläche |
 | `app.js` | Logik (Login, GPS, Meldungen, Übergabe, Chat, Auswertung) |
-| `zones.js` | Spielfeld und Verkleinerungsstufen (Koordinaten) |
+| `zones.js` | Spielfeld und 4 sperrbare Bereiche (Koordinaten entlang der Straßen aus OpenStreetMap) |
 | `database.rules.json` | Zugriffsrechte (wer darf was sehen/schreiben) |
 | `test/e2e.js` | Automatischer Test mit simulierten Handys |
+| `test/zones.test.mjs` | Prüft die Spielfeld-Zonen (`node test/zones.test.mjs`) |
 
 ## Veröffentlichen (einmalig am PC)
 

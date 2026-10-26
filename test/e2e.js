@@ -89,7 +89,7 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   await A.page.waitForSelector(".banner.mrx");
 
   // Spielfeld verkleinern: A steht danach im weggefallenen Nordbereich
-  await L.page.selectOption("#sZone", "1");
+  await L.page.check("#cut0");
   await A.ctx.setGeolocation({ latitude: 48.3058, longitude: 14.2864 }); // Hauptplatz = Nordbereich
   await L.page.click("#btnSave");
   await A.page.waitForFunction(() => document.querySelector("#banners").textContent.includes("außerhalb"));

@@ -22,7 +22,7 @@ if (new URLSearchParams(location.search).has("emu")) {
   connectDatabaseEmulator(db, "localhost", 9000);
 }
 
-const DEFAULTS = { interval: 10, wait: 5, radius: 200, zone: 0 };
+const DEFAULTS = { interval: 10, wait: 5, radius: 200, cuts: [] };
 const S = {
   me: null, teams: {}, roles: {}, game: {}, pos: {}, reports: {}, handovers: {}, locks: {}, stats: {},
   chat: {}, dm: {}, secret: {}, offset: 0, myPos: null, sent: null, dist: 0, tab: "all", staffSubs: false,
@@ -34,7 +34,7 @@ const isStaff = () => !!role();
 const isLeitung = () => role() === "leitung";
 const name = (uid) => S.teams[uid]?.name ?? "?";
 const teamIds = () => Object.keys(S.teams).filter((uid) => !S.roles[uid]);
-const g = () => ({ ...DEFAULTS, ...S.game });
+const g = () => ({ ...DEFAULTS, ...S.game, cuts: Object.values(S.game.cuts ?? {}) });
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const clock = (t) => new Date(t - S.offset).toLocaleTimeString("de-AT", { hour: "2-digit", minute: "2-digit" });
 const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
@@ -200,7 +200,7 @@ const settings = () => ({
   interval: +$("sInterval").value || DEFAULTS.interval,
   wait: +$("sWait").value,
   radius: +$("sRadius").value,
-  zone: +$("sZone").value,
+  cuts: CUTS.map((_, i) => i).filter((i) => $(`cut${i}`).checked),
 });
 
 // ---------- Buttons ----------
@@ -213,7 +213,9 @@ $("btnSave").onclick = async () => {
   await update(ref(db, "game"), settings());
   const after = g();
   if (after.interval !== before.interval) say(`📢 Regeländerung: Mister X meldet sich jetzt alle ${after.interval} Min.`, true);
-  if (after.zone !== before.zone) say(`📢 Das Spielfeld wird verkleinert: ${CUTS.slice(0, after.zone).map((c) => c.name).join(", ") || "volles Spielfeld"} ${after.zone ? "fällt weg" : ""}.`, true);
+  const added = after.cuts.filter((i) => !before.cuts.includes(i));
+  if (added.length) say(`📢 Das Spielfeld wird verkleinert! Gesperrt: ${added.map((i) => CUTS[i].name).join("; ")}.`, true);
+  else if (after.cuts.length < before.cuts.length) say("📢 Ein gesperrter Bereich ist wieder freigegeben.", true);
 };
 $("btnReset").onclick = () => confirm("Wirklich ALLES löschen (Spiel, Chat, Statistik)?") &&
   update(ref(db), { game: null, handovers: null, reports: null, locks: null, stats: null, chat: null, dm: null, secret: null });
@@ -238,8 +240,7 @@ function setupMap() {
   map = L.map("map").fitBounds(BASE);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
   zoneLayer = L.layerGroup().addTo(map);
-  $("sZone").innerHTML = ["volles Spielfeld", ...CUTS.map((c, i) => `ohne ${CUTS.slice(0, i + 1).map((x) => x.name.split(" ")[0]).join(", ")}`)]
-    .map((label, i) => `<option value="${i}">${i}: ${label}</option>`).join("");
+  $("sCuts").innerHTML = CUTS.map((c, i) => `<label class="row"><input type="checkbox" id="cut${i}"> ${esc(c.name)}</label>`).join("");
 }
 
 // Marker werden wiederverwendet statt neu erzeugt (sonst bleiben Leaflet-Beschriftungen hängen).
@@ -259,8 +260,10 @@ function renderMap() {
   if (!map) return;
   const G = g();
   zoneLayer.clearLayers();
-  L.polygon(BASE, { color: "#000", weight: 3, fill: false, interactive: false }).addTo(zoneLayer);
-  CUTS.slice(0, G.zone).forEach((c) => L.polygon(c.poly, { stroke: false, fillColor: "#555", fillOpacity: 0.45, interactive: false }).addTo(zoneLayer));
+  // Alles außerhalb des Spielfelds grau (Welt-Polygon mit dem Spielfeld als Loch)
+  L.polygon([[[49, 13], [49, 16], [47, 16], [47, 13]], BASE], { color: "#000", weight: 3, fillColor: "#555", fillOpacity: 0.5, interactive: false }).addTo(zoneLayer);
+  // ponytail: gesperrte Flächen einfach grau drüberlegen; Teile außerhalb des Spielfelds sind egal
+  G.cuts.forEach((i) => L.polygon(CUTS[i].poly, { stroke: false, fillColor: "#555", fillOpacity: 0.5, interactive: false }).addTo(zoneLayer));
 
   markers.forEach((m) => { m.seen = false; });
   if (S.myPos) dot("me", S.myPos, "#2b6cb0", "Wir");
@@ -286,8 +289,8 @@ function renderStatus() {
     if (G.mrx === S.me) banner("mrx", `🚩 Ihr seid Mister X! Nächste automatische Meldung in ${next}`);
     else banner("info", `Mister X: ${name(G.mrx)} · nächste Meldung in ${next}`);
     if (S.locks[S.me] > now()) banner("warn", `⏳ Wartezeit: noch ${mmss(S.locks[S.me] - now())}, bitte stehen bleiben!`);
-    if (G.mrx === S.me && S.myPos && !inZone(S.myPos, G.zone)) banner("warn", "⚠️ Ihr seid außerhalb des Spielfelds! Sofort zurück!");
-    if (isStaff() && S.pos[G.mrx] && !inZone(S.pos[G.mrx], G.zone)) banner("warn", `⚠️ Mister X (${name(G.mrx)}) ist außerhalb des Spielfelds!`);
+    if (G.mrx === S.me && S.myPos && !inZone(S.myPos, G.cuts)) banner("warn", "⚠️ Ihr seid außerhalb des Spielfelds! Sofort zurück!");
+    if (isStaff() && S.pos[G.mrx] && !inZone(S.pos[G.mrx], G.cuts)) banner("warn", `⚠️ Mister X (${name(G.mrx)}) ist außerhalb des Spielfelds!`);
   } else if (G.status === "ended") banner("mrx", `🏁 Spiel vorbei! Gewinner: ${name(G.mrx)}`);
   else banner("info", "Warten auf den Spielstart …");
   if (isLeitung() && S.secret.endAt && G.status === "running") $("endInfo").textContent = `Geheimes Spielende: ${clock(S.secret.endAt)}`;
@@ -319,13 +322,13 @@ function renderAll() {
     return `<li>${uid === G.mrx ? "🚩 " : ""}${esc(name(uid))} – ${where}${S.locks[uid] > now() ? " ⏳" : ""}</li>`;
   }).join("");
   // Formular nur füllen, wenn sich die gespeicherten Einstellungen geändert haben – sonst gehen Eingaben verloren.
-  const cfg = JSON.stringify([G.interval, G.wait, G.radius, G.zone]);
+  const cfg = JSON.stringify([G.interval, G.wait, G.radius, G.cuts]);
   if (isLeitung() && S.cfg !== cfg) {
     S.cfg = cfg;
     $("sInterval").value = G.interval;
     $("sWait").value = G.wait;
     $("sRadius").value = G.radius;
-    $("sZone").value = G.zone;
+    CUTS.forEach((_, i) => { $(`cut${i}`).checked = G.cuts.includes(i); });
   }
   renderResults();
   renderMap();
