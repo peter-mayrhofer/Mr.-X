@@ -34,6 +34,9 @@ Danach läuft die App unter **https://mr-x-ooe.web.app**.
 4. Spielleitung wählt den Start-Mister-X und drückt **„Spiel starten“**.
 5. Nach Spielende wird das Spiel archiviert (Auswertung, Route von Mister X, Chat) und ist unter
    **„Vergangene Spiele“** nachschaubar. Ein neues Spiel kann direkt gestartet werden.
+6. **„Neue Runde vorbereiten“** meldet alle Teams und Schiris ab: ihre Logins werden ungültig, sie registrieren sich
+   neu (gleiche Namen erlaubt, neue Passwörter). Spielleitung und vergangene Spiele bleiben.
+   Die alten Konten bleiben in Firebase → Authentication liegen und können dort bei Bedarf gelöscht werden.
 
 ## Testen
 

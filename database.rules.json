@@ -1,7 +1,13 @@
 {
   "rules": {
+    "config": {
+      ".read": true,
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "gen": { ".validate": "newData.isNumber()" }
+    },
     "teams": {
       ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
       "$uid": {
         ".write": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'leitung'",
         ".validate": "newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40"
@@ -9,6 +15,7 @@
     },
     "roles": {
       ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
       "$uid": {
         ".write": "root.child('roles').child(auth.uid).val() === 'leitung' || (auth.uid === $uid && newData.val() === 'leitung' && (!root.child('roles').exists() || (root.child('secret/leitungCode').exists() && newData.parent().parent().child('claims').child($uid).val() === root.child('secret/leitungCode').val())))",
         ".validate": "newData.val() === 'leitung' || newData.val() === 'schiri'"

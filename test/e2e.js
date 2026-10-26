@@ -9,7 +9,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function phone(browser, name, lat, lng) {
   const ctx = await browser.newContext({ geolocation: { latitude: lat, longitude: lng, accuracy: 10 }, permissions: ["geolocation"], viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
-  page.on("dialog", (d) => d.accept());
+  page.on("dialog", (d) => d.accept().catch(() => {}));
   page.on("pageerror", (e) => console.log(name, "PAGEERROR", e.message));
   await page.goto(URL);
   await page.fill("#lname", name);
@@ -22,7 +22,7 @@ async function phone(browser, name, lat, lng) {
 async function token(name) {
   const r = await fetch("http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=x", {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@mrx-team.app`, password: "geheim123", returnSecureToken: true }),
+    body: JSON.stringify({ email: `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@r0.mrx-team.app`, password: "geheim123", returnSecureToken: true }),
   });
   return (await r.json()).idToken;
 }
@@ -117,16 +117,19 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   async function regLeitung(n, code) {
     const ctx = await browser.newContext({ geolocation: { latitude: 48.30, longitude: 14.29 }, permissions: ["geolocation"] });
     const page = await ctx.newPage();
-    page.on("dialog", (d) => d.accept());
+    page.on("dialog", (d) => d.accept().catch(() => {}));
     await page.goto(URL);
     await page.fill("#lname", n); await page.fill("#lpass", "geheim123");
     await page.click("details summary"); await page.fill("#lcode", code);
     await page.click("#btnRegLeitung");
-    await page.waitForSelector("#app:not([hidden])");
-    await sleep(2000);
+    await sleep(4000);
     return page.isVisible("#leitung");
   }
   assert.equal(await regLeitung("Falsch", "nein123"), false, "falscher Code");
+  const gone = await (await fetch("http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=x", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "falsch@mrx-team.app", password: "geheim123", returnSecureToken: true }) })).json();
+  assert(gone.error, "Konto mit falschem Code ist gelöscht");
   assert.equal(await regLeitung("Leitung Zwei", "geheimcode"), true, "richtiger Code");
 
   // Neues Spiel: Chat leer, Archiv bleibt
@@ -137,6 +140,23 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   assert(!(await B.page.textContent("#msgs")).includes("Hallo alle"), "Chat geleert");
   const arch = await (await fetch(`http://localhost:9000/archive.json?ns=${NS}`, { headers: { Authorization: "Bearer owner" } })).json();
   assert.equal(Object.keys(arch).length, 1, "Archiv bleibt");
+
+  // Neue Runde: Teams und Schiris fliegen raus, Spielleitung bleibt, Namen sind wieder frei
+  await L.page.click("#btnStop");
+  await L.page.click("#btnReset");
+  await A.page.waitForSelector("#login:not([hidden])", { timeout: 15000 });
+  await R.page.waitForSelector("#login:not([hidden])", { timeout: 15000 });
+  await sleep(1500);
+  assert(await L.page.isVisible("#leitung"), "Spielleitung bleibt angemeldet");
+  await A.page.fill("#lname", "Team A"); await A.page.fill("#lpass", "neuespw1");
+  await A.page.click("#btnRegister");
+  await A.page.waitForSelector("#app:not([hidden])");
+  await L.page.waitForFunction(() => [...document.querySelectorAll("#sStart option")].map((o) => o.textContent).join() === "Team A");
+  // altes Passwort der alten Runde gilt nicht mehr
+  await B.page.reload();
+  await B.page.fill("#lname", "Team B"); await B.page.fill("#lpass", "geheim123");
+  await B.page.click("#btnLogin");
+  await B.page.waitForFunction(() => document.querySelector("#lerr").textContent.length > 0);
   await browser.close();
   console.log("OK");
 })().catch((e) => { console.error(e); process.exit(1); });

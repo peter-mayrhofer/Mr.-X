@@ -1,9 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, connectAuthEmulator,
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, deleteUser, connectAuthEmulator,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getDatabase, ref, onValue, set, update, push, runTransaction, connectDatabaseEmulator,
+  getDatabase, ref, onValue, get, set, update, push, runTransaction, connectDatabaseEmulator,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { BASE, CUTS, inZone } from "./zones.js";
 
@@ -46,19 +46,38 @@ const sorted = (o) => Object.entries(o).map(([id, v]) => ({ id, ...v })).sort((a
 const say = (text, sys = false) => push(ref(db, "chat"), { uid: S.me, name: name(S.me), text, t: now(), sys });
 
 // ---------- Login ----------
-const email = (n) => `${n.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}@mrx-team.app`;
+// Team-Konten gehören zu einer Runde (config/gen). Neue Runde = alte Team-Logins ungültig, Namen wieder frei.
+// Spielleitungs-Konten haben keine Runde und bleiben gültig.
+const slug = (n) => n.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+const round = async () => (await get(ref(db, "config/gen"))).val() ?? 0;
+const teamEmail = async (n) => `${slug(n)}@r${await round()}.mrx-team.app`;
+const staffEmail = (n) => `${slug(n)}@mrx-team.app`;
 const loginErr = (e) => { $("lerr").textContent = { "auth/invalid-credential": "Teamname oder Passwort falsch.", "auth/email-already-in-use": "Diesen Teamnamen gibt es schon.", "auth/weak-password": "Passwort zu kurz (mind. 6 Zeichen)." }[e.code] ?? e.message; };
-$("btnLogin").onclick = () => signInWithEmailAndPassword(auth, email($("lname").value), $("lpass").value).catch(loginErr);
+$("btnLogin").onclick = async () => {
+  const n = $("lname").value, pw = $("lpass").value;
+  try {
+    await signInWithEmailAndPassword(auth, await teamEmail(n), pw);
+  } catch {
+    signInWithEmailAndPassword(auth, staffEmail(n), pw).catch(loginErr);
+  }
+};
 async function register(leitung) {
   const n = $("lname").value.trim();
   if (!n) return loginErr({ message: "Bitte Namen eingeben." });
+  S.registering = true;
   try {
-    const c = await createUserWithEmailAndPassword(auth, email(n), $("lpass").value);
+    const c = await createUserWithEmailAndPassword(auth, leitung ? staffEmail(n) : await teamEmail(n), $("lpass").value);
     await set(ref(db, `teams/${c.user.uid}`), { name: n });
     // Spielleitung: erlaubt, wenn es noch keine gibt oder der Code stimmt (geprüft in database.rules.json)
-    if (leitung) await update(ref(db), { [`claims/${c.user.uid}`]: $("lcode").value, [`roles/${c.user.uid}`]: "leitung" })
-      .catch(() => alert("Spielleitungs-Code falsch – du bist als normales Team angemeldet. Die Spielleitung kann dich nachträglich freischalten."));
+    if (leitung) await update(ref(db), { [`claims/${c.user.uid}`]: $("lcode").value, [`roles/${c.user.uid}`]: "leitung" }).catch(async () => {
+      await set(ref(db, `teams/${c.user.uid}`), null);
+      await deleteUser(c.user);
+      alert("Spielleitungs-Code falsch.");
+      location.reload();
+    });
   } catch (e) { loginErr(e); }
+  S.registering = false;
+  checkAccount();
 }
 $("btnRegister").onclick = () => register(false);
 $("btnRegLeitung").onclick = () => register(true);
@@ -80,6 +99,7 @@ function start() {
   onValue(ref(db, ".info/serverTimeOffset"), (s) => { S.offset = s.val() ?? 0; });
   ["teams", "game", "reports", "handovers", "locks", "stats"].forEach((k) => sub(k, k));
   sub("archive", "archive", renderArchive);
+  sub("config", "config", checkAccount);
   sub("chat", "chat", renderChat);
   sub("roles", "roles", () => {
     if (isStaff() && !S.staffSubs) {
@@ -88,6 +108,8 @@ function start() {
       if (isLeitung()) { sub("secret", "secret"); sub("dm", "dm", renderChat); }
     }
     if (!isLeitung() && !S.dmSub) { S.dmSub = true; sub(`dm/${S.me}`, "dmMine", renderChat); }
+    S.rolesLoaded = true;
+    checkAccount();
     renderAll();
   });
   sub(`stats/${S.me}`, "myStats", () => { S.dist = S.myStats.dist ?? 0; });
@@ -95,6 +117,16 @@ function start() {
   watchGps();
   keepAwake();
   setInterval(tick, 1000);
+}
+
+// Konto aus einer alten Runde (oder ohne Rolle mit Spielleitungs-Adresse) -> abmelden
+function checkAccount() {
+  if (S.registering || !S.rolesLoaded || !S.config || S.out) return;
+  const m = auth.currentUser?.email?.match(/@r(\d+)\./);
+  const stale = m ? +m[1] !== (S.config.gen ?? 0) && role() !== "leitung" : !role();
+  if (!stale) return;
+  S.out = true;
+  signOut(auth).then(() => { alert("Eine neue Runde hat begonnen – bitte das Team neu registrieren."); location.reload(); });
 }
 
 // ---------- GPS ----------
@@ -232,8 +264,15 @@ $("btnSave").onclick = async () => {
   if (added.length) say(`📢 Das Spielfeld wird verkleinert! Gesperrt: ${added.map((i) => CUTS[i].name).join("; ")}.`, true);
   else if (after.cuts.length < before.cuts.length) say("📢 Ein gesperrter Bereich ist wieder freigegeben.", true);
 };
-$("btnReset").onclick = () => confirm("Wirklich ALLES löschen (Spiel, Chat, Statistik)?") &&
-  update(ref(db), { game: null, handovers: null, reports: null, locks: null, stats: null, chat: null, dm: null, secret: null });
+$("btnReset").onclick = () => {
+  if (!confirm("Neue Runde vorbereiten?\n\nAlle Teams und Schiris werden abgemeldet und müssen sich neu registrieren (neue Passwörter). Spiel, Chat und Statistik werden gelöscht. Vergangene Spiele und die Spielleitung bleiben.")) return;
+  const roles = Object.fromEntries(Object.entries(S.roles).filter(([, r]) => r === "leitung"));
+  const teams = Object.fromEntries(Object.keys(roles).filter((uid) => S.teams[uid]).map((uid) => [uid, S.teams[uid]]));
+  update(ref(db), {
+    game: null, handovers: null, reports: null, locks: null, stats: null, chat: null, dm: null, pos: null,
+    "secret/endAt": null, teams, roles, "config/gen": (S.config.gen ?? 0) + 1,
+  });
+};
 $("btnClaim").onclick = () => set(ref(db, `roles/${S.me}`), "leitung");
 $("btnSchiri").onclick = () => set(ref(db, `roles/${$("rTeam").value}`), "schiri");
 $("btnLeitung").onclick = () => confirm(`${name($("rTeam").value)} zur Spielleitung machen?`) && set(ref(db, `roles/${$("rTeam").value}`), "leitung");
