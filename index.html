@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#c8102e">
+  <title>Mister X</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --rot: #c8102e; --bg: #f4f4f4; --text: #222; --card: #fff; --muted: #666; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #121212; --text: #eee; --card: #1e1e1e; --muted: #aaa; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--rot); color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+    header b { font-size: 20px; }
+    main { padding: 12px 16px; max-width: 700px; margin: auto; }
+    section, .card { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    h2 { font-size: 17px; margin: 0 0 8px; }
+    input, select, button { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid #999; max-width: 100%; }
+    button { background: var(--rot); color: #fff; border: 0; cursor: pointer; }
+    button.alt { background: #555; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+    .row > input:not([type=number]) { flex: 1; min-width: 0; }
+    input[type=number] { width: 90px; }
+    #map { height: 55vh; border-radius: 10px; margin-bottom: 12px; }
+    .banner { padding: 12px; border-radius: 10px; margin-bottom: 12px; font-weight: bold; text-align: center; }
+    .mrx { background: var(--rot); color: #fff; }
+    .warn { background: #f5a623; color: #000; }
+    .info { background: #2b6cb0; color: #fff; }
+    .msgs { max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .msg { padding: 6px 8px; border-radius: 8px; background: var(--bg); }
+    .msg.sys { background: #fff3cd; color: #000; }
+    .msg small { color: var(--muted); }
+    .msg.sys small { color: #555; }
+    .tabs button { background: #888; }
+    .tabs button.on { background: var(--rot); }
+    ul { padding-left: 20px; margin: 4px 0; }
+    .muted { color: var(--muted); font-size: 14px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header><b>Mister X</b><span id="who"></span></header>
+  <main>
+    <section id="login">
+      <h2>Anmelden</h2>
+      <div class="row"><input id="lname" placeholder="Teamname (z. B. Ortsgruppe Urfahr)" autocomplete="username"></div>
+      <div class="row"><input id="lpass" type="password" placeholder="Passwort (mind. 6 Zeichen)" autocomplete="current-password"></div>
+      <div class="row"><button id="btnLogin">Anmelden</button><button id="btnRegister" class="alt">Neues Team registrieren</button></div>
+      <p id="lerr" class="muted"></p>
+    </section>
+
+    <div id="app" hidden>
+      <div id="banners"></div>
+      <div id="map"></div>
+
+      <section id="results" hidden></section>
+
+      <section id="staff" hidden>
+        <h2>Übergabe (Schiri)</h2>
+        <div class="row">
+          <select id="hTo"></select>
+          <select id="hType"><option value="fang">Gefangen</option><option value="strafe">Strafübergabe</option></select>
+          <button id="btnHand">Fahne übergeben</button>
+        </div>
+        <div class="row"><button id="btnUndo" class="alt">Letzte Übergabe rückgängig</button></div>
+        <h2>Teams live</h2>
+        <ul id="teamList"></ul>
+      </section>
+
+      <section id="leitung" hidden>
+        <h2>Spielleitung</h2>
+        <div class="row">Meldung alle <input id="sInterval" type="number" min="1" step="any"> Min</div>
+        <div class="row">Wartezeit <input id="sWait" type="number" min="0" step="any"> Min im Umkreis von <input id="sRadius" type="number" min="0"> m</div>
+        <div class="row">Spielfeld-Stufe <select id="sZone"></select></div>
+        <div class="row"><button id="btnSave">Einstellungen speichern</button></div>
+        <hr>
+        <div class="row">Zufallsende zwischen <input id="sEndMin" type="number" value="3" step="any"> und <input id="sEndMax" type="number" value="4" step="any"> Stunden</div>
+        <div class="row">Start-Mister-X <select id="sStart"></select><button id="btnStart">Spiel starten</button></div>
+        <div class="row"><button id="btnStop">Notstopp: Spiel beenden</button><button id="btnReset" class="alt">Alles zurücksetzen</button></div>
+        <p id="endInfo" class="muted"></p>
+        <h2>Schiris</h2>
+        <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnUnSchiri" class="alt">Rolle entfernen</button></div>
+      </section>
+
+      <section id="claim" hidden>
+        <p class="muted">Noch keine Spielleitung festgelegt.</p>
+        <button id="btnClaim">Ich bin die Spielleitung</button>
+      </section>
+
+      <section>
+        <div class="row tabs"><button id="tabAll" class="on">Alle</button><button id="tabDm">Spielleitung</button><select id="dmTeam" hidden></select></div>
+        <div id="msgs" class="msgs"></div>
+        <form id="chatForm" class="row"><input id="chatText" maxlength="500" placeholder="Nachricht …"><button>Senden</button></form>
+      </section>
+
+      <p class="row"><button id="btnLogout" class="alt">Abmelden</button><span class="muted">Bildschirm bitte anlassen, sonst wird kein Standort gesendet.</span></p>
+    </div>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

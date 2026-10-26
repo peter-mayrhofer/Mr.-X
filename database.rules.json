@@ -1,0 +1,76 @@
+{
+  "rules": {
+    "teams": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'leitung'",
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40"
+      }
+    },
+    "roles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "root.child('roles').child(auth.uid).val() === 'leitung' || (!root.child('roles').exists() && auth.uid === $uid && newData.val() === 'leitung')",
+        ".validate": "newData.val() === 'leitung' || newData.val() === 'schiri'"
+      }
+    },
+    "pos": {
+      ".read": "root.child('roles').child(auth.uid).exists()",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "$uid": {
+        ".write": "auth.uid === $uid",
+        ".validate": "newData.child('lat').isNumber() && newData.child('lng').isNumber() && newData.child('t').isNumber()"
+      }
+    },
+    "game": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).exists()"
+    },
+    "handovers": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).exists()"
+    },
+    "locks": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).exists()"
+    },
+    "reports": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "$slot": {
+        ".write": "!data.exists() && (root.child('roles').child(auth.uid).exists() || root.child('game/mrx').val() === auth.uid)",
+        ".validate": "newData.child('team').val() === root.child('game/mrx').val() && newData.child('lat').isNumber() && newData.child('lng').isNumber()"
+      }
+    },
+    "secret": {
+      ".read": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'"
+    },
+    "stats": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "$uid": {
+        ".write": "auth.uid === $uid"
+      }
+    },
+    "chat": {
+      ".read": "auth != null",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "$id": {
+        ".write": "!data.exists() && newData.child('uid').val() === auth.uid && (newData.child('sys').val() !== true || root.child('roles').child(auth.uid).exists() || root.child('game/mrx').val() === auth.uid)",
+        ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 500"
+      }
+    },
+    "dm": {
+      ".read": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      ".write": "root.child('roles').child(auth.uid).val() === 'leitung'",
+      "$team": {
+        ".read": "auth.uid === $team",
+        "$id": {
+          ".write": "!data.exists() && newData.child('uid').val() === auth.uid && auth.uid === $team",
+          ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 500"
+        }
+      }
+    }
+  }
+}
