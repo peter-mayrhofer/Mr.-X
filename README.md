@@ -26,11 +26,14 @@ Danach läuft die App unter **https://mr-x-ooe.web.app**.
 
 ## Erster Start
 
-1. Spielleitung registriert sich als Team (z. B. „Spielleitung“) und drückt **„Ich bin die Spielleitung“**.
-   Das geht nur einmal – danach vergibt die Spielleitung alle weiteren Rollen.
+1. Spielleitung registriert sich über **„Ich bin Spielleitung“ → „Als Spielleitung registrieren“**.
+   Beim allerersten Mal ohne Code. Danach legt die Spielleitung unter „Rollen“ einen **Spielleitungs-Code** fest –
+   weitere Spielleitungen brauchen beim Registrieren diesen Code (oder werden unter „Rollen“ freigeschaltet).
 2. Schiris registrieren sich, die Spielleitung macht sie unter „Schiris“ zum Schiri.
 3. Jede Ortsgruppe registriert sich mit Teamname + Passwort auf **einem** Handy.
 4. Spielleitung wählt den Start-Mister-X und drückt **„Spiel starten“**.
+5. Nach Spielende wird das Spiel archiviert (Auswertung, Route von Mister X, Chat) und ist unter
+   **„Vergangene Spiele“** nachschaubar. Ein neues Spiel kann direkt gestartet werden.
 
 ## Testen
 

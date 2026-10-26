@@ -47,6 +47,11 @@
       <div class="row"><input id="lname" placeholder="Teamname (z. B. Ortsgruppe Urfahr)" autocomplete="username"></div>
       <div class="row"><input id="lpass" type="password" placeholder="Passwort (mind. 6 Zeichen)" autocomplete="current-password"></div>
       <div class="row"><button id="btnLogin">Anmelden</button><button id="btnRegister" class="alt">Neues Team registrieren</button></div>
+      <details>
+        <summary class="muted">Ich bin Spielleitung</summary>
+        <div class="row"><input id="lcode" type="password" placeholder="Spielleitungs-Code (beim allerersten Mal leer lassen)"></div>
+        <div class="row"><button id="btnRegLeitung" class="alt">Als Spielleitung registrieren</button></div>
+      </details>
       <p id="lerr" class="muted"></p>
     </section>
 
@@ -59,6 +64,12 @@
       <div id="map"></div>
 
       <section id="results" hidden></section>
+
+      <section id="archive" hidden>
+        <h2>Vergangene Spiele</h2>
+        <div class="row"><select id="archSel"></select></div>
+        <div id="archView"></div>
+      </section>
 
       <section id="staff" hidden>
         <h2>Übergabe (Schiri)</h2>
@@ -83,8 +94,10 @@
         <div class="row">Start-Mister-X <select id="sStart"></select><button id="btnStart">Spiel starten</button></div>
         <div class="row"><button id="btnStop">Notstopp: Spiel beenden</button><button id="btnReset" class="alt">Alles zurücksetzen</button></div>
         <p id="endInfo" class="muted"></p>
-        <h2>Schiris</h2>
-        <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnUnSchiri" class="alt">Rolle entfernen</button></div>
+        <h2>Rollen</h2>
+        <div class="row"><select id="rTeam"></select><button id="btnSchiri" class="alt">zum Schiri machen</button><button id="btnLeitung" class="alt">zur Spielleitung machen</button><button id="btnUnSchiri" class="alt">Rolle entfernen</button></div>
+        <div class="row"><input id="sCode" type="password" placeholder="neuer Spielleitungs-Code"><button id="btnCode" class="alt">Code festlegen</button></div>
+        <p class="muted">Mit diesem Code kann sich eine neue Spielleitung selbst registrieren.</p>
       </section>
 
       <section>

@@ -104,6 +104,39 @@ const read = async (path, tok) => (await fetch(`http://localhost:9000/${path}.js
   const texts = Object.values(chat).map((m) => m.text);
   console.log(texts.join("\n"));
   assert(texts.some((t) => t.startsWith("🏁")), "Spielende im Chat");
+
+  // Archiv: beendetes Spiel ist nachschaubar
+  await A.page.waitForSelector("#archive:not([hidden])");
+  await A.page.selectOption("#archSel", { index: 1 });
+  await A.page.waitForFunction(() => document.querySelector("#archView").textContent.includes("Letzter Mister X: Team A"));
+  console.log("Archiv:", (await A.page.textContent("#archView")).replace(/\s+/g, " ").slice(0, 160));
+
+  // Neue Spielleitung: falscher Code -> normales Team, richtiger Code -> Spielleitung
+  await L.page.fill("#sCode", "geheimcode");
+  await L.page.click("#btnCode");
+  async function regLeitung(n, code) {
+    const ctx = await browser.newContext({ geolocation: { latitude: 48.30, longitude: 14.29 }, permissions: ["geolocation"] });
+    const page = await ctx.newPage();
+    page.on("dialog", (d) => d.accept());
+    await page.goto(URL);
+    await page.fill("#lname", n); await page.fill("#lpass", "geheim123");
+    await page.click("details summary"); await page.fill("#lcode", code);
+    await page.click("#btnRegLeitung");
+    await page.waitForSelector("#app:not([hidden])");
+    await sleep(2000);
+    return page.isVisible("#leitung");
+  }
+  assert.equal(await regLeitung("Falsch", "nein123"), false, "falscher Code");
+  assert.equal(await regLeitung("Leitung Zwei", "geheimcode"), true, "richtiger Code");
+
+  // Neues Spiel: Chat leer, Archiv bleibt
+  await L.page.selectOption("#sStart", { label: "Team B" });
+  await L.page.click("#btnStart");
+  await B.page.waitForSelector(".banner.mrx");
+  await sleep(1000);
+  assert(!(await B.page.textContent("#msgs")).includes("Hallo alle"), "Chat geleert");
+  const arch = await (await fetch(`http://localhost:9000/archive.json?ns=${NS}`, { headers: { Authorization: "Bearer owner" } })).json();
+  assert.equal(Object.keys(arch).length, 1, "Archiv bleibt");
   await browser.close();
   console.log("OK");
 })().catch((e) => { console.error(e); process.exit(1); });

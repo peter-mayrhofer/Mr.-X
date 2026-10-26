@@ -49,14 +49,19 @@ const say = (text, sys = false) => push(ref(db, "chat"), { uid: S.me, name: name
 const email = (n) => `${n.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}@mrx-team.app`;
 const loginErr = (e) => { $("lerr").textContent = { "auth/invalid-credential": "Teamname oder Passwort falsch.", "auth/email-already-in-use": "Diesen Teamnamen gibt es schon.", "auth/weak-password": "Passwort zu kurz (mind. 6 Zeichen)." }[e.code] ?? e.message; };
 $("btnLogin").onclick = () => signInWithEmailAndPassword(auth, email($("lname").value), $("lpass").value).catch(loginErr);
-$("btnRegister").onclick = async () => {
+async function register(leitung) {
   const n = $("lname").value.trim();
-  if (!n) return loginErr({ message: "Bitte Teamnamen eingeben." });
+  if (!n) return loginErr({ message: "Bitte Namen eingeben." });
   try {
     const c = await createUserWithEmailAndPassword(auth, email(n), $("lpass").value);
     await set(ref(db, `teams/${c.user.uid}`), { name: n });
+    // Spielleitung: erlaubt, wenn es noch keine gibt oder der Code stimmt (geprüft in database.rules.json)
+    if (leitung) await update(ref(db), { [`claims/${c.user.uid}`]: $("lcode").value, [`roles/${c.user.uid}`]: "leitung" })
+      .catch(() => alert("Spielleitungs-Code falsch – du bist als normales Team angemeldet. Die Spielleitung kann dich nachträglich freischalten."));
   } catch (e) { loginErr(e); }
-};
+}
+$("btnRegister").onclick = () => register(false);
+$("btnRegLeitung").onclick = () => register(true);
 $("btnLogout").onclick = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, (u) => {
@@ -74,6 +79,7 @@ const sub = (path, key, after = renderAll) =>
 function start() {
   onValue(ref(db, ".info/serverTimeOffset"), (s) => { S.offset = s.val() ?? 0; });
   ["teams", "game", "reports", "handovers", "locks", "stats"].forEach((k) => sub(k, k));
+  sub("archive", "archive", renderArchive);
   sub("chat", "chat", renderChat);
   sub("roles", "roles", () => {
     if (isStaff() && !S.staffSubs) {
@@ -182,18 +188,27 @@ async function startGame(mrx) {
   const t = now(), lo = +$("sEndMin").value, hi = Math.max(lo, +$("sEndMax").value);
   await set(ref(db, "secret/endAt"), t + (lo + Math.random() * (hi - lo)) * 3600000);
   const key = push(ref(db, "handovers")).key;
+  // Nach einem beendeten Spiel ist alles archiviert -> Chat für das neue Spiel leeren
+  const fresh = S.game.status === "ended" ? { chat: null, dm: null } : {};
   await update(ref(db), {
     game: { ...settings(), status: "running", mrx, since: t, n0: 1, startedAt: t },
     handovers: { [key]: { to: mrx, at: t, type: "start" } },
-    reports: null, locks: null, stats: null,
+    reports: null, locks: null, stats: null, ...fresh,
   });
   say(`▶️ Spiel gestartet! ${name(mrx)} ist Mister X und hat ${g().interval} Min Vorsprung.`, true);
 }
 
 async function finish() {
   S.ending = true;
-  await update(ref(db, "game"), { status: "ended", endedAt: now() });
-  say(`🏁 Spielende! ${name(S.game.mrx)} ist der letzte Mister X und hat gewonnen!`, true);
+  const endedAt = now();
+  await update(ref(db, "game"), { status: "ended", endedAt });
+  await say(`🏁 Spielende! ${name(S.game.mrx)} ist der letzte Mister X und hat gewonnen!`, true);
+  // Spiel archivieren, damit es nach einem neuen Spiel noch nachschaubar ist
+  const names = Object.fromEntries(Object.entries(S.teams).map(([uid, t]) => [uid, t.name]));
+  await set(ref(db, `archive/${S.game.startedAt}`), {
+    game: { ...S.game, status: "ended", endedAt }, handovers: S.handovers, reports: S.reports, chat: S.chat, stats: S.stats, names, roles: S.roles,
+  });
+  S.ending = false;
 }
 
 const settings = () => ({
@@ -221,6 +236,13 @@ $("btnReset").onclick = () => confirm("Wirklich ALLES löschen (Spiel, Chat, Sta
   update(ref(db), { game: null, handovers: null, reports: null, locks: null, stats: null, chat: null, dm: null, secret: null });
 $("btnClaim").onclick = () => set(ref(db, `roles/${S.me}`), "leitung");
 $("btnSchiri").onclick = () => set(ref(db, `roles/${$("rTeam").value}`), "schiri");
+$("btnLeitung").onclick = () => confirm(`${name($("rTeam").value)} zur Spielleitung machen?`) && set(ref(db, `roles/${$("rTeam").value}`), "leitung");
+$("btnCode").onclick = () => {
+  const code = $("sCode").value.trim();
+  if (code.length < 6) return alert("Der Code muss mindestens 6 Zeichen haben.");
+  set(ref(db, "secret/leitungCode"), code).then(() => { $("sCode").value = ""; alert("Spielleitungs-Code gespeichert."); });
+};
+$("archSel").onchange = () => { renderArchive(); renderMap(); };
 $("btnUnSchiri").onclick = () => $("rTeam").value !== S.me && set(ref(db, `roles/${$("rTeam").value}`), null);
 $("tabAll").onclick = () => { S.tab = "all"; renderChat(); };
 $("tabDm").onclick = () => { S.tab = "dm"; renderChat(); };
@@ -235,7 +257,7 @@ $("chatForm").onsubmit = (e) => {
 };
 
 // ---------- Karte ----------
-let map, zoneLayer;
+let map, zoneLayer, archLayer;
 function setupMap() {
   map = L.map("map").fitBounds(BASE);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
@@ -270,6 +292,13 @@ function renderMap() {
   if (isStaff()) {
     for (const uid of teamIds()) if (S.pos[uid] && uid !== S.me)
       dot(uid, S.pos[uid], uid === G.mrx ? "#c8102e" : "#666", `${uid === G.mrx ? "🚩 " : ""}${name(uid)} ${clock(S.pos[uid].t)}`);
+  }
+  archLayer?.remove();
+  const A = S.archive?.[$("archSel").value];
+  if (A && S.game.status !== "running") {
+    const rs = sorted(A.reports ?? {});
+    archLayer = L.layerGroup([L.polyline(rs.map((r) => [r.lat, r.lng]), { color: "#c8102e", weight: 3, dashArray: "6 6" }),
+      ...rs.map((r) => L.circleMarker([r.lat, r.lng], { radius: 5, color: "#c8102e" }).bindTooltip(`${A.names?.[r.team] ?? "?"} ${clock(r.pt ?? r.t)}`))]).addTo(map);
   }
   const last = sorted(S.reports).at(-1);
   if (last) dot("report", last, "#c8102e", `Mister X ${clock(last.pt ?? last.t)}`);
@@ -331,30 +360,51 @@ function renderAll() {
     CUTS.forEach((_, i) => { $(`cut${i}`).checked = G.cuts.includes(i); });
   }
   renderResults();
+  renderArchive();
   renderMap();
   renderStatus();
   renderChat();
 }
 
-function renderResults() {
-  const G = g();
-  $("results").hidden = G.status !== "ended";
-  if (G.status !== "ended") return;
-  const hs = sorted(S.handovers), time = {}, count = {};
+function resultsHtml(G, handovers, stats, nameOf, teams) {
+  const hs = sorted(handovers ?? {}), time = {}, count = {};
   hs.forEach((h, i) => {
     time[h.to] = (time[h.to] ?? 0) + (hs[i + 1]?.at ?? G.endedAt) - h.at;
     count[h.to] = (count[h.to] ?? 0) + 1;
   });
-  const distance = Object.fromEntries(teamIds().map((uid) => [uid, S.stats[uid]?.dist ?? 0]));
+  const distance = Object.fromEntries(teams.map((uid) => [uid, stats?.[uid]?.dist ?? 0]));
   const top = (o, fmt) => {
     const [uid, v] = Object.entries(o).sort((a, b) => b[1] - a[1])[0] ?? [];
-    return uid ? `${esc(name(uid))} (${fmt(v)})` : "–";
+    return uid ? `${esc(nameOf(uid))} (${fmt(v)})` : "–";
   };
-  $("results").innerHTML = `<h2>🏆 Auswertung</h2><ul>
-    <li>Letzter Mister X: <b>${esc(name(G.mrx))}</b></li>
+  return `<ul>
+    <li>Letzter Mister X: <b>${esc(nameOf(G.mrx))}</b></li>
     <li>Am längsten Mister X: ${top(time, (v) => `${Math.round(v / 60000)} Min`)}</li>
     <li>Am öftesten Mister X: ${top(count, (v) => `${v}×`)}</li>
     <li>Meiste Distanz: ${top(distance, (v) => `${(v / 1000).toFixed(1)} km`)}</li></ul>`;
+}
+
+function renderResults() {
+  const G = g();
+  $("results").hidden = G.status !== "ended";
+  if (G.status === "ended") $("results").innerHTML = `<h2>🏆 Auswertung</h2>${resultsHtml(G, S.handovers, S.stats, name, teamIds())}`;
+}
+
+const day = (t) => new Date(+t).toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" });
+function renderArchive() {
+  const ids = Object.keys(S.archive ?? {}).sort().reverse();
+  $("archive").hidden = !ids.length || S.game.status === "running";
+  const html = `<option value="">– Spiel auswählen –</option>` + ids.map((id) => `<option value="${id}">${day(id)}</option>`).join("");
+  if ($("archSel").dataset.html !== html) { const v = $("archSel").value; $("archSel").innerHTML = $("archSel").dataset.html = html; $("archSel").value = v; }
+  const A = S.archive?.[$("archSel").value];
+  if (!A) { $("archView").innerHTML = ""; return; }
+  const nameOf = (uid) => A.names?.[uid] ?? "?";
+  const teams = Object.keys(A.names ?? {}).filter((uid) => !A.roles?.[uid]);
+  const dur = Math.round((A.game.endedAt - A.game.startedAt) / 60000);
+  $("archView").innerHTML = `<p class="muted">${day(A.game.startedAt)} · ${Math.floor(dur / 60)} h ${dur % 60} min · Route von Mister X auf der Karte</p>
+    ${resultsHtml(A.game, A.handovers, A.stats, nameOf, teams)}
+    <details><summary>Chat-Verlauf (${Object.keys(A.chat ?? {}).length})</summary><div class="msgs">${sorted(A.chat ?? {}).map((m) =>
+      `<div class="msg${m.sys ? " sys" : ""}"><small>${clock(m.t)} ${esc(m.name)}</small><br>${esc(m.text)}</div>`).join("")}</div></details>`;
 }
 
 function renderChat() {
