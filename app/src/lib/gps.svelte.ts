@@ -5,6 +5,7 @@ import { ref, set } from "firebase/database";
 import { distanceM, type Position } from "@mrx/shared";
 import { db } from "./firebase.ts";
 import { clock } from "./clock.svelte.ts";
+import { NATIVE, restSet, stopNative, watchNative } from "./native.ts";
 
 const MOVE_MS = 10_000;
 const KEEP_MS = 30_000;
@@ -36,8 +37,32 @@ function onErr(e: GeolocationPositionError) {
   gps.error = e.code === e.PERMISSION_DENIED ? "denied" : "unavailable";
 }
 
-/** GPS starten (fragt beim ersten Mal nach der Erlaubnis). Mehrfach aufrufen ist harmlos. */
-export function startGps() {
+let nativeMode: boolean | null = null;
+
+/**
+ * GPS starten (fragt beim ersten Mal nach der Erlaubnis). Mehrfach aufrufen ist harmlos.
+ * Android-App: `background` = auch bei ausgeschaltetem Bildschirm (Dauer-Benachrichtigung).
+ */
+export function startGps(background = true) {
+  if (NATIVE) {
+    if (nativeMode === background) return;
+    nativeMode = background;
+    void watchNative(
+      background,
+      (l) => {
+        gps.error = null;
+        gps.pos = {
+          lat: l.latitude,
+          lng: l.longitude,
+          acc: Math.round(l.accuracy),
+          t: Math.min(Math.round((l.time ?? Date.now()) + clock.offset), Date.now() + clock.offset),
+          ...(l.bearing !== null && Number.isFinite(l.bearing) ? { heading: Math.round(l.bearing) % 360 } : {}),
+        };
+      },
+      () => (gps.error = "denied"),
+    ).catch(() => (gps.error = "unavailable"));
+    return;
+  }
   if (!("geolocation" in navigator)) {
     gps.error = "unavailable";
     return;
@@ -58,6 +83,10 @@ export function startGps() {
 }
 
 export function stopGps() {
+  if (NATIVE) {
+    nativeMode = null;
+    void stopNative();
+  }
   if (watchId !== null) navigator.geolocation.clearWatch(watchId);
   clearInterval(keep);
   watchId = null;
@@ -78,12 +107,9 @@ export function sendPosition(path: () => string | null, uid: () => string | unde
     const target = path();
     if (!p || !target || !shouldSend(last, p)) return;
     last = p;
-    void set(ref(db, target), {
-      ...p,
-      uid: uid(),
-      ...extra(),
-      ...(gps.battery !== undefined ? { battery: gps.battery } : {}),
-    }).catch(() => (last = null)); // offline: beim nächsten Punkt nochmal
+    const value = { ...p, uid: uid(), ...extra(), ...(gps.battery !== undefined ? { battery: gps.battery } : {}) };
+    // Android-App: natives HTTP, weil Android das Netzwerk der WebView im Hintergrund drosselt
+    void (NATIVE ? restSet(target, value) : set(ref(db, target), value)).catch(() => (last = null)); // offline: beim nächsten Punkt nochmal
   });
 }
 

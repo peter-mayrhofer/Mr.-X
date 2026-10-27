@@ -3,6 +3,7 @@
 import { onValue, ref, serverTimestamp, set, update } from "firebase/database";
 import { PUSH_KINDS, type PushKind, type PushReg } from "@mrx/shared";
 import { app, db, EMU, VAPID_KEY } from "./firebase.ts";
+import { NATIVE, nativePushToken } from "./native.ts";
 
 export type PushStatus = "an" | "aus" | "verweigert" | "nichtMoeglich";
 
@@ -23,21 +24,35 @@ export class PushState {
   /** Eigene Anmeldung live lesen und – wenn schon erlaubt – den Token still erneuern (Tokens wechseln gelegentlich) */
   watch(g: string, uid: string): () => void {
     this.#path = `games/${g}/push/${uid}`;
+    if (NATIVE) {
+      // Android-App: Erlaubnis und Token kommen nativ; bei jedem Start still erneuern
+      const off = onValue(ref(db, this.#path), (s) => this.#read(s.val() as PushReg | null));
+      void this.enable(true);
+      return off;
+    }
     if (!pushPossible() && !EMU) this.status = "nichtMoeglich";
     else if ("Notification" in window && Notification.permission === "denied") this.status = "verweigert";
-    const off = onValue(ref(db, this.#path), (s) => {
-      const v = s.val() as PushReg | null;
-      if (v) {
-        this.status = "an";
-        for (const k of PUSH_KINDS) this.prefs[k] = v.prefs?.[k] !== false;
-      } else if (this.status === "an") this.status = "aus";
-    });
+    const off = onValue(ref(db, this.#path), (s) => this.#read(s.val() as PushReg | null));
     if ("Notification" in window && Notification.permission === "granted") void this.enable(true);
     return off;
   }
 
+  #read(v: PushReg | null) {
+    if (v) {
+      this.status = "an";
+      for (const k of PUSH_KINDS) this.prefs[k] = v.prefs?.[k] !== false;
+    } else if (this.status === "an") this.status = "aus";
+  }
+
   /** Erlaubnis anfragen und registrieren. `silent`: nur erneuern, nicht fragen. */
   async enable(silent = false): Promise<PushStatus> {
+    if (NATIVE) {
+      // Android fragt nur beim ersten Mal; danach liefert requestPermissions sofort das Ergebnis
+      const t = await nativePushToken().catch(() => null);
+      if (!t) return (this.status = silent ? this.status : "verweigert");
+      await set(ref(db, this.#path), { token: t, platform: "android", prefs: $state.snapshot(this.prefs), t: serverTimestamp() });
+      return (this.status = "an");
+    }
     try {
       if (!("Notification" in window)) return (this.status = "nichtMoeglich");
       const perm = silent ? Notification.permission : await Notification.requestPermission();

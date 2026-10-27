@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Benachrichtigungs-Symbol (einfarbig, Android färbt es ein): Fahne aus dem App-Icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M152,104 L184,104 L184,412 L152,412 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M184,112c48,-28 96,-28 144,0s96,28 128,8v168c-32,20 -80,20 -128,-8s-96,-28 -144,0z" />
+</vector>

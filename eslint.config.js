@@ -6,7 +6,7 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig(
-  { ignores: ["**/dist/", "legacy/", "docs/", "**/node_modules/", "functions/lib/"] },
+  { ignores: ["**/dist/", "legacy/", "docs/", "**/node_modules/", "functions/lib/", "app/android/"] },
   js.configs.recommended,
   ts.configs.recommended,
   svelte.configs.recommended,

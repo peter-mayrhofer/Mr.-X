@@ -15,7 +15,7 @@
   import AdminLog from "../screens/admin/AdminLog.svelte";
   import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
   import { GameData, pokeWhenDue, sendMessage } from "../lib/game.svelte.ts";
-  import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
+  import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { PushState } from "../lib/push.svelte.ts";
@@ -46,7 +46,9 @@
 
   // Schiri: Standort mit Namen (Karte der anderen Schiris, Ersatz-Standort für Mister X)
   $effect(() => {
-    if (!isAdmin) startGps();
+    if (isAdmin || phase === "beendet") return;
+    startGps(prefs.background);
+    return () => stopGps();
   });
   sendPosition(
     () => (!isAdmin && phase && phase !== "beendet" ? `games/${g}/staffPos/${uid}` : null),

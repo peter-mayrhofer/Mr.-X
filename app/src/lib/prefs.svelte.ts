@@ -6,6 +6,8 @@ interface Stored {
   sound: boolean;
   wake: boolean;
   onboarded: boolean;
+  /** Android-App: Standort auch bei ausgeschaltetem Bildschirm senden */
+  background: boolean;
 }
 
 function load(): Partial<Stored> {
@@ -20,11 +22,12 @@ class Prefs {
   sound = $state(true);
   wake = $state(true);
   onboarded = $state(false);
+  background = $state(true);
   constructor() {
     Object.assign(this, load());
     $effect.root(() => {
       $effect(() => {
-        const v: Stored = { sound: this.sound, wake: this.wake, onboarded: this.onboarded };
+        const v: Stored = { sound: this.sound, wake: this.wake, onboarded: this.onboarded, background: this.background };
         setMuted(!v.sound);
         try {
           localStorage.setItem(KEY, JSON.stringify(v));

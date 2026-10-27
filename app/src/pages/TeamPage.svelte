@@ -12,10 +12,11 @@
   import ChatView from "../screens/parts/ChatView.svelte";
   import AppBar from "../ui/AppBar.svelte";
   import { GameData, pokeWhenDue, sendMessage, type Msg } from "../lib/game.svelte.ts";
-  import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
+  import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { PushState } from "../lib/push.svelte.ts";
+  import { battery, NATIVE } from "../lib/native.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import { signal } from "../lib/signal.ts";
   import { leaveGame } from "../lib/session.svelte.ts";
@@ -45,8 +46,11 @@
   let chatOnly = $state(false);
 
   // Standort: ab dem Beitritt (Spielleitung sieht im Warteraum, ob GPS klappt), nach dem Ende nie mehr (Datenschutz)
+  // GPS (in der Android-App samt Dauer-Benachrichtigung) nur, solange gespielt wird; beim Verlassen beenden
   $effect(() => {
-    if (prefs.onboarded) startGps();
+    if (!prefs.onboarded || phase === "beendet") return;
+    startGps(prefs.background);
+    return () => stopGps();
   });
   sendPosition(
     () => (teamId && phase && phase !== "beendet" ? `games/${g}/pos/${teamId}` : null),
@@ -201,12 +205,13 @@
 {#if !prefs.onboarded}
   <Onboarding
     actions={{
-      1: () => startGps(),
+      1: () => startGps(prefs.background),
       2: async () => void (await push.enable()),
+      ...(NATIVE ? { 3: () => battery.request() } : {}),
     }}
     ondone={() => {
       prefs.onboarded = true;
-      startGps();
+      startGps(prefs.background);
     }}
   />
 {:else if !view || !game.config || (phase === "beendet" && !archive.value)}

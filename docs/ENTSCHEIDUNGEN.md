@@ -214,3 +214,14 @@ System-Benachrichtigung. Ungültige Tokens werden beim Senden gelöscht. Im Emul
 Benachrichtigung im Postausgang `pushOutbox/{g}`, so prüfen die Tests die Empfänger.
 **Warum:** Kein Gerät kann anderen Pushes schicken (Fälschungssicherheit), ein Service Worker ohne Offline-Cache
 verhindert veraltete App-Versionen, und die Empfängerauswahl ist als reine Funktion (`shared/push.ts`) getestet.
+
+### E-31 Android-App mit Capacitor, Web-Inhalte in der APK
+**Entscheidung:** Die Android-App packt die gebaute Web-App in die APK (keine Fernladung von der Website). Nativ
+ergänzt werden nur: Standort über `@capacitor-community/background-geolocation` (Vordergrund-Dienst mit
+Dauer-Benachrichtigung), Senden per nativem HTTP an die REST-Schnittstelle der Datenbank (gleiche Rules, ID-Token),
+Push über `@capacitor/push-notifications` und ein eigenes 30-Zeilen-Plugin „Akku“ für den Dialog
+„Akku-Optimierung ausschalten“. Signiert wird ausschließlich in GitHub Actions mit Secrets.
+**Warum:** Kostenlos und ohne Play Store verteilbar; das Netzwerk der WebView wird von Android im Hintergrund nach
+einigen Minuten gedrosselt, natives HTTP nicht. Kommerzielle Hintergrund-Standort-Plugins wären für Release-Builds
+kostenpflichtig.
+**Verworfen:** App lädt die Website (`server.url`) – von Capacitor nicht für den Produktivbetrieb vorgesehen.

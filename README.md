@@ -18,14 +18,15 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 6 – Schiri & Spielleitung | Schiri: Karte aller Teams, nächste Jäger, Übergabe nach Nähe mit Wartezeit-Vorschau, Rückgängig, „Ich begleite Mister X“. Spielleitung: Live-Übersicht mit Warnungen, Start (wählen/auslosen), Pause, Notstopp, Regeln live, Verkleinerung, Sofort-Meldung, Durchsage, Teams & Zugänge, Postfach, Protokoll | fertig |
 | 7 – Spielfeld & Spiele | Zonen-Editor (Punkte ziehen/einfügen/löschen, Sperrbereiche mit Name, Farbe, Reihenfolge, Toleranz, Vorschau, Prüfung, GeoJSON-Import/-Export, Linz-Vorlage), Speichern mit Prüfung am Server; Organisator: Spiele öffnen ohne Passwort, archivieren, reaktivieren, löschen | fertig |
 | 8 – Benachrichtigungen | Push über Firebase Cloud Messaging bei allen Spielereignissen, Push-Arten pro Gerät, Web-App-Manifest (iPhone: Home-Bildschirm), Ton/Vibration in der App | fertig |
-| 9–13 | Android-App, Großbild, Archiv & Replay, Tracker, Härtung, Abnahme | in Arbeit |
+| 9 – Android-App | Capacitor-App mit Standort im Hintergrund (Vordergrund-Dienst, natives HTTP), nativen Benachrichtigungen, Akku-Optimierung, eigenen Icons; signierte APK per GitHub Action ([`docs/ANDROID-APK.md`](docs/ANDROID-APK.md)) | fertig |
+| 10–13 | Großbild, Archiv & Replay, Tracker, Härtung, Abnahme | in Arbeit |
 
 ## Ordner
 
 | Ordner | Inhalt |
 |---|---|
 | `shared/` | Spiel-Logik ohne Firebase (Geometrie, Spielfeld Linz, Regeln) – mit Tests |
-| `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/pages/` = Seiten mit Daten, `src/map/` = Karte, `src/texte.ts` = alle Texte |
+| `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/pages/` = Seiten mit Daten, `src/map/` = Karte, `src/texte.ts` = alle Texte, `android/` = Android-Projekt (Capacitor) |
 | `functions/` | Spiel-Server (Cloud Functions): Beitritt, Passwörter, Spiele anlegen, der ganze Spielablauf (`ablauf.ts`, `actions/`), Takt, Strecken-Berechnung |
 | `database.rules.json` | Zugriffsregeln der Datenbank (wer darf was lesen/schreiben) |
 | `tests/` | Rechte-Tests, Server-Tests, Ende-zu-Ende-Tests mit simulierten Handys, Screenshot-Skript |

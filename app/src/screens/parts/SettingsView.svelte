@@ -10,6 +10,7 @@
   import { theme, type ThemeChoice } from "../../lib/theme.svelte.ts";
   import { signal } from "../../lib/signal.ts";
   import { prefs } from "../../lib/prefs.svelte.ts";
+  import { NATIVE } from "../../lib/native.ts";
   import type { PushState } from "../../lib/push.svelte.ts";
   import { PUSH_KINDS } from "@mrx/shared";
   import Banner from "../../ui/Banner.svelte";
@@ -19,11 +20,9 @@
     onlogout: () => void;
     /** Push auf diesem Gerät – ohne Angabe wird der Bereich nicht gezeigt (z. B. Großbild) */
     push?: PushState | undefined;
-    /** Hintergrund-Standort gibt es nur in der Android-App (Meilenstein 9) */
-    background?: { checked: boolean };
   }
 
-  let { onlogout, push, background }: Props = $props();
+  let { onlogout, push }: Props = $props();
 
   let choice = $state<ThemeChoice>(theme.choice);
   let confirmOut = $state(false);
@@ -63,11 +62,12 @@
   {/if}
 
   <Card label={T.einstellungen.standort} icon={MapPin}>
-    {#if background}
+    <!-- Hintergrund-Standort gibt es nur in der Android-App -->
+    {#if NATIVE}
       <Switch
         label={T.einstellungen.hintergrund}
         hint="Dauer-Benachrichtigung „Mister X läuft – Standort wird geteilt“"
-        bind:checked={background.checked}
+        bind:checked={prefs.background}
       />
     {/if}
     <Switch label={T.einstellungen.wach} bind:checked={prefs.wake} />

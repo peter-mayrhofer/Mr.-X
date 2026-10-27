@@ -6,7 +6,7 @@ import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 
 export const EMU = import.meta.env.MODE === "emu";
-const DATABASE_URL = "https://mr-x-ooe-neu.europe-west1.firebasedatabase.app";
+export const DATABASE_URL = "https://mr-x-ooe-neu.europe-west1.firebasedatabase.app";
 
 export const app = initializeApp({
   apiKey: EMU ? "demo" : "AIzaSyDtNPyDBqWVMcCv1MQsizkUSxAPhVEcvfg",
