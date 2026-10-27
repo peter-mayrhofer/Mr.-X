@@ -55,7 +55,9 @@ describe("Spielfeld speichern", () => {
     for (const field of bad) expect(reason(await run(admin.token, "setField", { field }))).toBe("invalid");
   });
   it("gültiges Feld wird gespeichert, Ring wird geschlossen", async () => {
-    expect((await run(admin.token, "setField", { field: { name: "Quadrat", toleranceM: 15, base: sq(0.01), cuts: {} } })).result).toEqual({});
+    expect((await run(admin.token, "setField", { field: { name: "Quadrat", toleranceM: 15, base: sq(0.01), cuts: {} } })).result).toEqual(
+      {},
+    );
     const f = await val(`games/${G}/field`);
     expect(f.base).toHaveLength(5);
     expect(f.base[4]).toEqual(f.base[0]);
@@ -101,7 +103,10 @@ describe("Spiele verwalten (Organisator)", () => {
     expect(await val(`games/${G}/members`)).toEqual({});
     expect((await games()).map((g) => g.id)).not.toContain(G);
     expect(reason(await call(null, { action: "gameInfo", gameId: G }))).toBe("notFound");
-    await eventually(async () => phone.bye, (b) => b !== null);
+    await eventually(
+      async () => phone.bye,
+      (b) => b !== null,
+    );
     expect(phone.bye).toBe("removed");
   });
 });

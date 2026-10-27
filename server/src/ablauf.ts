@@ -1,6 +1,16 @@
 // Spielablauf am Server (KONZEPT Abschnitt 5 + 6): Mister X melden, Wartezeiten beenden, Spielende mit Auswertung und
 // Archiv. Alle Zeiten sind Server-Zeit. Läuft im Spielraum – eine Sache nach der anderen, darum ohne Transaktionen.
-import { bestPosition, MELDUNG, PUSH_TITLE, results, uhr, type Position, type Report, type ReportKind, type ReportSource } from "@mrx/shared";
+import {
+  bestPosition,
+  MELDUNG,
+  PUSH_TITLE,
+  results,
+  uhr,
+  type Position,
+  type Report,
+  type ReportKind,
+  type ReportSource,
+} from "@mrx/shared";
 import { DAY, MIN, newKey } from "./util.ts";
 import type { Data, GameRoom } from "./room.ts";
 

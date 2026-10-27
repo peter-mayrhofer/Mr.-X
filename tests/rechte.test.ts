@@ -217,7 +217,10 @@ describe("Angriffsversuche", () => {
     const other = await join("anderes-spiel", "admin", "Fremd", "admin1234");
     expect(reason(await call(other.token, { action: "announce", gameId: G, text: "Hallo" }))).toBe("unauthenticated");
     const w = raw(other.token);
-    await eventually(async () => w.msgs.length, (n) => n > 0);
+    await eventually(
+      async () => w.msgs.length,
+      (n) => n > 0,
+    );
     expect(w.msgs[0]!.t === "snap" && w.msgs[0].view.info.name).toBe("Anderes"); // verbunden mit dem eigenen Spiel
     w.ws.close();
   });
@@ -227,7 +230,10 @@ describe("Verbindung: Token, Version, Wiederverbinden", () => {
   it("gefälschtes Token → Hinweis „Sitzung“ und Ende", async () => {
     const [body] = t1.token.split(".");
     const w = raw(`${body}.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`);
-    await eventually(async () => w.closed, (c) => c !== null);
+    await eventually(
+      async () => w.closed,
+      (c) => c !== null,
+    );
     expect(w.msgs).toEqual([{ t: "bye", reason: "session" }]);
     expect(w.closed).toBe(4002);
   });
@@ -235,29 +241,50 @@ describe("Verbindung: Token, Version, Wiederverbinden", () => {
     const d = await join(G, "team", "Urfahr", "falke27", { secondDevice: true });
     await ok(admin, "removeMember", { uid: d.uid });
     const w = raw(d.token);
-    await eventually(async () => w.closed, (c) => c !== null);
+    await eventually(
+      async () => w.closed,
+      (c) => c !== null,
+    );
     expect(w.msgs).toEqual([{ t: "bye", reason: "session" }]);
   });
   it("alte App-Version → freundlich zum Neuladen auffordern", async () => {
     const w = raw(t1.token, 0);
-    await eventually(async () => w.closed, (c) => c !== null);
+    await eventually(
+      async () => w.closed,
+      (c) => c !== null,
+    );
     expect(w.msgs).toEqual([{ t: "bye", reason: "version" }]);
     expect(w.closed).toBe(4003);
   });
   it("Herzschlag ping → pong (ohne den Spielraum aufzuwecken)", async () => {
     const w = raw(t1.token);
-    await eventually(async () => w.msgs.length, (n) => n > 0);
+    await eventually(
+      async () => w.msgs.length,
+      (n) => n > 0,
+    );
     w.ws.send("ping");
-    await eventually(async () => w.texts.includes("pong"), (x) => x);
+    await eventually(
+      async () => w.texts.includes("pong"),
+      (x) => x,
+    );
     w.ws.close();
   });
   it("Lücke/Neustart: „resync“ liefert einen frischen Snapshot mit neuer Zählung", async () => {
     const w = raw(t1.token);
-    await eventually(async () => w.msgs.length, (n) => n > 0);
+    await eventually(
+      async () => w.msgs.length,
+      (n) => n > 0,
+    );
     await ok(admin, "announce", { text: "Test" });
-    await eventually(async () => w.msgs.length, (n) => n > 1);
+    await eventually(
+      async () => w.msgs.length,
+      (n) => n > 1,
+    );
     w.ws.send(JSON.stringify({ t: "resync" }));
-    await eventually(async () => w.msgs.at(-1)!.t, (t) => t === "snap");
+    await eventually(
+      async () => w.msgs.at(-1)!.t,
+      (t) => t === "snap",
+    );
     expect(w.msgs.at(-1)).toMatchObject({ t: "snap", seq: 1 });
     w.ws.close();
   });
@@ -267,11 +294,23 @@ describe("Verbindung: Token, Version, Wiederverbinden", () => {
     const snaps = () => wires.t2!.msgs.filter((m) => m.t === "snap").length;
     expect(snaps()).toBe(1);
     await drop(G);
-    await eventually(async () => c.live.online, (on) => !on, 3000);
+    await eventually(
+      async () => c.live.online,
+      (on) => !on,
+      3000,
+    );
     c.sendPos(pos(0.004)); // offline → wartet
     // wieder online (1 s Pause), frischer Snapshot, Standort angekommen
-    await eventually(async () => c.live.online, (on) => on, 5000);
-    await eventually(() => val(`games/${G}/positions/${t2.teamId}/lat`), (lat) => Math.abs(lat - 48.3099) < 1e-6, 5000);
+    await eventually(
+      async () => c.live.online,
+      (on) => on,
+      5000,
+    );
+    await eventually(
+      () => val(`games/${G}/positions/${t2.teamId}/lat`),
+      (lat) => Math.abs(lat - 48.3099) < 1e-6,
+      5000,
+    );
     expect(c.bye).toBeNull();
     c.close();
   });

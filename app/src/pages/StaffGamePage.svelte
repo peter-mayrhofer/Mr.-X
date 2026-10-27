@@ -14,9 +14,9 @@
   import AdminTeams from "../screens/admin/AdminTeams.svelte";
   import AdminLog from "../screens/admin/AdminLog.svelte";
   import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
-  import { GameData, pokeWhenDue, sendMessage } from "../lib/game.svelte.ts";
+  import { GameData, sendMessage } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
-  import { live } from "../lib/live.svelte.ts";
+  import { remote } from "../lib/remote.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { PushState } from "../lib/push.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
@@ -38,7 +38,7 @@
 
   const isAdmin = $derived(member.role === "admin");
   const game = new GameData();
-  $effect(() => game.watch(g, { chat: true, live: true, admin: isAdmin }));
+  $effect(() => game.watch());
   // Schiris: Push wie Teams (Meldungen, Übergaben, Durchsagen); die Spielleitung sitzt meist am Laptop
   const push = new PushState();
   $effect(() => (isAdmin ? undefined : push.watch(g, uid)));
@@ -50,16 +50,8 @@
     startGps(prefs.background);
     return () => stopGps();
   });
-  sendPosition(
-    () => (!isAdmin && phase && phase !== "beendet" ? `games/${g}/staffPos/${uid}` : null),
-    () => uid,
-    () => ({ name: member.name }),
-  );
+  sendPosition(() => !isAdmin && !!phase && phase !== "beendet");
   keepAwake(() => !isAdmin && prefs.wake && (phase === "laeuft" || phase === "pause"));
-  pokeWhenDue(
-    () => g,
-    () => game.state,
-  );
 
   // Spielleitung: neue Direktnachrichten melden, gelesen-Stand pro Team
   let seen = $state<Record<string, number>>({});
@@ -105,8 +97,9 @@
       : null,
   );
 
-  const archive = live<{ results: ResultsT; teams: Record<string, Team> }>(() =>
-    phase === "beendet" && game.state?.run ? `games/${g}/archive/${game.state.run}` : null,
+  const archive = remote(
+    () => (phase === "beendet" && game.state?.run ? game.state.run : null),
+    async (run) => (await call({ action: "archiveGet", gameId: g, run })).archive as { results: ResultsT; teams: Record<string, Team> },
   );
 
   const SECTIONS: Section[] = ["live", "steuerung", "teams", "zonen", "chat", "protokoll"];

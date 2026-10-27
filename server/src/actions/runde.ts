@@ -18,7 +18,20 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
   room.setState({ phase: "vorbereitung", rev: st.rev });
   room.set("info", { ...room.d.info!, phase: "vorbereitung" });
   room.set("secrets", { ...room.d.secrets, teamPw: undefined });
-  for (const k of ["teams", "reports", "handovers", "locks", "stats", "chat", "dm", "pauses", "cutLog", "positions", "staff", "track"] as const)
+  for (const k of [
+    "teams",
+    "reports",
+    "handovers",
+    "locks",
+    "stats",
+    "chat",
+    "dm",
+    "pauses",
+    "cutLog",
+    "positions",
+    "staff",
+    "track",
+  ] as const)
     room.set(k, {});
   room.set("purgeAt", null);
   room.audit(who, "Neue Runde vorbereitet");
@@ -41,7 +54,8 @@ export function removeTeam(room: GameRoom, d: D, a: Auth): ApiResults["removeTea
   const team = room.d.teams[t];
   if (!team) fail("invalid", "Team unbekannt");
   const st = room.d.state;
-  if (st.mrx === t && (st.phase === "laeuft" || st.phase === "pause")) fail("conflict", "Mister X kann nicht entfernt werden – zuerst übergeben");
+  if (st.mrx === t && (st.phase === "laeuft" || st.phase === "pause"))
+    fail("conflict", "Mister X kann nicht entfernt werden – zuerst übergeben");
   room.put("teams", t, null);
   room.put("positions", t, null);
   room.put("locks", t, null);

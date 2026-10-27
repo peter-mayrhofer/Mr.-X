@@ -29,16 +29,12 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci
+      # Adresse des Spiel-Servers fest in die App (Repository-Variable MRX_API_URL, docs/ANDROID-APK.md)
       - run: npm -w app run build
+        env:
+          VITE_API_URL: ${{ vars.MRX_API_URL || 'https://mister-x.mr-x-ooe.workers.dev' }}
       - run: npx cap sync android
         working-directory: app
-
-      # Firebase-Konfiguration für Push (aus der Firebase-Konsole, als Base64 im Secret GOOGLE_SERVICES_JSON)
-      - name: google-services.json
-        env:
-          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: |
-          if [ -n "$GOOGLE_SERVICES_JSON" ]; then echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/android/app/google-services.json; fi
 
       - name: Signier-Schlüssel
         if: env.SIGNED == 'true'

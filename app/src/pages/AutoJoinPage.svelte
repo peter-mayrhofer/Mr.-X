@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
-  import { ensureDevice } from "../lib/session.svelte.ts";
+  import { startSession } from "../lib/session.svelte.ts";
   import { call } from "../lib/api.ts";
   import { go, query } from "../lib/router.svelte.ts";
 
@@ -13,8 +13,7 @@
   async function join() {
     failed = false;
     try {
-      await ensureDevice();
-      await call({ action: "join", gameId, role, name: "", secret: query().get("k") ?? "" });
+      startSession(gameId, await call({ action: "join", gameId, role, name: "", secret: query().get("k") ?? "" }));
       go("/spiel");
     } catch {
       failed = true;

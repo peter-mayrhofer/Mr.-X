@@ -1,6 +1,17 @@
 // Worker (E-32): liefert die App aus und leitet weiter – Befehle (POST /api) und Live-Verbindungen (/ws) an den Spielraum
 // des Spiels, Organisator-Login an die Zentrale. Prüft Tokens, sonst bewusst dünn: die Spielregeln stehen im Spielraum.
-import { GAME_ID, PROTOCOL_VERSION, WS_CLOSE, type ApiCall, type ApiReason, type ApiReply, type GameListEntry, type JoinResult, type NativePosIn, type ServerMsg } from "@mrx/shared";
+import {
+  GAME_ID,
+  PROTOCOL_VERSION,
+  WS_CLOSE,
+  type ApiCall,
+  type ApiReason,
+  type ApiReply,
+  type GameListEntry,
+  type JoinResult,
+  type NativePosIn,
+  type ServerMsg,
+} from "@mrx/shared";
 import { verify } from "./auth.ts";
 import { ensureSchema } from "./d1.ts";
 import { DAY, type Env } from "./util.ts";

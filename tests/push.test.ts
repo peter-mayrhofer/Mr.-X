@@ -3,7 +3,20 @@
 // `to` = alle Empfänger (über die Verbindung, Android-App), `push` = davon per Web-Push (Abo, App nicht sichtbar).
 import { beforeAll, describe, expect, it } from "vitest";
 import { MELDUNG, PUSH_TITLE } from "@mrx/shared";
-import { call, connect, eventually, join, outbox as readOutbox, resetServer, set, SERVER, sleep, superAdminToken, val, type Device } from "./helpers.ts";
+import {
+  call,
+  connect,
+  eventually,
+  join,
+  outbox as readOutbox,
+  resetServer,
+  set,
+  SERVER,
+  sleep,
+  superAdminToken,
+  val,
+  type Device,
+} from "./helpers.ts";
 
 const G = "push-test";
 let admin: Device;
@@ -28,7 +41,10 @@ const pushed = (o: Out[], title: string) =>
     .flatMap((x) => x.push)
     .sort();
 const at = (dLat: number) => ({ lat: 48.3059 + dLat, lng: 14.2862, acc: 8, t: Date.now() });
-const sub = (n: string) => ({ endpoint: `https://push.example.net/${n}`, keys: { p256dh: "BCVxsr7N_eNgVRqvHtD0zTZsEc6", auth: "BTBZMqHH6r4Tts7J_aSIgg" } });
+const sub = (n: string) => ({
+  endpoint: `https://push.example.net/${n}`,
+  keys: { p256dh: "BCVxsr7N_eNgVRqvHtD0zTZsEc6", auth: "BTBZMqHH6r4Tts7J_aSIgg" },
+});
 
 beforeAll(async () => {
   await resetServer();
@@ -47,9 +63,10 @@ beforeAll(async () => {
 
 describe("Wer bekommt welche Benachrichtigung?", () => {
   it("Push-Abo: nur gültige Abos, nur eigene Einstellung, nicht als Großbild", async () => {
-    expect((await call(team.A!.token, { action: "pushSubscribe", gameId: G, sub: { endpoint: "http://unsicher", keys: {} }, prefs: {} })).error?.details.reason).toBe(
-      "invalid",
-    );
+    expect(
+      (await call(team.A!.token, { action: "pushSubscribe", gameId: G, sub: { endpoint: "http://unsicher", keys: {} }, prefs: {} })).error
+        ?.details.reason,
+    ).toBe("invalid");
     expect(await val(`games/${G}/push/${team.A!.uid}/sub/endpoint`)).toBe("https://push.example.net/A");
   });
 
@@ -66,7 +83,10 @@ describe("Wer bekommt welche Benachrichtigung?", () => {
     await set(`games/${G}/locks`, null);
     await set(`games/${G}/positions/${team.A!.id}`, at(0));
     await set(`games/${G}/state/nextReportAt`, Date.now() - 1000);
-    await eventually(() => val(`games/${G}/reports`), (r) => Object.keys(r).length > 0);
+    await eventually(
+      () => val(`games/${G}/reports`),
+      (r) => Object.keys(r).length > 0,
+    );
     const o = await outbox();
     expect(pushed(o, PUSH_TITLE.meldung)).toEqual([team.A!.uid, team.B!.uid].sort());
   });
@@ -89,7 +109,10 @@ describe("Wer bekommt welche Benachrichtigung?", () => {
   it("Ende der Wartezeit per Alarm: genau einmal je Team", async () => {
     const locks = (await val(`games/${G}/locks`)) as Record<string, { until: number }>;
     for (const t of Object.keys(locks)) await set(`games/${G}/locks/${t}/until`, Date.now() - 1000);
-    await eventually(() => val(`games/${G}/locks`), (l) => Object.keys(l).length === 0);
+    await eventually(
+      () => val(`games/${G}/locks`),
+      (l) => Object.keys(l).length === 0,
+    );
     await sleep(200);
     const o = await outbox();
     expect(pushed(o, PUSH_TITLE.weiter)).toEqual([team.A!.uid, team.C!.uid].sort());
@@ -120,7 +143,10 @@ describe("Wer bekommt welche Benachrichtigung?", () => {
     const o = await outbox();
     expect(o[0]!.to).toContain(team.B!.uid);
     expect(o[0]!.push).not.toContain(team.B!.uid);
-    await eventually(async () => phone.notes.length, (n) => n > 0);
+    await eventually(
+      async () => phone.notes.length,
+      (n) => n > 0,
+    );
     expect(phone.notes[0]).toMatchObject({ kind: "durchsage", title: PUSH_TITLE.durchsage, body: "Alle zum Hauptplatz" });
     // im Hintergrund (Tab nicht sichtbar) wieder per Web-Push
     phone.live.setVisible(false);

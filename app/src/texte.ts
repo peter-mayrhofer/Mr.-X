@@ -467,7 +467,7 @@ export const T = {
 
   superadmin: {
     titel: "Spiele verwalten",
-    angemeldet: (mail: string) => `Angemeldet als ${mail}`,
+    angemeldet: "Angemeldet als Organisator",
     neu: "Neues Spiel",
     name: "Name des Spiels",
     code: "Spiel-Code (für Link und QR)",
@@ -562,7 +562,8 @@ export const T = {
 
   /** Ablehnungen des Spiel-Servers (shared/api.ts ApiReason) */
   apiFehler: {
-    unauthenticated: "Die Anmeldung ist abgelaufen. Bitte die Seite neu laden.",
+    unauthenticated: "Bitte zuerst anmelden.",
+    session: "Die Anmeldung ist abgelaufen. Bitte neu anmelden.",
     invalid: "Bitte die Eingaben prüfen.",
     notFound: "Spiel nicht gefunden. Prüft den Spiel-Code auf dem Zettel.",
     wrongSecret: "Das Passwort stimmt nicht. Fragt bei der Spielleitung nach.",
@@ -587,9 +588,17 @@ export const T = {
   },
 
   verwaltung: {
-    anmelden: "Mit Google anmelden",
+    anmelden: "Anmelden",
     nurOrganisator: "Diese Seite ist nur für den Organisator.",
-    keinZugang: (mail: string) => `${mail} ist nicht als Organisator freigeschaltet.`,
+    passwort: "Organisator-Passwort",
+    ersteinrichtung: "Erstes Mal hier oder Passwort vergessen?",
+    zurueckZumLogin: "Zurück zur Anmeldung",
+    setupGeheimnis: "Setup-Geheimnis",
+    setupHinweis:
+      "Das Setup-Geheimnis wurde beim Einrichten des Servers festgelegt (docs/BETRIEB.md). Damit legst du ein neues Organisator-Passwort fest – alte Anmeldungen werden ungültig.",
+    neuesPasswort: "Neues Organisator-Passwort",
+    festlegen: "Passwort festlegen",
+    abmelden: "Abmelden",
     leer: "Noch keine Spiele angelegt.",
     angelegt: (name: string) => `${name} angelegt`,
     oeffnen: "Öffnen",

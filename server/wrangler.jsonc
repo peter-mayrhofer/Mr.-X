@@ -10,14 +10,14 @@
     "directory": "../app/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api", "/api/*", "/ws", "/health", "/__test/*"]
+    "run_worker_first": ["/api", "/api/*", "/ws", "/health", "/__test/*"],
   },
   // ein Spielraum pro Spiel (SQLite-Speicher, im Gratis-Tarif die einzige Art) + die Zentrale für den Organisator-Login
   "durable_objects": {
     "bindings": [
       { "name": "ROOM", "class_name": "GameRoom" },
-      { "name": "ZENTRALE", "class_name": "Zentrale" }
-    ]
+      { "name": "ZENTRALE", "class_name": "Zentrale" },
+    ],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom", "Zentrale"] }],
   // spielübergreifend: Spieleliste und Archiv. Ohne database_id legt `wrangler deploy` die Datenbank selbst an.
@@ -33,12 +33,12 @@
       "durable_objects": {
         "bindings": [
           { "name": "ROOM", "class_name": "GameRoom" },
-          { "name": "ZENTRALE", "class_name": "Zentrale" }
-        ]
+          { "name": "ZENTRALE", "class_name": "Zentrale" },
+        ],
       },
       "d1_databases": [{ "binding": "DB", "database_name": "mister-x-vorschau" }],
       "triggers": { "crons": ["17 3 * * *"] },
-      "vars": { "VAPID_SUBJECT": "mailto:mr.x.rf.ooe@gmail.com" }
-    }
-  }
+      "vars": { "VAPID_SUBJECT": "mailto:mr.x.rf.ooe@gmail.com" },
+    },
+  },
 }

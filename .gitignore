@@ -1,4 +1,6 @@
 *-debug.log
 node_modules/
-.firebase/
 dist/
+.wrangler/
+.dev.vars
+server/geheimnisse*.json

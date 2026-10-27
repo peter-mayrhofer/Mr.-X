@@ -24,7 +24,8 @@ export class Zentrale extends DurableObject<Env> {
     if (cur && now - cur.since < WINDOW_MS && cur.n >= MAX_FAILS) fail("tooMany", "Zu viele Versuche – bitte 10 Minuten warten");
     return {
       key,
-      hit: () => this.ctx.storage.put(key, !cur || now - cur.since >= WINDOW_MS ? { n: 1, since: now } : { n: cur.n + 1, since: cur.since }),
+      hit: () =>
+        this.ctx.storage.put(key, !cur || now - cur.since >= WINDOW_MS ? { n: 1, since: now } : { n: cur.n + 1, since: cur.since }),
     };
   }
 

@@ -1,13 +1,13 @@
 // Ende-zu-Ende (Meilenstein 5): drei simulierte Team-Handys mit Fake-GPS spielen durch die echte App –
-// Onboarding, Warteraum mit Standort-Check, Start mit Wartezeit, Meldung (Handys stoßen selbst an), Chat, Übergabe mit
+// Onboarding, Warteraum mit Standort-Check, Start mit Wartezeit, Meldung (per Alarm des Servers), Chat, Übergabe mit
 // Szenen, Rückgängig, Durchsage, Verkleinerung, Spielfeld-Warnung für Mister X, Spielende mit Auswertung.
 // Die Spielleitung bedient hier noch die Server-Schnittstelle direkt (ihre Oberfläche folgt in Meilenstein 6).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createServer, type ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { PUSH_TITLE } from "@mrx/shared";
 import { T } from "../app/src/texte.ts";
-import { call, db, device, resetEmulators, superAdminToken, val } from "./helpers.ts";
+import { call, join, outbox, resetServer, set, startApp, superAdminToken, val, type Device } from "./helpers.ts";
 
 const G = "linz-team";
 const PORT = 5181;
@@ -15,7 +15,7 @@ const URL = `http://127.0.0.1:${PORT}/`;
 const HAUPTPLATZ = { latitude: 48.3059, longitude: 14.2862 };
 let vite: ViteDevServer;
 let browser: Browser;
-let admin: { uid: string; token: string };
+let admin: Device;
 const phones: Record<string, { ctx: BrowserContext; page: Page; id: string }> = {};
 
 const api = async (action: string, extra: Record<string, unknown> = {}) => {
@@ -53,20 +53,12 @@ async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
 }
 
 beforeAll(async () => {
-  await resetEmulators();
+  await resetServer();
   const sa = await superAdminToken();
   await call(sa, { action: "createGame", gameId: G, name: "Team-Test", template: "linz", adminPassword: "admin1234" });
-  admin = await device();
-  await call(admin.token, { action: "join", gameId: G, role: "admin", name: "Peter", secret: "admin1234" });
+  admin = await join(G, "admin", "Peter", "admin1234");
   await api("setSecret", { kind: "teamPw", value: "falke27" });
-  vite = await createServer({
-    root: "app",
-    configFile: "app/vite.config.ts",
-    mode: "emu",
-    logLevel: "error",
-    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
-  });
-  await vite.listen();
+  vite = await startApp(PORT);
   browser = await chromium.launch();
 }, 120_000);
 
@@ -83,10 +75,12 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     await joinTeam("Leonding", 0.003);
     const p = phones.Urfahr!;
     await visible(p.page, `${T.lobby.check.standort}: ${T.lobby.gut}`);
-    await expect.poll(() => val(`games/${G}/pos/${p.id}/lat`), { timeout: 15_000 }).toBeCloseTo(HAUPTPLATZ.latitude, 4);
-    // Benachrichtigungen erlaubt → Gerät ist mit Token und Push-Arten registriert, Warteraum zeigt es an
+    await expect.poll(() => val(`games/${G}/positions/${p.id}/lat`), { timeout: 15_000 }).toBeCloseTo(HAUPTPLATZ.latitude, 4);
+    // Benachrichtigungen erlaubt → Gerät ist mit Web-Push-Abo und Push-Arten angemeldet, Warteraum zeigt es an
     await expect
-      .poll(async () => Object.values(((await val(`games/${G}/push`)) ?? {}) as Record<string, { platform: string }>).length)
+      .poll(
+        async () => Object.values(((await val(`games/${G}/push`)) ?? {}) as Record<string, { sub?: unknown }>).filter((x) => x.sub).length,
+      )
       .toBe(1);
     await visible(p.page, `${T.lobby.check.push}: ${T.lobby.gut}`);
   }, 90_000);
@@ -94,20 +88,18 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
   it("Start: Mister X sieht den roten Modus, Jäger die Wartezeit mit Countdown", async () => {
     await api("startGame", { mrx: phones.Urfahr!.id });
     await visible(phones.Urfahr!.page, T.status.ihrSeidMrx);
-    // nur Urfahr hat Benachrichtigungen erlaubt → bekommt „Ihr seid Mister X!“ (im Emulator im Postausgang statt bei Google)
-    await expect
-      .poll(async () => Object.values(((await val(`pushOutbox/${G}`)) ?? {}) as Record<string, { title: string }>).map((x) => x.title))
-      .toContain(PUSH_TITLE.neuerMrx);
+    // „Ihr seid Mister X!“ geht an Urfahr – die App ist offen und sichtbar, also über die Verbindung statt per Web-Push
+    await expect.poll(async () => (await outbox(G)).find((x) => x.title === PUSH_TITLE.neuerMrx)?.to).toHaveLength(1);
     const lock = phones.Traun!.page.getByRole("alertdialog", { name: T.wartezeit.titel });
     await lock.waitFor();
     expect(await lock.getByText(T.wartezeit.grundStart).isVisible()).toBe(true);
     await visible(phones.Leonding!.page, "Urfahr");
   });
 
-  it("Countdown abgelaufen → die Handys stoßen den Server an → Meldung auf der Karte", async () => {
-    await db.ref(`games/${G}/locks`).set(null);
+  it("Termin erreicht → der Server meldet per Alarm → Meldung auf der Karte", async () => {
+    await set(`games/${G}/locks`, null);
     await phones.Traun!.page.getByRole("alertdialog", { name: T.wartezeit.titel }).waitFor({ state: "detached" });
-    await db.ref(`games/${G}/state/nextReportAt`).set(Date.now() + 2000);
+    await set(`games/${G}/state/nextReportAt`, Date.now() + 2000);
     await expect.poll(async () => Object.keys((await val(`games/${G}/reports`)) ?? {}).length, { timeout: 20_000 }).toBe(1);
     await visible(phones.Traun!.page, T.karte.letzteMeldung);
   });
@@ -146,7 +138,8 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     // Szenen der Übergabe schließen
     for (const n of ["Urfahr", "Leonding"]) {
       const ok = phones[n]!.page.getByRole("alertdialog").getByRole("button", { name: T.allgemein.ok, exact: true });
-      if (await ok.isVisible()) await ok.click();
+      // die Szene schließt sich nach dem Rückgängig evtl. gerade selbst
+      if (await ok.isVisible()) await ok.click({ timeout: 3000 }).catch(() => {});
     }
     await api("announce", { text: "Treffpunkt Hauptplatz um 17 Uhr" });
     await visible(phones.Leonding!.page, "Treffpunkt Hauptplatz um 17 Uhr");
@@ -160,12 +153,11 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
   });
 
   it("Spielende: alle sehen die Auswertung, Standorte sind gelöscht und werden nicht neu gesendet", async () => {
-    await db.ref(`secrets/${G}/endAt`).set(Date.now() - 1000);
-    await api("poke");
+    await set(`secrets/${G}/endAt`, Date.now() - 1000);
     for (const n of ["Urfahr", "Traun", "Leonding"]) await visible(phones[n]!.page, T.ende.sieger);
     await visible(phones.Traun!.page, "Urfahr");
     await phones.Traun!.ctx.setGeolocation({ latitude: 48.307, longitude: 14.287, accuracy: 8 });
     await new Promise((r) => setTimeout(r, 2500));
-    expect(await val(`games/${G}/pos`)).toBeNull();
+    expect(await val(`games/${G}/positions`)).toEqual({});
   });
 });

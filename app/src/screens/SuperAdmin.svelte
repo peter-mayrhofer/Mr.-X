@@ -1,4 +1,5 @@
-<!-- Screen 21: Super-Admin – Spiele anlegen, Spiel-Admins vergeben (Passwort/Einladungslink), archivieren, löschen. -->
+<!-- Screen 21: Super-Admin – Anmeldung mit Organisator-Passwort (Ersteinrichtung mit dem Setup-Geheimnis), Spiele anlegen,
+     Spiel-Admins vergeben (Passwort/Einladungslink), archivieren, löschen. -->
 <script module lang="ts">
   export interface GameRow {
     id: string;
@@ -9,7 +10,7 @@
 </script>
 
 <script lang="ts">
-  import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, Plus, Trash } from "@lucide/svelte";
+  import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, LogOut, Plus, Trash } from "@lucide/svelte";
   import { GAME_ID, LIMITS, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
@@ -25,10 +26,12 @@
   import { T } from "../texte.ts";
 
   interface Props {
-    email: string | null;
     allowed: boolean;
     games: GameRow[];
-    onlogin: () => Promise<void>;
+    onlogin: (password: string) => Promise<void>;
+    /** Passwort erstmals (oder neu) festlegen – mit dem Setup-Geheimnis vom Server */
+    onsetup: (setupSecret: string, password: string) => Promise<void>;
+    onlogout?: () => void;
     oncreate: (v: { gameId: string; name: string; template: Template; adminPassword: string }) => Promise<void>;
     onopen?: (id: string) => void;
     onadminpw: (id: string, pw: string) => Promise<void>;
@@ -39,8 +42,28 @@
     onback: () => void;
   }
 
-  let { email, allowed, games, onlogin, oncreate, onopen, onadminpw, inviteUrl, onarchive, onunarchive, ondelete, onback }: Props =
-    $props();
+  let {
+    allowed,
+    games,
+    onlogin,
+    onsetup,
+    onlogout,
+    oncreate,
+    onopen,
+    onadminpw,
+    inviteUrl,
+    onarchive,
+    onunarchive,
+    ondelete,
+    onback,
+  }: Props = $props();
+
+  const MIN_PW = 10;
+  let loginPw = $state("");
+  let setupMode = $state(false);
+  let setupSecret = $state("");
+  let loginBusy = $state(false);
+  let loginError = $state<string | undefined>();
 
   let creating = $state(false);
   let name = $state("");
@@ -89,6 +112,20 @@
     }
   }
 
+  async function login() {
+    loginBusy = true;
+    loginError = undefined;
+    try {
+      if (setupMode) await onsetup(setupSecret.trim(), loginPw);
+      else await onlogin(loginPw);
+      loginPw = setupSecret = "";
+    } catch (e) {
+      loginError = msg(e);
+    } finally {
+      loginBusy = false;
+    }
+  }
+
   async function setPw() {
     if (!pwFor) return;
     try {
@@ -120,16 +157,44 @@
   <div class="body">
     {#if !allowed}
       <Card>
-        <div class="login">
+        <form
+          class="login"
+          onsubmit={(e) => {
+            e.preventDefault();
+            void login();
+          }}
+        >
           <p>{T.verwaltung.nurOrganisator}</p>
-          {#if email}<Banner tone="warn">{T.verwaltung.keinZugang(email)}</Banner>{/if}
-          <Button size="l" icon={LogIn} onclick={onlogin}>{T.verwaltung.anmelden}</Button>
-        </div>
+          {#if setupMode}
+            <Banner tone="info">{T.verwaltung.setupHinweis}</Banner>
+            <TextField label={T.verwaltung.setupGeheimnis} bind:value={setupSecret} autocomplete="off" autocapitalize="none" />
+          {/if}
+          <TextField
+            label={setupMode ? T.verwaltung.neuesPasswort : T.verwaltung.passwort}
+            type="password"
+            bind:value={loginPw}
+            hint={setupMode ? T.zugang.mindestens(MIN_PW) : undefined}
+            error={loginError}
+            autocomplete={setupMode ? "new-password" : "current-password"}
+          />
+          <Button
+            type="submit"
+            size="l"
+            icon={LogIn}
+            loading={loginBusy}
+            disabled={setupMode ? !setupSecret.trim() || loginPw.length < MIN_PW : !loginPw}
+            >{setupMode ? T.verwaltung.festlegen : T.verwaltung.anmelden}</Button
+          >
+          <button type="button" class="linkish" onclick={() => ((setupMode = !setupMode), (loginError = undefined))}
+            >{setupMode ? T.verwaltung.zurueckZumLogin : T.verwaltung.ersteinrichtung}</button
+          >
+        </form>
       </Card>
     {:else}
-      <p class="who">
-        <span class="avatar" aria-hidden="true">{(email ?? "?")[0]!.toUpperCase()}</span>{T.superadmin.angemeldet(email ?? "")}
-      </p>
+      <div class="who">
+        <span class="avatar" aria-hidden="true">O</span>{T.superadmin.angemeldet}
+        {#if onlogout}<Button size="m" variant="secondary" icon={LogOut} onclick={onlogout}>{T.verwaltung.abmelden}</Button>{/if}
+      </div>
       {#each games as g (g.id)}
         <Card>
           <div class="game">
@@ -243,7 +308,18 @@
   .login {
     display: grid;
     gap: var(--sp-3);
-    justify-items: start;
+    max-width: 420px;
+  }
+  .linkish {
+    justify-self: start;
+    background: none;
+    border: 0;
+    padding: var(--sp-2) 0;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: 44px;
   }
   .who {
     display: flex;

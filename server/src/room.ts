@@ -155,7 +155,14 @@ const empty = (): Data => ({
 
 const lastN = <T>(o: Record<string, T>, n: number): Record<string, T> => {
   const keys = Object.keys(o);
-  return keys.length <= n ? o : Object.fromEntries(keys.sort().slice(-n).map((k) => [k, o[k]!]));
+  return keys.length <= n
+    ? o
+    : Object.fromEntries(
+        keys
+          .sort()
+          .slice(-n)
+          .map((k) => [k, o[k]!]),
+      );
 };
 
 type Out = { t: "snap"; v: number; view: View; vapid?: string } | { t: "patch"; p: Patch[] } | { t: "note"; n: Note };
@@ -459,7 +466,12 @@ export class GameRoom extends DurableObject<Env> {
     if (!this.d.members[a.uid]) return;
     a.seq = 0;
     ws.serializeAttachment(a);
-    this.#send(ws, { t: "snap", v: PROTOCOL_VERSION, view: this.view(a.uid), ...(this.env.VAPID_PUBLIC ? { vapid: this.env.VAPID_PUBLIC } : {}) });
+    this.#send(ws, {
+      t: "snap",
+      v: PROTOCOL_VERSION,
+      view: this.view(a.uid),
+      ...(this.env.VAPID_PUBLIC ? { vapid: this.env.VAPID_PUBLIC } : {}),
+    });
   }
 
   #broadcast(patches: Patch[], notes: { to: string[]; n: Note }[]) {
@@ -517,7 +529,7 @@ export class GameRoom extends DurableObject<Env> {
       this.d.staff[uid] = s;
       this.#livePatches.set(`staff/${uid}`, ["staff", uid, s]);
     } else return;
-    this.#liveTimer ??= setTimeout(() => this.#flushLive(), POS_BATCH_MS);
+    if (!this.#liveTimer) this.#liveTimer = setTimeout(() => this.#flushLive(), POS_BATCH_MS);
   }
 
   /** gesammelte Standorte verteilen (höchstens alle 2 s) und gelegentlich speichern (höchstens alle 30 s) */
@@ -575,7 +587,8 @@ export class GameRoom extends DurableObject<Env> {
       }),
     );
     // Abo gibt es nicht mehr (App deinstalliert, Erlaubnis entzogen) → vergessen
-    for (const j of dead) if (j && this.d.push[j.uid]?.sub?.endpoint === j.sub.endpoint) this.put("push", j.uid, { ...this.d.push[j.uid], sub: undefined });
+    for (const j of dead)
+      if (j && this.d.push[j.uid]?.sub?.endpoint === j.sub.endpoint) this.put("push", j.uid, { ...this.d.push[j.uid], sub: undefined });
     this.commit();
   }
 

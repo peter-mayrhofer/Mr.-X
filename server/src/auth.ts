@@ -23,7 +23,11 @@ export type Claims = { g: string; u: string; e: number } | { s: number; e: numbe
 const keys = new Map<string, Promise<CryptoKey>>();
 const hmacKey = (secret: string) => {
   let k = keys.get(secret);
-  if (!k) keys.set(secret, (k = crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"])));
+  if (!k)
+    keys.set(
+      secret,
+      (k = crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"])),
+    );
   return k;
 };
 

@@ -16,12 +16,7 @@ export interface PushReg {
 export type PushTarget = { all: true; except?: string[] } | { teams: string[] } | { roles: Role[] };
 
 /** Geräte (uid), die eine Benachrichtigung bekommen – egal ob per Web-Push oder über die offene Verbindung */
-export function pushTargets(
-  members: Record<string, Member>,
-  regs: Record<string, PushReg>,
-  target: PushTarget,
-  kind: PushKind,
-): string[] {
+export function pushTargets(members: Record<string, Member>, regs: Record<string, PushReg>, target: PushTarget, kind: PushKind): string[] {
   return Object.entries(members)
     .filter(([uid, m]) => {
       if (regs[uid]?.prefs?.[kind] === false) return false; // abgeschaltet

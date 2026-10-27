@@ -16,7 +16,8 @@ function ring(v: unknown, what: string): Polygon {
   const pts = v.map((p): LngLat => {
     if (!Array.isArray(p) || p.length !== 2) fail("invalid", `${what}: ungültiger Punkt`);
     const [lng, lat] = p as unknown[];
-    if (typeof lng !== "number" || typeof lat !== "number" || Math.abs(lat) > 90 || Math.abs(lng) > 180) fail("invalid", `${what}: ungültiger Punkt`);
+    if (typeof lng !== "number" || typeof lat !== "number" || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+      fail("invalid", `${what}: ungültiger Punkt`);
     return [lng, lat];
   });
   const [a, z] = [pts[0], pts.at(-1)];
@@ -43,7 +44,13 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
     const order = c.order;
     if (typeof order !== "number" || !Number.isInteger(order) || order < 1 || order > 20) fail("invalid", "Reihenfolge: 1–20");
     if (typeof c.color !== "string" || !HEX.test(c.color)) fail("invalid", "Farbe ungültig");
-    cuts[id] = { name: str(c.name, [1, 80], "Name des Sperrbereichs"), short: str(c.short, [1, 20], "Kurzname"), color: c.color, order, poly: ring(c.poly, "Sperrbereich") };
+    cuts[id] = {
+      name: str(c.name, [1, 80], "Name des Sperrbereichs"),
+      short: str(c.short, [1, 20], "Kurzname"),
+      color: c.color,
+      order,
+      poly: ring(c.poly, "Sperrbereich"),
+    };
   }
   const field: Field = { name: str(f.name, [1, 60], "Name des Spielfelds"), toleranceM: tol, base: ring(f.base, "Spielfeld"), cuts };
   const p = fieldProblems(field)[0];
@@ -77,7 +84,10 @@ export async function deleteGame(room: GameRoom, _d: D, a: Auth): Promise<ApiRes
   if (!a.superAdmin) fail("forbidden");
   if (running(room)) fail("wrongPhase", "Zuerst das Spiel beenden");
   const g = room.d.gid;
-  await room.env.DB.batch([room.env.DB.prepare("DELETE FROM archive WHERE game = ?1").bind(g), room.env.DB.prepare("DELETE FROM games WHERE id = ?1").bind(g)]);
+  await room.env.DB.batch([
+    room.env.DB.prepare("DELETE FROM archive WHERE game = ?1").bind(g),
+    room.env.DB.prepare("DELETE FROM games WHERE id = ?1").bind(g),
+  ]);
   await room.destroy(true);
   return {};
 }

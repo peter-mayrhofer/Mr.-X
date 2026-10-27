@@ -32,7 +32,8 @@ describe("Organisator (Super-Admin)", () => {
   });
   it("Rate-Limit: 5 falsche Passwörter, dann auch das richtige gesperrt", async () => {
     const ip = "198.51.100.7";
-    for (let i = 0; i < 5; i++) expect(reason(await call(null, { action: "superLogin", password: `falsch-${i}-xxxx` }, ip))).toBe("wrongSecret");
+    for (let i = 0; i < 5; i++)
+      expect(reason(await call(null, { action: "superLogin", password: `falsch-${i}-xxxx` }, ip))).toBe("wrongSecret");
     expect(reason(await call(null, { action: "superLogin", password: SUPER_PW }, ip))).toBe("tooMany");
     expect(reason(await call(null, { action: "superLogin", password: SUPER_PW }, "198.51.100.8"))).toBeUndefined();
   });
@@ -50,16 +51,23 @@ describe("Organisator (Super-Admin)", () => {
 
 describe("Spiel anlegen", () => {
   it("nur Super-Admin", async () => {
-    expect(reason(await call(null, { action: "createGame", gameId: G, name: "Linz Test", template: "linz", adminPassword: "admin1234" }))).toBe(
-      "forbidden",
-    );
+    expect(
+      reason(await call(null, { action: "createGame", gameId: G, name: "Linz Test", template: "linz", adminPassword: "admin1234" })),
+    ).toBe("forbidden");
   });
   it.each([
     ["ungültiger Code", { gameId: "Linz Test" }],
     ["Passwort zu kurz", { adminPassword: "kurz" }],
     ["Name zu kurz", { name: "x" }],
   ])("abgelehnt: %s", async (_, over) => {
-    const r = await call(superToken, { action: "createGame", gameId: G, name: "Linz Test", template: "linz", adminPassword: "admin1234", ...over });
+    const r = await call(superToken, {
+      action: "createGame",
+      gameId: G,
+      name: "Linz Test",
+      template: "linz",
+      adminPassword: "admin1234",
+      ...over,
+    });
     expect(reason(r)).toBe("invalid");
   });
   it("legt das Spiel mit Linz-Vorlage an, Passwort nur gehasht", async () => {
@@ -71,7 +79,9 @@ describe("Spiel anlegen", () => {
     const sec = await val(`secrets/${G}`);
     expect(sec.adminPw).toMatch(/^pbkdf2\$100000\$/);
     expect(JSON.stringify(sec)).not.toContain("admin1234");
-    expect((await call(superToken, { action: "listGames" })).result!.games).toMatchObject([{ id: G, name: "Linz Test", phase: "vorbereitung" }]);
+    expect((await call(superToken, { action: "listGames" })).result!.games).toMatchObject([
+      { id: G, name: "Linz Test", phase: "vorbereitung" },
+    ]);
   });
   it("gleicher Code nicht zweimal", async () => {
     const r = await call(superToken, { action: "createGame", gameId: G, name: "Nochmal", template: "leer", adminPassword: "admin1234" });
@@ -115,7 +125,9 @@ describe("Beitritt", () => {
     const teamId = r.result!.teamId as string;
     expect(await val(`games/${G}/teams/${teamId}`)).toMatchObject({ name: "Urfahr", short: "UR" });
     expect(await val(`games/${G}/members/${r.result!.uid as string}`)).toMatchObject({ role: "team", teamId, name: "Urfahr" });
-    expect(reason(await call(r.result!.token as string, { action: "setSecret", gameId: G, kind: "teamPw", value: "geknackt" }))).toBe("forbidden");
+    expect(reason(await call(r.result!.token as string, { action: "setSecret", gameId: G, kind: "teamPw", value: "geknackt" }))).toBe(
+      "forbidden",
+    );
   });
   it("Ersatzgerät (F14): erst Rückfrage, dann gleiches Team", async () => {
     const first = await call(null, { action: "join", gameId: G, role: "team", name: "urfahr", secret: "falke27" });
@@ -134,21 +146,30 @@ describe("Beitritt", () => {
   it("Großbild mit Schlüssel aus dem Admin-Bereich", async () => {
     const key = (await call(adminDev.token, { action: "screenLink", gameId: G })).result!.key as string;
     expect(key.length).toBeGreaterThan(16);
-    expect(reason(await call(null, { action: "join", gameId: G, role: "screen", name: "", secret: "x".repeat(key.length) }))).toBe("wrongSecret");
+    expect(reason(await call(null, { action: "join", gameId: G, role: "screen", name: "", secret: "x".repeat(key.length) }))).toBe(
+      "wrongSecret",
+    );
     expect((await call(null, { action: "join", gameId: G, role: "screen", name: "", secret: key })).result).toMatchObject({
       status: "joined",
       role: "screen",
     });
   });
   it("Zuschauer ohne Passwort (F6)", async () => {
-    expect((await call(null, { action: "join", gameId: G, role: "viewer", name: "" })).result).toMatchObject({ status: "joined", role: "viewer" });
+    expect((await call(null, { action: "join", gameId: G, role: "viewer", name: "" })).result).toMatchObject({
+      status: "joined",
+      role: "viewer",
+    });
   });
   it("Rate-Limit pro IP: 20 Fehlversuche, dann auch das richtige Passwort gesperrt – andere IPs nicht", async () => {
     const ip = "203.0.113.5";
     for (let i = 0; i < 20; i++)
-      expect(reason(await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: `falsch${i}` }, ip))).toBe("wrongSecret");
+      expect(reason(await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: `falsch${i}` }, ip))).toBe(
+        "wrongSecret",
+      );
     expect(reason(await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" }, ip))).toBe("tooMany");
-    expect(reason(await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" }, "203.0.113.6"))).toBeUndefined();
+    expect(
+      reason(await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" }, "203.0.113.6")),
+    ).toBeUndefined();
     expect(JSON.stringify(await val(`games/${G}/rate`))).not.toContain("203.0.113"); // IP nur gehasht
     await set(`games/${G}/rate`, {});
   });

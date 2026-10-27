@@ -1,7 +1,16 @@
 // Live-Verbindung zum Spielraum für App und Tests (docs/API.md): verbinden, bei Abbruch mit wachsender Pause neu
 // verbinden, Snapshot + Änderungen zu einer lokalen Sicht zusammenführen, eigenen Standort senden (offline: nur der
 // neueste wartet). Ohne Framework – die App hängt ihre Svelte-Zustände an `onView`.
-import { applyPatch, PROTOCOL_VERSION, type ClientMsg, type Note, type PositionIn, type ServerMsg, type View, type ViewKey } from "./protocol.ts";
+import {
+  applyPatch,
+  PROTOCOL_VERSION,
+  type ClientMsg,
+  type Note,
+  type PositionIn,
+  type ServerMsg,
+  type View,
+  type ViewKey,
+} from "./protocol.ts";
 
 export type ByeReason = "removed" | "session" | "version";
 

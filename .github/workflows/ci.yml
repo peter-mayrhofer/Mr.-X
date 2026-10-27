@@ -19,8 +19,9 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  # Security Rules, Spiel-Server und Ende-zu-Ende-Tests gegen die Firebase-Emulatoren (Projekt demo-mrx)
-  emulator:
+  # Spiel-Server (Worker, Spielräume, D1, Alarme) in der lokalen Cloudflare-Laufzeit, Rechte/Angriffe und
+  # Ende-zu-Ende-Tests mit der echten App im Browser
+  server:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,14 +29,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/firebase/emulators
-          key: firebase-emulators-${{ hashFiles('package-lock.json') }}
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:emu
+      - run: npm run test:server

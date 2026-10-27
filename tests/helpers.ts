@@ -37,7 +37,13 @@ export interface Device {
 }
 
 /** Gerät tritt bei (wie ein Handy, das den QR-Link öffnet); wirft bei Ablehnung */
-export async function join(gameId: string, role: string, name: string, secret?: string, extra: Record<string, unknown> = {}): Promise<Device> {
+export async function join(
+  gameId: string,
+  role: string,
+  name: string,
+  secret?: string,
+  extra: Record<string, unknown> = {},
+): Promise<Device> {
   const r = await call(null, { action: "join", gameId, role, name, ...(secret !== undefined ? { secret } : {}), ...extra });
   if (r.error) throw new Error(`join ${role} ${name}: ${r.error.message}`);
   const j = r.result as { status: string; token: string; uid: string; teamId?: string };
@@ -126,4 +132,19 @@ export async function eventually<T>(fn: () => Promise<T>, ok: (v: T) => boolean,
     if (ok(v) || Date.now() > end) return v;
     await sleep(100);
   }
+}
+
+/** App wie im Browser (Vite-Entwicklungsserver, Modus „e2e“), Anfragen an /api und /ws gehen an den Test-Server */
+export async function startApp(port: number) {
+  process.env.MRX_SERVER = SERVER;
+  const { createServer } = await import("vite");
+  const vite = await createServer({
+    root: "app",
+    configFile: "app/vite.config.ts",
+    mode: "e2e",
+    logLevel: "error",
+    server: { port, strictPort: true, host: "127.0.0.1" },
+  });
+  await vite.listen();
+  return vite;
 }

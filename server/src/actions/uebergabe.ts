@@ -1,5 +1,15 @@
 // Übergabe, Strafübergabe und Rückgängig (Regel 3, 4, 11, 13; KONZEPT Abschnitt 6.2).
-import { FRESH_MS, MELDUNG, PUSH_TITLE, teamsToLock, type ApiResults, type HandoverRecord, type Lock, type Position, type ReportSource } from "@mrx/shared";
+import {
+  FRESH_MS,
+  MELDUNG,
+  PUSH_TITLE,
+  teamsToLock,
+  type ApiResults,
+  type HandoverRecord,
+  type Lock,
+  type Position,
+  type ReportSource,
+} from "@mrx/shared";
 import { fail, MIN, newKey } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
 

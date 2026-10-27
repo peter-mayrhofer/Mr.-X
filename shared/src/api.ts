@@ -46,7 +46,8 @@ export type ApiRequest =
   | { action: "chat"; gameId: string; text: string; dm?: string }
   | { action: "deleteChat"; gameId: string; id: string; dm?: string }
   // Push (Web Push, VAPID): Abo dieses Geräts und gewünschte Arten
-  | { action: "pushSubscribe"; gameId: string; sub: PushSub | null; prefs: Partial<Record<PushKind, boolean>> }
+  // sub weglassen = Abo bleibt, nur Arten ändern; null = kein Web-Push (Android-App: lokale Benachrichtigungen)
+  | { action: "pushSubscribe"; gameId: string; sub?: PushSub | null; prefs: Partial<Record<PushKind, boolean>> }
   // Archiv (Meilenstein 10)
   | { action: "archiveList"; gameId: string }
   | { action: "archiveGet"; gameId: string; run: string }
@@ -63,8 +64,7 @@ export type ApiReply<R = unknown> = { ok: true; result: R } | { ok: false; reaso
 
 /** Nach dem Beitritt: Sitzungs-Token für dieses Gerät (signiert, widerrufbar) */
 export type JoinResult =
-  | { status: "joined"; role: Role; teamId?: string; token: string; uid: string }
-  | { status: "teamExists"; teamName: string };
+  { status: "joined"; role: Role; teamId?: string; token: string; uid: string } | { status: "teamExists"; teamName: string };
 
 export interface GameListEntry {
   id: string;

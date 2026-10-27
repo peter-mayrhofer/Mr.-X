@@ -33,7 +33,15 @@ export function startGame(room: GameRoom, d: D, a: Auth): ApiResults["startGame"
 
   const now = Date.now();
   const head = now + cfg.headStartMin * MIN;
-  room.setState({ phase: "laeuft", rev: room.d.state.rev, cuts: room.d.state.cuts, mrx, mrxSince: now, startedAt: now, nextReportAt: head });
+  room.setState({
+    phase: "laeuft",
+    rev: room.d.state.rev,
+    cuts: room.d.state.cuts,
+    mrx,
+    mrxSince: now,
+    startedAt: now,
+    nextReportAt: head,
+  });
   room.set("info", { ...room.d.info!, phase: "laeuft" });
   room.put("handovers", newKey(), { to: mrx, at: now, type: "start", byName: who.name, byUid: who.uid });
   room.set("secrets", { ...room.d.secrets, endAt: randomEnd(now, cfg.endMinH, cfg.endMaxH, rand()) });

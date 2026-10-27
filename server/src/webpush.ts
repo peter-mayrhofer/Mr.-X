@@ -50,14 +50,18 @@ export async function encrypt(
     asPub = new Uint8Array((await crypto.subtle.exportKey("raw", pair.publicKey)) as ArrayBuffer);
   }
   const uaKey = await crypto.subtle.importKey("raw", uaPub, ecdh, false, []);
-  const secret = new Uint8Array(await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey } as unknown as SubtleCryptoDeriveKeyAlgorithm, asPriv, 256));
+  const secret = new Uint8Array(
+    await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey } as unknown as SubtleCryptoDeriveKeyAlgorithm, asPriv, 256),
+  );
   const ikm = await hkdf(auth, secret, cat(enc.encode("WebPush: info\0"), uaPub, asPub), 32);
   const salt = fixed?.salt ?? crypto.getRandomValues(new Uint8Array(16));
   const cek = await hkdf(salt, ikm, enc.encode("Content-Encoding: aes128gcm\0"), 16);
   const nonce = await hkdf(salt, ikm, enc.encode("Content-Encoding: nonce\0"), 12);
   const key = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
   // ein einziger Datensatz: Inhalt ‖ 0x02 (Ende-Markierung)
-  const data = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, cat(enc.encode(plaintext), new Uint8Array([2]))));
+  const data = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, cat(enc.encode(plaintext), new Uint8Array([2]))),
+  );
   const rs = new Uint8Array([0, 0, 0x10, 0]); // Datensatzgröße 4096
   return cat(salt, rs, new Uint8Array([asPub.byteLength]), asPub, data);
 }

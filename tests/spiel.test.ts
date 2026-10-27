@@ -112,9 +112,9 @@ describe("Meldungen per Alarm (Regel 5, Abschnitt 4.3)", () => {
 describe("Übergabe (Regel 3, 4) und Rückgängig", () => {
   let hid = "";
   it("Teams dürfen nicht übergeben", async () =>
-    expect(reason(await run(team.b!, "handover", { to: team.b!.id, type: "fang", expectedMrx: team.a!.id, requestId: "teamversuch" }))).toBe(
-      "forbidden",
-    ));
+    expect(
+      reason(await run(team.b!, "handover", { to: team.b!.id, type: "fang", expectedMrx: team.a!.id, requestId: "teamversuch" })),
+    ).toBe("forbidden"));
   it("Fang: altes Team + Teams im Umkreis warten, der neue Mister X und weit entfernte nicht, sofort eine Meldung", async () => {
     await Promise.all([setPos("a", 0), setPos("b", 0.00045), setPos("c", 0.0009), setPos("d", 0.01)]);
     await set(`games/${G}/locks/${team.b!.id}`, { until: Date.now() + MIN, reason: "manuell" });
@@ -183,7 +183,9 @@ describe("Rückgängig (sauber)", () => {
   });
   it("nur die letzte Übergabe kann rückgängig gemacht werden", async () => {
     await ok(schiri, "handover", { to: team.c!.id, type: "fang", expectedMrx: team.d!.id, requestId: "fang-0004" });
-    const older = (await list<{ type: string; to: string; undoneAt?: number }>("handovers")).find(([, h]) => h.to === team.d!.id && !h.undoneAt)![0];
+    const older = (await list<{ type: string; to: string; undoneAt?: number }>("handovers")).find(
+      ([, h]) => h.to === team.d!.id && !h.undoneAt,
+    )![0];
     await set(`games/${G}/handovers/${older}/at`, Date.now() - MIN); // noch in der Frist, aber nicht die letzte
     expect(reason(await run(schiri, "undo", { handoverId: older }))).toBe("conflict");
   });
@@ -236,7 +238,12 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
   });
   it("abgelaufene Wartezeit endet per Alarm", async () => {
     await set(`games/${G}/locks/${team.a!.id}`, { until: Date.now() - 500, reason: "manuell" });
-    expect(await eventually(() => val(`games/${G}/locks/${team.a!.id}`), (v) => v === null)).toBeNull();
+    expect(
+      await eventually(
+        () => val(`games/${G}/locks/${team.a!.id}`),
+        (v) => v === null,
+      ),
+    ).toBeNull();
   });
 });
 
@@ -268,7 +275,9 @@ describe("Pause (F2)", () => {
     await ok(admin, "pause");
     expect(await val(`games/${G}/info/phase`)).toBe("pause");
     const mrx = (await state()).mrx;
-    expect(reason(await run(schiri, "handover", { to: team.a!.id, type: "fang", expectedMrx: mrx, requestId: "pause-001" }))).toBe("wrongPhase");
+    expect(reason(await run(schiri, "handover", { to: team.a!.id, type: "fang", expectedMrx: mrx, requestId: "pause-001" }))).toBe(
+      "wrongPhase",
+    );
     expect(reason(await run(admin, "setLock", { teamId: team.d!.id, min: 5 }))).toBe("wrongPhase");
     // 10 Min Pause simulieren
     const s = await state();
@@ -339,7 +348,10 @@ describe("Teams verwalten", () => {
     await phone.until(() => true);
     await ok(admin, "removeMember", { uid: schiri2.uid });
     expect(await val(`games/${G}/members/${schiri2.uid}`)).toBeNull();
-    await eventually(async () => phone.bye, (b) => b !== null);
+    await eventually(
+      async () => phone.bye,
+      (b) => b !== null,
+    );
     expect(phone.bye).toBe("removed");
     expect(reason(await run(schiri2, "follow", { on: true }))).toBe("session");
   });
@@ -375,7 +387,9 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
   it("Zuschauer sehen das Archiv nicht", async () => expect(reason(await run(viewer, "archiveList"))).toBe("forbidden"));
   it("nach dem Ende keine Übergabe und keine Standorte mehr", async () => {
     const s = await state();
-    expect(reason(await run(schiri, "handover", { to: team.a!.id, type: "fang", expectedMrx: s.mrx, requestId: "danach-01" }))).toBe("wrongPhase");
+    expect(reason(await run(schiri, "handover", { to: team.a!.id, type: "fang", expectedMrx: s.mrx, requestId: "danach-01" }))).toBe(
+      "wrongPhase",
+    );
     const phone = connect(team.a!.token);
     await phone.until(() => true);
     phone.sendPos(at(0));
@@ -385,7 +399,10 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
   });
   it("Löschfrist: Chat wird geleert", async () => {
     await set(`games/${G}/purgeAt`, Date.now() - 1000);
-    await eventually(() => val(`games/${G}/chat`), (c) => Object.keys(c).length === 0);
+    await eventually(
+      () => val(`games/${G}/chat`),
+      (c) => Object.keys(c).length === 0,
+    );
     expect(await val(`games/${G}/purgeAt`)).toBeNull();
   });
 });
@@ -397,11 +414,15 @@ describe("Neue Runde", () => {
     await phone.until(() => true);
     await ok(admin, "resetRound");
     expect(await state()).toMatchObject({ phase: "vorbereitung" });
-    for (const p of ["teams", "reports", "handovers", "chat", "pauses", "cutLog", "stats"]) expect(await val(`games/${G}/${p}`)).toEqual({});
+    for (const p of ["teams", "reports", "handovers", "chat", "pauses", "cutLog", "stats"])
+      expect(await val(`games/${G}/${p}`)).toEqual({});
     expect((await ok(admin, "archiveList")).runs).toHaveLength(1);
     expect(await val(`secrets/${G}/teamPw`)).toBeNull();
     expect(await val(`secrets/${G}/schiriCode`)).toMatch(/^pbkdf2\$/);
-    await eventually(async () => phone.bye, (b) => b !== null);
+    await eventually(
+      async () => phone.bye,
+      (b) => b !== null,
+    );
     expect(phone.bye).toBe("removed");
     expect(await val(`games/${G}/members/${schiri.uid}`)).toBeNull();
     expect(await val(`games/${G}/members/${admin.uid}/role`)).toBe("admin");

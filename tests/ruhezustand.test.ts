@@ -21,7 +21,8 @@ const api = async (token: string | null, body: Record<string, unknown>) => {
   return j.result;
 };
 const hook = async (body: Record<string, unknown>) =>
-  ((await (await fetch(`${url}/__test/room`, { method: "POST", body: JSON.stringify({ g: G, ...body }) })).json()) as { result: unknown }).result;
+  ((await (await fetch(`${url}/__test/room`, { method: "POST", body: JSON.stringify({ g: G, ...body }) })).json()) as { result: unknown })
+    .result;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const evict = () => server.getWorker().evictDurableObject("GameRoom", { name: G, webSockets: "hibernate" });
 
@@ -31,7 +32,8 @@ let team = "";
 beforeAll(async () => {
   server = createTestHarness({ workers: [{ configPath: "server/wrangler.jsonc", vars: { TEST_HOOKS: "1" }, secrets: TEST_SECRETS }] });
   url = (await server.listen()).url.origin;
-  const sa = (await api(null, { action: "superSetup", setupSecret: TEST_SECRETS.SETUP_SECRET, password: "organisator-test-123" })).token as string;
+  const sa = (await api(null, { action: "superSetup", setupSecret: TEST_SECRETS.SETUP_SECRET, password: "organisator-test-123" }))
+    .token as string;
   await api(sa, { action: "createGame", gameId: G, name: "Schlaf", template: "linz", adminPassword: "admin1234" });
   admin = (await api(null, { action: "join", gameId: G, role: "admin", name: "Peter", secret: "admin1234" })).token as string;
   await api(admin, { action: "setSecret", gameId: G, kind: "teamPw", value: "falke27" });
@@ -54,7 +56,8 @@ describe("Spielraum schläft und wacht wieder auf", () => {
     // nächste Aktion weckt den Spielraum: Zustand muss aus dem Speicher kommen
     await api(admin, { action: "announce", gameId: G, text: "Nach dem Schlaf" });
     const until = Date.now() + 5000;
-    while (!Object.values((view as unknown as View).chat ?? {}).some((m) => m.text === "Nach dem Schlaf") && Date.now() < until) await sleep(25);
+    while (!Object.values((view as unknown as View).chat ?? {}).some((m) => m.text === "Nach dem Schlaf") && Date.now() < until)
+      await sleep(25);
     const v = view as unknown as View;
     expect(v.state.phase).toBe("laeuft");
     expect(Object.values(v.chat!).some((m) => m.text === "Nach dem Schlaf")).toBe(true);
@@ -96,13 +99,19 @@ describe("Löschfristen im Archiv (täglicher Cron, F3)", () => {
   it("Chat nach 30 Tagen weg, ganzer Lauf nach einem Jahr", async () => {
     await api(admin, { action: "stopGame", gameId: G });
     const env = await server.getWorker<{ DB: D1Database }>().getEnv();
-    const runs = async () => (await env.DB.prepare("SELECT run, chat IS NOT NULL AS hasChat FROM archive WHERE game = ?1").bind(G).all<{ hasChat: number }>()).results;
+    const runs = async () =>
+      (await env.DB.prepare("SELECT run, chat IS NOT NULL AS hasChat FROM archive WHERE game = ?1").bind(G).all<{ hasChat: number }>())
+        .results;
     expect(await runs()).toEqual([expect.objectContaining({ hasChat: 1 })]);
     const DAY = 24 * 3600_000;
-    await env.DB.prepare("UPDATE archive SET endedAt = ?1 WHERE game = ?2").bind(Date.now() - 31 * DAY, G).run();
+    await env.DB.prepare("UPDATE archive SET endedAt = ?1 WHERE game = ?2")
+      .bind(Date.now() - 31 * DAY, G)
+      .run();
     await server.getWorker().scheduled({ cron: "17 3 * * *" });
     expect(await runs()).toEqual([expect.objectContaining({ hasChat: 0 })]);
-    await env.DB.prepare("UPDATE archive SET endedAt = ?1 WHERE game = ?2").bind(Date.now() - 366 * DAY, G).run();
+    await env.DB.prepare("UPDATE archive SET endedAt = ?1 WHERE game = ?2")
+      .bind(Date.now() - 366 * DAY, G)
+      .run();
     await server.getWorker().scheduled({ cron: "17 3 * * *" });
     expect(await runs()).toEqual([]);
   });

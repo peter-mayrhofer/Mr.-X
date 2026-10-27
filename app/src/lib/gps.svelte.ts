@@ -1,11 +1,11 @@
 // Eigener Standort (Abschnitt 9.1): GPS beobachten und adaptiv senden – alle 10 s bei mehr als 15 m Bewegung,
-// sonst spätestens alle 30 s (damit der Standort für Meldungen und Umkreis „frisch“ bleibt, FRESH_MS = 2 Min).
+// sonst spätestens alle 30 s, damit der Standort für Meldungen und Umkreis „frisch“ bleibt (FRESH_MS = 2 Min).
+// Android-App im Hintergrund: alle 30 s.
 // Ungenaue Punkte werden mit ihrer Genauigkeit gesendet; der Server zählt sie nicht zur Strecke.
-import { ref, set } from "firebase/database";
 import { distanceM, type Position } from "@mrx/shared";
-import { db } from "./firebase.ts";
 import { clock } from "./clock.svelte.ts";
-import { NATIVE, restSet, stopNative, watchNative } from "./native.ts";
+import { sendPos } from "./session.svelte.ts";
+import { NATIVE, nativePos, stopNative, watchNative } from "./native.ts";
 
 const MOVE_MS = 10_000;
 const KEEP_MS = 30_000;
@@ -28,7 +28,7 @@ function onPos(p: GeolocationPosition) {
     lat: c.latitude,
     lng: c.longitude,
     acc: Math.round(c.accuracy),
-    // Messzeit in Server-Zeit; nie in der Zukunft (Rules erlauben max. 1 Min)
+    // Messzeit in Server-Zeit; nie in der Zukunft (der Server nimmt höchstens 1 Min an)
     t: Math.min(Math.round(p.timestamp + clock.offset), Date.now() + clock.offset),
     ...(c.heading !== null && Number.isFinite(c.heading) ? { heading: Math.round(c.heading) % 360 } : {}),
   };
@@ -93,23 +93,25 @@ export function stopGps() {
 }
 
 /** Sende-Entscheidung (rein, getestet über den Ende-zu-Ende-Test) */
-export function shouldSend(last: Position | null, next: Position): boolean {
+export function shouldSend(last: Position | null, next: Position, moveMs = MOVE_MS): boolean {
   if (!last) return true;
   const dt = next.t - last.t;
-  return dt >= KEEP_MS || (dt >= MOVE_MS && distanceM(last, next) >= MOVE_M);
+  return dt >= KEEP_MS || (dt >= moveMs && distanceM(last, next) >= MOVE_M);
 }
 
-/** Standort an `path` senden, solange die Komponente lebt. `path()` = null → nichts senden. `extra`: z. B. Schiri-Name */
-export function sendPosition(path: () => string | null, uid: () => string | undefined, extra: () => Record<string, string> = () => ({})) {
+/** Standort senden, solange die Komponente lebt und `active()` gilt. Der Server ordnet ihn dem eigenen Team bzw. Schiri zu. */
+export function sendPosition(active: () => boolean) {
   let last: Position | null = null;
   $effect(() => {
     const p = gps.pos;
-    const target = path();
-    if (!p || !target || !shouldSend(last, p)) return;
+    // Android-App im Hintergrund: natives HTTP (Android drosselt das Netzwerk der WebView), dafür nur alle 30 s –
+    // jede Anfrage zählt im Gratis-Tarif (docs/CLOUDFLARE-LIMITS.md)
+    const background = NATIVE && document.visibilityState === "hidden";
+    if (!p || !active() || !shouldSend(last, p, background ? KEEP_MS : MOVE_MS)) return;
     last = p;
-    const value = { ...p, uid: uid(), ...extra(), ...(gps.battery !== undefined ? { battery: gps.battery } : {}) };
-    // Android-App: natives HTTP, weil Android das Netzwerk der WebView im Hintergrund drosselt
-    void (NATIVE ? restSet(target, value) : set(ref(db, target), value)).catch(() => (last = null)); // offline: beim nächsten Punkt nochmal
+    const value = { ...p, ...(gps.battery !== undefined ? { battery: gps.battery } : {}) };
+    if (background) void nativePos(value).catch(() => (last = null));
+    else sendPos(value); // offline wartet der neueste Punkt und geht beim Wiederverbinden raus
   });
 }
 

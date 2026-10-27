@@ -92,7 +92,11 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
   }
 
   const name =
-    role === "screen" ? "Großbild" : role === "viewer" ? "Zuschauer" : str(d.name, role === "team" ? LIMITS.teamName : LIMITS.personName, "Name");
+    role === "screen"
+      ? "Großbild"
+      : role === "viewer"
+        ? "Zuschauer"
+        : str(d.name, role === "team" ? LIMITS.teamName : LIMITS.personName, "Name");
 
   // Team finden oder anlegen (der Spielraum macht eins nach dem anderen – zwei Handys erzeugen nie zwei gleiche Teams)
   let teamId: string | undefined;
@@ -145,7 +149,8 @@ export async function setSecret(room: GameRoom, d: D, a: Auth): Promise<ApiResul
     room.audit(who, `${LABEL[kind]} gelöscht`);
     return {};
   }
-  if (typeof value !== "string" || value.length < MIN[kind] || value.length > 64) fail("invalid", `${LABEL[kind]}: ${MIN[kind]}–64 Zeichen`);
+  if (typeof value !== "string" || value.length < MIN[kind] || value.length > 64)
+    fail("invalid", `${LABEL[kind]}: ${MIN[kind]}–64 Zeichen`);
   const hash = await hashSecret(value);
   room.set("secrets", { ...room.d.secrets, [kind]: hash });
   // Admin-Passwort geändert → alle anderen Admin-Geräte müssen sich neu anmelden (Sitzungen widerrufen)

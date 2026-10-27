@@ -58,7 +58,7 @@
     initialExisting={v === "zweit" ? "Urfahr" : undefined}
     onsubmit={async () => {
       await new Promise((r) => setTimeout(r, 600));
-      return { status: "joined", role: "team" };
+      return { status: "joined", role: "team", token: "", uid: "" };
     }}
     onjoined={() => go("/prototyp/4?v=1")}
     onback={() => go("/prototyp/1")}
@@ -124,14 +124,14 @@
   />
 {:else if n === 20}<Archive variant={v} />
 {:else if n === 21}<SuperAdmin
-    email="mr.x.rf.ooe@gmail.com"
     allowed
     games={M.games}
     onlogin={async () => {}}
+    onsetup={async () => {}}
     oncreate={async () => {}}
     onopen={() => go("/prototyp/13")}
     onadminpw={async () => {}}
-    inviteUrl={(id) => `https://mr-x-ooe-neu.web.app/#/staff/admin?g=${id}`}
+    inviteUrl={(id) => `${location.origin}/#/staff/admin?g=${id}`}
     onarchive={(id) => toast(`${id} archiviert`, "ok")}
     ondelete={(id) => toast(`${id} gelöscht`, "ok")}
     onback={() => go("/prototyp/3?v=admin")}

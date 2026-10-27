@@ -2,10 +2,10 @@
 // lädt die Linz-Vorlage, speichert, archiviert, reaktiviert und löscht das Spiel – alles über die echte App.
 import { readFileSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createServer, type ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { resetEmulators, superAdminToken, val } from "./helpers.ts";
+import { call, resetServer, startApp, SUPER_PW, superAdminToken, val } from "./helpers.ts";
 
 const PORT = 5183;
 const URL = `http://127.0.0.1:${PORT}/`;
@@ -15,16 +15,9 @@ let browser: Browser;
 let page: Page;
 
 beforeAll(async () => {
-  await resetEmulators();
-  await superAdminToken(); // legt super@test.at an (Freigabeliste der Emulator-Umgebung)
-  vite = await createServer({
-    root: "app",
-    configFile: "app/vite.config.ts",
-    mode: "emu",
-    logLevel: "error",
-    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
-  });
-  await vite.listen();
+  await resetServer();
+  await superAdminToken(); // Organisator-Passwort SUPER_PW
+  vite = await startApp(PORT);
   browser = await chromium.launch();
 }, 120_000);
 
@@ -36,21 +29,14 @@ afterAll(async () => {
 const confirm = (label: string) => page.getByRole("dialog").getByRole("button", { name: label, exact: true }).click();
 
 describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout: 60_000 }, () => {
-  it("Google-Login und Spiel ohne Vorlage anlegen", async () => {
+  it("Anmeldung mit Organisator-Passwort und Spiel ohne Vorlage anlegen", async () => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, locale: "de-AT", reducedMotion: "reduce" });
     page = await ctx.newPage();
     page.on("pageerror", (e) => console.error("PAGEERROR", e.message));
     await page.goto(`${URL}#/verwaltung`);
-    const [popup] = await Promise.all([
-      page.waitForEvent("popup"),
-      page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click(),
-    ]);
-    await popup.waitForLoadState("load");
-    await popup.locator("#email-input, #add-account-button").first().waitFor();
-    if (await popup.locator("#add-account-button").isVisible()) await popup.locator("#add-account-button").click();
-    await popup.locator("#email-input").fill("orga@test.at");
-    await popup.locator("#sign-in").click();
-    await page.getByText(T.superadmin.angemeldet("orga@test.at")).waitFor();
+    await page.getByLabel(T.verwaltung.passwort).fill(SUPER_PW);
+    await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
+    await page.getByText(T.superadmin.angemeldet).waitFor();
 
     await page.getByRole("button", { name: T.superadmin.neu, exact: true }).click();
     await page.getByLabel(T.superadmin.name).fill("Wels 2028");
@@ -104,12 +90,15 @@ describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout:
     const row = page.locator("section.card", { hasText: "Wels 2028" });
     await row.getByRole("button", { name: T.superadmin.archivieren }).click();
     await row.getByText(T.superadmin.phase.archiviert).waitFor();
-    expect(await val(`gameIndex/${G}/archived`)).toBe(true);
+    // eigene Anmeldung per Passwort (ein neues Setup würde die Sitzung im Browser ungültig machen)
+    const token = (await call(null, { action: "superLogin", password: SUPER_PW })).result!.token as string;
+    const games = async () => (await call(token, { action: "listGames" })).result!.games as { id: string; archived: boolean }[];
+    expect((await games()).find((g) => g.id === G)?.archived).toBe(true);
     await row.getByRole("button", { name: T.superadmin.reaktivieren }).click();
     await row.getByRole("button", { name: T.superadmin.archivieren }).waitFor();
     await row.getByRole("button", { name: T.allgemein.loeschen }).click();
     await confirm(T.allgemein.loeschen);
     await page.getByText(T.verwaltung.leer).waitFor();
-    expect(await val(`games/${G}`)).toBeNull();
+    expect(await val(`games/${G}/info`)).toBeNull();
   });
 });

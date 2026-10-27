@@ -1,39 +1,30 @@
-<!-- „/verwaltung“: Super-Admin (Organisator) – Google-Login, Spiele anlegen, öffnen, Admin-Zugang, archivieren, löschen. -->
+<!-- „/verwaltung“: Super-Admin (Organisator) – Anmeldung mit Passwort, Spiele anlegen, öffnen, Admin-Zugang, archivieren, löschen. -->
 <script lang="ts">
-  import { onValue, ref } from "firebase/database";
-  import type { ApiReason, GameInfo } from "@mrx/shared";
+  import type { ApiReason, GameListEntry } from "@mrx/shared";
   import SuperAdmin, { type GameRow } from "../screens/SuperAdmin.svelte";
-  import { session, signInSuperAdmin } from "../lib/session.svelte.ts";
-  import { live } from "../lib/live.svelte.ts";
-  import { db } from "../lib/firebase.ts";
+  import { session, startSession, superLogin, superLogout, superSetup } from "../lib/session.svelte.ts";
   import { ApiError, call } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
   import { T } from "../texte.ts";
 
-  const email = $derived(session.user?.email ?? null);
-  const index = live<Record<string, { name: string; createdAt: number; archived?: boolean }>>(() =>
-    session.superAdmin ? "gameIndex" : null,
-  );
-  let phases = $state<Record<string, string>>({});
-  let teamCount = $state<Record<string, number>>({});
-
-  // Phase und Anzahl Teams je Spiel live dazulesen
+  let list = $state<GameListEntry[]>([]);
+  async function load() {
+    if (!session.superAdmin) return;
+    try {
+      list = (await call({ action: "listGames" })).games;
+    } catch (e) {
+      toast(errText(e), "warn");
+    }
+  }
   $effect(() => {
-    const ids = Object.keys(index.value ?? {});
-    const offs = ids.flatMap((id) => [
-      onValue(ref(db, `games/${id}/info`), (s) => (phases[id] = (s.val() as GameInfo | null)?.phase ?? "")),
-      onValue(ref(db, `games/${id}/teams`), (s) => (teamCount[id] = s.size)),
-    ]);
-    return () => offs.forEach((o) => o());
+    if (session.superAdmin) void load();
   });
 
   const games = $derived<GameRow[]>(
-    Object.entries(index.value ?? {})
-      .sort((a, b) => b[1].createdAt - a[1].createdAt)
-      .map(([id, g]) => ({ id, name: g.name, phase: g.archived ? "archiviert" : phases[id], teams: teamCount[id] })),
+    list.map((g) => ({ id: g.id, name: g.name, phase: g.archived ? "archiviert" : g.phase, teams: g.teams })),
   );
-  const nameOf = (id: string) => index.value?.[id]?.name ?? id;
+  const nameOf = (id: string) => list.find((g) => g.id === id)?.name ?? id;
   const errText = (e: unknown) =>
     e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
   async function run(fn: () => Promise<unknown>, ok: string) {
@@ -43,27 +34,24 @@
     } catch (e) {
       toast(errText(e), "warn");
     }
+    await load();
   }
 </script>
 
 <SuperAdmin
-  {email}
   allowed={session.superAdmin}
   {games}
-  onlogin={async () => {
-    try {
-      await signInSuperAdmin();
-    } catch {
-      toast(T.apiFehler.network, "warn");
-    }
-  }}
+  onlogin={superLogin}
+  onsetup={superSetup}
+  onlogout={superLogout}
   oncreate={async (v) => {
     await call({ action: "createGame", ...v });
+    await load();
   }}
   onopen={async (id) => {
     // Organisator tritt ohne Admin-Passwort als Spielleitung bei
     try {
-      await call({ action: "join", gameId: id, role: "admin", name: (email ?? "Organisator").split("@")[0]!.slice(0, 30).padEnd(2, "-") });
+      startSession(id, await call({ action: "join", gameId: id, role: "admin", name: "Organisator" }));
       go("/spiel");
     } catch (e) {
       toast(errText(e), "warn");

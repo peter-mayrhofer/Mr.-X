@@ -1,10 +1,14 @@
-// Android-App (Meilenstein 9): was nur in der Capacitor-App anders läuft als im Browser.
+// Android-App (Meilenstein 9 + 9b): was nur in der Capacitor-App anders läuft als im Browser.
 // - Standort über einen Vordergrund-Dienst (Dauer-Benachrichtigung) → läuft auch bei ausgeschaltetem Bildschirm
-// - Standort senden über natives HTTP (REST der Datenbank) → Android bremst WebView-Netzwerk im Hintergrund
-// - Push über Firebase Cloud Messaging nativ, Akku-Optimierung abschalten (eigenes kleines Plugin „Akku“)
+// - im Hintergrund Standort per nativem HTTP (Android bremst das Netzwerk der WebView) – die Antwort bringt verpasste
+//   Benachrichtigungen mit
+// - Benachrichtigungen lokal anzeigen (kein Firebase): Ereignisse kommen über die Live-Verbindung oder POST /api/pos
+// - Akku-Optimierung abschalten (eigenes kleines Plugin „Akku“)
 import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community/background-geolocation";
-import { auth, DATABASE_URL } from "./firebase.ts";
+import type { ApiReply, Note, PositionIn } from "@mrx/shared";
+import { API_URL } from "./server.ts";
+import { tokens } from "./tokens.ts";
 
 export const NATIVE = Capacitor.isNativePlatform();
 
@@ -37,24 +41,18 @@ export async function stopNative() {
 
 export const openLocationSettings = () => BG.openSettings();
 
-/** Datenbank-Schreibzugriff per REST mit nativem HTTP (Rules gelten genauso, Anmeldung über das ID-Token) */
-export async function restSet(path: string, value: unknown) {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) throw new Error("nicht angemeldet");
-  const r = await CapacitorHttp.put({
-    url: `${DATABASE_URL}/${path}.json?auth=${encodeURIComponent(token)}`,
-    headers: { "Content-Type": "application/json" },
-    data: value,
-  });
-  if (r.status >= 300) throw new Error(`HTTP ${r.status}`);
-}
+// ---------- Benachrichtigungen (lokal) ----------
 
-/** Push nativ registrieren; liefert den FCM-Token oder null (keine Erlaubnis / keine google-services.json) */
-export async function nativePushToken(): Promise<string | null> {
-  const { PushNotifications } = await import("@capacitor/push-notifications");
-  const perm = await PushNotifications.requestPermissions();
-  if (perm.receive !== "granted") return null;
-  await PushNotifications.createChannel({
+const shown = new Set<string>();
+let lastNoteAt = Date.now();
+let channel: Promise<void> | null = null;
+
+/** Erlaubnis für Benachrichtigungen (Android 13+ fragt) und Kanal „Spiel“ anlegen */
+export async function enableLocal(ask: boolean): Promise<boolean> {
+  const { LocalNotifications } = await import("@capacitor/local-notifications");
+  const perm = ask ? await LocalNotifications.requestPermissions() : await LocalNotifications.checkPermissions();
+  if (perm.display !== "granted") return false;
+  channel ??= LocalNotifications.createChannel({
     id: "spiel",
     name: "Spiel",
     description: "Meldungen, Übergaben, Wartezeiten, Durchsagen",
@@ -62,11 +60,39 @@ export async function nativePushToken(): Promise<string | null> {
     vibration: true,
     visibility: 1,
   });
-  return new Promise((resolve) => {
-    void PushNotifications.addListener("registration", (t) => resolve(t.value));
-    void PushNotifications.addListener("registrationError", () => resolve(null));
-    void PushNotifications.register();
+  await channel;
+  return true;
+}
+
+/** App war sichtbar und hat es selbst angezeigt → später nicht nochmal als Benachrichtigung */
+export function seenNote(n: Note) {
+  lastNoteAt = Math.max(lastNoteAt, n.t);
+  shown.add(n.id);
+}
+
+/** Benachrichtigung anzeigen – jede nur einmal, egal ob sie über die Verbindung oder per HTTP kam */
+export async function showLocal(n: Note) {
+  if (shown.has(n.id)) return;
+  seenNote(n);
+  const { LocalNotifications } = await import("@capacitor/local-notifications");
+  await LocalNotifications.schedule({
+    notifications: [
+      { id: (Date.now() % 2_000_000_000) + shown.size, title: n.title, body: n.body, channelId: "spiel", smallIcon: "ic_stat_flag" },
+    ],
   });
+}
+
+/** Standort im Hintergrund per nativem HTTP; verpasste Benachrichtigungen kommen in der Antwort mit */
+export async function nativePos(p: PositionIn): Promise<void> {
+  if (!tokens.game) return;
+  const r = await CapacitorHttp.post({
+    url: `${API_URL}/api/pos`,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokens.game}` },
+    data: { p, since: lastNoteAt },
+  });
+  const j = r.data as ApiReply<{ notes: Note[] }>;
+  if (r.status >= 300 || !j.ok) throw new Error(`HTTP ${r.status}`);
+  for (const n of j.result.notes) await showLocal(n);
 }
 
 export const battery = {

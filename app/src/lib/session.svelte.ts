@@ -1,88 +1,156 @@
-// Wer bin ich, in welchem Spiel, mit welcher Rolle? Live aus Auth + Datenbank (userGames, members, info).
-// Wird ein Gerät entfernt (Admin, neue Runde), setzt der Server userGames/{uid}.removedFrom –
-// die App erklärt es dann freundlich (Screen 23).
-import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut, type User } from "firebase/auth";
-import { onValue, ref, type Unsubscribe } from "firebase/database";
-import type { GameInfo, Member, Role } from "@mrx/shared";
-import { auth, db } from "./firebase.ts";
+// Wer bin ich, in welchem Spiel, mit welcher Rolle? Die Sitzung (Token vom Beitritt) bleibt im Gerät gespeichert; dazu
+// eine Live-Verbindung zum Spielraum (Snapshot + Änderungen, shared/client.ts). Wird ein Gerät entfernt (Admin, neue
+// Runde) oder ist die Sitzung abgelaufen, sagt der Server den Grund – die App erklärt es freundlich (Screen 23).
+import { Live } from "@mrx/shared/client";
+import type { GameInfo, JoinResult, Note, PositionIn, Role, View, ViewKey } from "@mrx/shared";
+import { WS_URL } from "./server.ts";
+import { tokens } from "./tokens.ts";
 import { call } from "./api.ts";
+import { clock } from "./clock.svelte.ts";
+
+interface Saved {
+  gameId: string;
+  token: string;
+  uid: string;
+  role: Role;
+}
+const KEY = "mrx.sitzung";
+const SUPER_KEY = "mrx.organisator";
 
 class Session {
-  user = $state<User | null>(null);
-  ready = $state(false);
-  superAdmin = $state(false);
+  /** gespeicherte Sitzung gelesen (sofort – localStorage ist synchron) */
+  ready = $state(true);
   gameId = $state<string | null>(null);
+  uid = $state<string | null>(null);
   role = $state<Role | null>(null);
-  member = $state<Member | null>(null);
-  info = $state<GameInfo | null>(null);
-  /** Gerät wurde aus dem Spiel entfernt (oder neue Runde) */
+  member = $state.raw<View["me"] | null>(null);
+  info = $state.raw<GameInfo | null>(null);
+  /** ganze Sicht dieses Geräts (nach Rolle gefiltert vom Server) */
+  view = $state.raw<View | null>(null);
+  online = $state(false);
+  lastDataAt = $state(Date.now());
+  /** Gerät wurde aus dem Spiel entfernt, neue Runde oder Sitzung abgelaufen */
   removed = $state(false);
+  superAdmin = $state(false);
+  /** öffentlicher Web-Push-Schlüssel des Servers */
+  vapid = $state<string | null>(null);
 }
 
 export const session = new Session();
 
-const subs: Unsubscribe[] = [];
-const gameSubs: Unsubscribe[] = [];
-const stop = (list: Unsubscribe[]) => list.splice(0).forEach((u) => u());
+type ViewListener = (v: View, changed: ViewKey[] | "all") => void;
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Abonnenten-Liste, kein Zustand für die Oberfläche
+const viewListeners = new Set<ViewListener>();
+// eslint-disable-next-line svelte/prefer-svelte-reactivity -- dito
+const noteListeners = new Set<(n: Note) => void>();
 
-function watchGame(gameId: string | null, uid: string) {
-  stop(gameSubs);
-  session.member = null;
-  session.info = null;
-  if (!gameId) return;
-  gameSubs.push(
-    onValue(ref(db, `games/${gameId}/members/${uid}`), (s) => (session.member = s.val() as Member | null)),
-    onValue(
-      ref(db, `games/${gameId}/info`),
-      (s) => (session.info = s.val() as GameInfo | null),
-      () => (session.info = null),
-    ),
-  );
+/** Sicht beobachten (für GameData); ruft sofort mit dem aktuellen Stand auf */
+export function onView(fn: ViewListener): () => void {
+  viewListeners.add(fn);
+  if (session.view) fn(session.view, "all");
+  return () => viewListeners.delete(fn);
+}
+/** Benachrichtigungen des Servers für dieses Gerät (Android: lokal anzeigen) */
+export function onNote(fn: (n: Note) => void): () => void {
+  noteListeners.add(fn);
+  return () => noteListeners.delete(fn);
 }
 
-onAuthStateChanged(auth, async (u) => {
-  stop(subs);
-  stop(gameSubs);
-  session.user = u;
-  session.superAdmin = u ? (await u.getIdTokenResult()).claims.superAdmin === true : false;
-  if (!u) {
-    session.gameId = session.role = null;
-    session.ready = true;
-    return;
+function read<T>(k: string): T | null {
+  try {
+    return JSON.parse(localStorage.getItem(k) ?? "null") as T | null;
+  } catch {
+    return null;
   }
-  subs.push(
-    onValue(ref(db, `userGames/${u.uid}`), (s) => {
-      const v = s.val() as { gameId?: string; role?: Role; removedFrom?: string } | null;
-      const gameId = v?.gameId ?? null;
-      if (gameId !== session.gameId) watchGame(gameId, u.uid);
-      session.gameId = gameId;
-      session.role = v?.role ?? null;
-      session.removed = !!v?.removedFrom;
-      session.ready = true;
-    }),
-  );
-});
-
-/** Teams/Schiris/Spielleitung brauchen kein Konto mit E-Mail: anonymes Konto pro Gerät (E-05) */
-export async function ensureDevice(): Promise<User> {
-  return auth.currentUser ?? (await signInAnonymously(auth)).user;
+}
+function write(k: string, v: unknown) {
+  try {
+    if (v === null) localStorage.removeItem(k);
+    else localStorage.setItem(k, JSON.stringify(v));
+  } catch {
+    /* privater Modus: Sitzung gilt dann nur bis zum Schließen */
+  }
 }
 
-/** Organisator: Google-Login, dann prüft der Server die Freigabeliste und setzt den Claim */
-export async function signInSuperAdmin(): Promise<boolean> {
-  const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
-  const { superAdmin } = await call({ action: "claimSuperAdmin" });
-  await user.getIdToken(true);
-  session.superAdmin = superAdmin;
-  return superAdmin;
+let live: Live | null = null;
+const visible = () => document.visibilityState === "visible";
+
+function connect(s: Saved) {
+  live?.close();
+  Object.assign(session, { gameId: s.gameId, uid: s.uid, role: s.role, removed: false, view: null, member: null, info: null });
+  tokens.game = s.token;
+  tokens.gameId = s.gameId;
+  const l: Live = new Live({
+    url: WS_URL,
+    token: s.token,
+    onView: (v, changed) => {
+      session.view = v;
+      session.member = v.me;
+      session.info = v.info;
+      session.role = v.me.role;
+      session.lastDataAt = Date.now();
+      clock.offset = l.offset;
+      for (const fn of viewListeners) fn(v, changed);
+    },
+    onNote: (n) => noteListeners.forEach((fn) => fn(n)),
+    onBye: () => (session.removed = true),
+    onStatus: (on) => {
+      session.online = on;
+      if (on) session.lastDataAt = Date.now();
+    },
+    onVapid: (k) => (session.vapid = k),
+  });
+  live = l;
+  l.setVisible(visible());
+}
+document.addEventListener("visibilitychange", () => live?.setVisible(visible()));
+
+/** nach erfolgreichem Beitritt: Sitzung merken und verbinden */
+export function startSession(gameId: string, r: JoinResult) {
+  if (r.status !== "joined") return;
+  const s: Saved = { gameId, token: r.token, uid: r.uid, role: r.role };
+  write(KEY, s);
+  connect(s);
+}
+
+/** eigenen Standort über die Live-Verbindung senden (offline: der neueste wartet) */
+export const sendPos = (p: PositionIn) => live?.sendPos(p);
+
+function endSession() {
+  live?.close();
+  live = null;
+  write(KEY, null);
+  tokens.game = tokens.gameId = null;
+  Object.assign(session, { gameId: null, uid: null, role: null, member: null, info: null, view: null, removed: false, online: false });
 }
 
 /** Abmelden (oder nach einer Entfernung den Hinweis quittieren) */
 export async function leaveGame() {
-  await call({ action: "leave", gameId: session.gameId ?? "" });
+  if (session.gameId && !session.removed) await call({ action: "leave", gameId: session.gameId }).catch(() => {});
+  endSession();
 }
 
-export async function signOutCompletely() {
-  await leaveGame().catch(() => {});
-  await signOut(auth);
+function setSuper(t: string | null) {
+  tokens.super = t;
+  write(SUPER_KEY, t);
+  session.superAdmin = !!t;
 }
+/** Organisator: Anmeldung mit Passwort */
+export async function superLogin(password: string) {
+  setSuper((await call({ action: "superLogin", password })).token);
+}
+/** Organisator: Passwort einmalig (oder neu) mit dem Setup-Geheimnis festlegen */
+export async function superSetup(setupSecret: string, password: string) {
+  setSuper((await call({ action: "superSetup", setupSecret, password })).token);
+}
+export const superLogout = () => setSuper(null);
+
+tokens.onSession = (kind) => {
+  if (kind === "super") setSuper(null);
+  else session.removed = true;
+};
+
+// beim Start: gespeicherte Sitzungen übernehmen
+const saved = read<Saved>(KEY);
+if (saved?.token) connect(saved);
+setSuper(read<string>(SUPER_KEY));

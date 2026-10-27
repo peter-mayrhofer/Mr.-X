@@ -6,13 +6,14 @@ const config: CapacitorConfig = {
   appName: "Mister X",
   webDir: "dist",
   android: {
-    // Karte und Firebase laufen über https – keine unverschlüsselten Verbindungen erlauben
+    // Karte und Spiel-Server laufen über https – keine unverschlüsselten Verbindungen erlauben
     allowMixedContent: false,
     // sonst hören Standort-Updates nach 5 Min im Hintergrund auf (Hinweis des Standort-Plugins)
     useLegacyBridge: true,
   },
   plugins: {
-    PushNotifications: { presentationOptions: ["badge", "sound", "alert"] },
+    // lokale Benachrichtigungen (kein Firebase): kleines Fahnen-Symbol, Farbe der Roten Falken
+    LocalNotifications: { smallIcon: "ic_stat_flag", iconColor: "#C51A1A" },
   },
 };
 

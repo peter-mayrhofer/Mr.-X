@@ -11,9 +11,10 @@
   import Results from "../screens/Results.svelte";
   import ChatView from "../screens/parts/ChatView.svelte";
   import AppBar from "../ui/AppBar.svelte";
-  import { GameData, pokeWhenDue, sendMessage, type Msg } from "../lib/game.svelte.ts";
+  import { GameData, sendMessage, type Msg } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
-  import { live } from "../lib/live.svelte.ts";
+  import { remote } from "../lib/remote.svelte.ts";
+  import { call } from "../lib/api.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { PushState } from "../lib/push.svelte.ts";
   import { battery, NATIVE } from "../lib/native.ts";
@@ -34,7 +35,7 @@
 
   const game = new GameData();
   const teamId = $derived(member.teamId ?? "");
-  $effect(() => game.watch(g, { chat: true, dmTeam: teamId }));
+  $effect(() => game.watch());
   const push = new PushState();
   $effect(() => push.watch(g, uid));
 
@@ -52,10 +53,7 @@
     startGps(prefs.background);
     return () => stopGps();
   });
-  sendPosition(
-    () => (teamId && phase && phase !== "beendet" ? `games/${g}/pos/${teamId}` : null),
-    () => uid,
-  );
+  sendPosition(() => !!teamId && !!phase && phase !== "beendet");
   keepAwake(() => prefs.wake && (phase === "laeuft" || phase === "pause"));
 
   // ---- Ereignisse: nur was nach dem Öffnen passiert, bekommt Ton/Vibration bzw. eine Szene ----
@@ -135,11 +133,6 @@
     wasPhase = phase;
   });
 
-  pokeWhenDue(
-    () => g,
-    () => game.state,
-  );
-
   const lock = $derived.by(() => {
     const l = game.locks[teamId];
     if (!l) return null;
@@ -175,8 +168,9 @@
       : null,
   );
 
-  const archive = live<{ results: ResultsT; teams: Record<string, Team> }>(() =>
-    phase === "beendet" && game.state?.run ? `games/${g}/archive/${game.state.run}` : null,
+  const archive = remote(
+    () => (phase === "beendet" && game.state?.run ? game.state.run : null),
+    async (run) => (await call({ action: "archiveGet", gameId: g, run })).archive as { results: ResultsT; teams: Record<string, Team> },
   );
 
   async function send(text: string, ch: "alle" | "dm") {

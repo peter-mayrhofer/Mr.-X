@@ -1,12 +1,12 @@
 // Ende-zu-Ende (Meilenstein 6): Spielleitung am Laptop und Schiri am Handy bedienen das Spiel über die echte App –
 // Start mit gewähltem Mister X, Schiri begleitet die Fahne, Übergabe mit Vorschau, Rückgängig, Regeln live ändern,
 // Bereich sperren, Durchsage, Wartezeit von Hand, Umbenennen, Postfach, Protokoll, Notstopp mit Auswertung.
-// Die Team-Handys werden hier direkt über die Datenbank simuliert (ihre Oberfläche testet e2e-team).
+// Die Team-Handys werden hier direkt im Spielraum simuliert (ihre Oberfläche testet e2e-team).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createServer, type ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, db, device, resetEmulators, superAdminToken, val } from "./helpers.ts";
+import { call, join, resetServer, set, sleep, startApp, superAdminToken, val, type Device } from "./helpers.ts";
 
 const G = "linz-staff";
 const PORT = 5182;
@@ -17,20 +17,20 @@ let browser: Browser;
 let admin: Page;
 let schiri: Page;
 const team: Record<string, string> = {};
+const devices: Record<string, Device> = {};
 
 const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
 const setPos = (id: string, dLat: number) =>
-  db.ref(`games/${G}/pos/${id}`).set({ lat: HAUPTPLATZ.lat + dLat, lng: HAUPTPLATZ.lng, acc: 8, t: Date.now() });
+  set(`games/${G}/positions/${id}`, { lat: HAUPTPLATZ.lat + dLat, lng: HAUPTPLATZ.lng, acc: 8, t: Date.now() });
 const nav = (label: string) => admin.getByRole("link", { name: label }).click();
 const confirm = (page: Page, label: string = T.allgemein.bestaetigen) =>
   page.getByRole("dialog").getByRole("button", { name: label, exact: true }).click();
 
 beforeAll(async () => {
-  await resetEmulators();
+  await resetServer();
   const sa = await superAdminToken();
   await call(sa, { action: "createGame", gameId: G, name: "Staff-Test", template: "linz", adminPassword: "admin1234" });
-  const a = await device();
-  await call(a.token, { action: "join", gameId: G, role: "admin", name: "Vorab", secret: "admin1234" });
+  const a = await join(G, "admin", "Vorab", "admin1234");
   await call(a.token, { action: "setSecret", gameId: G, kind: "teamPw", value: "falke27" });
   await call(a.token, { action: "setSecret", gameId: G, kind: "schiriCode", value: "pfeife" });
   for (const [name, dLat] of [
@@ -38,19 +38,12 @@ beforeAll(async () => {
     ["Traun", 0.0005],
     ["Leonding", 0.01],
   ] as const) {
-    const d = await device();
-    const r = await call(d.token, { action: "join", gameId: G, role: "team", name, secret: "falke27" });
-    team[name] = r.result!.teamId as string;
+    const d = await join(G, "team", name, "falke27");
+    devices[name] = d;
+    team[name] = d.teamId!;
     await setPos(team[name], dLat);
   }
-  vite = await createServer({
-    root: "app",
-    configFile: "app/vite.config.ts",
-    mode: "emu",
-    logLevel: "error",
-    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
-  });
-  await vite.listen();
+  vite = await startApp(PORT);
   browser = await chromium.launch();
 }, 120_000);
 
@@ -106,14 +99,14 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
       )
       .toBe(true);
     await expect
-      .poll(async () => Object.values(((await val(`games/${G}/staffPos`)) ?? {}) as Record<string, { name: string }>)[0]?.name, {
+      .poll(async () => Object.values(((await val(`games/${G}/staff`)) ?? {}) as Record<string, { name: string }>)[0]?.name, {
         timeout: 15_000,
       })
       .toBe("Anna");
   });
 
   it("Schiri übergibt: nächstes Team oben, Vorschau der Wartezeit, dann Rückgängig", async () => {
-    await db.ref(`games/${G}/locks`).set(null);
+    await set(`games/${G}/locks`, null);
     await Promise.all([setPos(team.Urfahr!, 0), setPos(team.Traun!, 0.0005), setPos(team.Leonding!, 0.01)]);
     await schiri.getByRole("button", { name: T.schiri.uebergabe, exact: true }).click();
     const sheet = schiri.getByRole("dialog");
@@ -168,10 +161,8 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
   });
 
   it("Postfach: Nachricht eines Teams erscheint mit Zähler, Antwort geht in den Direktkanal", async () => {
-    const t = Date.now();
-    await db
-      .ref(`games/${G}/dm/${team.Traun}/m1`)
-      .set({ uid: "x", name: "Traun", teamId: team.Traun, kind: "msg", t, text: "Unser Akku ist fast leer" });
+    await sleep(2100); // Chat-Tempolimit des Teams
+    await call(devices.Traun!.token, { action: "chat", gameId: G, text: "Unser Akku ist fast leer", dm: team.Traun });
     await admin.getByRole("link", { name: /Chat/ }).getByText("1").waitFor();
     await nav(T.admin.nav.chat);
     await admin.getByRole("tab", { name: T.chat.postfach }).click();
@@ -197,6 +188,6 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
     await visible(admin, T.ende.sieger);
     await visible(schiri, T.ende.sieger);
     expect(await val(`games/${G}/state/phase`)).toBe("beendet");
-    expect(await val(`games/${G}/staffPos`)).toBeNull();
+    expect(await val(`games/${G}/staff`)).toEqual({});
   });
 });

@@ -11,7 +11,10 @@ const members: Record<string, Member> = {
   scr: m("screen"),
   v1: m("viewer"),
 };
-const reg = (prefs: PushReg["prefs"] = {}): PushReg => ({ sub: { endpoint: "https://push.example/" + Math.random(), keys: { p256dh: "", auth: "" } }, prefs });
+const reg = (prefs: PushReg["prefs"] = {}): PushReg => ({
+  sub: { endpoint: "https://push.example/" + Math.random(), keys: { p256dh: "", auth: "" } },
+  prefs,
+});
 const regs: Record<string, PushReg> = {
   a1: reg(),
   a2: reg({ meldung: false }),

@@ -1,6 +1,5 @@
-// Live-Daten eines Spiels für die Spiel-Ansichten (Team, Schiri, Spielleitung). Jede Ansicht liest nur, was ihre Rolle
-// lesen darf (Rules) – darum sagt `watch`, welche Teile abonniert werden.
-import { limitToLast, onValue, push, query, ref, serverTimestamp, update, type Unsubscribe } from "firebase/database";
+// Live-Daten eines Spiels für die Spiel-Ansichten (Team, Schiri, Spielleitung). Kommen über die eine Live-Verbindung des
+// Geräts (session.svelte.ts); was die Rolle nicht sehen darf, schickt der Server gar nicht erst (Abschnitt 6).
 import type {
   AuditEntry,
   ChatMessage,
@@ -16,133 +15,81 @@ import type {
   Report,
   Team,
   TeamStats,
+  View,
+  ViewKey,
 } from "@mrx/shared";
-import { db } from "./firebase.ts";
-import { clock } from "./clock.svelte.ts";
+import { untrack } from "svelte";
+import { onView, session } from "./session.svelte.ts";
 import { call } from "./api.ts";
 
 export type Keyed<T> = T & { id: string };
 export type Msg = Keyed<ChatMessage>;
 
-/** RTDB-Liste (Push-Schlüssel = zeitlich sortiert) → Array */
-const list = <T>(v: Record<string, T> | null): Keyed<T>[] =>
+/** Einträge (zeitlich sortierbare Schlüssel) → sortierte Liste */
+const list = <T>(v: Record<string, T> | null | undefined): Keyed<T>[] =>
   Object.entries(v ?? {})
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([id, x]) => ({ ...x, id }));
 
 export class GameData {
-  config = $state<Config | null>(null);
-  field = $state<Field | null>(null);
-  state = $state<GameState | null>(null);
-  teams = $state<Record<string, Team>>({});
-  reports = $state<Keyed<Report>[]>([]);
-  handovers = $state<Keyed<Handover>[]>([]);
-  locks = $state<Record<string, Lock>>({});
-  pauses = $state<Keyed<Pause>[]>([]);
-  cutLog = $state<Keyed<CutEvent>[]>([]);
-  stats = $state<Record<string, TeamStats>>({});
-  chat = $state<Msg[]>([]);
-  dm = $state<Msg[]>([]);
+  config = $state.raw<Config | null>(null);
+  field = $state.raw<Field | null>(null);
+  state = $state.raw<GameState | null>(null);
+  teams = $state.raw<Record<string, Team>>({});
+  reports = $state.raw<Keyed<Report>[]>([]);
+  handovers = $state.raw<Keyed<Handover>[]>([]);
+  locks = $state.raw<Record<string, Lock>>({});
+  pauses = $state.raw<Keyed<Pause>[]>([]);
+  cutLog = $state.raw<Keyed<CutEvent>[]>([]);
+  stats = $state.raw<Record<string, TeamStats>>({});
+  chat = $state.raw<Msg[]>([]);
+  /** eigener Direktkanal (Team) */
+  dm = $state.raw<Msg[]>([]);
   /** nur Schiri, Spielleitung, Großbild: Live-Standorte */
-  positions = $state<Record<string, Position>>({});
-  staff = $state<Record<string, Position & { name?: string }>>({});
+  positions = $state.raw<Record<string, Position>>({});
+  staff = $state.raw<Record<string, Position & { name?: string }>>({});
   /** nur Spielleitung */
-  members = $state<Record<string, Member>>({});
-  audit = $state<Keyed<AuditEntry>[]>([]);
-  dmAll = $state<Record<string, Msg[]>>({});
-  /** Verbindung zur Datenbank; `lastDataAt` = zuletzt verbunden */
-  online = $state(true);
-  lastDataAt = $state(Date.now());
+  members = $state.raw<Record<string, Member>>({});
+  audit = $state.raw<Keyed<AuditEntry>[]>([]);
+  dmAll = $state.raw<Record<string, Msg[]>>({});
+  /** Verbindung zum Server; `lastDataAt` = zuletzt Daten bekommen */
+  readonly online = $derived(session.online);
+  readonly lastDataAt = $derived(session.lastDataAt);
   readonly loaded = $derived(!!this.config && !!this.field && !!this.state);
 
-  /** Abonnieren; gibt die Abmeldung zurück (für $effect) */
-  watch(g: string, o: { chat?: boolean; dmTeam?: string | undefined; live?: boolean; admin?: boolean }): () => void {
-    const p = `games/${g}`;
-    const on = <T>(path: string, set: (v: T | null) => void, limit?: number): Unsubscribe =>
-      onValue(
-        limit ? query(ref(db, path), limitToLast(limit)) : ref(db, path),
-        (s) => set(s.val() as T | null),
-        () => set(null),
-      );
-    const subs: Unsubscribe[] = [
-      on<Config>(`${p}/config`, (v) => (this.config = v)),
-      // RTDB speichert keine leeren Listen → leeres Spielfeld kommt ohne base/cuts an
-      on<Field>(`${p}/field`, (v) => (this.field = v && { ...v, base: v.base ?? [], cuts: v.cuts ?? {} })),
-      on<GameState>(`${p}/state`, (v) => (this.state = v)),
-      on<Record<string, Team>>(`${p}/teams`, (v) => (this.teams = v ?? {})),
-      on<Record<string, Report>>(`${p}/reports`, (v) => (this.reports = list(v))),
-      on<Record<string, Handover>>(`${p}/handovers`, (v) => (this.handovers = list(v))),
-      on<Record<string, Lock>>(`${p}/locks`, (v) => (this.locks = v ?? {})),
-      on<Record<string, Pause>>(`${p}/pauses`, (v) => (this.pauses = list(v))),
-      on<Record<string, CutEvent>>(`${p}/cutLog`, (v) => (this.cutLog = list(v))),
-      on<Record<string, TeamStats>>(`${p}/stats`, (v) => (this.stats = v ?? {})),
-      on<boolean>(".info/connected", (v) => {
-        this.online = v === true;
-        if (v) this.lastDataAt = Date.now();
-      }),
-      // Server-Zeit für alle Countdowns (KONZEPT Abschnitt 5)
-      on<number>(".info/serverTimeOffset", (v) => (clock.offset = v ?? 0)),
-    ];
-    if (o.chat) subs.push(on<Record<string, ChatMessage>>(`${p}/chat`, (v) => (this.chat = list(v)), 200));
-    if (o.dmTeam) subs.push(on<Record<string, ChatMessage>>(`${p}/dm/${o.dmTeam}`, (v) => (this.dm = list(v)), 200));
-    if (o.live)
-      subs.push(
-        on<Record<string, Position>>(`${p}/pos`, (v) => (this.positions = v ?? {})),
-        on<Record<string, Position & { name?: string }>>(`${p}/staffPos`, (v) => (this.staff = v ?? {})),
-      );
-    if (o.admin) {
-      subs.push(
-        on<Record<string, Member>>(`${p}/members`, (v) => (this.members = v ?? {})),
-        on<Record<string, AuditEntry>>(`${p}/audit`, (v) => (this.audit = list(v)), 500),
-      );
-      // Direktkanäle: pro Team ein Abo (die Rules erlauben kein Lesen von dm/ als Ganzes)
-      const dmSubs: Record<string, Unsubscribe> = {};
-      subs.push(
-        on<Record<string, Team>>(`${p}/teams`, (v) => {
-          const ids = Object.keys(v ?? {});
-          for (const t of Object.keys(dmSubs))
-            if (!ids.includes(t)) {
-              dmSubs[t]!();
-              delete dmSubs[t];
-              delete this.dmAll[t];
-            }
-          for (const t of ids) dmSubs[t] ??= on<Record<string, ChatMessage>>(`${p}/dm/${t}`, (m) => (this.dmAll[t] = list(m)), 200);
-        }),
-        () => Object.values(dmSubs).forEach((u) => u()),
-      );
+  /** Live-Daten übernehmen; gibt die Abmeldung zurück (für $effect). Spiel und Rolle bestimmt die Sitzung. */
+  watch(): () => void {
+    // ohne Abhängigkeiten: die Daten kommen über onView, nicht über den umgebenden $effect
+    return untrack(() => onView((v, changed) => this.#apply(v, changed)));
+  }
+
+  #apply(v: View, changed: ViewKey[] | "all") {
+    const has = (k: ViewKey) => changed === "all" || changed.includes(k);
+    if (has("config")) this.config = v.config;
+    // leeres Spielfeld kommt evtl. ohne base/cuts
+    if (has("field")) this.field = v.field && { ...v.field, base: v.field.base ?? [], cuts: v.field.cuts ?? {} };
+    if (has("state")) this.state = { ...v.state };
+    if (has("teams")) this.teams = { ...v.teams };
+    if (has("reports")) this.reports = list(v.reports);
+    if (has("handovers")) this.handovers = list(v.handovers);
+    if (has("locks")) this.locks = { ...v.locks };
+    if (has("pauses")) this.pauses = list(v.pauses);
+    if (has("cutLog")) this.cutLog = list(v.cutLog);
+    if (has("stats")) this.stats = { ...v.stats };
+    if (has("chat")) this.chat = list(v.chat);
+    if (has("dm")) {
+      const all = Object.fromEntries(Object.entries(v.dm ?? {}).map(([t, c]) => [t, list(c)]));
+      this.dmAll = all;
+      this.dm = v.me.teamId ? (all[v.me.teamId] ?? []) : [];
     }
-    return () => subs.forEach((u) => u());
+    if (has("positions")) this.positions = { ...v.positions };
+    if (has("staff")) this.staff = { ...v.staff };
+    if (has("members")) this.members = { ...v.members };
+    if (has("audit")) this.audit = list(v.audit);
   }
 }
 
-/**
- * Chat-Nachricht schreiben. Die Rules verlangen Zeitstempel = Server-Zeit und denselben Stempel unter rate/{uid}
- * (max. 1 Nachricht pro 2 s) – darum beides in einem Schreibvorgang.
- */
-export async function sendMessage(
-  g: string,
-  me: { uid: string; name: string; teamId?: string | undefined },
-  text: string,
-  channel: { dm?: string | undefined } = {},
-) {
-  const path = channel.dm ? `games/${g}/dm/${channel.dm}` : `games/${g}/chat`;
-  const id = push(ref(db, path)).key!;
-  await update(ref(db), {
-    [`${path}/${id}`]: { uid: me.uid, name: me.name, text, t: serverTimestamp(), kind: "msg", ...(me.teamId ? { teamId: me.teamId } : {}) },
-    [`games/${g}/rate/${me.uid}`]: serverTimestamp(),
-  });
-}
-
-/** Countdown abgelaufen → Server anstoßen; er entscheidet, ob wirklich etwas fällig ist (E-23). Für $effect-Kontext. */
-export function pokeWhenDue(g: () => string, state: () => GameState | null) {
-  let poked = 0;
-  $effect(() => {
-    const st = state();
-    const due = st?.nextReportAt;
-    if (st?.phase !== "laeuft" || !due || clock.now < due + 1000 || poked === due) return;
-    poked = due;
-    const gameId = g();
-    // leicht gestreut, damit nicht alle Handys in derselben Millisekunde fragen
-    setTimeout(() => void call({ action: "poke", gameId }).catch(() => {}), Math.random() * 1500);
-  });
+/** Chat-Nachricht schreiben (Gruppenchat oder Direktkanal `dm` = Team-Id); der Server prüft Absender und Tempo */
+export async function sendMessage(g: string, _me: unknown, text: string, channel: { dm?: string | undefined } = {}) {
+  await call({ action: "chat", gameId: g, text, ...(channel.dm ? { dm: channel.dm } : {}) });
 }

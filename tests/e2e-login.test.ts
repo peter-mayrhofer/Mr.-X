@@ -1,11 +1,11 @@
-// Ende-zu-Ende (Abschnitt 9.3): simulierte Handys melden sich über die echte App an – gegen die Emulatoren.
+// Ende-zu-Ende (Abschnitt 9.3): simulierte Handys melden sich über die echte App an – gegen den lokalen Spiel-Server.
 // Spielleitung legt Zugänge fest, Teams treten per QR-Link bei (falsches Passwort, Ersatzgerät), Schiri, Zuschauer,
 // Großbild, Abmelden, angemeldet bleiben nach Neuladen.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createServer, type ViteDevServer } from "vite";
+import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, resetEmulators, superAdminToken, val } from "./helpers.ts";
+import { call, resetServer, startApp, SUPER_PW, superAdminToken, val } from "./helpers.ts";
 
 const G = "linz-e2e";
 const PORT = 5180;
@@ -19,18 +19,6 @@ async function phone(): Promise<{ ctx: BrowserContext; page: Page }> {
   page.on("pageerror", (e) => console.error("PAGEERROR", e.message));
   return { ctx, page };
 }
-/** Google-Login im Auth-Emulator: Kontoliste nur, wenn schon Konten existieren – sonst gleich das Formular */
-async function googleEmulatorLogin(page: Page, email: string) {
-  const [popup] = await Promise.all([
-    page.waitForEvent("popup"),
-    page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click(),
-  ]);
-  await popup.waitForLoadState("load"); // Klick-Handler des Emulator-Fensters hängen erst danach
-  await popup.locator("#email-input, #add-account-button").first().waitFor();
-  if (await popup.locator("#add-account-button").isVisible()) await popup.locator("#add-account-button").click();
-  await popup.locator("#email-input").fill(email);
-  await popup.locator("#sign-in").click();
-}
 /** Team-Handys sehen nach dem Beitritt zuerst das Onboarding */
 async function skipOnboarding(page: Page) {
   await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
@@ -38,18 +26,11 @@ async function skipOnboarding(page: Page) {
 const card = (page: Page, label: string) => page.locator("section.card", { has: page.getByRole("heading", { name: label, exact: true }) });
 
 beforeAll(async () => {
-  await resetEmulators();
+  await resetServer();
   const token = await superAdminToken();
   const r = await call(token, { action: "createGame", gameId: G, name: "E2E Spiel", template: "linz", adminPassword: "admin1234" });
   expect(r.result).toEqual({ gameId: G });
-  vite = await createServer({
-    root: "app",
-    configFile: "app/vite.config.ts",
-    mode: "emu",
-    logLevel: "error",
-    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
-  });
-  await vite.listen();
+  vite = await startApp(PORT);
   browser = await chromium.launch();
 }, 120_000);
 
@@ -83,7 +64,7 @@ describe("Anmeldung über die App", () => {
     await schiri.getByLabel(T.admin.passwortNeu).fill("pfeife");
     await schiri.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
     await adminPage.getByText(T.zugang.gespeichert(T.admin.schiriCode)).waitFor();
-    expect(await val(`secrets/${G}/teamPw`)).toMatch(/^scrypt\$/);
+    expect(await val(`secrets/${G}/teamPw`)).toMatch(/^pbkdf2\$/);
   });
 
   it("Team kommt über den QR-Link, falsches Passwort wird erklärt, richtiges führt in den Warteraum", async () => {
@@ -161,12 +142,24 @@ describe("Anmeldung über die App", () => {
     await page.getByText(T.warten.angemeldetAls(T.warten.rolle.screen, "Großbild")).waitFor();
   });
 
-  it("Organisator: Google-Login (Emulator), Spiel anlegen, Admin-Passwort vergeben", async () => {
+  it("Organisator: falsches Passwort abgelehnt", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/verwaltung`);
     await page.getByText(T.verwaltung.nurOrganisator).waitFor();
-    await googleEmulatorLogin(page, "orga@test.at");
-    await page.getByText(T.superadmin.angemeldet("orga@test.at")).waitFor();
+    await page.getByLabel(T.verwaltung.passwort).fill("falsches-passwort");
+    await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
+    await page.getByText(T.apiFehler.wrongSecret).waitFor();
+    expect(await page.getByRole("button", { name: T.superadmin.neu, exact: true }).count()).toBe(0);
+  });
+
+  it("Organisator: Passwort mit dem Setup-Geheimnis neu festlegen, Spiel anlegen, bleibt angemeldet", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/verwaltung`);
+    await page.getByRole("button", { name: T.verwaltung.ersteinrichtung, exact: true }).click();
+    await page.getByLabel(T.verwaltung.setupGeheimnis).fill("test-setup-geheimnis");
+    await page.getByLabel(T.verwaltung.neuesPasswort).fill(SUPER_PW);
+    await page.getByRole("button", { name: T.verwaltung.festlegen, exact: true }).click();
+    await page.getByText(T.superadmin.angemeldet).waitFor();
     await page.getByText("E2E Spiel").waitFor();
 
     await page.getByRole("button", { name: T.superadmin.neu, exact: true }).click();
@@ -175,16 +168,22 @@ describe("Anmeldung über die App", () => {
     await page.getByLabel(T.staffLogin.adminPasswort).fill("wels12345");
     await page.getByRole("dialog").getByRole("button", { name: T.superadmin.neu, exact: true }).click();
     await page.getByText(T.verwaltung.angelegt("Wels 2028")).waitFor();
+    await page.getByText("wels-2028", { exact: true }).waitFor();
     expect(await val("games/wels-2028/info/name")).toBe("Wels 2028");
-    expect(await val("secrets/wels-2028/adminPw")).toMatch(/^scrypt\$/);
+    expect(await val("secrets/wels-2028/adminPw")).toMatch(/^pbkdf2\$/);
+
+    await page.reload();
+    await page.getByText(T.superadmin.angemeldet).waitFor();
+    await page.getByRole("button", { name: T.verwaltung.abmelden, exact: true }).click();
+    await page.getByLabel(T.verwaltung.passwort).waitFor();
   });
 
-  it("andere Google-Konten bekommen keinen Zugang", async () => {
+  it("Organisator: Anmeldung mit Passwort", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/verwaltung`);
-    await googleEmulatorLogin(page, "fremd@test.at");
-    await page.getByText(T.verwaltung.keinZugang("fremd@test.at")).waitFor();
-    expect(await page.getByRole("button", { name: T.superadmin.neu, exact: true }).count()).toBe(0);
+    await page.getByLabel(T.verwaltung.passwort).fill(SUPER_PW);
+    await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
+    await page.getByText("Wels 2028").waitFor();
   });
 
   it("unbekanntes Spiel im QR-Link wird freundlich erklärt", async () => {

@@ -3,21 +3,18 @@
   Großbild und Zuschauer sehen vorerst den Warteraum – ihre Ansichten folgen in Meilenstein 10.
 -->
 <script lang="ts">
-  import type { Config, Team } from "@mrx/shared";
   import Lobby from "../screens/Lobby.svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
   import TeamPage from "./TeamPage.svelte";
   import StaffGamePage from "./StaffGamePage.svelte";
   import { session, leaveGame } from "../lib/session.svelte.ts";
-  import { live } from "../lib/live.svelte.ts";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
   const g = $derived(session.gameId);
-  const teams = live<Record<string, Team>>(() => (g ? `games/${g}/teams` : null));
-  const config = live<Config>(() => (g ? `games/${g}/config` : null));
-  const list = $derived(Object.entries(teams.value ?? {}).map(([id, t]) => ({ id, ...t })));
+  const view = $derived(session.view);
+  const list = $derived(Object.entries(view?.teams ?? {}).map(([id, t]) => ({ id, ...t })));
 
   $effect(() => {
     if (session.ready && !session.gameId && !session.removed) go("/");
@@ -32,23 +29,23 @@
       go("/");
     }}
   />
-{:else if !g || !session.member || !config.value || !session.info || !session.user}
+{:else if !g || !view || !session.uid}
   <div class="wait" aria-busy="true" aria-label={T.allgemein.laden}>
     <Skeleton h="96px" w="96px" r="50%" />
     <Skeleton h="40px" />
     <Skeleton h="200px" r="var(--r-l)" />
   </div>
-{:else if session.member.role === "team"}
-  <TeamPage {g} uid={session.user.uid} member={session.member} gameName={session.info.name} />
-{:else if session.member.role === "schiri" || session.member.role === "admin"}
-  <StaffGamePage {g} uid={session.user.uid} member={session.member} gameName={session.info.name} />
+{:else if view.me.role === "team"}
+  <TeamPage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
+{:else if view.me.role === "schiri" || view.me.role === "admin"}
+  <StaffGamePage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
 {:else}
   <Lobby
-    gameName={session.info.name}
-    roleLabel={T.warten.rolle[session.member.role]}
-    name={session.member.name}
+    gameName={view.info.name}
+    roleLabel={T.warten.rolle[view.me.role]}
+    name={view.me.name}
     teams={list}
-    config={config.value}
+    config={view.config}
     onrules={() => go("/hilfe")}
     onlogout={async () => {
       await leaveGame();
