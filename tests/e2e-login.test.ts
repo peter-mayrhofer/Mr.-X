@@ -1,0 +1,191 @@
+// Ende-zu-Ende (Abschnitt 9.3): simulierte Handys melden sich über die echte App an – gegen die Emulatoren.
+// Spielleitung legt Zugänge fest, Teams treten per QR-Link bei (falsches Passwort, Ersatzgerät), Schiri, Zuschauer,
+// Großbild, Abmelden, angemeldet bleiben nach Neuladen.
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createServer, type ViteDevServer } from "vite";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { T } from "../app/src/texte.ts";
+import { call, resetEmulators, superAdminToken, val } from "./helpers.ts";
+
+const G = "linz-e2e";
+const PORT = 5180;
+let vite: ViteDevServer;
+let browser: Browser;
+const URL = `http://127.0.0.1:${PORT}/`;
+
+async function phone(): Promise<{ ctx: BrowserContext; page: Page }> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "de-AT", reducedMotion: "reduce" });
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => console.error("PAGEERROR", e.message));
+  return { ctx, page };
+}
+/** Google-Login im Auth-Emulator: Kontoliste nur, wenn schon Konten existieren – sonst gleich das Formular */
+async function googleEmulatorLogin(page: Page, email: string) {
+  const [popup] = await Promise.all([
+    page.waitForEvent("popup"),
+    page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click(),
+  ]);
+  await popup.waitForLoadState("load"); // Klick-Handler des Emulator-Fensters hängen erst danach
+  await popup.locator("#email-input, #add-account-button").first().waitFor();
+  if (await popup.locator("#add-account-button").isVisible()) await popup.locator("#add-account-button").click();
+  await popup.locator("#email-input").fill(email);
+  await popup.locator("#sign-in").click();
+}
+const card = (page: Page, label: string) => page.locator("section.card", { has: page.getByRole("heading", { name: label, exact: true }) });
+
+beforeAll(async () => {
+  await resetEmulators();
+  const token = await superAdminToken();
+  const r = await call(token, { action: "createGame", gameId: G, name: "E2E Spiel", template: "linz", adminPassword: "admin1234" });
+  expect(r.result).toEqual({ gameId: G });
+  vite = await createServer({
+    root: "app",
+    configFile: "app/vite.config.ts",
+    mode: "emu",
+    logLevel: "error",
+    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
+  });
+  await vite.listen();
+  browser = await chromium.launch();
+}, 120_000);
+
+afterAll(async () => {
+  await browser?.close();
+  await vite?.close();
+});
+
+describe("Anmeldung über die App", () => {
+  let adminPage: Page;
+
+  it("Spielleitung meldet sich an und legt Team-Passwort und Schiri-Code fest", async () => {
+    adminPage = (await phone()).page;
+    await adminPage.goto(`${URL}#/staff/admin?g=${G}`);
+    await adminPage.getByLabel(T.staffLogin.name).fill("Peter");
+    await adminPage.getByLabel(T.staffLogin.adminPasswort).fill("falsch123");
+    await adminPage.getByRole("button", { name: T.staffLogin.los, exact: true }).click();
+    await expect.poll(() => adminPage.getByText(T.apiFehler.wrongSecret).isVisible()).toBe(true);
+    await adminPage.getByLabel(T.staffLogin.adminPasswort).fill("admin1234");
+    await adminPage.getByRole("button", { name: T.staffLogin.los, exact: true }).click();
+    await adminPage.getByRole("heading", { name: T.warten.zugaenge }).waitFor();
+
+    const teamPw = card(adminPage, T.admin.teamPasswort);
+    await teamPw.getByLabel(T.admin.passwortNeu).fill("falke27");
+    await teamPw.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
+    await adminPage.getByText(T.zugang.gespeichert(T.admin.teamPasswort)).waitFor();
+    const schiri = card(adminPage, T.admin.schiriCode);
+    await schiri.getByLabel(T.admin.passwortNeu).fill("pfeife");
+    await schiri.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
+    await adminPage.getByText(T.zugang.gespeichert(T.admin.schiriCode)).waitFor();
+    expect(await val(`secrets/${G}/teamPw`)).toMatch(/^scrypt\$/);
+  });
+
+  it("Team kommt über den QR-Link, falsches Passwort wird erklärt, richtiges führt in den Warteraum", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/s/${G}`);
+    await page.getByText("E2E Spiel").waitFor();
+    await page.getByRole("button", { name: T.start.teamBeitreten, exact: true }).click();
+    await page.getByLabel(T.beitritt.teamname).fill("Urfahr");
+    await page.getByLabel(T.beitritt.passwort).fill("falsch");
+    await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await page.getByText(T.apiFehler.wrongSecret).waitFor();
+    await page.getByLabel(T.beitritt.passwort).fill("falke27");
+    await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
+    await page.getByText("Urfahr", { exact: true }).first().waitFor();
+
+    // angemeldet bleiben (Abschnitt 7.1)
+    await page.reload();
+    await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
+  });
+
+  it("Ersatzgerät: Rückfrage, dann im selben Team", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/beitreten/${G}`);
+    await page.getByLabel(T.beitritt.teamname).fill("urfahr");
+    await page.getByLabel(T.beitritt.passwort).fill("falke27");
+    await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await page.getByText(T.beitritt.zweitgeraet("urfahr")).waitFor();
+    await page.getByRole("button", { name: T.beitritt.alsErsatz, exact: true }).click();
+    await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
+    expect(Object.keys(await val(`games/${G}/teams`))).toHaveLength(1);
+  });
+
+  it("zweites Team erscheint live bei der Spielleitung", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/beitreten/${G}`);
+    await page.getByLabel(T.beitritt.teamname).fill("Traun");
+    await page.getByLabel(T.beitritt.passwort).fill("falke27");
+    await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
+    await adminPage.getByText(T.lobby.teams(2)).waitFor();
+
+    // Abmelden: Gerät landet auf der Startseite, das Team bleibt bestehen
+    await page.getByRole("button", { name: T.warten.abmelden, exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: T.einstellungen.abmelden, exact: true }).click();
+    await page.getByRole("button", { name: T.start.teamBeitreten, exact: true }).waitFor();
+    await adminPage.getByText(T.lobby.teams(2)).waitFor();
+  });
+
+  it("Schiri mit Schiri-Code", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/staff/schiri?g=${G}`);
+    await page.getByLabel(T.staffLogin.name).fill("Anna");
+    await page.getByLabel(T.staffLogin.schiriCode).fill("pfeife");
+    await page.getByRole("button", { name: T.staffLogin.los, exact: true }).click();
+    await page.getByText(T.warten.angemeldetAls(T.warten.rolle.schiri, "Anna")).waitFor();
+  });
+
+  it("Zuschauer-Link ohne Passwort", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/z/${G}`);
+    await page.getByText(T.warten.angemeldetAls(T.warten.rolle.viewer, "Zuschauer")).waitFor();
+  });
+
+  it("Großbild über den Link aus dem Admin-Bereich", async () => {
+    const box = card(adminPage, T.admin.grossbildLink);
+    await box.getByRole("button", { name: T.zugang.grossbildZeigen, exact: true }).click();
+    const link = (await box.locator("code").textContent())!;
+    expect(link).toContain(`#/g/${G}?k=`);
+    const { page } = await phone();
+    await page.goto(link.replace(/^https?:\/\/[^/]+\//, URL));
+    await page.getByText(T.warten.angemeldetAls(T.warten.rolle.screen, "Großbild")).waitFor();
+  });
+
+  it("Organisator: Google-Login (Emulator), Spiel anlegen, Admin-Passwort vergeben", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/verwaltung`);
+    await page.getByText(T.verwaltung.nurOrganisator).waitFor();
+    await googleEmulatorLogin(page, "orga@test.at");
+    await page.getByText(T.superadmin.angemeldet("orga@test.at")).waitFor();
+    await page.getByText("E2E Spiel").waitFor();
+
+    await page.getByRole("button", { name: T.superadmin.neu, exact: true }).click();
+    await page.getByLabel(T.superadmin.name).fill("Wels 2028");
+    expect(await page.getByLabel(T.superadmin.code).inputValue()).toBe("wels-2028");
+    await page.getByLabel(T.staffLogin.adminPasswort).fill("wels12345");
+    await page.getByRole("dialog").getByRole("button", { name: T.superadmin.neu, exact: true }).click();
+    await page.getByText(T.verwaltung.angelegt("Wels 2028")).waitFor();
+    expect(await val("games/wels-2028/info/name")).toBe("Wels 2028");
+    expect(await val("secrets/wels-2028/adminPw")).toMatch(/^scrypt\$/);
+  });
+
+  it("andere Google-Konten bekommen keinen Zugang", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/verwaltung`);
+    await googleEmulatorLogin(page, "fremd@test.at");
+    await page.getByText(T.verwaltung.keinZugang("fremd@test.at")).waitFor();
+    expect(await page.getByRole("button", { name: T.superadmin.neu, exact: true }).count()).toBe(0);
+  });
+
+  it("unbekanntes Spiel im QR-Link wird freundlich erklärt", async () => {
+    const { page } = await phone();
+    await page.goto(`${URL}#/s/gibts-nicht`);
+    await page.getByRole("heading", { name: T.fehler.nichtGefunden.titel }).waitFor();
+  });
+
+  it("Protokoll hält alle Beitritte fest", async () => {
+    const audit = Object.values((await val(`games/${G}/audit`)) as Record<string, { action: string }>).map((a) => a.action);
+    expect(audit.filter((a) => a === "Beigetreten").length).toBeGreaterThanOrEqual(6);
+    expect(audit).toContain("Abgemeldet");
+  });
+});

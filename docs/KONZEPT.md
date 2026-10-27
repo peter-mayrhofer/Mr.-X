@@ -1,6 +1,7 @@
 # Konzept: Neubau „Mister X – Rote Falken“
 
-Stand: Meilenstein 1 (Analyse & Konzept) + Design-Prototyp. **Wartet auf Bestätigung durch den Organisator.**
+Stand: Meilenstein 1 (Analyse & Konzept) + Design-Prototyp – **vom Organisator bestätigt am 27.10.2026**
+(alle Vorschläge aus Abschnitt 9 angenommen, siehe E-20).
 Begründungen zu allen Entscheidungen: [`ENTSCHEIDUNGEN.md`](ENTSCHEIDUNGEN.md). Offene Fragen: [Abschnitt 9](#9-offene-fragen-bitte-beantworten).
 
 ---
@@ -151,11 +152,13 @@ Spalte **schreibt**: *F* = nur Functions, *C* = Client (mit Rules-Prüfung).
 | `games/{g}/chat/{id}` | `uid, name, text, t, kind (msg/sys/ann), ev (Verweis auf Meldung)` | Mitglieder außer Zuschauer | C nur `kind=msg` (Länge ≤ 300, max. 1 Nachricht / 2 s); F für `sys`/`ann` |
 | `games/{g}/dm/{t}/{id}` | Direktkanal Team ↔ Admin | Admin + Team `{t}` | C (Admin oder Team `{t}`) |
 | `games/{g}/audit/{id}` | Protokoll: wer, wann, was | Admin | F |
+| `games/{g}/rate/{uid}` | Zeitstempel der letzten eigenen Nachricht (Chat-Bremse: max. 1 Nachricht / 2 s, geprüft von den Rules) | – | C (nur eigener, nur zusammen mit einer Nachricht sinnvoll) |
+| `rate/join/{schlüssel}` | Fehlversuche beim Beitritt pro Gerät und pro IP (IP nur gehasht) | niemand | F |
 | `games/{g}/devices/{gerät}` | Tracker: Name, Zuordnung (`team:{t}` oder `fahne`), zuletzt gesehen | Admin | F |
 | `games/{g}/push/{uid}` | FCM-Token, Plattform, gewählte Push-Arten | eigener | C (nur eigener) |
 | `games/{g}/archive/{lauf}` | Auswertung, Übergaben, Mister-X-Meldungen, Chat, Teamnamen, Protokoll | Mitglieder | F |
 | `secrets/{g}` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, **Spielende-Zeitpunkt**, Tracker-Tokens | **niemand** | F |
-| `userGames/{uid}` | in welchem Spiel ist dieses Gerät (für „angemeldet bleiben“) | eigener | F |
+| `userGames/{uid}` | in welchem Spiel ist dieses Gerät (für „angemeldet bleiben“); `removedFrom` = vom Admin entfernt | eigener | F |
 | `gameIndex/{g}` | Liste aller Spiele für Super-Admin | Super-Admin | F |
 
 **Bewusst nicht gespeichert:** lückenlose Bewegungsprofile. `pos` enthält immer nur den **letzten** Standort pro Team.
@@ -309,9 +312,10 @@ Der Lasttest (Meilenstein 12) misst diese Zahlen im Emulator nach und korrigiert
 
 ---
 
-## 9. Offene Fragen (bitte beantworten)
+## 9. Offene Fragen
 
-Zu jeder Frage steht der **Vorschlag**, mit dem ich weiterarbeite, falls keine andere Antwort kommt.
+Zu jeder Frage steht der **Vorschlag**. Bestätigt am 27.10.2026: F2, F3, F6, F8, F10, F14 ausdrücklich, alle übrigen
+als Standard. **Noch zu liefern:** Vektor-Logos (F1), Kontakt des Verantwortlichen für den Datenschutzhinweis (F12).
 
 | # | Frage | Vorschlag |
 |---|---|---|

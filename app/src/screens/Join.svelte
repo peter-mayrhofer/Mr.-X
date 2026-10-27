@@ -1,71 +1,106 @@
-<!-- Screen 2: Team beitreten (Spiel-Code/QR, Teamname, Team-Passwort). -->
+<!-- Screen 2: Team beitreten (Spiel-Code/QR, Teamname, Team-Passwort). Ersatzgerät nach Rückfrage (F14). -->
 <script lang="ts">
-  import { CircleCheck, ScanQrCode } from "@lucide/svelte";
+  import { CircleCheck } from "@lucide/svelte";
+  import type { JoinResult } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
   import TextField from "../ui/TextField.svelte";
   import Banner from "../ui/Banner.svelte";
-  import { go } from "../lib/router.svelte.ts";
-  import { toast } from "../ui/toast.svelte.ts";
+  import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
 
-  let { variant = "" }: { variant?: string } = $props();
-  // svelte-ignore state_referenced_locally
-  let code = $state(variant === "spiel" ? "" : "linz-2027");
-  // svelte-ignore state_referenced_locally
-  let name = $state(variant ? "Urfahr" : "");
-  // svelte-ignore state_referenced_locally
-  let pw = $state(variant ? "falke27" : "");
-  let loading = $state(false);
+  interface Props {
+    /** Spielname, wenn über den QR-Link gekommen – dann kein Code-Feld */
+    gameName?: string | null | undefined;
+    code?: string;
+    name?: string;
+    password?: string;
+    /** Prototyp: Zustand gleich anzeigen */
+    initialError?: string;
+    initialExisting?: string;
+    onsubmit: (v: { code: string; name: string; password: string; secondDevice: boolean }) => Promise<JoinResult>;
+    onjoined: () => void;
+    onback: () => void;
+  }
 
-  function submit(e: SubmitEvent) {
-    e.preventDefault();
+  let {
+    gameName,
+    code: code0 = "",
+    name: name0 = "",
+    password: pw0 = "",
+    initialError,
+    initialExisting,
+    onsubmit,
+    onjoined,
+    onback,
+  }: Props = $props();
+  // svelte-ignore state_referenced_locally
+  let code = $state(code0);
+  // svelte-ignore state_referenced_locally
+  let name = $state(name0);
+  // svelte-ignore state_referenced_locally
+  let pw = $state(pw0);
+  let loading = $state(false);
+  // svelte-ignore state_referenced_locally
+  let error = $state<string | undefined>(initialError);
+  // svelte-ignore state_referenced_locally
+  let existing = $state<string | null>(initialExisting ?? null);
+
+  async function submit(secondDevice = false) {
     loading = true;
-    setTimeout(() => go("/prototyp/4?v=1"), 700);
+    error = undefined;
+    try {
+      const r = await onsubmit({ code: code.trim().toLowerCase(), name: name.trim(), password: pw, secondDevice });
+      if (r.status === "teamExists") existing = r.teamName;
+      else onjoined();
+    } catch (e) {
+      error = e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network;
+    } finally {
+      loading = false;
+    }
   }
 </script>
 
 <div class="page">
-  <AppBar title={T.beitritt.titel} onback={() => go("/prototyp/1")} />
-  <form class="form" onsubmit={submit}>
-    {#if variant === "spiel"}
+  <AppBar title={T.beitritt.titel} {onback} />
+  <form
+    class="form"
+    onsubmit={(e) => {
+      e.preventDefault();
+      void submit();
+    }}
+  >
+    {#if gameName}
       <div class="game">
         <CircleCheck size={24} aria-hidden="true" />
-        <div><span class="caps">{T.beitritt.spiel}</span><strong>Mister X Linz 2027</strong></div>
+        <div><span class="caps">{T.beitritt.spiel}</span><strong>{gameName}</strong></div>
       </div>
     {:else}
-      <div class="coderow">
-        <TextField
-          label={T.beitritt.spielCode}
-          hint={T.beitritt.spielCodeHinweis}
-          bind:value={code}
-          autocapitalize="none"
-          autocomplete="off"
-        />
-        <Button type="button" variant="secondary" icon={ScanQrCode} onclick={() => toast(T.allgemein.prototyp(T.beitritt.qrScannen))}
-          >{T.beitritt.qrScannen}</Button
-        >
-      </div>
+      <TextField
+        label={T.beitritt.spielCode}
+        hint={T.beitritt.spielCodeHinweis}
+        bind:value={code}
+        autocapitalize="none"
+        autocomplete="off"
+      />
     {/if}
 
     <TextField label={T.beitritt.teamname} hint={T.beitritt.teamnameHinweis} bind:value={name} maxlength={30} autocomplete="organization" />
-    <TextField
-      label={T.beitritt.passwort}
-      hint={T.beitritt.passwortHinweis}
-      type="password"
-      bind:value={pw}
-      error={variant === "fehler" ? T.beitritt.fehlerPasswort : undefined}
-      autocomplete="off"
-    />
+    <TextField label={T.beitritt.passwort} hint={T.beitritt.passwortHinweis} type="password" bind:value={pw} {error} autocomplete="off" />
 
-    {#if variant === "zweit"}
-      <Banner tone="info" title="Ersatzgerät">{T.beitritt.zweitgeraet(name)}</Banner>
+    {#if existing}
+      <Banner tone="info" title={T.beitritt.ersatzTitel}>{T.beitritt.zweitgeraet(existing)}</Banner>
     {/if}
 
     <div class="submit">
-      <Button size="xl" block {loading} disabled={!name || !pw} type="submit"
-        >{variant === "zweit" ? "Als Ersatzgerät beitreten" : T.beitritt.los}</Button
-      >
+      {#if existing}
+        <Button size="xl" block {loading} type="button" onclick={() => submit(true)}>{T.beitritt.alsErsatz}</Button>
+        <Button variant="ghost" block type="button" onclick={() => (existing = null)}>{T.beitritt.andererName}</Button>
+      {:else}
+        <Button size="xl" block {loading} disabled={!name.trim() || !pw || (!gameName && !code.trim())} type="submit"
+          >{T.beitritt.los}</Button
+        >
+      {/if}
     </div>
   </form>
 </div>
@@ -86,10 +121,6 @@
     width: 100%;
     margin: 0 auto;
   }
-  .coderow {
-    display: grid;
-    gap: var(--sp-3);
-  }
   .game {
     display: flex;
     align-items: center;
@@ -109,6 +140,8 @@
   }
   .submit {
     margin-top: auto;
+    display: grid;
+    gap: var(--sp-2);
     position: sticky;
     bottom: var(--sp-4);
   }

@@ -10,17 +10,20 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 
 | Meilenstein | Inhalt | Status |
 |---|---|---|
-| 1 – Konzept | [`docs/KONZEPT.md`](docs/KONZEPT.md), [`docs/ENTSCHEIDUNGEN.md`](docs/ENTSCHEIDUNGEN.md) | fertig, **wartet auf Bestätigung** |
-| 2 – Design | Design-System, Kartenstil, Klick-Prototyp aller 23 Screens, [`docs/DESIGN.md`](docs/DESIGN.md) | fertig, **wartet auf Bestätigung** |
-| 3–13 | Server, Echtzeit, Android-App, Push … | nach Bestätigung |
+| 1 – Konzept | [`docs/KONZEPT.md`](docs/KONZEPT.md), [`docs/ENTSCHEIDUNGEN.md`](docs/ENTSCHEIDUNGEN.md) | fertig, bestätigt |
+| 2 – Design | Design-System, Kartenstil, Klick-Prototyp aller 23 Screens, [`docs/DESIGN.md`](docs/DESIGN.md) | fertig, bestätigt |
+| 3 – Fundament | Firebase (eigene Datenbank + Website, E-21), Security Rules mit Tests, Spiel-Server, Anmeldung aller Rollen | fertig |
+| 4–13 | Spielablauf am Server, Karte, Android-App, Push … | in Arbeit |
 
 ## Ordner
 
 | Ordner | Inhalt |
 |---|---|
 | `shared/` | Spiel-Logik ohne Firebase (Geometrie, Spielfeld Linz, Regeln) – mit Tests |
-| `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/map/` = Karte, `src/texte.ts` = alle Texte |
-| `tests/` | Screenshot-Skript (später: Rechte-, Function- und Gesamtspiel-Tests) |
+| `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/pages/` = Seiten mit Daten, `src/map/` = Karte, `src/texte.ts` = alle Texte |
+| `functions/` | Spiel-Server (Cloud Functions): Beitritt, Passwörter, Spiele anlegen – später der ganze Spielablauf |
+| `database.rules.json` | Zugriffsregeln der Datenbank (wer darf was lesen/schreiben) |
+| `tests/` | Rechte-Tests, Server-Tests, Ende-zu-Ende-Tests mit simulierten Handys, Screenshot-Skript |
 | `docs/` | Konzept, Entscheidungen, Design, Screenshots |
 | `legacy/` | alter Prototyp (nur Referenz) |
 
@@ -39,24 +42,30 @@ npm run dev
 Dann im Browser `http://localhost:5173/#/prototyp` öffnen. Mit dem Handy im selben WLAN geht die Adresse, die
 `npm run dev` unter „Network“ anzeigt.
 
-**Online zum Weitergeben (Firebase-Vorschau, ändert die Live-Version nicht):**
-
-```sh
-npm ci
-npm run build
-npx firebase-tools login
-npx firebase-tools hosting:channel:deploy prototyp --expires 30d
-```
-
-Der letzte Befehl zeigt eine Adresse wie `https://mr-x-ooe--prototyp-xxxx.web.app` – die ist 30 Tage gültig.
-Am Ende `#/prototyp` anhängen.
-
-> ⚠️ **Von diesem Branch nie `firebase deploy` ausführen** – das würde die laufende alte App ersetzen.
-> Bis zur Abnahme nur `hosting:channel:deploy` verwenden.
+**Online zum Weitergeben:** siehe [`docs/FIREBASE-EINRICHTUNG.md`](docs/FIREBASE-EINRICHTUNG.md), Abschnitt 8.
 
 Im Prototyp öffnet der lila Griff am linken Bildschirmrand ein Menü mit allen Zuständen eines Screens
 (z. B. „Durchsage“, „Offline“) und der Darstellung (Hell, Dunkel, Sonne).
 Die Komponenten-Bibliothek liegt unter `#/komponenten`.
+
+## Veröffentlichen
+
+Einmalige Einrichtung und Befehle: [`docs/FIREBASE-EINRICHTUNG.md`](docs/FIREBASE-EINRICHTUNG.md).
+`npx firebase-tools deploy` betrifft nur die neue Datenbank `mr-x-ooe-neu`, den Spiel-Server und die neue Website
+`mr-x-ooe-neu` – die laufende alte App bleibt unberührt.
+
+## Lokal mit Emulatoren (ohne echte Firebase-Daten)
+
+Braucht zusätzlich [Java 21](https://adoptium.net). Zwei Fenster:
+
+```sh
+npm run emu        # Fenster 1: Firebase-Emulatoren (Projekt demo-mrx)
+npm run dev:emu    # Fenster 2: App gegen die Emulatoren
+```
+
+Dann `http://localhost:5173/#/verwaltung` → „Mit Google anmelden“ → im Emulator-Fenster `orga@test.at` eingeben →
+Spiel anlegen → mit dem Admin-Passwort unter „Spielleitung“ anmelden → Team-Passwort festlegen → Teams über
+`#/s/<spiel-code>` beitreten lassen (z. B. in einem zweiten Browser-Fenster im privaten Modus).
 
 ## Entwickeln
 
@@ -64,9 +73,10 @@ Die Komponenten-Bibliothek liegt unter `#/komponenten`.
 npm run lint     # ESLint + Prettier
 npm run check    # TypeScript (strict) + Svelte
 npm test         # Unit-Tests (Vitest)
-npm run build    # App bauen (app/dist)
+npm run test:emu # Rechte-, Server- und Ende-zu-Ende-Tests gegen die Emulatoren (Java 21 nötig)
+npm run build    # App und Spiel-Server bauen
 ```
 
 Screenshots aller Screens (dunkel/hell/Sonne) neu erzeugen: `npm run build`, dann in `app/`
 `npx vite preview --port 4173` starten und im Hauptordner `npm run screenshots` ausführen.
-GitHub Actions führt Lint, Typecheck, Tests und Build bei jedem Push aus.
+GitHub Actions führt bei jedem Push Lint, Typecheck, alle Tests (auch gegen die Emulatoren) und den Build aus.

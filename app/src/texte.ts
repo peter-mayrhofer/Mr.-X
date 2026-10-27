@@ -37,8 +37,7 @@ export const T = {
     titel: "Team beitreten",
     spiel: "Spiel",
     spielCode: "Spiel-Code",
-    spielCodeHinweis: "steht auf dem Zettel mit dem QR-Code, z. B. linz-2027",
-    qrScannen: "QR-Code scannen",
+    spielCodeHinweis: "steht auf dem Zettel, z. B. linz-2027 – oder einfach den QR-Code mit der Handy-Kamera scannen",
     teamname: "Teamname",
     teamnameHinweis: "z. B. Ortsgruppe Urfahr – so sehen euch die anderen",
     passwort: "Team-Passwort",
@@ -49,6 +48,9 @@ export const T = {
     fehlerPasswort: "Das Passwort stimmt nicht. Fragt bei der Spielleitung nach.",
     fehlerZuOft: "Zu viele Versuche. Bitte in 10 Minuten noch einmal.",
     zweitgeraet: (team: string) => `„${team}“ ist schon angemeldet. Dieses Handy als Ersatzgerät dazunehmen?`,
+    ersatzTitel: "Team gibt es schon",
+    alsErsatz: "Als Ersatzgerät beitreten",
+    andererName: "Anderen Teamnamen eingeben",
   },
 
   staffLogin: {
@@ -106,6 +108,7 @@ export const T = {
     check: { standort: "Standort", push: "Benachrichtigungen", akku: "Akku" },
     gut: "gut",
     teams: (n: number) => `${n} Teams angemeldet`,
+    nochKeine: "Noch keine Teams angemeldet.",
     regelnKurz: "Das Wichtigste",
     alleRegeln: "Alle Regeln",
   },
@@ -420,6 +423,7 @@ export const T = {
   },
 
   fehler: {
+    erneut: "Erneut versuchen",
     offline: { titel: "Kein Netz", text: "Die App versucht es weiter. Alles, was ihr schickt, geht raus, sobald wieder Netz da ist." },
     keinGps: {
       titel: "Kein GPS-Signal",
@@ -441,6 +445,60 @@ export const T = {
       text: "Die Spielleitung hat eine neue Runde vorbereitet oder euer Team entfernt. Meldet euch einfach neu an.",
       knopf: "Zur Startseite",
     },
+  },
+
+  zugang: {
+    teamPwHinweis: "Steht auf dem Flyer. Aus Sicherheitsgründen nach dem Speichern nicht mehr anzeigbar – bei Bedarf neu festlegen.",
+    nichtAnzeigbar: "Wird nur verschlüsselt gespeichert und kann nicht angezeigt werden – bei Bedarf neu festlegen.",
+    mindestens: (n: number) => `mindestens ${n} Zeichen`,
+    gespeichert: (was: string) => `${was} gespeichert`,
+    geloescht: (was: string) => `${was} gelöscht – niemand kann sich mehr damit anmelden`,
+    loeschenFrage: "Danach können keine weiteren Teams beitreten, bis ein neues Passwort festgelegt ist. Angemeldete Teams bleiben dabei.",
+    kopieren: "Kopieren",
+    kopiert: "Link kopiert",
+    nichtKopiert: "Kopieren nicht möglich – Link bitte markieren",
+    grossbildHinweis: "Der Link enthält einen Schlüssel – nur auf dem Laptop in der Zentrale öffnen.",
+    grossbildZeigen: "Link anzeigen",
+    flyer: [
+      "1. QR-Code mit der Handy-Kamera scannen",
+      "2. Teamname eingeben",
+      "3. Team-Passwort: ______________________",
+      "Android: App installieren · iPhone: im Browser öffnen und „Zum Home-Bildschirm“",
+    ],
+  },
+
+  /** Ablehnungen des Spiel-Servers (shared/api.ts ApiReason) */
+  apiFehler: {
+    unauthenticated: "Die Anmeldung ist abgelaufen. Bitte die Seite neu laden.",
+    invalid: "Bitte die Eingaben prüfen.",
+    notFound: "Spiel nicht gefunden. Prüft den Spiel-Code auf dem Zettel.",
+    wrongSecret: "Das Passwort stimmt nicht. Fragt bei der Spielleitung nach.",
+    noTeamPassword: "Die Spielleitung hat noch kein Team-Passwort festgelegt. Bitte kurz warten.",
+    noSpectators: "Für dieses Spiel gibt es keine Zuschauer-Ansicht.",
+    tooMany: "Zu viele Versuche. Bitte in 10 Minuten noch einmal.",
+    forbidden: "Dafür fehlen die Rechte.",
+    exists: "Diesen Spiel-Code gibt es schon.",
+    network: "Keine Verbindung zum Server. Bitte nochmal versuchen.",
+  },
+
+  warten: {
+    rolle: { team: "Team", schiri: "Schiri", admin: "Spielleitung", screen: "Großbild", viewer: "Zuschauer" },
+    angemeldetAls: (rolle: string, name: string) => `Angemeldet als ${rolle}: ${name}`,
+    bald: "Das Spiel startet bald. Hier erscheint dann die Karte.",
+    zugaenge: "Zugänge für dieses Spiel",
+    abmelden: "Abmelden",
+  },
+
+  verwaltung: {
+    anmelden: "Mit Google anmelden",
+    nurOrganisator: "Diese Seite ist nur für den Organisator.",
+    keinZugang: (mail: string) => `${mail} ist nicht als Organisator freigeschaltet.`,
+    leer: "Noch keine Spiele angelegt.",
+    angelegt: (name: string) => `${name} angelegt`,
+    oeffnen: "Öffnen",
+    codeUngueltig: "Nur Kleinbuchstaben, Ziffern und Bindestrich, 3–30 Zeichen",
+    leeresFeld: "Leer (selbst zeichnen)",
+    loeschenFrage: "Alle Daten dieses Spiels inkl. Archiv werden endgültig gelöscht.",
   },
 
   datenschutz: {

@@ -3,11 +3,9 @@
   import { LogIn, MapPinOff, RefreshCw, SatelliteDish, SearchX, WifiOff } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
-  import { go } from "../lib/router.svelte.ts";
-  import { toast } from "../ui/toast.svelte.ts";
   import { T } from "../texte.ts";
 
-  let { variant = "offline" }: { variant?: string } = $props();
+  let { variant = "offline", onaction }: { variant?: string; onaction: () => void } = $props();
   const F = T.fehler;
   const MAP = {
     offline: { icon: WifiOff, ...F.offline, tone: "warn" },
@@ -40,23 +38,13 @@
   {/if}
 
   <div class="actions">
-    {#if "knopf" in v}
-      <Button
-        size="xl"
-        block
-        icon={variant === "entfernt" ? LogIn : RefreshCw}
-        onclick={() =>
-          variant === "entfernt"
-            ? go("/prototyp/1")
-            : variant === "nichtGefunden"
-              ? go("/prototyp/2")
-              : toast(T.allgemein.prototyp(v.knopf))}>{v.knopf}</Button
-      >
-    {:else}
-      <Button size="xl" block variant="secondary" icon={RefreshCw} onclick={() => toast(T.allgemein.prototyp("Neu verbinden"))}
-        >Erneut versuchen</Button
-      >
-    {/if}
+    <Button
+      size="xl"
+      block
+      variant={"knopf" in v ? "primary" : "secondary"}
+      icon={variant === "entfernt" ? LogIn : RefreshCw}
+      onclick={onaction}>{"knopf" in v ? v.knopf : T.fehler.erneut}</Button
+    >
   </div>
 </main>
 

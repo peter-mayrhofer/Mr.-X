@@ -4,8 +4,10 @@
   ?clean blendet den Griff aus (für Screenshots).
 -->
 <script lang="ts">
-  import { ChevronLeft, ChevronRight, LayoutGrid, X } from "@lucide/svelte";
+  import { BatteryMedium, Bell, ChevronLeft, ChevronRight, LayoutGrid, MapPin, X } from "@lucide/svelte";
+  import * as M from "./mock.svelte.ts";
   import { go, query } from "../lib/router.svelte.ts";
+  import { toast } from "../ui/toast.svelte.ts";
   import { theme, type ThemeChoice } from "../lib/theme.svelte.ts";
   import { T } from "../texte.ts";
   import { SCREENS } from "./registry.ts";
@@ -40,11 +42,56 @@
   const to = (k: number, variant = "") => go(`/prototyp/${k}${variant ? `?v=${variant}` : ""}`);
 </script>
 
-{#if n === 1}<Start game={v === "spiel" ? "Mister X Linz 2027" : undefined} />
-{:else if n === 2}<Join variant={v} />
-{:else if n === 3}<StaffLogin variant={v} />
+{#if n === 1}<Start
+    game={v === "spiel" ? "Mister X Linz 2027" : undefined}
+    links={{
+      join: v === "spiel" ? "/prototyp/2?v=spiel" : "/prototyp/2",
+      schiri: "/prototyp/3?v=schiri",
+      admin: "/prototyp/3?v=admin",
+      help: "/prototyp/11",
+    }}
+  />
+{:else if n === 2}<Join
+    gameName={v === "spiel" ? "Mister X Linz 2027" : undefined}
+    code="linz-2027"
+    name={v ? "Urfahr" : ""}
+    password={v ? "falke27" : ""}
+    initialError={v === "fehler" ? T.apiFehler.wrongSecret : undefined}
+    initialExisting={v === "zweit" ? "Urfahr" : undefined}
+    onsubmit={async () => {
+      await new Promise((r) => setTimeout(r, 600));
+      return { status: "joined", role: "team" };
+    }}
+    onjoined={() => go("/prototyp/4?v=1")}
+    onback={() => go("/prototyp/1")}
+  />
+{:else if n === 3}<StaffLogin
+    role={v === "admin" ? "admin" : "schiri"}
+    code="linz-2027"
+    onsubmit={async ({ role }) => {
+      await new Promise((r) => setTimeout(r, 500));
+      go(role === "admin" ? "/prototyp/13" : "/prototyp/12");
+    }}
+    onsuperadmin={() => go("/prototyp/21")}
+    onback={() => go("/prototyp/1")}
+  />
 {:else if n === 4}<Onboarding variant={v} />
-{:else if n === 5}<Lobby />
+{:else if n === 5}<Lobby
+    gameName="Mister X Linz 2027"
+    myTeam={{ id: M.ME, ...M.teams[M.ME]! }}
+    roleLabel={T.warten.rolle.team}
+    name={M.teams[M.ME]!.name}
+    teams={M.teamIds.map((id) => ({ id, ...M.teams[id]! }))}
+    config={M.config}
+    startPlanned="14:00"
+    checks={[
+      { label: `${T.lobby.check.standort}: ${T.lobby.gut}`, ok: true, icon: MapPin },
+      { label: T.lobby.check.push, ok: true, icon: Bell },
+      { label: `${T.lobby.check.akku} 84 %`, ok: true, icon: BatteryMedium },
+    ]}
+    onrules={() => go("/prototyp/11")}
+    onchat={() => go("/prototyp/10")}
+  />
 {:else if n === 6}<TeamHome variant={v} />
 {:else if n === 7}<TeamHome mode="mrx" variant={v} />
 {:else if n === 8}<TeamHome overlay="lock" />
@@ -63,9 +110,25 @@
 {:else if n === 18}<BigScreen variant={v} />
 {:else if n === 19}<Results />
 {:else if n === 20}<Archive variant={v} />
-{:else if n === 21}<SuperAdmin />
+{:else if n === 21}<SuperAdmin
+    email="mr.x.rf.ooe@gmail.com"
+    allowed
+    games={M.games}
+    onlogin={async () => {}}
+    oncreate={async () => {}}
+    onopen={() => go("/prototyp/13")}
+    onadminpw={async () => {}}
+    inviteUrl={(id) => `https://mr-x-ooe-neu.web.app/#/staff/admin?g=${id}`}
+    onarchive={(id) => toast(`${id} archiviert`, "ok")}
+    ondelete={(id) => toast(`${id} gelöscht`, "ok")}
+    onback={() => go("/prototyp/3?v=admin")}
+  />
 {:else if n === 22}<TeamHome tab="mehr" />
-{:else}<ErrorStates variant={v} />
+{:else}<ErrorStates
+    variant={v}
+    onaction={() =>
+      v === "entfernt" ? go("/prototyp/1") : v === "nichtGefunden" ? go("/prototyp/2") : toast(T.allgemein.prototyp(T.fehler.erneut))}
+  />
 {/if}
 
 {#if !clean}

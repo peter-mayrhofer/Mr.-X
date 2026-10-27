@@ -6,7 +6,13 @@
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
-  let { game }: { game?: string } = $props();
+  interface Props {
+    /** Spielname aus dem QR-Link */
+    game?: string | null | undefined;
+    links: { join: string; schiri: string; admin: string; help: string };
+  }
+
+  let { game, links }: Props = $props();
 </script>
 
 <main class="start">
@@ -28,19 +34,19 @@
         <div><span class="caps">{T.start.spielGefunden}</span><strong>{game}</strong></div>
       </div>
     {/if}
-    <Button size="xl" block icon={Users} onclick={() => go(game ? "/prototyp/2?v=spiel" : "/prototyp/2")}>{T.start.teamBeitreten}</Button>
+    <Button size="xl" block icon={Users} onclick={() => go(links.join)}>{T.start.teamBeitreten}</Button>
     <p class="hint">{T.start.teamHinweis}</p>
     <div class="staff">
-      <Button variant="secondary" icon={ShieldCheck} onclick={() => go("/prototyp/3?v=schiri")}>{T.start.schiri}</Button>
-      <Button variant="secondary" icon={Crown} onclick={() => go("/prototyp/3?v=admin")}>{T.start.admin}</Button>
+      <Button variant="secondary" icon={ShieldCheck} onclick={() => go(links.schiri)}>{T.start.schiri}</Button>
+      <Button variant="secondary" icon={Crown} onclick={() => go(links.admin)}>{T.start.admin}</Button>
     </div>
   </section>
 
   <footer>
     <Logo which="kinderfreunde-ooe" height={28} />
     <nav>
-      <a href="#/prototyp/11">{T.start.hilfe}</a>
-      <a href="#/prototyp/11">{T.start.datenschutz}</a>
+      <a href="#{links.help}">{T.start.hilfe}</a>
+      <a href="#{links.help}">{T.start.datenschutz}</a>
     </nav>
   </footer>
 </main>

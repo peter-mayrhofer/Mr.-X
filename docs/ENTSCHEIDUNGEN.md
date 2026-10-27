@@ -135,3 +135,25 @@ schwere Abhängigkeit für eine Handvoll Komponenten.
 ### E-19 Alter Prototyp nach `legacy/`
 **Entscheidung:** Auf dem Neubau-Branch liegen die alten Dateien unter `legacy/` (nur Referenz). Die Live-Version
 `https://mr-x-ooe.web.app` wird weiter vom bisherigen Branch deployt, bis der Neubau abgenommen ist.
+
+### E-20 Antworten des Organisators (27.10.2026)
+**Entscheidung:** Konzept und Design bestätigt. Übernommen: Pause-Funktion (F2), Aufbewahrung Archiv 1 Jahr / Chat 30 Tage /
+Live-Standorte sofort löschen (F3), Zuschauer-Modus nur mit Meldungen (F6), Start-Mister-X auslosbar (F8),
+Sofort-Meldung bei Übergabe (F10), Ersatzgerät pro Team (F14); die übrigen Fragen mit dem jeweiligen Vorschlag.
+**Offen:** Vektor-Logos (F1) und Datenschutz-Kontakt (F12) – werden spätestens für Meilenstein 12 gebraucht.
+
+### E-21 Eigene Datenbank-Instanz und Hosting-Site für den Neubau
+**Entscheidung:** Der Neubau verwendet die Realtime-Database-Instanz `mr-x-ooe-neu` (europe-west1) und die Hosting-Site
+`mr-x-ooe-neu` im selben Firebase-Projekt. Der Organisator legt beide einmal in der Konsole an (Blaze erlaubt mehrere
+Instanzen kostenlos; Kosten zählen gemeinsam).
+**Warum:** Die alte App liest und schreibt in der Standard-Instanz direkt unter `/teams`, `/game`, … und braucht ihre
+eigenen Security Rules. Würden die neuen Rules in dieselbe Instanz deployt, wäre die alte App sofort kaputt. Getrennte
+Instanz und Site bedeuten: Kein Befehl für den Neubau kann die laufende Version beschädigen. Umschalten nach der
+Abnahme = neue App auf die Standard-Site deployen (Anleitung folgt in Meilenstein 13).
+**Verworfen:** Gemeinsame Instanz mit kombinierten Rules (fehleranfällig), eigenes Firebase-Projekt (zweite Konfiguration,
+zweiter Budget-Alarm, Logins doppelt).
+
+### E-22 Emulator-Projekt `demo-mrx` für Tests
+**Entscheidung:** Alle automatisierten Tests laufen gegen die Firebase-Emulatoren mit der Projekt-ID `demo-mrx`.
+**Warum:** `demo-`-Projekte haben garantiert keinen Zugriff auf echte Firebase-Dienste – ein Test kann nie versehentlich
+Produktionsdaten verändern, und CI braucht keine Zugangsdaten.

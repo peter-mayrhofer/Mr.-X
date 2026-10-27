@@ -1,50 +1,89 @@
-<!-- Screen 5: Warteraum vor Spielstart. -->
+<!-- Screen 5: Warteraum vor Spielstart (Teamliste, Checks, wichtigste Regeln). Für alle Rollen. -->
 <script lang="ts">
-  import { BatteryMedium, Bell, Check, MapPin, MessageCircle, ScrollText } from "@lucide/svelte";
+  import type { Snippet } from "svelte";
+  import { LogOut, MessageCircle, ScrollText } from "@lucide/svelte";
+  import type { Config, Team } from "@mrx/shared";
   import Card from "../ui/Card.svelte";
   import Button from "../ui/Button.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
   import Pill from "../ui/Pill.svelte";
   import Logo from "../ui/Logo.svelte";
-  import { ICONS } from "../ui/icons.ts";
-  import { go } from "../lib/router.svelte.ts";
+  import Modal from "../ui/Modal.svelte";
+  import { ICONS, type Icon } from "../ui/icons.ts";
   import { T } from "../texte.ts";
-  import * as M from "../proto/mock.svelte.ts";
 
-  const me = M.teams[M.ME]!;
-  const quick = T.regeln.liste(M.config).filter((r) => ["Fangen", "Übergabe", "Meldungen"].includes(r.titel));
+  interface Props {
+    gameName: string;
+    /** eigenes Team (Rolle Team) – sonst Rolle + Name */
+    myTeam?: (Team & { id: string }) | undefined;
+    roleLabel: string;
+    name: string;
+    teams: (Team & { id: string })[];
+    config: Config;
+    startPlanned?: string | undefined;
+    checks?: { label: string; ok: boolean; icon: Icon }[];
+    onrules: () => void;
+    onchat?: () => void;
+    onlogout?: () => Promise<void> | void;
+    children?: Snippet;
+  }
+
+  let {
+    gameName,
+    myTeam,
+    roleLabel,
+    name,
+    teams,
+    config,
+    startPlanned,
+    checks = [],
+    onrules,
+    onchat,
+    onlogout,
+    children,
+  }: Props = $props();
+  let confirmOut = $state(false);
+  const quick = $derived(T.regeln.liste(config).filter((r) => ["Fangen", "Übergabe", "Meldungen"].includes(r.titel)));
 </script>
 
 <main class="lobby">
   <header>
     <Logo height={36} />
-    <p class="caps">Mister X Linz 2027</p>
+    <p class="caps">{gameName}</p>
   </header>
 
   <section class="hero">
-    <TeamBadge short={me.short} color={me.color} size={96} me />
+    {#if myTeam}
+      <TeamBadge short={myTeam.short} color={myTeam.color} size={96} me />
+    {/if}
     <h1>{T.lobby.angemeldet}</h1>
-    <p class="name display">{me.name}</p>
+    <p class="name display">{myTeam ? myTeam.name : name}</p>
+    {#if !myTeam}<p class="muted">{T.warten.angemeldetAls(roleLabel, name)}</p>{/if}
     <div class="wait" role="status">
       <span class="dotpulse" aria-hidden="true"></span>
       <span class="caps">{T.lobby.warten}</span>
-      <span class="muted">· {T.lobby.startGeplant("14:00")}</span>
+      {#if startPlanned}<span class="muted">· {T.lobby.startGeplant(startPlanned)}</span>{/if}
     </div>
   </section>
 
-  <div class="checks">
-    <Pill tone="ok" icon={MapPin}>{T.lobby.check.standort}: {T.lobby.gut}</Pill>
-    <Pill tone="ok" icon={Bell}>{T.lobby.check.push} <Check size={16} aria-hidden="true" /></Pill>
-    <Pill tone="neutral" icon={BatteryMedium}>{T.lobby.check.akku} 84 %</Pill>
-  </div>
+  {#if checks.length}
+    <div class="checks">
+      {#each checks as c (c.label)}<Pill tone={c.ok ? "ok" : "warn"} icon={c.icon}>{c.label}</Pill>{/each}
+    </div>
+  {/if}
 
-  <Card label={T.lobby.teams(M.teamIds.length)}>
-    <ul class="teams">
-      {#each M.teamIds as id (id)}
-        {@const t = M.teams[id]!}
-        <li><TeamBadge short={t.short} color={t.color} size={44} me={id === M.ME} /><span>{t.name}</span></li>
-      {/each}
-    </ul>
+  {#if children}{@render children()}{/if}
+
+  <Card label={T.lobby.teams(teams.length)}>
+    {#if teams.length}
+      <ul class="teams">
+        {#each teams as t (t.id)}
+          <li><TeamBadge short={t.short} color={t.color} size={44} me={t.id === myTeam?.id} /><span>{t.name}</span></li>
+        {/each}
+      </ul>
+    {:else}
+      <p class="muted">{T.lobby.nochKeine}</p>
+    {/if}
   </Card>
 
   <Card label={T.lobby.regelnKurz}>
@@ -63,10 +102,24 @@
   </Card>
 
   <div class="actions">
-    <Button variant="secondary" icon={ScrollText} onclick={() => go("/prototyp/11")}>{T.lobby.alleRegeln}</Button>
-    <Button variant="secondary" icon={MessageCircle} onclick={() => go("/prototyp/10")}>{T.tabs.chat}</Button>
+    <Button variant="secondary" icon={ScrollText} onclick={onrules}>{T.lobby.alleRegeln}</Button>
+    {#if onchat}<Button variant="secondary" icon={MessageCircle} onclick={onchat}>{T.tabs.chat}</Button>{/if}
+    {#if onlogout}<Button variant="ghost" icon={LogOut} onclick={() => (confirmOut = true)}>{T.warten.abmelden}</Button>{/if}
   </div>
 </main>
+
+{#if onlogout}
+  <Modal
+    open={confirmOut}
+    title={T.einstellungen.abmelden}
+    confirm={T.einstellungen.abmelden}
+    danger
+    onconfirm={onlogout}
+    onclose={() => (confirmOut = false)}
+  >
+    {T.einstellungen.abmeldenFrage}
+  </Modal>
+{/if}
 
 <style>
   .lobby {
@@ -80,6 +133,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--sp-3);
     color: var(--text-2);
   }
   .hero {
@@ -156,8 +210,11 @@
     flex: none;
   }
   .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--sp-3);
+  }
+  .actions > :global(*) {
+    flex: 1 1 160px;
   }
 </style>

@@ -1,6 +1,16 @@
-<!-- Screen 21: Super-Admin – Spiele anlegen, Spiel-Admins vergeben, archivieren, löschen. -->
+<!-- Screen 21: Super-Admin – Spiele anlegen, Spiel-Admins vergeben (Passwort/Einladungslink), archivieren, löschen. -->
+<script module lang="ts">
+  export interface GameRow {
+    id: string;
+    name: string;
+    phase?: string | undefined;
+    teams?: number | undefined;
+  }
+</script>
+
 <script lang="ts">
-  import { Archive, KeyRound, Link, Plus, Trash, ArrowRight } from "@lucide/svelte";
+  import { Archive, ArrowRight, KeyRound, Link, LogIn, Plus, Trash } from "@lucide/svelte";
+  import { GAME_ID, LIMITS, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
   import Card from "../ui/Card.svelte";
@@ -9,17 +19,38 @@
   import TextField from "../ui/TextField.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import Modal from "../ui/Modal.svelte";
+  import Banner from "../ui/Banner.svelte";
   import { toast } from "../ui/toast.svelte.ts";
-  import { go } from "../lib/router.svelte.ts";
+  import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
-  import * as M from "../proto/mock.svelte.ts";
+
+  interface Props {
+    email: string | null;
+    allowed: boolean;
+    games: GameRow[];
+    onlogin: () => Promise<void>;
+    oncreate: (v: { gameId: string; name: string; template: Template; adminPassword: string }) => Promise<void>;
+    onopen?: (id: string) => void;
+    onadminpw: (id: string, pw: string) => Promise<void>;
+    inviteUrl: (id: string) => string;
+    onarchive?: (id: string) => void;
+    ondelete?: (id: string) => void;
+    onback: () => void;
+  }
+
+  let { email, allowed, games, onlogin, oncreate, onopen, onadminpw, inviteUrl, onarchive, ondelete, onback }: Props = $props();
 
   let creating = $state(false);
   let name = $state("");
   let code = $state("");
-  let tpl = $state<"linz" | "leer">("linz");
+  let tpl = $state<Template>("linz");
   let pw = $state("");
-  let del = $state<string | null>(null);
+  let busy = $state(false);
+  let error = $state<string | undefined>();
+  let pwFor = $state<GameRow | null>(null);
+  let newPw = $state("");
+  let del = $state<GameRow | null>(null);
+
   const slug = (s: string) =>
     s
       .toLowerCase()
@@ -28,64 +59,128 @@
       .replace(/ü/g, "ue")
       .replace(/ß/g, "ss")
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-  const TONE = { laeuft: "ok", vorbereitung: "info", archiviert: "neutral", beendet: "neutral", pause: "warn" } as const;
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 30);
+  const TONE: Record<string, "ok" | "info" | "neutral" | "warn"> = {
+    laeuft: "ok",
+    vorbereitung: "info",
+    archiviert: "neutral",
+    beendet: "neutral",
+    pause: "warn",
+  };
+  const phaseLabel = (p: string | undefined) =>
+    p && p in T.superadmin.phase ? T.superadmin.phase[p as keyof typeof T.superadmin.phase] : "–";
+  const msg = (e: unknown) => (e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network);
+
+  async function create() {
+    busy = true;
+    error = undefined;
+    try {
+      await oncreate({ gameId: code, name: name.trim(), template: tpl, adminPassword: pw });
+      toast(T.verwaltung.angelegt(name.trim()), "ok");
+      creating = false;
+      name = code = pw = "";
+    } catch (e) {
+      error = msg(e);
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function setPw() {
+    if (!pwFor) return;
+    try {
+      await onadminpw(pwFor.id, newPw);
+      toast(T.zugang.gespeichert(T.admin.adminPasswort), "ok");
+      pwFor = null;
+      newPw = "";
+    } catch (e) {
+      toast(msg(e), "warn");
+    }
+  }
+
+  async function copy(s: string) {
+    try {
+      await navigator.clipboard.writeText(s);
+      toast(T.zugang.kopiert, "ok");
+    } catch {
+      toast(T.zugang.nichtKopiert, "warn");
+    }
+  }
 </script>
 
 <div class="page">
-  <AppBar title={T.superadmin.titel} onback={() => go("/prototyp/3?v=admin")}>
-    {#snippet actions()}<Button size="m" icon={Plus} onclick={() => (creating = true)}>{T.superadmin.neu}</Button>{/snippet}
+  <AppBar title={T.superadmin.titel} {onback}>
+    {#snippet actions()}
+      {#if allowed}<Button size="m" icon={Plus} onclick={() => (creating = true)}>{T.superadmin.neu}</Button>{/if}
+    {/snippet}
   </AppBar>
   <div class="body">
-    <p class="who"><span class="avatar" aria-hidden="true">M</span>{T.superadmin.angemeldet("mr.x.rf.ooe@gmail.com")}</p>
-    {#each M.games as g (g.id)}
-      {@const phase = g.phase as keyof typeof TONE}
+    {#if !allowed}
       <Card>
-        <div class="game">
-          <div class="info">
-            <h2>{g.name}</h2>
-            <p class="muted"><code>{g.id}</code> · {g.teams} Teams · {g.admins} Admins</p>
-            <Pill tone={TONE[phase]} dot>{T.superadmin.phase[phase]}</Pill>
-          </div>
-          <div class="acts">
-            <Button size="m" icon={ArrowRight} onclick={() => go("/prototyp/13")}>Öffnen</Button>
-            <Button size="m" variant="secondary" icon={KeyRound} onclick={() => toast("Neues Admin-Passwort festgelegt", "ok")}
-              >{T.superadmin.adminZugang}</Button
-            >
-            <Button size="m" variant="secondary" icon={Link} onclick={() => toast("Einladungslink kopiert", "ok")}
-              >{T.superadmin.einladung}</Button
-            >
-            {#if g.phase !== "archiviert"}<Button
-                size="m"
-                variant="secondary"
-                icon={Archive}
-                onclick={() => toast(`${g.name} archiviert`, "ok")}>{T.superadmin.archivieren}</Button
-              >{/if}
-            <Button size="m" variant="danger" icon={Trash} onclick={() => (del = g.name)}>{T.allgemein.loeschen}</Button>
-          </div>
+        <div class="login">
+          <p>{T.verwaltung.nurOrganisator}</p>
+          {#if email}<Banner tone="warn">{T.verwaltung.keinZugang(email)}</Banner>{/if}
+          <Button size="l" icon={LogIn} onclick={onlogin}>{T.verwaltung.anmelden}</Button>
         </div>
       </Card>
-    {/each}
+    {:else}
+      <p class="who">
+        <span class="avatar" aria-hidden="true">{(email ?? "?")[0]!.toUpperCase()}</span>{T.superadmin.angemeldet(email ?? "")}
+      </p>
+      {#each games as g (g.id)}
+        <Card>
+          <div class="game">
+            <div class="info">
+              <h2>{g.name}</h2>
+              <p class="muted">
+                <code>{g.id}</code>{#if g.teams !== undefined}
+                  · {g.teams} Teams{/if}
+              </p>
+              <Pill tone={TONE[g.phase ?? ""] ?? "neutral"} dot>{phaseLabel(g.phase)}</Pill>
+            </div>
+            <div class="acts">
+              {#if onopen}<Button size="m" icon={ArrowRight} onclick={() => onopen(g.id)}>{T.verwaltung.oeffnen}</Button>{/if}
+              <Button size="m" variant="secondary" icon={KeyRound} onclick={() => (pwFor = g)}>{T.superadmin.adminZugang}</Button>
+              <Button size="m" variant="secondary" icon={Link} onclick={() => copy(inviteUrl(g.id))}>{T.superadmin.einladung}</Button>
+              {#if onarchive && g.phase !== "archiviert"}<Button size="m" variant="secondary" icon={Archive} onclick={() => onarchive(g.id)}
+                  >{T.superadmin.archivieren}</Button
+                >{/if}
+              {#if ondelete}<Button size="m" variant="danger" icon={Trash} onclick={() => (del = g)}>{T.allgemein.loeschen}</Button>{/if}
+            </div>
+          </div>
+        </Card>
+      {:else}
+        <p class="muted">{T.verwaltung.leer}</p>
+      {/each}
+    {/if}
   </div>
 </div>
 
 <BottomSheet open={creating} title={T.superadmin.neu} onclose={() => (creating = false)}>
   <div class="form">
     <TextField label={T.superadmin.name} bind:value={name} oninput={() => (code = slug(name))} placeholder="Mister X Linz 2028" />
-    <TextField label={T.superadmin.code} bind:value={code} hint="mr-x-ooe.web.app/#/s/{code || '…'}" />
+    <TextField
+      label={T.superadmin.code}
+      bind:value={code}
+      hint="…/#/s/{code || '…'}"
+      error={code && !GAME_ID.test(code) ? T.verwaltung.codeUngueltig : undefined}
+      autocapitalize="none"
+    />
     <Segmented
       label={T.superadmin.vorlage}
       bind:value={tpl}
       options={[
         { value: "linz", label: "Linz Innenstadt" },
-        { value: "leer", label: "Leer" },
+        { value: "leer", label: T.verwaltung.leeresFeld },
       ]}
     />
     <TextField
       label={T.staffLogin.adminPasswort}
       type="password"
       bind:value={pw}
-      hint="mind. 8 Zeichen – an die Spielleitung weitergeben"
+      hint={T.zugang.mindestens(LIMITS.adminPw)}
+      {error}
       autocomplete="new-password"
     />
   </div>
@@ -93,25 +188,38 @@
     <Button
       block
       size="l"
-      disabled={!name || !code || pw.length < 8}
-      onclick={() => {
-        creating = false;
-        toast(`${name} angelegt`, "ok");
-      }}>{T.superadmin.neu}</Button
+      loading={busy}
+      disabled={name.trim().length < LIMITS.gameName[0] || !GAME_ID.test(code) || pw.length < LIMITS.adminPw}
+      onclick={create}>{T.superadmin.neu}</Button
     >
   {/snippet}
 </BottomSheet>
 
-<Modal
-  open={!!del}
-  title="{del} löschen?"
-  confirm={T.allgemein.loeschen}
-  danger
-  onconfirm={() => toast(`${del} gelöscht`, "ok")}
-  onclose={() => (del = null)}
->
-  Alle Daten dieses Spiels inkl. Archiv werden endgültig gelöscht.
-</Modal>
+<BottomSheet open={!!pwFor} title="{T.superadmin.adminZugang}: {pwFor?.name ?? ''}" onclose={() => (pwFor = null)}>
+  <TextField
+    label={T.admin.passwortNeu}
+    type="password"
+    bind:value={newPw}
+    hint={T.zugang.mindestens(LIMITS.adminPw)}
+    autocomplete="new-password"
+  />
+  {#snippet footer()}
+    <Button block size="l" disabled={newPw.length < LIMITS.adminPw} onclick={setPw}>{T.allgemein.speichern}</Button>
+  {/snippet}
+</BottomSheet>
+
+{#if ondelete}
+  <Modal
+    open={!!del}
+    title="{del?.name} {T.allgemein.loeschen}?"
+    confirm={T.allgemein.loeschen}
+    danger
+    onconfirm={() => del && ondelete(del.id)}
+    onclose={() => (del = null)}
+  >
+    {T.verwaltung.loeschenFrage}
+  </Modal>
+{/if}
 
 <style>
   .page {
@@ -123,6 +231,11 @@
     padding: var(--sp-4) var(--gutter) var(--sp-8);
     max-width: 1000px;
     margin: 0 auto;
+  }
+  .login {
+    display: grid;
+    gap: var(--sp-3);
+    justify-items: start;
   }
   .who {
     display: flex;
