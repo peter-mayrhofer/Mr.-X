@@ -1,141 +1,222 @@
 <!--
-  Screen 15: Teams & Schiris & Zugänge. Status pro Team (online, Akku, letzte Position, Rolle), Aktionen,
+  Screen 15: Teams & Schiris & Zugänge. Status pro Team (online, Akku, letzte Position, Geräte), Aktionen,
   Passwörter/Codes neu festlegen (gehasht → nur neu setzen, nicht auslesen, E-06), QR-Codes, Neue Runde.
 -->
 <script lang="ts">
   import { BatteryFull, BatteryLow, BatteryMedium, Ellipsis, Hourglass, Pencil, ShieldCheck, Trash } from "@lucide/svelte";
+  import { LIMITS, type ApiReason, type SecretKind } from "@mrx/shared";
   import Segmented from "../../ui/Segmented.svelte";
   import ListItem from "../../ui/ListItem.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import Pill from "../../ui/Pill.svelte";
   import IconButton from "../../ui/IconButton.svelte";
   import BottomSheet from "../../ui/BottomSheet.svelte";
+  import TextField from "../../ui/TextField.svelte";
+  import Button from "../../ui/Button.svelte";
   import Modal from "../../ui/Modal.svelte";
   import AccessPanel from "../parts/AccessPanel.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { vor } from "../../lib/format.ts";
+  import { ApiError } from "../../lib/api.ts";
+  import { isOffline, type Api, type StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
-  import * as M from "../../proto/mock.svelte.ts";
 
-  let { variant = "teams" }: { variant?: string } = $props();
+  interface Props {
+    view: StaffView;
+    api: Api;
+    joinUrl: string;
+    screenUrl: (key: string) => string;
+    variant?: string;
+  }
+  let { view, api, joinUrl, screenUrl, variant = "teams" }: Props = $props();
   // svelte-ignore state_referenced_locally
   let tab = $state(variant === "schiris" || variant === "zugaenge" ? variant : "teams");
   let action = $state<string | null>(null);
-  let confirmKick = $state<string | null>(null);
-  const battery: Record<string, number> = {
-    urfahr: 18,
-    kleinmuenchen: 64,
-    auwiesen: 81,
-    ebelsberg: 55,
-    pichling: 92,
-    spallerhof: 47,
-    bindermichl: 73,
-    neueheimat: 38,
-    leonding: 12,
-    traun: 66,
-    ansfelden: 70,
-    wels: 59,
-  };
-  const offline = (id: string) => clock.now - M.positions[id]!.t > 3 * 60_000;
+  let rename = $state<{ id: string; name: string } | null>(null);
+  let kick = $state<{ kind: "team" | "member"; id: string; name: string } | null>(null);
+
+  const g = $derived(view.gameId);
+  const teamIds = $derived(Object.keys(view.teams).sort((a, b) => view.teams[a]!.name.localeCompare(view.teams[b]!.name, "de")));
+  const schiris = $derived(Object.entries(view.members).filter(([, m]) => m.role === "schiri"));
+  const devices = (id: string) => Object.values(view.members).filter((m) => m.teamId === id).length;
+  const locked = (id: string) => (view.locks[id]?.until ?? 0) > clock.now;
+  const running = $derived(view.state.phase === "laeuft");
+
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  async function run(fn: () => Promise<unknown>, okText: string) {
+    try {
+      await fn();
+      toast(okText, "ok");
+    } catch (e) {
+      toast(errText(e), "warn");
+    }
+  }
 </script>
 
 <div class="wrap">
   <Segmented
-    label="Bereich"
+    label={T.admin.bereich}
     bind:value={tab}
     options={[
-      { value: "teams", label: `${T.admin.teams} (${M.teamIds.length})` },
-      { value: "schiris", label: `${T.admin.schiris} (${M.staff.length})` },
+      { value: "teams", label: `${T.admin.teams} (${teamIds.length})` },
+      { value: "schiris", label: `${T.admin.schiris} (${schiris.length})` },
       { value: "zugaenge", label: T.admin.zugaenge },
     ]}
   />
 
   {#if tab === "teams"}
     <div class="list">
-      {#each M.teamIds as id (id)}
-        {@const t = M.teams[id]!}
-        {@const p = M.positions[id]!}
-        {@const b = battery[id] ?? 50}
-        {@const locked = (M.locks[id] ?? 0) > clock.now}
-        <ListItem title={t.name} subtitle="{T.admin.zuletzt} {vor(p.t, clock.now)} · 2 Geräte">
+      {#each teamIds as id (id)}
+        {@const t = view.teams[id]!}
+        {@const p = view.positions[id]}
+        {@const off = isOffline(p, clock.now)}
+        {@const n = devices(id)}
+        <ListItem
+          title={t.name}
+          subtitle="{p ? `${T.admin.zuletzt} ${vor(p.t, clock.now)}` : T.admin.keinStandortBisher} · {T.admin.geraete(n)}"
+        >
           {#snippet lead()}<TeamBadge
               short={t.short}
               color={t.color}
               size={44}
-              mrx={id === M.MRX}
-              {locked}
-              offline={offline(id)}
+              mrx={id === view.state.mrx}
+              locked={locked(id)}
+              offline={off}
             />{/snippet}
           {#snippet trail()}
             <span class="pills">
-              {#if id === M.MRX}<Pill tone="accent">Mister X</Pill>{/if}
-              {#if locked}<Pill tone="warn" icon={Hourglass}>wartet</Pill>{/if}
-              {#if offline(id)}<Pill tone="danger" dot>offline</Pill>{:else}<Pill tone="ok" dot>online</Pill>{/if}
-              <Pill tone={b < 20 ? "danger" : "neutral"} icon={b < 20 ? BatteryLow : b < 70 ? BatteryMedium : BatteryFull}
-                ><span class="num">{b} %</span></Pill
-              >
+              {#if id === view.state.mrx}<Pill tone="accent">Mister X</Pill>{/if}
+              {#if locked(id)}<Pill tone="warn" icon={Hourglass}>{T.schiri.wartet}</Pill>{/if}
+              {#if off}<Pill tone="danger" dot>offline</Pill>{:else}<Pill tone="ok" dot>online</Pill>{/if}
+              {#if p?.battery !== undefined}
+                {@const b = p.battery}
+                <Pill tone={b < 20 ? "danger" : "neutral"} icon={b < 20 ? BatteryLow : b < 70 ? BatteryMedium : BatteryFull}
+                  ><span class="num">{b} %</span></Pill
+                >
+              {/if}
             </span>
-            <IconButton icon={Ellipsis} label="Aktionen für {t.name}" size="m" tone="plain" onclick={() => (action = id)} />
+            <IconButton icon={Ellipsis} label={T.admin.aktionenFuer(t.name)} size="m" tone="plain" onclick={() => (action = id)} />
           {/snippet}
         </ListItem>
+      {:else}
+        <p class="muted">{T.lobby.nochKeine}</p>
       {/each}
     </div>
   {:else if tab === "schiris"}
     <div class="list">
-      {#each M.staff as s (s.uid)}
-        <ListItem title={s.name} subtitle="{T.admin.zuletzt} {vor(s.pos.t, clock.now)}">
+      {#each schiris as [uid, m] (uid)}
+        {@const p = view.staff[uid]}
+        <ListItem title={m.name} subtitle={p ? `${T.admin.zuletzt} ${vor(p.t, clock.now)}` : T.admin.keinStandortBisher}>
           {#snippet lead()}<span class="staff"><ShieldCheck size={24} aria-hidden="true" /></span>{/snippet}
           {#snippet trail()}
             <span class="pills">
-              {#if s.followsFlag}<Pill tone="accent">begleitet Mister X</Pill>{/if}
-              <Pill tone="ok" dot>online</Pill>
+              {#if m.followsFlag}<Pill tone="accent">{T.admin.begleitet}</Pill>{/if}
+              {#if isOffline(p, clock.now)}<Pill tone="danger" dot>offline</Pill>{:else}<Pill tone="ok" dot>online</Pill>{/if}
             </span>
-            <IconButton icon={Trash} label="{s.name} entfernen" size="m" tone="plain" onclick={() => (confirmKick = s.name)} />
+            <IconButton
+              icon={Trash}
+              label={T.admin.entfernenWer(m.name)}
+              size="m"
+              tone="plain"
+              onclick={() => (kick = { kind: "member", id: uid, name: m.name })}
+            />
           {/snippet}
         </ListItem>
+      {:else}
+        <p class="muted">{T.admin.keineSchiris}</p>
       {/each}
     </div>
   {:else}
     <AccessPanel
-      gameName="Mister X Linz 2027"
-      joinUrl="https://mr-x-ooe-neu.web.app/#/s/linz-2027"
-      loadScreenUrl={async () => "https://mr-x-ooe-neu.web.app/#/g/linz-2027?k=7f3a9c0b2e"}
-      onsave={async () => {}}
-      onreset={() => toast(T.allgemein.prototyp(T.admin.neueRunde))}
+      gameName={view.gameName}
+      {joinUrl}
+      loadScreenUrl={async () => screenUrl((await api({ action: "screenLink", gameId: g })).key)}
+      onsave={async (kind: SecretKind, value: string | null) => {
+        await api({ action: "setSecret", gameId: g, kind, value });
+      }}
+      onreset={() => run(() => api({ action: "resetRound", gameId: g }), T.admin.neueRundeOk)}
     />
   {/if}
 </div>
 
-<BottomSheet open={!!action} title={action ? M.teams[action]!.name : ""} onclose={() => (action = null)}>
-  <ListItem title={T.admin.umbenennen} onclick={() => ((action = null), toast(T.allgemein.prototyp(T.admin.umbenennen)))}>
-    {#snippet lead()}<Pencil size={24} aria-hidden="true" />{/snippet}
-  </ListItem>
-  <ListItem
-    title={T.admin.wartezeitGeben}
-    subtitle="{M.config.waitMin} Min ab jetzt"
-    onclick={() => ((action = null), toast("Wartezeit gesetzt", "ok"))}
-  >
-    {#snippet lead()}<Hourglass size={24} aria-hidden="true" />{/snippet}
-  </ListItem>
-  <ListItem
-    title={T.admin.entfernen}
-    subtitle="Handy wird abgemeldet"
-    onclick={() => ((confirmKick = M.teams[action!]!.name), (action = null))}
-  >
-    {#snippet lead()}<Trash size={24} aria-hidden="true" />{/snippet}
-  </ListItem>
+<BottomSheet open={!!action} title={action ? (view.teams[action]?.name ?? "") : ""} onclose={() => (action = null)}>
+  {#if action}
+    {@const id = action}
+    <ListItem title={T.admin.umbenennen} onclick={() => ((rename = { id, name: view.teams[id]?.name ?? "" }), (action = null))}>
+      {#snippet lead()}<Pencil size={24} aria-hidden="true" />{/snippet}
+    </ListItem>
+    {#if running && id !== view.state.mrx}
+      {#if locked(id)}
+        <ListItem
+          title={T.admin.wartezeitAufheben}
+          onclick={() => {
+            const teamId = id; // vor dem Schließen lesen: `id` hängt am offenen Dialog
+            action = null;
+            void run(() => api({ action: "setLock", gameId: g, teamId, min: 0 }), T.admin.wartezeitAufgehoben);
+          }}
+        >
+          {#snippet lead()}<Hourglass size={24} aria-hidden="true" />{/snippet}
+        </ListItem>
+      {:else}
+        <ListItem
+          title={T.admin.wartezeitGeben}
+          subtitle={T.admin.abJetzt(view.config.waitMin)}
+          onclick={() => {
+            const teamId = id;
+            action = null;
+            void run(() => api({ action: "setLock", gameId: g, teamId, min: view.config.waitMin }), T.admin.wartezeitGesetzt);
+          }}
+        >
+          {#snippet lead()}<Hourglass size={24} aria-hidden="true" />{/snippet}
+        </ListItem>
+      {/if}
+    {/if}
+    <ListItem
+      title={T.admin.entfernen}
+      subtitle={T.admin.wirdAbgemeldet}
+      onclick={() => ((kick = { kind: "team", id, name: view.teams[id]?.name ?? "" }), (action = null))}
+    >
+      {#snippet lead()}<Trash size={24} aria-hidden="true" />{/snippet}
+    </ListItem>
+  {/if}
+</BottomSheet>
+
+<BottomSheet open={!!rename} title={T.admin.umbenennen} onclose={() => (rename = null)}>
+  {#if rename}
+    <TextField label={T.beitritt.teamname} bind:value={rename.name} />
+  {/if}
+  {#snippet footer()}
+    <Button
+      block
+      size="l"
+      disabled={!rename || rename.name.trim().length < LIMITS.teamName[0]}
+      onclick={() => {
+        const r = rename!;
+        rename = null;
+        void run(() => api({ action: "renameTeam", gameId: g, teamId: r.id, name: r.name }), T.allgemein.gespeichert);
+      }}>{T.allgemein.speichern}</Button
+    >
+  {/snippet}
 </BottomSheet>
 
 <Modal
-  open={!!confirmKick}
-  title="{confirmKick} entfernen?"
+  open={!!kick}
+  title={T.admin.entfernenFrage(kick?.name ?? "")}
   confirm={T.admin.entfernen}
   danger
-  onconfirm={() => toast(`${confirmKick} entfernt`, "ok")}
-  onclose={() => (confirmKick = null)}
+  onconfirm={() => {
+    const k = kick!;
+    void run(
+      () =>
+        k.kind === "team" ? api({ action: "removeTeam", gameId: g, teamId: k.id }) : api({ action: "removeMember", gameId: g, uid: k.id }),
+      T.admin.entferntOk(k.name),
+    );
+  }}
+  onclose={() => (kick = null)}
 >
-  Das Gerät wird abgemeldet und landet mit einer Erklärung auf der Startseite.
+  {T.admin.entfernenText}
 </Modal>
 
 <style>

@@ -70,8 +70,8 @@ export function shouldSend(last: Position | null, next: Position): boolean {
   return dt >= KEEP_MS || (dt >= MOVE_MS && distanceM(last, next) >= MOVE_M);
 }
 
-/** Standort an `path` senden, solange die Komponente lebt. `path()` = null → nichts senden. */
-export function sendPosition(path: () => string | null, uid: () => string | undefined) {
+/** Standort an `path` senden, solange die Komponente lebt. `path()` = null → nichts senden. `extra`: z. B. Schiri-Name */
+export function sendPosition(path: () => string | null, uid: () => string | undefined, extra: () => Record<string, string> = () => ({})) {
   let last: Position | null = null;
   $effect(() => {
     const p = gps.pos;
@@ -81,6 +81,7 @@ export function sendPosition(path: () => string | null, uid: () => string | unde
     void set(ref(db, target), {
       ...p,
       uid: uid(),
+      ...extra(),
       ...(gps.battery !== undefined ? { battery: gps.battery } : {}),
     }).catch(() => (last = null)); // offline: beim nächsten Punkt nochmal
   });

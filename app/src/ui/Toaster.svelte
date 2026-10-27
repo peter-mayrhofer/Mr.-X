@@ -7,7 +7,8 @@
 </script>
 
 <div class="toaster" aria-live="polite">
-  {#each toasts.list as t (t.id)}
+  <!-- höchstens drei auf einmal; sie fangen keine Klicks ab (nur ihr Aktionsknopf), damit nichts darunter blockiert ist -->
+  {#each toasts.list.slice(-3) as t (t.id)}
     {@const IconC = ICON[t.tone]}
     <div class="toast {t.tone}" transition:fly={{ y: 40, duration: 200 }}>
       <IconC size={22} aria-hidden="true" />
@@ -30,7 +31,6 @@
     pointer-events: none;
   }
   .toast {
-    pointer-events: auto;
     display: flex;
     align-items: center;
     gap: var(--sp-3);
@@ -51,6 +51,7 @@
     color: var(--warn);
   }
   button {
+    pointer-events: auto;
     min-height: var(--touch);
     padding: 0 var(--sp-3);
     border: 2px solid currentColor;

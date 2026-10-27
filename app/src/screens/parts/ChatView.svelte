@@ -18,17 +18,33 @@
   type Msg = ChatMessage & { id: string };
   interface Props {
     group: Msg[];
-    direct: Msg[];
+    /** Direktkanal mit der Spielleitung (Team); ohne Angabe und ohne `admin` gibt es nur den Gruppenchat (Schiri) */
+    direct?: Msg[];
     teams: Record<string, Team>;
     myUid: string;
     admin?: boolean;
     inbox?: { teamId: string; unread: number; last: string; t: number }[];
+    /** Spielleitung: Nachrichten eines Teams im Postfach */
+    dmOf?: (teamId: string) => Msg[];
+    onthread?: (teamId: string) => void;
     tab?: "alle" | "dm";
     onreport?: (reportId: string) => void;
-    onsend: (text: string, channel: "alle" | "dm") => void;
+    onsend: (text: string, channel: "alle" | "dm", teamId?: string) => void;
   }
 
-  let { group, direct, teams, myUid, admin = false, inbox = [], tab = $bindable("alle"), onreport, onsend }: Props = $props();
+  let {
+    group,
+    direct,
+    teams,
+    myUid,
+    admin = false,
+    inbox = [],
+    dmOf,
+    onthread,
+    tab = $bindable("alle"),
+    onreport,
+    onsend,
+  }: Props = $props();
   const MAX = 300;
   let text = $state("");
   let box: HTMLDivElement | undefined = $state();
@@ -36,7 +52,8 @@
   let unseen = $state(0);
   let dmTeam = $state<string | null>(null);
 
-  const list = $derived(tab === "alle" ? group : direct);
+  const list = $derived(tab === "alle" ? group : admin ? (dmTeam && dmOf ? dmOf(dmTeam) : []) : (direct ?? []));
+  const channels = $derived(admin || !!direct);
   const showInbox = $derived(admin && tab === "dm" && !dmTeam);
   const unreadDm = $derived(admin ? inbox.reduce((s, i) => s + i.unread, 0) : 0);
 
@@ -70,30 +87,37 @@
     e.preventDefault();
     const t = text.trim();
     if (!t) return;
-    onsend(t, tab);
+    onsend(t, tab, dmTeam ?? undefined);
     text = "";
     atBottom = true;
   }
 </script>
 
 <div class="chat">
-  <div class="head">
-    <Segmented
-      label="Chat-Kanal"
-      bind:value={tab}
-      options={[
-        { value: "alle", label: T.chat.alle },
-        { value: "dm", label: admin ? T.chat.postfach : T.chat.spielleitung, badge: unreadDm },
-      ]}
-      onchange={() => (dmTeam = null)}
-    />
-  </div>
+  {#if channels}
+    <div class="head">
+      <Segmented
+        label="Chat-Kanal"
+        bind:value={tab}
+        options={[
+          { value: "alle", label: T.chat.alle },
+          { value: "dm", label: admin ? T.chat.postfach : T.chat.spielleitung, badge: unreadDm },
+        ]}
+        onchange={() => (dmTeam = null)}
+      />
+    </div>
+  {/if}
 
   {#if showInbox}
     <div class="inbox">
       {#each inbox as it (it.teamId)}
         {@const team = teams[it.teamId]!}
-        <ListItem title={team.name} subtitle="{it.last} · {vor(it.t, clock.now)}" onclick={() => (dmTeam = it.teamId)} chevron>
+        <ListItem
+          title={team.name}
+          subtitle="{it.last} · {vor(it.t, clock.now)}"
+          onclick={() => ((dmTeam = it.teamId), onthread?.(it.teamId))}
+          chevron
+        >
           {#snippet lead()}<TeamBadge short={team.short} color={team.color} size={40} />{/snippet}
           {#snippet trail()}{#if it.unread}<span class="unread num">{it.unread}</span>{/if}{/snippet}
         </ListItem>

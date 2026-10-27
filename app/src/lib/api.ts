@@ -20,6 +20,7 @@ export async function call<R extends ApiRequest>(req: R): Promise<ApiResults[R["
   } catch (e) {
     const err = e as FunctionsError;
     const reason = (err.details as { reason?: ApiReason } | undefined)?.reason;
-    throw new ApiError(reason ?? "network", err.message);
+    // das SDK hängt manchmal den HTTP-Code an („… [400]“) – für Menschen ohne Wert
+    throw new ApiError(reason ?? "network", err.message.replace(/\s*\[\d+\]$/, ""));
   }
 }

@@ -11,13 +11,12 @@
   import Results from "../screens/Results.svelte";
   import ChatView from "../screens/parts/ChatView.svelte";
   import AppBar from "../ui/AppBar.svelte";
-  import { GameData, sendMessage, type Msg } from "../lib/game.svelte.ts";
+  import { GameData, pokeWhenDue, sendMessage, type Msg } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import { signal } from "../lib/signal.ts";
-  import { call } from "../lib/api.ts";
   import { leaveGame } from "../lib/session.svelte.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
@@ -129,15 +128,10 @@
     wasPhase = phase;
   });
 
-  // ---- Countdown abgelaufen → Server anstoßen (er entscheidet, ob wirklich etwas fällig ist, E-23) ----
-  let poked = 0;
-  $effect(() => {
-    const due = game.state?.nextReportAt;
-    if (phase !== "laeuft" || !due || clock.now < due + 1000 || poked === due) return;
-    poked = due;
-    // leicht gestreut, damit nicht alle Handys in derselben Millisekunde fragen
-    setTimeout(() => void call({ action: "poke", gameId: g }).catch(() => {}), Math.random() * 1500);
-  });
+  pokeWhenDue(
+    () => g,
+    () => game.state,
+  );
 
   const lock = $derived.by(() => {
     const l = game.locks[teamId];

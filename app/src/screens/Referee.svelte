@@ -3,10 +3,12 @@
   Übergabe-Ablauf: Team wählen (nach Nähe sortiert) → Art → Bestätigen; Rückgängig 2 Min lang.
 -->
 <script lang="ts">
-  import { Flag, Hourglass, Map as MapIcon, Menu, MessageCircle, ScrollText, Undo2 } from "@lucide/svelte";
-  import { distanceM } from "@mrx/shared";
+  import { Flag, Hourglass, Map as MapIcon, Menu, MessageCircle, ScrollText } from "@lucide/svelte";
+  import { distanceM, type ApiReason } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import StatusCard from "./parts/StatusCard.svelte";
+  import HandoverFlow from "./parts/HandoverFlow.svelte";
+  import UndoHandover from "./parts/UndoHandover.svelte";
   import MapControls from "./parts/MapControls.svelte";
   import ChatView from "./parts/ChatView.svelte";
   import RulesView from "./parts/RulesView.svelte";
@@ -14,104 +16,93 @@
   import TabBar from "../ui/TabBar.svelte";
   import Button from "../ui/Button.svelte";
   import BottomSheet from "../ui/BottomSheet.svelte";
-  import Segmented from "../ui/Segmented.svelte";
   import ListItem from "../ui/ListItem.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
-  import Pill from "../ui/Pill.svelte";
-  import Modal from "../ui/Modal.svelte";
   import Switch from "../ui/Switch.svelte";
   import AppBar from "../ui/AppBar.svelte";
   import { toast } from "../ui/toast.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
-  import { meter, mmss, uhr, vor } from "../lib/format.ts";
-  import { signal } from "../lib/signal.ts";
-  import { go } from "../lib/router.svelte.ts";
+  import { meter, mmss, uhr } from "../lib/format.ts";
+  import { ApiError } from "../lib/api.ts";
+  import { isOffline, trailOf, type Api, type StaffView } from "../lib/staff.ts";
   import { T } from "../texte.ts";
-  import * as M from "../proto/mock.svelte.ts";
 
-  let { variant = "" }: { variant?: string } = $props();
+  interface Props {
+    view: StaffView;
+    api: Api;
+    onsend: (text: string) => void;
+    onlogout: () => void;
+    /** Prototyp: Übergabe-Ablauf schon offen, mit vorgewähltem Team */
+    preset?: string | null;
+  }
+  let { view, api, onsend, onlogout, preset = null }: Props = $props();
+
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   let tab = $state<Tab>("karte");
   let map: GameMap | undefined = $state();
   // svelte-ignore state_referenced_locally
-  let sheet = $state(variant === "uebergabe");
-  // svelte-ignore state_referenced_locally
-  let pick = $state<string | null>(variant === "uebergabe" ? "auwiesen" : null);
-  let kind = $state<"fang" | "strafe">("fang");
-  let confirm = $state(false);
+  let sheet = $state(!!preset);
   let waitSheet = $state(false);
-  let follows = $state(true);
-  let mrx = $state(M.MRX);
-  // svelte-ignore state_referenced_locally
-  let undoUntil = $state(variant === "rueckgaengig" ? clock.now + 2 * 60_000 - 12_000 : 0);
-  let prevMrx = $state(M.MRX);
 
-  const me = M.staff[0]!;
-  const mrxPos = $derived(M.positions[mrx]!);
-  const OFFLINE_MS = 3 * 60_000;
-  const isOffline = (id: string) => clock.now - M.positions[id]!.t > OFFLINE_MS;
+  const unknown = { name: "–", short: "?", color: "#888" };
+  const team = (id: string | null | undefined) => (id && view.teams[id]) || unknown;
+  const mrx = $derived(view.state.mrx ?? null);
+  const mrxPos = $derived(mrx ? view.positions[mrx] : undefined);
+  const teamIds = $derived(Object.keys(view.teams));
+  const running = $derived(view.state.phase === "laeuft");
 
-  // nach Nähe zum Fangort sortiert (Abschnitt 7.4)
+  // nach Nähe sortiert (Abschnitt 7.4) – zum Mister X bzw. zum Schiri selbst, wenn Mister X keinen Standort hat
+  const anchor = $derived(mrxPos ?? view.me);
   const byDistance = $derived(
-    M.teamIds
+    teamIds
       .filter((id) => id !== mrx)
-      .map((id) => ({ id, d: distanceM(M.positions[id]!, mrxPos), offline: isOffline(id) }))
+      .map((id) => {
+        const p = view.positions[id];
+        return { id, d: p && anchor ? distanceM(p, anchor) : Infinity, offline: isOffline(p, clock.now) };
+      })
       .sort((a, b) => a.d - b.d),
   );
-  const nearest = $derived(byDistance.filter((x) => !x.offline).slice(0, 3));
-  const waiting = $derived(Object.entries(M.locks).filter(([, until]) => until > clock.now));
+  const nearest = $derived(byDistance.filter((x) => !x.offline && Number.isFinite(x.d)).slice(0, 3));
+  const waiting = $derived(Object.entries(view.locks).filter(([, l]) => l.until > clock.now));
 
-  // Vorschau Wartezeit: altes Team + alle mit frischem Standort im Umkreis des Übergabeorts
-  const lockPreview = $derived(
-    pick
-      ? [
-          mrx,
-          ...M.teamIds.filter(
-            (id) => id !== pick && id !== mrx && !isOffline(id) && distanceM(M.positions[id]!, M.positions[pick!]!) <= M.config.radiusM,
-          ),
-        ]
-      : [],
-  );
-
-  const trail = $derived(M.reports.filter((r) => r.t >= M.game.mrxSince));
+  const trail = $derived(trailOf(view));
   const pins = $derived<MapPin[]>([
-    ...M.teamIds.map((id) => {
-      const t = M.teams[id]!;
-      const p = M.positions[id]!;
-      return {
-        key: id,
-        lat: p.lat,
-        lng: p.lng,
-        props: {
-          kind: "team" as const,
-          short: t.short,
-          color: t.color,
-          name: t.name,
-          mrx: id === mrx,
-          locked: (M.locks[id] ?? 0) > clock.now,
-          offline: isOffline(id),
+    ...teamIds.flatMap((id) => {
+      const t = view.teams[id]!;
+      const p = view.positions[id];
+      if (!p) return [];
+      return [
+        {
+          key: id,
+          lat: p.lat,
+          lng: p.lng,
+          props: {
+            kind: "team" as const,
+            short: t.short,
+            color: t.color,
+            name: t.name,
+            mrx: id === mrx,
+            locked: (view.locks[id]?.until ?? 0) > clock.now,
+            offline: isOffline(p, clock.now),
+          },
         },
-      };
+      ];
     }),
-    { key: "me", lat: me.pos.lat, lng: me.pos.lng, props: { kind: "me" as const, label: me.name } },
-    ...M.staff.slice(1).map((s) => ({ key: s.uid, lat: s.pos.lat, lng: s.pos.lng, props: { kind: "staff" as const, name: s.name } })),
+    ...(view.me ? [{ key: "me", lat: view.me.lat, lng: view.me.lng, props: { kind: "me" as const, label: view.myName } }] : []),
+    ...Object.entries(view.staff)
+      .filter(([uid]) => uid !== view.myUid)
+      .map(([uid, p]) => ({ key: uid, lat: p.lat, lng: p.lng, props: { kind: "staff" as const, name: p.name ?? T.status.schiri } })),
   ]);
 
-  function doHandover() {
-    if (!pick) return;
-    prevMrx = mrx;
-    mrx = pick;
-    sheet = false;
-    undoUntil = clock.now + M.config.undoMin * 60_000;
-    signal("uebergabe");
-    toast(T.schiri.gespeichert, "ok", { label: T.schiri.rueckgaengig, run: () => (confirmUndo = true) });
-    pick = null;
-  }
-  let confirmUndo = $state(false);
-  function undo() {
-    mrx = prevMrx;
-    undoUntil = 0;
-    toast("Übergabe rückgängig gemacht", "info");
+  const msg = (e: unknown) =>
+    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+
+  async function follow(on: boolean) {
+    try {
+      await api({ action: "follow", gameId: view.gameId, on });
+    } catch (e) {
+      toast(msg(e), "warn");
+    }
   }
 </script>
 
@@ -119,8 +110,8 @@
   <div class="mapzone">
     <GameMap
       bind:this={map}
-      field={M.field}
-      locked={M.game.locked}
+      field={view.field}
+      locked={Object.keys(view.state.cuts ?? {})}
       {trail}
       {pins}
       padding={{ top: 190, bottom: 200, left: 24, right: 90 }}
@@ -128,56 +119,62 @@
 
     <div class="top">
       <StatusCard
-        mrxTeam={M.teams[mrx]!}
+        mrxTeam={team(mrx)}
         role="schiri"
-        nextReportAt={M.game.nextReportAt}
-        intervalMs={M.config.intervalMin * 60_000}
-        startedAt={M.game.startedAt}
-        gpsAcc={me.pos.acc}
+        nextReportAt={view.state.nextReportAt ?? clock.now}
+        intervalMs={view.config.intervalMin * 60_000}
+        startedAt={view.state.startedAt ?? clock.now}
+        gpsAcc={view.me?.acc}
+        online={view.online}
+        lastDataAt={view.lastDataAt}
+        paused={view.state.phase === "pause"}
       />
     </div>
 
     <div class="side">
-      <MapControls onmrx={() => map?.flyTo(mrxPos)} onme={() => map?.flyTo(me.pos)} onfield={() => map?.fitField()} />
+      <MapControls
+        onmrx={mrxPos ? () => map?.flyTo(mrxPos) : undefined}
+        onme={view.me ? () => map?.flyTo(view.me!) : undefined}
+        onfield={() => map?.fitField()}
+      />
     </div>
 
     <div class="bottom">
       <div class="near" aria-label={T.schiri.naechsteJaeger}>
         <span class="caps">{T.schiri.naechsteJaeger}</span>
         {#each nearest as n (n.id)}
-          {@const t = M.teams[n.id]!}
+          {@const t = team(n.id)}
           <span class="chip"><TeamBadge short={t.short} color={t.color} size={28} /><b class="num">{meter(n.d)}</b></span>
         {/each}
         <button class="waitbtn" onclick={() => (waitSheet = true)}><Hourglass size={18} aria-hidden="true" />{waiting.length}</button>
       </div>
-      {#if undoUntil > clock.now}
-        <Button variant="secondary" block icon={Undo2} onclick={() => (confirmUndo = true)}
-          >{T.schiri.rueckgaengigNoch(mmss(undoUntil - clock.now))}</Button
-        >
-      {/if}
-      <Button size="xl" block icon={Flag} onclick={() => (sheet = true)}>{T.schiri.uebergabe}</Button>
+      <UndoHandover {view} {api} />
+      <Button size="xl" block icon={Flag} disabled={!running} onclick={() => (sheet = true)}>{T.schiri.uebergabe}</Button>
     </div>
 
     {#if tab !== "karte"}
       <div class="pane">
         {#if tab === "chat"}
           <ChatView
-            group={M.chat}
-            direct={M.dm}
-            teams={M.teams}
-            myUid="s1"
-            onreport={() => (tab = "karte")}
-            onsend={(text) => M.chat.push({ id: `s${Date.now()}`, uid: "s1", name: me.name, kind: "msg", t: clock.now, text })}
+            group={view.chat}
+            teams={view.teams}
+            myUid={view.myUid}
+            onreport={(id) => {
+              const r = view.reports.find((x) => x.id === id);
+              tab = "karte";
+              if (r) setTimeout(() => map?.flyTo(r), 50);
+            }}
+            onsend={(text) => onsend(text)}
           />
         {:else if tab === "regeln"}
           <AppBar title={T.regeln.titel} />
-          <RulesView config={M.config} />
+          <RulesView config={view.config} />
         {:else}
           <AppBar title={T.mehr.titel} />
           <div class="follow">
-            <Switch label={T.schiri.folgen} hint={T.schiri.folgenHinweis} bind:checked={follows} />
+            <Switch label={T.schiri.folgen} hint={T.schiri.folgenHinweis} checked={view.follows} onchange={follow} />
           </div>
-          <SettingsView onlogout={() => go("/prototyp/1")} />
+          <SettingsView {onlogout} />
         {/if}
       </div>
     {/if}
@@ -195,81 +192,19 @@
   />
 </div>
 
-<BottomSheet open={sheet} title={T.schiri.uebergabe} onclose={() => (sheet = false)}>
-  <h3 class="step"><span class="n">1</span>{T.schiri.schritt1}</h3>
-  <p class="muted small">{T.schiri.schritt1Hinweis}</p>
-  <div class="picklist">
-    {#each byDistance as x (x.id)}
-      {@const t = M.teams[x.id]!}
-      <ListItem
-        title={t.name}
-        subtitle={x.offline ? `${T.schiri.keinStandort} · ${vor(M.positions[x.id]!.t, clock.now)}` : `${meter(x.d)} entfernt`}
-        selected={pick === x.id}
-        onclick={() => (pick = x.id)}
-      >
-        {#snippet lead()}<TeamBadge short={t.short} color={t.color} size={44} offline={x.offline} />{/snippet}
-        {#snippet trail()}{#if (M.locks[x.id] ?? 0) > clock.now}<Pill tone="warn" icon={Hourglass}>wartet</Pill>{/if}{/snippet}
-      </ListItem>
-    {/each}
-  </div>
-  <h3 class="step"><span class="n">2</span>{T.schiri.schritt2}</h3>
-  <Segmented
-    label={T.schiri.schritt2}
-    bind:value={kind}
-    options={[
-      { value: "fang", label: T.schiri.fang },
-      { value: "strafe", label: T.schiri.strafe },
-    ]}
-  />
-  {#if pick}
-    <div class="preview">
-      <p class="caps">{T.schiri.vorschau(M.config.waitMin)}</p>
-      <div class="chips">
-        {#each lockPreview as id (id)}
-          {@const t = M.teams[id]!}
-          <span class="chip"><TeamBadge short={t.short} color={t.color} size={28} locked />{t.name}</span>
-        {/each}
-      </div>
-    </div>
-  {/if}
-  {#snippet footer()}
-    <Button size="xl" block icon={Flag} disabled={!pick} onclick={() => (confirm = true)}
-      >{pick ? T.schiri.bestaetigen(M.teams[pick]!.name) : T.schiri.schritt1}</Button
-    >
-  {/snippet}
-</BottomSheet>
+<HandoverFlow {view} {api} bind:open={sheet} {preset} />
 
 <BottomSheet open={waitSheet} title={T.schiri.wartezeiten} onclose={() => (waitSheet = false)}>
-  {#each waiting as [id, until] (id)}
-    {@const t = M.teams[id]!}
-    <ListItem title={t.name} subtitle="bis {uhr(until)}">
+  {#each waiting as [id, l] (id)}
+    {@const t = team(id)}
+    <ListItem title={t.name} subtitle={T.schiri.bis(uhr(l.until))}>
       {#snippet lead()}<TeamBadge short={t.short} color={t.color} size={44} locked />{/snippet}
-      {#snippet trail()}<b class="num big">{mmss(until - clock.now)}</b>{/snippet}
+      {#snippet trail()}<b class="num big">{mmss(l.until - clock.now)}</b>{/snippet}
     </ListItem>
   {:else}
     <p class="muted">{T.schiri.keineWartezeit}</p>
   {/each}
 </BottomSheet>
-
-<Modal
-  open={confirm}
-  title={pick ? T.schiri.bestaetigen(M.teams[pick]!.name) + "?" : ""}
-  confirm={T.allgemein.bestaetigen}
-  onconfirm={doHandover}
-  onclose={() => (confirm = false)}
->
-  {kind === "fang" ? T.schiri.fang : T.schiri.strafe} · {T.schiri.vorschau(M.config.waitMin)}
-  {lockPreview.map((id) => M.teams[id]!.name).join(", ")}
-</Modal>
-
-<Modal
-  open={confirmUndo}
-  title={T.schiri.rueckgaengigFrage(M.teams[mrx]!.name)}
-  confirm={T.schiri.rueckgaengig}
-  danger
-  onconfirm={undo}
-  onclose={() => (confirmUndo = false)}
-/>
 
 <style>
   .screen {
@@ -353,44 +288,6 @@
   }
   .follow {
     padding: var(--sp-3) var(--gutter) 0;
-  }
-  .step {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    margin-top: var(--sp-3);
-  }
-  .n {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: var(--accent);
-    color: var(--on-accent);
-    font-size: 18px;
-  }
-  .small {
-    font-size: var(--fs-s);
-    margin-bottom: var(--sp-2);
-  }
-  .picklist {
-    display: grid;
-    gap: 2px;
-    margin-bottom: var(--sp-3);
-  }
-  .preview {
-    margin-top: var(--sp-4);
-    padding: var(--sp-3);
-    border-radius: var(--r-m);
-    background: var(--warn-soft);
-    border: 2px solid var(--warn);
-  }
-  .preview .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-3);
-    margin-top: var(--sp-2);
   }
   .big {
     font-family: var(--font-display);

@@ -5,9 +5,10 @@
     hint?: string;
     checked?: boolean;
     disabled?: boolean;
+    onchange?: (checked: boolean) => void;
   }
 
-  let { label, hint, checked = $bindable(false), disabled = false }: Props = $props();
+  let { label, hint, checked = $bindable(false), disabled = false, onchange }: Props = $props();
 </script>
 
 <label class="row" class:disabled>
@@ -15,7 +16,7 @@
     <span>{label}</span>
     {#if hint}<small>{hint}</small>{/if}
   </span>
-  <input type="checkbox" role="switch" bind:checked {disabled} />
+  <input type="checkbox" role="switch" bind:checked {disabled} onchange={() => onchange?.(checked)} />
 </label>
 
 <style>

@@ -1,9 +1,25 @@
 // Live-Daten eines Spiels für die Spiel-Ansichten (Team, Schiri, Spielleitung). Jede Ansicht liest nur, was ihre Rolle
 // lesen darf (Rules) – darum sagt `watch`, welche Teile abonniert werden.
 import { limitToLast, onValue, push, query, ref, serverTimestamp, update, type Unsubscribe } from "firebase/database";
-import type { ChatMessage, Config, CutEvent, Field, GameState, Handover, Lock, Pause, Report, Team, TeamStats } from "@mrx/shared";
+import type {
+  AuditEntry,
+  ChatMessage,
+  Config,
+  CutEvent,
+  Field,
+  GameState,
+  Handover,
+  Lock,
+  Member,
+  Pause,
+  Position,
+  Report,
+  Team,
+  TeamStats,
+} from "@mrx/shared";
 import { db } from "./firebase.ts";
 import { clock } from "./clock.svelte.ts";
+import { call } from "./api.ts";
 
 export type Keyed<T> = T & { id: string };
 export type Msg = Keyed<ChatMessage>;
@@ -27,13 +43,20 @@ export class GameData {
   stats = $state<Record<string, TeamStats>>({});
   chat = $state<Msg[]>([]);
   dm = $state<Msg[]>([]);
+  /** nur Schiri, Spielleitung, Großbild: Live-Standorte */
+  positions = $state<Record<string, Position>>({});
+  staff = $state<Record<string, Position & { name?: string }>>({});
+  /** nur Spielleitung */
+  members = $state<Record<string, Member>>({});
+  audit = $state<Keyed<AuditEntry>[]>([]);
+  dmAll = $state<Record<string, Msg[]>>({});
   /** Verbindung zur Datenbank; `lastDataAt` = zuletzt verbunden */
   online = $state(true);
   lastDataAt = $state(Date.now());
   readonly loaded = $derived(!!this.config && !!this.field && !!this.state);
 
   /** Abonnieren; gibt die Abmeldung zurück (für $effect) */
-  watch(g: string, o: { chat?: boolean; dmTeam?: string | undefined }): () => void {
+  watch(g: string, o: { chat?: boolean; dmTeam?: string | undefined; live?: boolean; admin?: boolean }): () => void {
     const p = `games/${g}`;
     const on = <T>(path: string, set: (v: T | null) => void, limit?: number): Unsubscribe =>
       onValue(
@@ -61,6 +84,32 @@ export class GameData {
     ];
     if (o.chat) subs.push(on<Record<string, ChatMessage>>(`${p}/chat`, (v) => (this.chat = list(v)), 200));
     if (o.dmTeam) subs.push(on<Record<string, ChatMessage>>(`${p}/dm/${o.dmTeam}`, (v) => (this.dm = list(v)), 200));
+    if (o.live)
+      subs.push(
+        on<Record<string, Position>>(`${p}/pos`, (v) => (this.positions = v ?? {})),
+        on<Record<string, Position & { name?: string }>>(`${p}/staffPos`, (v) => (this.staff = v ?? {})),
+      );
+    if (o.admin) {
+      subs.push(
+        on<Record<string, Member>>(`${p}/members`, (v) => (this.members = v ?? {})),
+        on<Record<string, AuditEntry>>(`${p}/audit`, (v) => (this.audit = list(v)), 500),
+      );
+      // Direktkanäle: pro Team ein Abo (die Rules erlauben kein Lesen von dm/ als Ganzes)
+      const dmSubs: Record<string, Unsubscribe> = {};
+      subs.push(
+        on<Record<string, Team>>(`${p}/teams`, (v) => {
+          const ids = Object.keys(v ?? {});
+          for (const t of Object.keys(dmSubs))
+            if (!ids.includes(t)) {
+              dmSubs[t]!();
+              delete dmSubs[t];
+              delete this.dmAll[t];
+            }
+          for (const t of ids) dmSubs[t] ??= on<Record<string, ChatMessage>>(`${p}/dm/${t}`, (m) => (this.dmAll[t] = list(m)), 200);
+        }),
+        () => Object.values(dmSubs).forEach((u) => u()),
+      );
+    }
     return () => subs.forEach((u) => u());
   }
 }
@@ -80,5 +129,19 @@ export async function sendMessage(
   await update(ref(db), {
     [`${path}/${id}`]: { uid: me.uid, name: me.name, text, t: serverTimestamp(), kind: "msg", ...(me.teamId ? { teamId: me.teamId } : {}) },
     [`games/${g}/rate/${me.uid}`]: serverTimestamp(),
+  });
+}
+
+/** Countdown abgelaufen → Server anstoßen; er entscheidet, ob wirklich etwas fällig ist (E-23). Für $effect-Kontext. */
+export function pokeWhenDue(g: () => string, state: () => GameState | null) {
+  let poked = 0;
+  $effect(() => {
+    const st = state();
+    const due = st?.nextReportAt;
+    if (st?.phase !== "laeuft" || !due || clock.now < due + 1000 || poked === due) return;
+    poked = due;
+    const gameId = g();
+    // leicht gestreut, damit nicht alle Handys in derselben Millisekunde fragen
+    setTimeout(() => void call({ action: "poke", gameId }).catch(() => {}), Math.random() * 1500);
   });
 }

@@ -2,9 +2,25 @@
   Rahmen für die Spielleitung (Screens 13–17): auf Laptop Seitenleiste, am Handy untere Navigation
   (Live · Steuerung · Teams · Chat · Mehr).
 -->
+<script module lang="ts">
+  export type Section = "live" | "steuerung" | "teams" | "zonen" | "protokoll" | "chat" | "grossbild" | "archiv";
+</script>
+
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { Archive, Map as MapIcon, Menu, MessageCircle, Monitor, Radar, ScrollText, SlidersHorizontal, Users } from "@lucide/svelte";
+  import {
+    Archive,
+    LogOut,
+    Map as MapIcon,
+    Menu,
+    MessageCircle,
+    Monitor,
+    Radar,
+    ScrollText,
+    SlidersHorizontal,
+    Users,
+  } from "@lucide/svelte";
+  import type { Phase } from "@mrx/shared";
   import TabBar from "../../ui/TabBar.svelte";
   import BottomSheet from "../../ui/BottomSheet.svelte";
   import ListItem from "../../ui/ListItem.svelte";
@@ -13,20 +29,33 @@
   import { go } from "../../lib/router.svelte.ts";
   import { T } from "../../texte.ts";
 
-  let { section, children }: { section: "live" | "steuerung" | "teams" | "zonen" | "protokoll" | "chat"; children: Snippet } = $props();
+  interface Props {
+    section: Section;
+    gameName: string;
+    phase: Phase;
+    /** Adresse eines Bereichs; Bereiche ohne Adresse werden nicht angezeigt */
+    link: (id: Section) => string | null;
+    /** Ungelesene Direktnachrichten */
+    unread?: number;
+    onlogout?: () => void;
+    children: Snippet;
+  }
+  let { section, gameName, phase, link, unread = 0, onlogout, children }: Props = $props();
   let more = $state(false);
 
-  const NAV = [
-    { id: "live", label: T.admin.nav.live, icon: Radar, to: "/prototyp/13" },
-    { id: "steuerung", label: T.admin.nav.steuerung, icon: SlidersHorizontal, to: "/prototyp/14" },
-    { id: "teams", label: T.admin.nav.teams, icon: Users, to: "/prototyp/15" },
-    { id: "zonen", label: T.admin.nav.zonen, icon: MapIcon, to: "/prototyp/16" },
-    { id: "protokoll", label: T.admin.nav.protokoll, icon: ScrollText, to: "/prototyp/17" },
-    { id: "chat", label: T.admin.nav.chat, icon: MessageCircle, to: "/prototyp/13?v=chat" },
-    { id: "grossbild", label: T.admin.nav.grossbild, icon: Monitor, to: "/prototyp/18" },
-    { id: "archiv", label: T.admin.nav.archiv, icon: Archive, to: "/prototyp/20?v=liste" },
+  const ALL: { id: Section; label: string; icon: typeof Radar }[] = [
+    { id: "live", label: T.admin.nav.live, icon: Radar },
+    { id: "steuerung", label: T.admin.nav.steuerung, icon: SlidersHorizontal },
+    { id: "teams", label: T.admin.nav.teams, icon: Users },
+    { id: "zonen", label: T.admin.nav.zonen, icon: MapIcon },
+    { id: "protokoll", label: T.admin.nav.protokoll, icon: ScrollText },
+    { id: "chat", label: T.admin.nav.chat, icon: MessageCircle },
+    { id: "grossbild", label: T.admin.nav.grossbild, icon: Monitor },
+    { id: "archiv", label: T.admin.nav.archiv, icon: Archive },
   ];
+  const NAV = $derived(ALL.flatMap((n) => (link(n.id) ? [{ ...n, to: link(n.id)! }] : [])));
   const MOBILE = ["live", "steuerung", "teams", "chat"];
+  const TONE: Record<Phase, "ok" | "info" | "warn" | "neutral"> = { laeuft: "ok", vorbereitung: "info", pause: "warn", beendet: "neutral" };
 </script>
 
 <div class="shell">
@@ -34,8 +63,8 @@
     <div class="brand">
       <Logo height={40} />
       <div>
-        <strong class="display">Mister X Linz 2027</strong>
-        <Pill tone="ok" dot>läuft</Pill>
+        <strong class="display">{gameName}</strong>
+        <Pill tone={TONE[phase]} dot>{T.superadmin.phase[phase]}</Pill>
       </div>
     </div>
     <nav>
@@ -43,9 +72,11 @@
         {@const IconC = n.icon}
         <a href="#{n.to}" class:on={section === n.id} aria-current={section === n.id ? "page" : undefined}>
           <IconC size={22} aria-hidden="true" />{n.label}
+          {#if n.id === "chat" && unread}<span class="badge num">{unread}</span>{/if}
         </a>
       {/each}
     </nav>
+    {#if onlogout}<button class="out" onclick={onlogout}><LogOut size={22} aria-hidden="true" />{T.einstellungen.abmelden}</button>{/if}
   </aside>
 
   <main class="content">{@render children()}</main>
@@ -56,6 +87,7 @@
         id: n.id,
         label: n.id === "teams" ? T.admin.teams : n.label,
         icon: n.icon,
+        badge: n.id === "chat" ? unread : 0,
       }))}
       active={MOBILE.includes(section) ? section : "mehr"}
       onselect={(id) => (id === "mehr" ? (more = true) : go(NAV.find((n) => n.id === id)!.to))}
@@ -70,6 +102,11 @@
       {#snippet lead()}<IconC size={24} aria-hidden="true" />{/snippet}
     </ListItem>
   {/each}
+  {#if onlogout}
+    <ListItem title={T.einstellungen.abmelden} onclick={onlogout}>
+      {#snippet lead()}<LogOut size={24} aria-hidden="true" />{/snippet}
+    </ListItem>
+  {/if}
 </BottomSheet>
 
 <style>
@@ -134,12 +171,40 @@
     text-decoration: none;
     font-weight: 600;
   }
-  nav a:hover {
+  .out {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: var(--touch);
+    padding: 0 var(--sp-3);
+    margin-top: auto;
+    border: 0;
+    border-radius: var(--r-m);
+    background: none;
+    color: var(--text-2);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  nav a:hover,
+  .out:hover {
     background: var(--surface-2);
   }
   nav a.on {
     background: var(--accent-soft);
     color: var(--accent-text);
+  }
+  .badge {
+    margin-left: auto;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 7px;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 800;
+    display: grid;
+    place-items: center;
   }
   :global([data-theme="sonne"]) nav a.on {
     background: #000;

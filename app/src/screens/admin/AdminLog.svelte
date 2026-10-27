@@ -1,26 +1,39 @@
 <!-- Screen 17: Protokoll (Audit-Log) – wer hat wann was ausgelöst; wichtig bei Streit. Export als CSV. -->
 <script lang="ts">
   import { Download } from "@lucide/svelte";
+  import type { AuditEntry } from "@mrx/shared";
   import Segmented from "../../ui/Segmented.svelte";
   import Button from "../../ui/Button.svelte";
   import Pill from "../../ui/Pill.svelte";
   import { uhr } from "../../lib/format.ts";
+  import type { Keyed } from "../../lib/game.svelte.ts";
   import { T } from "../../texte.ts";
-  import * as M from "../../proto/mock.svelte.ts";
 
   type Cat = "alle" | "uebergabe" | "regeln" | "spielfeld" | "zugang";
+  type Entry = Keyed<Omit<AuditEntry, "role"> & { role: string; undone?: boolean }>;
+  let { audit }: { audit: Entry[] } = $props();
   let cat = $state<Cat>("alle");
-  const list = $derived([...M.audit].reverse().filter((a) => cat === "alle" || a.cat === cat));
-  const ROLE = { admin: "Spielleitung", schiri: "Schiri", team: "Team", screen: "Großbild", viewer: "Zuschauer" } as const;
+
+  // Kategorie aus der Aktion (die Texte setzt der Spiel-Server, functions/src/actions)
+  const catOf = (a: Entry): Exclude<Cat, "alle"> =>
+    /Übergabe/.test(a.action)
+      ? "uebergabe"
+      : /Bereich|Spielfeld/.test(a.action)
+        ? "spielfeld"
+        : /Beigetreten|Abgemeldet|Passwort|Code|entfernt|umbenannt|Runde|Gerät|Spiel angelegt|Begleitet/.test(a.action)
+          ? "zugang"
+          : "regeln";
+  const list = $derived([...audit].reverse().filter((a) => cat === "alle" || catOf(a) === cat));
+  const ROLE: Record<string, string> = { ...T.warten.rolle, admin: "Spielleitung", superadmin: "Organisator" };
 
   function csv() {
     const rows = [
-      ["Zeit", "Wer", "Rolle", "Aktion", "Details", "Rückgängig"],
-      ...M.audit.map((a) => [new Date(a.t).toISOString(), a.name, ROLE[a.role], a.action, a.details, a.undone ? "ja" : ""]),
+      ["Zeit", "Wer", "Rolle", "Aktion", "Details"],
+      ...audit.map((a) => [new Date(a.t).toISOString(), a.name, ROLE[a.role] ?? a.role, a.action, a.details ?? ""]),
     ];
     const text = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(";")).join("\n");
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob(["﻿" + text], { type: "text/csv" }));
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + text], { type: "text/csv" }));
     a.download = "protokoll.csv";
     a.click();
     URL.revokeObjectURL(a.href);
@@ -44,10 +57,13 @@
         <div class="body">
           <p class="act">
             {a.action}
-            {#if a.undone}<Pill tone="warn">rückgängig gemacht</Pill>{/if}
+            {#if a.undone}<Pill tone="warn">{T.admin.rueckgaengigGemacht}</Pill>{/if}
           </p>
           {#if a.details}<p class="det">{a.details}</p>{/if}
-          <p class="who"><Pill tone={a.role === "admin" ? "accent" : "info"}>{ROLE[a.role]}</Pill> {a.name}</p>
+          <p class="who">
+            <Pill tone={a.role === "admin" || a.role === "superadmin" ? "accent" : "info"}>{ROLE[a.role] ?? a.role}</Pill>
+            {a.name}
+          </p>
         </div>
       </li>
     {/each}

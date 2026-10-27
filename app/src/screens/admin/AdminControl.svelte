@@ -1,7 +1,7 @@
 <!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
 <script lang="ts">
   import { Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer } from "@lucide/svelte";
-  import { nextReportAfterIntervalChange } from "@mrx/shared";
+  import { nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Card from "../../ui/Card.svelte";
@@ -13,62 +13,113 @@
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { dauer, uhr } from "../../lib/format.ts";
-  import { go } from "../../lib/router.svelte.ts";
+  import { ApiError } from "../../lib/api.ts";
+  import type { Api, StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
-  import * as M from "../../proto/mock.svelte.ts";
 
-  let { vorStart = false }: { vorStart?: boolean } = $props();
+  interface Props {
+    view: StaffView;
+    api: Api;
+    /** nach dem Start (Countdown fertig) bzw. nach dem Notstopp */
+    onstarted?: () => void;
+    onstopped?: () => void;
+  }
+  let { view, api, onstarted, onstopped }: Props = $props();
 
-  let interval = $state(M.config.intervalMin);
-  let head = $state(M.config.headStartMin);
-  let wait = $state(M.config.waitMin);
-  let radius = $state(M.config.radiusM);
-  let endMin = $state(M.config.endMinH);
-  let endMax = $state(M.config.endMaxH);
-  let locked = $state([...M.game.locked]);
+  type Rule = "intervalMin" | "headStartMin" | "waitMin" | "radiusM" | "endMinH" | "endMaxH";
+  // Entwurf: nur geänderte Werte, angezeigt wird sonst der aktuelle Wert vom Server
+  let draft = $state<Partial<Pick<Config, Rule>>>({});
+  const val = (k: Rule) => draft[k] ?? view.config[k];
+  const bind = (k: Rule) => [() => val(k), (v: number) => (draft[k] = v)] as const;
+  const [gInterval, sInterval] = bind("intervalMin");
+  const [gHead, sHead] = bind("headStartMin");
+  const [gWait, sWait] = bind("waitMin");
+  const [gRadius, sRadius] = bind("radiusM");
+  const [gEndMin, sEndMin] = bind("endMinH");
+  const [gEndMax, sEndMax] = bind("endMaxH");
+
   let previewCut = $state<string | null>(null);
   let ask = $state<null | "stop" | "reveal" | "start" | { cut: string; lock: boolean }>(null);
   let revealed = $state<number | null>(null);
   let startMrx = $state<string | null>(null);
   let drawing = $state(false);
   let counting = $state(false);
+  let busy = $state(false);
 
-  const changed = $derived(
-    interval !== M.config.intervalMin || head !== M.config.headStartMin || wait !== M.config.waitMin || radius !== M.config.radiusM,
-  );
-  const nextPreview = $derived(nextReportAfterIntervalChange(M.game.lastReportAt, interval, clock.now));
-  const cuts = Object.entries(M.field.cuts).sort((a, b) => a[1].order - b[1].order);
+  const st = $derived(view.state);
+  const g = $derived(view.gameId);
+  const teamIds = $derived(Object.keys(view.teams));
+  const before = $derived(st.phase === "vorbereitung");
+  const running = $derived(st.phase === "laeuft" || st.phase === "pause");
+  const locked = $derived(Object.keys(st.cuts ?? {}));
+  const RULES: Rule[] = ["intervalMin", "headStartMin", "waitMin", "radiusM"];
+  const changed = $derived(RULES.filter((k) => draft[k] !== undefined && draft[k] !== view.config[k]));
+  const nextPreview = $derived(st.lastReportAt ? nextReportAfterIntervalChange(st.lastReportAt, val("intervalMin"), clock.now) : null);
+  const cuts = $derived(Object.entries(view.field.cuts).sort((a, b) => a[1].order - b[1].order));
+  const fieldReady = $derived(view.field.base.length >= 3);
 
-  // Auslosen mit Animation: Hervorhebung läuft über die Teams und bleibt zufällig stehen
-  function draw() {
-    drawing = true;
-    let n = 0;
-    const steps = 18 + Math.floor(Math.random() * M.teamIds.length);
-    const t = setInterval(() => {
-      startMrx = M.teamIds[n++ % M.teamIds.length]!;
-      if (n >= steps) {
-        clearInterval(t);
-        drawing = false;
-      }
-    }, 90);
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  async function run<R>(fn: () => Promise<R>, okText?: string): Promise<R | undefined> {
+    busy = true;
+    try {
+      const r = await fn();
+      if (okText) toast(okText, "ok");
+      return r;
+    } catch (e) {
+      toast(errText(e), "warn");
+      return undefined;
+    } finally {
+      busy = false;
+    }
   }
 
-  function apply() {
-    M.config.intervalMin = interval;
-    M.config.headStartMin = head;
-    M.config.waitMin = wait;
-    M.config.radiusM = radius;
-    toast("Regeln geändert – alle wurden informiert", "ok");
+  async function apply() {
+    const patch = Object.fromEntries(changed.map((k) => [k, draft[k]]));
+    if (await run(() => api({ action: "setConfig", gameId: g, config: patch }), T.admin.regelnGeaendert)) draft = {};
+  }
+
+  /** Hervorhebung läuft über die Teams und bleibt beim Ergebnis stehen (Auslosen macht der Server, Abschnitt 7.7) */
+  function animateTo(result: string): Promise<void> {
+    drawing = true;
+    return new Promise((done) => {
+      let n = 0;
+      const target = teamIds.indexOf(result);
+      const steps = teamIds.length * 2 + (target < 0 ? 0 : target) + 1;
+      const t = setInterval(() => {
+        startMrx = teamIds[n++ % teamIds.length]!;
+        if (n >= steps) {
+          clearInterval(t);
+          startMrx = result;
+          drawing = false;
+          done();
+        }
+      }, 90);
+    });
+  }
+
+  async function start() {
+    const endPatch = Object.fromEntries(
+      (["endMinH", "endMaxH", "headStartMin"] as const).filter((k) => draft[k] !== undefined).map((k) => [k, draft[k]]),
+    );
+    if (Object.keys(endPatch).length && !(await run(() => api({ action: "setConfig", gameId: g, config: endPatch })))) return;
+    const r = await run(() => api({ action: "startGame", gameId: g, mrx: startMrx ?? "random" }));
+    if (!r) return;
+    draft = {};
+    if (startMrx === "random" || !startMrx) await animateTo(r.mrx);
+    counting = true;
   }
 </script>
 
 <div class="grid">
-  {#if vorStart}
+  {#if before}
     <Card label={T.admin.spielStarten} icon={Play} tone="accent">
+      {#if !fieldReady}<p class="warnline">{T.admin.feldFehlt}</p>{/if}
+      {#if teamIds.length < 2}<p class="warnline">{T.admin.zuWenigTeams}</p>{/if}
       <p class="caps sub">{T.admin.startMrx}</p>
       <div class="pick" role="radiogroup" aria-label={T.admin.startMrx}>
-        {#each M.teamIds as id (id)}
-          {@const t = M.teams[id]!}
+        {#each teamIds as id (id)}
+          {@const t = view.teams[id]!}
           <button role="radio" aria-checked={startMrx === id} class:on={startMrx === id} disabled={drawing} onclick={() => (startMrx = id)}>
             <TeamBadge short={t.short} color={t.color} size={40} mrx={startMrx === id} />
             <span>{t.name}</span>
@@ -76,87 +127,121 @@
         {/each}
       </div>
       <div class="row">
-        <Button variant="secondary" icon={Dices} loading={drawing} onclick={draw}>{T.admin.auslosen}</Button>
+        <Button
+          variant={startMrx === "random" ? "primary" : "secondary"}
+          icon={Dices}
+          loading={drawing}
+          onclick={() => (startMrx = "random")}>{T.admin.auslosen}</Button
+        >
       </div>
       <div class="steppers">
-        <Stepper label="{T.admin.zufallsende} frühestens" bind:value={endMin} unit="h" min={1} max={endMax} step={0.5} />
-        <Stepper label="{T.admin.zufallsende} spätestens" bind:value={endMax} unit="h" min={endMin} max={8} step={0.5} />
+        <Stepper label={T.admin.endeFrueh} bind:value={gEndMin, sEndMin} unit="h" min={0.5} max={val("endMaxH")} step={0.5} />
+        <Stepper label={T.admin.endeSpaet} bind:value={gEndMax, sEndMax} unit="h" min={val("endMinH")} max={12} step={0.5} />
       </div>
-      <Button size="xl" block icon={Play} disabled={!startMrx || drawing} onclick={() => (ask = "start")}>{T.admin.spielStarten}</Button>
+      <Button
+        size="xl"
+        block
+        icon={Play}
+        disabled={!startMrx || drawing || busy || !fieldReady || teamIds.length < 2}
+        onclick={() => (ask = "start")}>{T.admin.spielStarten}</Button
+      >
     </Card>
-  {:else}
-    <Card label="Spielstatus" icon={Timer}>
+  {:else if running}
+    <Card label={T.admin.spielstatus} icon={Timer}>
       <div class="status">
-        <Pill tone="ok" dot>läuft seit {uhr(M.game.startedAt)}</Pill>
-        <span class="num big">{dauer(clock.now - M.game.startedAt)}</span>
+        {#if st.phase === "pause"}<Pill tone="warn" dot>{T.status.pause}</Pill>{:else}<Pill tone="ok" dot
+            >{T.admin.laeuftSeit(uhr(st.startedAt ?? clock.now))}</Pill
+          >{/if}
+        <span class="num big">{dauer(clock.now - (st.startedAt ?? clock.now))}</span>
       </div>
       <div class="row">
-        <Button variant="secondary" icon={Pause} onclick={() => toast(T.allgemein.prototyp(T.admin.pause))}>{T.admin.pause}</Button>
+        {#if st.phase === "pause"}
+          <Button variant="secondary" icon={Play} disabled={busy} onclick={() => run(() => api({ action: "resume", gameId: g }))}
+            >{T.admin.fortsetzen}</Button
+          >
+        {:else}
+          <Button variant="secondary" icon={Pause} disabled={busy} onclick={() => run(() => api({ action: "pause", gameId: g }))}
+            >{T.admin.pause}</Button
+          >
+        {/if}
         <Button variant="danger" icon={OctagonX} onclick={() => (ask = "stop")}>{T.admin.notstopp}</Button>
       </div>
     </Card>
 
     <Card label={T.admin.zufallsende} icon={Eye}>
-      <p class="end">{T.admin.endeZwischen(uhr(M.game.endFrom), uhr(M.game.endTo))}</p>
+      {#if st.startedAt}
+        <p class="end">
+          {T.admin.endeZwischen(uhr(st.startedAt + view.config.endMinH * 3_600_000), uhr(st.startedAt + view.config.endMaxH * 3_600_000))}
+        </p>
+      {/if}
       {#if revealed}
-        <p class="reveal">Geplantes Ende: <b class="num">{uhr(revealed)}</b> <Pill tone="warn">im Protokoll vermerkt</Pill></p>
+        <p class="reveal">{T.admin.geplantesEnde} <b class="num">{uhr(revealed)}</b> <Pill tone="warn">{T.admin.imProtokoll}</Pill></p>
       {:else}
         <Pill tone="info">{T.admin.geheim}</Pill>
         <div class="row"><Button variant="secondary" size="m" icon={Eye} onclick={() => (ask = "reveal")}>{T.admin.aufdecken}</Button></div>
       {/if}
     </Card>
+  {:else}
+    <Card label={T.admin.spielstatus} icon={Timer}>
+      <Pill dot>{T.superadmin.phase.beendet}</Pill>
+      <p class="muted">{T.admin.beendetHinweis}</p>
+    </Card>
   {/if}
 
-  <Card label={T.admin.regelnLive} icon={SlidersHorizontal}>
-    <div class="steppers">
-      <Stepper
-        label={T.admin.intervall}
-        bind:value={interval}
-        unit={T.allgemein.min}
-        min={1}
-        max={30}
-        hint={vorStart ? undefined : T.admin.vorschauMeldung(uhr(nextPreview))}
-      />
-      <Stepper label={T.admin.vorsprung} bind:value={head} unit={T.allgemein.min} min={0} max={30} />
-      <Stepper label={T.admin.wartezeit} bind:value={wait} unit={T.allgemein.min} min={0} max={20} />
-      <Stepper label={T.admin.umkreis} bind:value={radius} unit="m" min={25} max={1000} step={25} />
-    </div>
-    <p class="muted small">{T.admin.aenderungMeldung}</p>
-    <Button block disabled={!changed} onclick={apply}>Übernehmen</Button>
-  </Card>
-
-  <Card label={T.admin.bereiche} icon={Shrink}>
-    <div class="cuts">
-      <div class="mini">
-        <GameMap
-          field={M.field}
-          {locked}
-          preview={previewCut ? [previewCut] : []}
-          interactive={false}
-          padding={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          label="Vorschau Spielfeld"
+  {#if before || running}
+    <Card label={T.admin.regelnLive} icon={SlidersHorizontal}>
+      <div class="steppers">
+        <Stepper
+          label={T.admin.intervall}
+          bind:value={gInterval, sInterval}
+          unit={T.allgemein.min}
+          min={1}
+          max={30}
+          hint={running && nextPreview ? T.admin.vorschauMeldung(uhr(nextPreview)) : undefined}
         />
+        {#if before}<Stepper label={T.admin.vorsprung} bind:value={gHead, sHead} unit={T.allgemein.min} min={0} max={30} />{/if}
+        <Stepper label={T.admin.wartezeit} bind:value={gWait, sWait} unit={T.allgemein.min} min={0} max={20} />
+        <Stepper label={T.admin.umkreis} bind:value={gRadius, sRadius} unit="m" min={25} max={1000} step={25} />
       </div>
-      <ul>
-        {#each cuts as [id, c] (id)}
-          {@const isLocked = locked.includes(id)}
-          <li onmouseenter={() => (previewCut = id)} onmouseleave={() => (previewCut = null)}>
-            <span class="dot" style:background={c.color} aria-hidden="true"></span>
-            <div class="cn">
-              <strong>{c.short}</strong>
-              {#if isLocked}<Pill tone="danger">{T.karte.gesperrt}</Pill>{:else}<Pill>frei</Pill>{/if}
-            </div>
-            <Button
-              size="m"
-              variant={isLocked ? "secondary" : "danger"}
-              onfocus={() => (previewCut = id)}
-              onclick={() => (ask = { cut: id, lock: !isLocked })}>{isLocked ? T.admin.freigeben : T.admin.sperren}</Button
-            >
-          </li>
-        {/each}
-      </ul>
-    </div>
-  </Card>
+      {#if running}<p class="muted small">{T.admin.aenderungMeldung}</p>{/if}
+      <Button block disabled={!changed.length || busy} onclick={apply}>{T.admin.uebernehmen}</Button>
+    </Card>
+
+    <Card label={T.admin.bereiche} icon={Shrink}>
+      <div class="cuts">
+        <div class="mini">
+          <GameMap
+            field={view.field}
+            {locked}
+            preview={previewCut ? [previewCut] : []}
+            interactive={false}
+            padding={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            label={T.admin.vorschauFeld}
+          />
+        </div>
+        <ul>
+          {#each cuts as [id, c] (id)}
+            {@const isLocked = locked.includes(id)}
+            <li onmouseenter={() => (previewCut = id)} onmouseleave={() => (previewCut = null)}>
+              <span class="dot" style:background={c.color} aria-hidden="true"></span>
+              <div class="cn">
+                <strong>{c.short}</strong>
+                {#if isLocked}<Pill tone="danger">{T.karte.gesperrt}</Pill>{:else}<Pill>{T.admin.frei}</Pill>{/if}
+              </div>
+              <Button
+                size="m"
+                variant={isLocked ? "secondary" : "danger"}
+                onfocus={() => (previewCut = id)}
+                onclick={() => (ask = { cut: id, lock: !isLocked })}>{isLocked ? T.admin.freigeben : T.admin.sperren}</Button
+              >
+            </li>
+          {:else}
+            <li class="muted">{T.admin.keineBereiche}</li>
+          {/each}
+        </ul>
+      </div>
+    </Card>
+  {/if}
 </div>
 
 <Modal
@@ -164,7 +249,9 @@
   title={T.admin.notstopp}
   confirm={T.admin.notstopp}
   danger
-  onconfirm={() => go("/prototyp/19")}
+  onconfirm={async () => {
+    if (await run(() => api({ action: "stopGame", gameId: g }))) onstopped?.();
+  }}
   onclose={() => (ask = null)}
 >
   {T.admin.notstoppFrage}
@@ -173,39 +260,43 @@
   open={ask === "reveal"}
   title={T.admin.aufdecken}
   confirm={T.admin.aufdecken}
-  onconfirm={() => (revealed = M.game.endFrom + 37 * 60_000)}
+  onconfirm={async () => {
+    const r = await run(() => api({ action: "revealEnd", gameId: g }));
+    if (r) revealed = r.endAt;
+  }}
   onclose={() => (ask = null)}
 >
-  Der geheime Zeitpunkt wird angezeigt und im Protokoll vermerkt. Teams sehen ihn nicht.
+  {T.admin.aufdeckenText}
 </Modal>
-<Modal
-  open={ask === "start"}
-  title="{T.admin.spielStarten}?"
-  confirm={T.admin.spielStarten}
-  onconfirm={() => (counting = true)}
-  onclose={() => (ask = null)}
->
-  {startMrx ? M.teams[startMrx]!.name : ""} ist Mister X und hat {head} Min Vorsprung. Ende zufällig zwischen {endMin} und {endMax} h.
+<Modal open={ask === "start"} title="{T.admin.spielStarten}?" confirm={T.admin.spielStarten} onconfirm={start} onclose={() => (ask = null)}>
+  {startMrx === "random" ? T.admin.startAusgelost : T.admin.startMit(view.teams[startMrx ?? ""]?.name ?? "")}
+  {T.admin.startDetails(val("headStartMin"), val("endMinH"), val("endMaxH"))}
 </Modal>
 {#if ask && typeof ask === "object"}
   {@const id = ask.cut}
-  {@const c = M.field.cuts[id]!}
+  {@const c = view.field.cuts[id]!}
   {@const lock = ask.lock}
   <Modal
     open
-    title={lock ? `Der ${c.short} wird gesperrt!` : `${c.short} wieder freigeben?`}
+    title={lock ? T.verkleinerung.titel(c.short) : T.admin.freigebenFrage(c.short)}
     confirm={lock ? T.admin.sperren : T.admin.freigeben}
     danger={lock}
-    onconfirm={() => {
-      locked = lock ? [...locked, id] : locked.filter((x) => x !== id);
-      toast(lock ? `${c.short} gesperrt – alle wurden informiert` : `${c.short} freigegeben`, "ok");
-    }}
+    onconfirm={() =>
+      run(
+        () => api({ action: "setCut", gameId: g, cutId: id, locked: lock }),
+        lock ? T.admin.gesperrtOk(c.short) : T.verkleinerung.frei(c.short),
+      )}
     onclose={() => (ask = null)}
   >
     {T.admin.aenderungMeldung}
   </Modal>
 {/if}
-{#if counting}<StartCountdown ondone={() => go("/prototyp/13")} />{/if}
+{#if counting}<StartCountdown
+    ondone={() => {
+      counting = false;
+      onstarted?.();
+    }}
+  />{/if}
 
 <style>
   .grid {
@@ -221,6 +312,11 @@
       align-items: start;
       padding: var(--sp-6);
     }
+  }
+  .warnline {
+    color: var(--warn-text);
+    font-weight: 700;
+    margin-bottom: var(--sp-2);
   }
   .row {
     display: flex;

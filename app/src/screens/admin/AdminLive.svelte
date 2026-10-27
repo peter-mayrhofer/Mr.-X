@@ -1,10 +1,11 @@
 <!-- Screen 13: Live-Übersicht der Spielleitung – Karte mit allen Teams, Warnungen, Schnellaktionen. -->
 <script lang="ts">
-  import { Flag, Hourglass, MapPin, Megaphone, Pause, TriangleAlert } from "@lucide/svelte";
-  import { zoneStatus } from "@mrx/shared";
+  import { Flag, Hourglass, MapPin, Megaphone, Pause, Play, TriangleAlert } from "@lucide/svelte";
+  import { distanceToBoundaryM, zoneStatus, type ApiReason } from "@mrx/shared";
   import GameMap, { type MapPin as Pin } from "../../map/GameMap.svelte";
   import MapControls from "../parts/MapControls.svelte";
-  import ChatView from "../parts/ChatView.svelte";
+  import HandoverFlow from "../parts/HandoverFlow.svelte";
+  import UndoHandover from "../parts/UndoHandover.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import Banner from "../../ui/Banner.svelte";
@@ -16,160 +17,208 @@
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { dauer, mmss, uhr } from "../../lib/format.ts";
-  import { go } from "../../lib/router.svelte.ts";
+  import { ApiError } from "../../lib/api.ts";
+  import { isOffline, trailOf, type Api, type StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
-  import * as M from "../../proto/mock.svelte.ts";
 
-  let { chat = false }: { chat?: boolean } = $props();
+  let { view, api }: { view: StaffView; api: Api } = $props();
   let map: GameMap | undefined = $state();
   let ann = $state("");
-  let askInstant = $state(false);
-  let askPause = $state(false);
+  let ask = $state<null | "instant" | "pause">(null);
+  let handover = $state(false);
+  let busy = $state(false);
 
-  const mrx = M.teams[M.MRX]!;
-  const OFFLINE = 3 * 60_000;
-  const offline = $derived(M.teamIds.filter((id) => clock.now - M.positions[id]!.t > OFFLINE));
-  const mrxZone = $derived(zoneStatus(M.positions[M.MRX]!, M.field, M.game.locked));
-  const waiting = $derived(Object.entries(M.locks).filter(([, u]) => u > clock.now));
-  const trail = $derived(M.reports.filter((r) => r.t >= M.game.mrxSince));
+  const unknown = { name: "–", short: "?", color: "#888" };
+  const team = (id: string | null | undefined) => (id && view.teams[id]) || unknown;
+  const st = $derived(view.state);
+  const mrx = $derived(team(st.mrx));
+  const mrxPos = $derived(st.mrx ? view.positions[st.mrx] : undefined);
+  const teamIds = $derived(Object.keys(view.teams));
+  const locked = $derived(Object.keys(st.cuts ?? {}));
+  const running = $derived(st.phase === "laeuft" || st.phase === "pause");
+  const offline = $derived(teamIds.filter((id) => isOffline(view.positions[id], clock.now)));
+  const mrxZone = $derived(mrxPos ? zoneStatus(mrxPos, view.field, locked) : "drinnen");
+  const waiting = $derived(Object.entries(view.locks).filter(([, l]) => l.until > clock.now));
+  const trail = $derived(trailOf(view));
+  const minSince = (t: number) => Math.floor((clock.now - t) / 60_000);
 
   const pins = $derived<Pin[]>([
-    ...M.teamIds.map((id) => {
-      const t = M.teams[id]!,
-        p = M.positions[id]!;
-      return {
-        key: id,
-        lat: p.lat,
-        lng: p.lng,
-        props: {
-          kind: "team" as const,
-          short: t.short,
-          color: t.color,
-          name: t.name,
-          mrx: id === M.MRX,
-          locked: (M.locks[id] ?? 0) > clock.now,
-          offline: offline.includes(id),
+    ...teamIds.flatMap((id) => {
+      const t = view.teams[id]!,
+        p = view.positions[id];
+      if (!p) return [];
+      return [
+        {
+          key: id,
+          lat: p.lat,
+          lng: p.lng,
+          props: {
+            kind: "team" as const,
+            short: t.short,
+            color: t.color,
+            name: t.name,
+            mrx: id === st.mrx,
+            locked: (view.locks[id]?.until ?? 0) > clock.now,
+            offline: offline.includes(id),
+          },
         },
-      };
+      ];
     }),
-    ...M.staff.map((s) => ({ key: s.uid, lat: s.pos.lat, lng: s.pos.lng, props: { kind: "staff" as const, name: s.name } })),
+    ...Object.entries(view.staff).map(([uid, p]) => ({
+      key: uid,
+      lat: p.lat,
+      lng: p.lng,
+      props: { kind: "staff" as const, name: p.name ?? T.status.schiri },
+    })),
   ]);
+
+  async function run(fn: () => Promise<unknown>, okText?: string) {
+    busy = true;
+    try {
+      await fn();
+      if (okText) toast(okText, "ok");
+    } catch (e) {
+      toast(e instanceof ApiError && e.reason !== "invalid" ? T.apiFehler[e.reason as ApiReason | "network"] : T.apiFehler.network, "warn");
+    } finally {
+      busy = false;
+    }
+  }
+  const g = $derived(view.gameId);
 </script>
 
-{#if chat}
-  <div class="chatwrap">
-    <ChatView
-      group={M.chat}
-      direct={M.dm}
-      teams={M.teams}
-      myUid="adm"
-      admin
-      inbox={M.inbox}
-      onsend={(text) => M.chat.push({ id: `a${Date.now()}`, uid: "adm", name: "Spielleitung", kind: "msg", t: clock.now, text })}
-    />
-  </div>
-{:else}
-  <div class="live">
-    <div class="mapcol">
-      <GameMap
-        bind:this={map}
-        field={M.field}
-        locked={M.game.locked}
-        {trail}
-        {pins}
-        padding={{ top: 40, bottom: 40, left: 40, right: 90 }}
-      />
-      <div class="ctl"><MapControls onmrx={() => map?.flyTo(M.positions[M.MRX]!)} onfield={() => map?.fitField()} /></div>
+<div class="live">
+  <div class="mapcol">
+    <GameMap bind:this={map} field={view.field} {locked} {trail} {pins} padding={{ top: 40, bottom: 40, left: 40, right: 90 }} />
+    <div class="ctl">
+      <MapControls onmrx={mrxPos ? () => map?.flyTo(mrxPos) : undefined} onfield={() => map?.fitField()} />
     </div>
+  </div>
 
-    <aside class="panel">
+  <aside class="panel">
+    {#if running}
       <Card label={T.status.misterX} icon={Flag} tone="accent">
         <div class="mrx">
           <TeamBadge short={mrx.short} color={mrx.color} mrx size={56} />
           <div class="who">
             <strong class="display">{mrx.name}</strong>
-            <span class="muted">seit {uhr(M.game.mrxSince)} · {dauer(clock.now - M.game.mrxSince)}</span>
+            {#if st.mrxSince}<span class="muted">{T.admin.seit(uhr(st.mrxSince), dauer(clock.now - st.mrxSince))}</span>{/if}
           </div>
-          <CountdownRing until={M.game.nextReportAt} total={M.config.intervalMin * 60_000} size={84} label={T.status.naechsteMeldung} />
+          {#if st.phase === "pause"}
+            <Pill tone="warn">{T.status.pause}</Pill>
+          {:else if st.nextReportAt}
+            <CountdownRing until={st.nextReportAt} total={view.config.intervalMin * 60_000} size={84} label={T.status.naechsteMeldung} />
+          {/if}
         </div>
         <div class="row">
-          <Button variant="secondary" size="m" icon={MapPin} onclick={() => (askInstant = true)}>{T.admin.sofortMeldung}</Button>
-          <Button variant="secondary" size="m" icon={Flag} onclick={() => go("/prototyp/12?v=uebergabe")}>{T.schiri.uebergabe}</Button>
+          <Button variant="secondary" size="m" icon={MapPin} disabled={st.phase !== "laeuft"} onclick={() => (ask = "instant")}
+            >{T.admin.sofortMeldung}</Button
+          >
+          <Button variant="secondary" size="m" icon={Flag} disabled={st.phase !== "laeuft"} onclick={() => (handover = true)}
+            >{T.schiri.uebergabe}</Button
+          >
         </div>
+        <div class="row"><UndoHandover {view} {api} /></div>
       </Card>
 
       <Card label={T.admin.warnungen} icon={TriangleAlert}>
         <div class="stack">
-          {#if mrxZone !== "drinnen"}<Banner tone={mrxZone === "draussen" ? "danger" : "warn"}>{T.admin.mrxGrenze(35)}</Banner>{/if}
-          {#each offline as id (id)}
-            <Banner tone="warn">{T.admin.teamOhneStandort(M.teams[id]!.name, Math.floor((clock.now - M.positions[id]!.t) / 60_000))}</Banner
+          {#if st.mrx && !mrxPos}
+            <Banner tone="danger">{T.admin.mrxOhneStandort(0)}</Banner>
+          {:else if st.mrx && isOffline(mrxPos, clock.now)}
+            <Banner tone="danger">{T.admin.mrxOhneStandort(minSince(mrxPos!.t))}</Banner>
+          {/if}
+          {#if mrxPos && mrxZone === "draussen"}
+            <Banner tone="danger">{T.admin.mrxDraussen}</Banner>
+          {:else if mrxPos && mrxZone === "grenze"}
+            <Banner tone="warn">{T.admin.mrxGrenze(Math.round(distanceToBoundaryM(mrxPos, view.field, locked)))}</Banner>
+          {/if}
+          {#each offline.filter((id) => id !== st.mrx) as id (id)}
+            {@const p = view.positions[id]}
+            <Banner tone="warn"
+              >{p ? T.admin.teamOhneStandort(team(id).name, minSince(p.t)) : T.admin.teamNieStandort(team(id).name)}</Banner
             >
           {:else}
-            <p class="muted">Alles in Ordnung.</p>
+            {#if !(st.mrx && isOffline(mrxPos, clock.now)) && mrxZone === "drinnen"}<p class="muted">{T.admin.allesOk}</p>{/if}
           {/each}
         </div>
       </Card>
 
       <Card label={T.schiri.wartezeiten} icon={Hourglass}>
-        {#each waiting as [id, until] (id)}
-          {@const t = M.teams[id]!}
-          <ListItem title={t.name} subtitle="bis {uhr(until)}">
+        {#each waiting as [id, l] (id)}
+          {@const t = team(id)}
+          <ListItem title={t.name} subtitle={T.schiri.bis(uhr(l.until))}>
             {#snippet lead()}<TeamBadge short={t.short} color={t.color} size={36} locked />{/snippet}
-            {#snippet trail()}<b class="num">{mmss(until - clock.now)}</b>{/snippet}
+            {#snippet trail()}<b class="num">{mmss(l.until - clock.now)}</b>{/snippet}
           </ListItem>
         {:else}
           <p class="muted">{T.schiri.keineWartezeit}</p>
         {/each}
       </Card>
+    {/if}
 
-      <Card label={T.admin.durchsage} icon={Megaphone}>
-        <form
-          class="ann"
-          onsubmit={(e) => {
-            e.preventDefault();
-            if (!ann.trim()) return;
-            M.chat.push({ id: `ann${Date.now()}`, uid: "adm", name: "Spielleitung", kind: "ann", t: clock.now, text: ann.trim() });
-            toast("Durchsage gesendet", "ok");
-            ann = "";
-          }}
-        >
-          <label class="sr-only" for="ann">{T.admin.durchsage}</label>
-          <textarea id="ann" bind:value={ann} maxlength={300} rows={2} placeholder={T.admin.durchsagePlatzhalter}></textarea>
-          <Button size="m" icon={Megaphone} disabled={!ann.trim()} type="submit">{T.admin.durchsage}</Button>
-        </form>
-      </Card>
+    <Card label={T.admin.durchsage} icon={Megaphone}>
+      <form
+        class="ann"
+        onsubmit={(e) => {
+          e.preventDefault();
+          const text = ann.trim();
+          if (text) void run(() => api({ action: "announce", gameId: g, text }), T.admin.durchsageGesendet).then(() => (ann = ""));
+        }}
+      >
+        <label class="sr-only" for="ann">{T.admin.durchsage}</label>
+        <textarea id="ann" bind:value={ann} maxlength={300} rows={2} placeholder={T.admin.durchsagePlatzhalter}></textarea>
+        <Button size="m" icon={Megaphone} disabled={!ann.trim() || busy} type="submit">{T.admin.durchsage}</Button>
+      </form>
+    </Card>
 
-      <Card label="Spiel">
+    {#if running}
+      <Card label={T.admin.spiel}>
         <div class="game">
-          <span>{T.status.spielzeit}: <b class="num">{dauer(clock.now - M.game.startedAt)}</b></span>
-          <span
-            >{T.admin.zufallsende}: <b>{T.admin.endeZwischen(uhr(M.game.endFrom), uhr(M.game.endTo))}</b>
-            <Pill tone="info">geheim</Pill></span
-          >
-          <Button variant="secondary" size="m" icon={Pause} onclick={() => (askPause = true)}>{T.admin.pause}</Button>
+          {#if st.startedAt}<span>{T.status.spielzeit}: <b class="num">{dauer(clock.now - st.startedAt)}</b></span>{/if}
+          {#if st.startedAt}
+            <span
+              >{T.admin.zufallsende}:
+              <b
+                >{T.admin.endeZwischen(
+                  uhr(st.startedAt + view.config.endMinH * 3_600_000),
+                  uhr(st.startedAt + view.config.endMaxH * 3_600_000),
+                )}</b
+              >
+              <Pill tone="info">{T.admin.geheimKurz}</Pill></span
+            >
+          {/if}
+          {#if st.phase === "pause"}
+            <Button variant="secondary" size="m" icon={Play} disabled={busy} onclick={() => run(() => api({ action: "resume", gameId: g }))}
+              >{T.admin.fortsetzen}</Button
+            >
+          {:else}
+            <Button variant="secondary" size="m" icon={Pause} onclick={() => (ask = "pause")}>{T.admin.pause}</Button>
+          {/if}
         </div>
       </Card>
-    </aside>
-  </div>
-{/if}
+    {/if}
+  </aside>
+</div>
+
+<HandoverFlow {view} {api} bind:open={handover} />
 
 <Modal
-  open={askInstant}
+  open={ask === "instant"}
   title={T.admin.sofortMeldung}
   confirm={T.admin.sofortMeldung}
-  onconfirm={() => toast("Standort von Mister X gemeldet", "ok")}
-  onclose={() => (askInstant = false)}
+  onconfirm={() => run(() => api({ action: "instantReport", gameId: g }), T.admin.sofortGemeldet)}
+  onclose={() => (ask = null)}
 >
   {T.admin.sofortFrage}
 </Modal>
 <Modal
-  open={askPause}
-  title="Spiel pausieren?"
+  open={ask === "pause"}
+  title={T.admin.pauseFrage}
   confirm={T.admin.pause}
-  onconfirm={() => toast(T.allgemein.prototyp(T.admin.pause))}
-  onclose={() => (askPause = false)}
+  onconfirm={() => run(() => api({ action: "pause", gameId: g }))}
+  onclose={() => (ask = null)}
 >
-  Meldungen, Wartezeiten und das Spielende werden angehalten. Alle bekommen eine Meldung.
+  {T.admin.pauseText}
 </Modal>
 
 <style>
@@ -245,11 +294,5 @@
     display: grid;
     gap: var(--sp-2);
     justify-items: start;
-  }
-  .chatwrap {
-    position: absolute;
-    inset: 0;
-    max-width: 820px;
-    margin: 0 auto;
   }
 </style>

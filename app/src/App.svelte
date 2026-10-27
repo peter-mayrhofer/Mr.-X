@@ -24,7 +24,8 @@
   const screen = $derived(match("/g/:spiel"));
 </script>
 
-{#key router.path}
+<!-- Spiel-Ansicht: Bereichswechsel (?b=…) ohne Neuaufbau, damit die Live-Daten nicht neu geladen werden -->
+{#key p === "/spiel" ? p : router.path}
   {#if proto}<ProtoScreen n={Number(proto.n)} />
   {:else if p === "/prototyp"}<Gallery />
   {:else if p === "/komponenten"}<Components />

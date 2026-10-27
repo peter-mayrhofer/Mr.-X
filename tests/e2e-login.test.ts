@@ -70,7 +70,10 @@ describe("Anmeldung über die App", () => {
     await expect.poll(() => adminPage.getByText(T.apiFehler.wrongSecret).isVisible()).toBe(true);
     await adminPage.getByLabel(T.staffLogin.adminPasswort).fill("admin1234");
     await adminPage.getByRole("button", { name: T.staffLogin.los, exact: true }).click();
-    await adminPage.getByRole("heading", { name: T.warten.zugaenge }).waitFor();
+    // Spielleitung landet vor dem Start in der Steuerung; Zugänge unter „Teams & Zugänge“
+    await adminPage.getByText(T.admin.spielStarten).first().waitFor();
+    await adminPage.getByRole("button", { name: T.admin.teams, exact: true }).click();
+    await adminPage.getByRole("tab", { name: T.admin.zugaenge }).click();
 
     const teamPw = card(adminPage, T.admin.teamPasswort);
     await teamPw.getByLabel(T.admin.passwortNeu).fill("falke27");
@@ -124,13 +127,13 @@ describe("Anmeldung über die App", () => {
     await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
     await skipOnboarding(page);
     await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
-    await adminPage.getByText(T.lobby.teams(2)).waitFor();
+    await adminPage.getByRole("tab", { name: `${T.admin.teams} (2)` }).waitFor();
 
     // Abmelden: Gerät landet auf der Startseite, das Team bleibt bestehen
     await page.getByRole("button", { name: T.warten.abmelden, exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: T.einstellungen.abmelden, exact: true }).click();
     await page.getByRole("button", { name: T.start.teamBeitreten, exact: true }).waitFor();
-    await adminPage.getByText(T.lobby.teams(2)).waitFor();
+    await adminPage.getByRole("tab", { name: `${T.admin.teams} (2)` }).waitFor();
   });
 
   it("Schiri mit Schiri-Code", async () => {

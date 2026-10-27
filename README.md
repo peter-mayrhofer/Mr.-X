@@ -15,7 +15,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 3 – Fundament | Firebase (eigene Datenbank + Website, E-21), Security Rules mit Tests, Spiel-Server, Anmeldung aller Rollen | fertig |
 | 4 – Spiel-Kern | Start (gewählt/ausgelost), Meldungen mit Standort-Fallback, Übergabe/Strafübergabe/Rückgängig, Wartezeiten im Umkreis, Verkleinerung, Pause, Zufallsende/Notstopp, Auswertung + Archiv, Neue Runde – alles am Server | fertig |
 | 5 – Team & Mister X | Onboarding mit Standort-Freigabe, Warteraum mit Checks, Karte mit Spur und Countdown, Wartezeit, Übergabe-Szenen, Durchsagen, Verkleinerung, Spielfeld-Warnung, Chat, Regeln, Auswertung; eigener Standort wird adaptiv gesendet | fertig |
-| 6–13 | Schiri- und Admin-Oberfläche, Push, Android-App, Großbild, Tracker … | in Arbeit |
+| 6 – Schiri & Spielleitung | Schiri: Karte aller Teams, nächste Jäger, Übergabe nach Nähe mit Wartezeit-Vorschau, Rückgängig, „Ich begleite Mister X“. Spielleitung: Live-Übersicht mit Warnungen, Start (wählen/auslosen), Pause, Notstopp, Regeln live, Verkleinerung, Sofort-Meldung, Durchsage, Teams & Zugänge, Postfach, Protokoll | fertig |
+| 7–13 | Zonen-Editor, Push, Android-App, Großbild, Archiv, Tracker … | in Arbeit |
 
 ## Ordner
 
@@ -66,8 +67,9 @@ npm run dev:emu    # Fenster 2: App gegen die Emulatoren
 ```
 
 Dann `http://localhost:5173/#/verwaltung` → „Mit Google anmelden“ → im Emulator-Fenster `orga@test.at` eingeben →
-Spiel anlegen → mit dem Admin-Passwort unter „Spielleitung“ anmelden → Team-Passwort festlegen → Teams über
-`#/s/<spiel-code>` beitreten lassen (z. B. in einem zweiten Browser-Fenster im privaten Modus).
+Spiel anlegen → mit dem Admin-Passwort unter „Spielleitung“ anmelden → „Teams & Zugänge“ → „Zugänge“: Team-Passwort
+und Schiri-Code festlegen → Teams über `#/s/<spiel-code>` beitreten lassen (z. B. in weiteren Browser-Fenstern im
+privaten Modus) → „Steuerung“: Mister X wählen oder auslosen und starten.
 
 ## Entwickeln
 

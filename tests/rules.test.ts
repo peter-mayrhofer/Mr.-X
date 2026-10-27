@@ -217,6 +217,10 @@ describe("Schreiben: eigener Standort", () => {
     ["Text statt Zahl", { acc: "gut" }],
   ])("ungültig: %s", (_, extra) => assertFails(write("team1", "games/g1/pos/t1", pos(extra))));
   it("Pflichtfelder", () => assertFails(write("team1", "games/g1/pos/t1", { lat: 48.3, lng: 14.29 })));
+  it("Schiri-Standort mit eigenem Namen (für die Karte), kein fremder Name", async () => {
+    await assertSucceeds(write("schiri1", "games/g1/staffPos/schiri1", pos({ name: "Anna" })));
+    await assertFails(write("schiri1", "games/g1/staffPos/schiri1", pos({ name: "Peter" })));
+  });
   it("Schiri schreibt seinen Standort, nicht den anderer", async () => {
     await assertSucceeds(write("schiri1", "games/g1/staffPos/schiri1", pos()));
     await assertFails(write("schiri1", "games/g1/staffPos/admin1", pos()));

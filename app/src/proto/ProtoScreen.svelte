@@ -6,6 +6,7 @@
 <script lang="ts">
   import { BatteryMedium, Bell, ChevronLeft, ChevronRight, LayoutGrid, MapPin, X } from "@lucide/svelte";
   import * as M from "./mock.svelte.ts";
+  import { fakeApi, recentHandover, staffView } from "./staffMock.svelte.ts";
   import { go, query } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
   import { theme, type ThemeChoice } from "../lib/theme.svelte.ts";
@@ -19,12 +20,7 @@
   import Lobby from "../screens/Lobby.svelte";
   import TeamHome from "./ProtoTeam.svelte";
   import Referee from "../screens/Referee.svelte";
-  import AdminShell from "../screens/admin/AdminShell.svelte";
-  import AdminLive from "../screens/admin/AdminLive.svelte";
-  import AdminControl from "../screens/admin/AdminControl.svelte";
-  import AdminTeams from "../screens/admin/AdminTeams.svelte";
-  import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
-  import AdminLog from "../screens/admin/AdminLog.svelte";
+  import ProtoAdmin from "./ProtoAdmin.svelte";
   import BigScreen from "../screens/BigScreen.svelte";
   import Results from "../screens/Results.svelte";
   import Archive from "../screens/Archive.svelte";
@@ -39,6 +35,8 @@
   let open = $state(false);
   let choice = $state<ThemeChoice>(theme.choice);
 
+  // svelte-ignore state_referenced_locally
+  if (n === 12 && v === "rueckgaengig") recentHandover();
   const to = (k: number, variant = "") => go(`/prototyp/${k}${variant ? `?v=${variant}` : ""}`);
 </script>
 
@@ -105,12 +103,18 @@
   />
 {:else if n === 10}<TeamHome tab="chat" />
 {:else if n === 11}<TeamHome tab="regeln" />
-{:else if n === 12}<Referee variant={v} />
-{:else if n === 13}<AdminShell section={v === "chat" ? "chat" : "live"}><AdminLive chat={v === "chat"} /></AdminShell>
-{:else if n === 14}<AdminShell section="steuerung"><AdminControl vorStart={v === "vorStart"} /></AdminShell>
-{:else if n === 15}<AdminShell section="teams"><AdminTeams variant={v} /></AdminShell>
-{:else if n === 16}<AdminShell section="zonen"><ZoneEditor variant={v} /></AdminShell>
-{:else if n === 17}<AdminShell section="protokoll"><AdminLog /></AdminShell>
+{:else if n === 12}<Referee
+    view={staffView("schiri")}
+    api={fakeApi}
+    preset={v === "uebergabe" ? "auwiesen" : null}
+    onsend={(text) => M.chat.push({ id: `s${Date.now()}`, uid: "s1", name: "Schiri Anna", kind: "msg", t: Date.now(), text })}
+    onlogout={() => go("/prototyp/1")}
+  />
+{:else if n === 13}<ProtoAdmin section={v === "chat" ? "chat" : "live"} />
+{:else if n === 14}<ProtoAdmin section="steuerung" variant={v} />
+{:else if n === 15}<ProtoAdmin section="teams" variant={v} />
+{:else if n === 16}<ProtoAdmin section="zonen" variant={v} />
+{:else if n === 17}<ProtoAdmin section="protokoll" />
 {:else if n === 18}<BigScreen variant={v} />
 {:else if n === 19}<Results
     results={M.result}
