@@ -3,6 +3,7 @@ import type { CallableRequest } from "firebase-functions/v2/https";
 import {
   FRESH_MS,
   MELDUNG,
+  PUSH_TITLE,
   teamsToLock,
   type ApiReason,
   type ApiResults,
@@ -14,6 +15,7 @@ import {
 } from "@mrx/shared";
 import { audit, clean, db, fail, gameId, requireRole, val } from "../util.ts";
 import { changeState, config, MIN, sysMsg, teams } from "../ablauf.ts";
+import { notify } from "../push.ts";
 
 type Req = CallableRequest<Record<string, unknown>>;
 const REQUEST_ID = /^[A-Za-z0-9_-]{8,40}$/;
@@ -93,6 +95,13 @@ export async function handover(req: Req): Promise<ApiResults["handover"]> {
   const text = (type === "fang" ? MELDUNG.fang : MELDUNG.strafe)(ts[to]!.name, ts[from]?.name ?? "?", cfg.waitMin);
   Object.assign(upd, sysMsg(g, text, now, reportId ? { reportId } : {}));
   await db().ref().update(clean(upd));
+  const others = locked.filter((t) => t !== from);
+  await Promise.all([
+    notify(g, "uebergabe", { teams: [to] }, PUSH_TITLE.neuerMrx, MELDUNG.vorsprung(cfg.waitMin)),
+    locked.includes(from) ? notify(g, "wartezeit", { teams: [from] }, PUSH_TITLE.warten, MELDUNG.gefangen(cfg.waitMin)) : null,
+    others.length ? notify(g, "wartezeit", { teams: others }, PUSH_TITLE.warten, MELDUNG.warten(cfg.waitMin)) : null,
+    notify(g, "uebergabe", { all: true, except: [to, ...locked] }, PUSH_TITLE.uebergabe, text),
+  ]);
   await audit(
     g,
     who,
@@ -132,6 +141,13 @@ export async function undo(req: Req): Promise<ApiResults["undo"]> {
   for (const t of new Set([...(h.locked ?? []), h.to])) upd[`games/${g}/locks/${t}`] = h.prevLocks?.[t] ?? null;
   if (h.reportId) upd[`games/${g}/reports/${h.reportId}/void`] = true;
   await db().ref().update(upd);
+  await notify(
+    g,
+    "uebergabe",
+    { all: true },
+    PUSH_TITLE.rueckgaengig,
+    MELDUNG.rueckgaengig(ts[h.to]?.name ?? "?", ts[h.from!]?.name ?? "?"),
+  );
   await audit(g, who, "Übergabe rückgängig", `${ts[h.to]?.name ?? "?"} → wieder ${ts[h.from!]?.name ?? "?"}`);
   return {};
 }

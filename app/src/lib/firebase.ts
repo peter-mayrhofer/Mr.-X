@@ -8,7 +8,7 @@ import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 export const EMU = import.meta.env.MODE === "emu";
 const DATABASE_URL = "https://mr-x-ooe-neu.europe-west1.firebasedatabase.app";
 
-const app = initializeApp({
+export const app = initializeApp({
   apiKey: EMU ? "demo" : "AIzaSyDtNPyDBqWVMcCv1MQsizkUSxAPhVEcvfg",
   authDomain: "mr-x-ooe.firebaseapp.com",
   databaseURL: DATABASE_URL,
@@ -28,3 +28,9 @@ if (EMU) {
   connectDatabaseEmulator(db, host, 9000);
   connectFunctionsEmulator(functions, host, 5001);
 }
+
+/**
+ * Öffentlicher Web-Push-Schlüssel (Firebase-Konsole → Projekteinstellungen → Cloud Messaging → Web-Push-Zertifikate),
+ * in app/.env als VITE_FCM_VAPID_KEY. Leer = Standardschlüssel von Firebase (siehe docs/FIREBASE-EINRICHTUNG.md).
+ */
+export const VAPID_KEY: string | undefined = import.meta.env.VITE_FCM_VAPID_KEY || undefined;

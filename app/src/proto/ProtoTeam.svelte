@@ -5,6 +5,7 @@
   import { signal } from "../lib/signal.ts";
   import { go } from "../lib/router.svelte.ts";
   import * as M from "./mock.svelte.ts";
+  import { PushState } from "../lib/push.svelte.ts";
 
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   interface Props {
@@ -15,6 +16,9 @@
   }
   let { mode = "jaeger", tab = "karte", overlay = null, variant = "" }: Props = $props();
 
+  // Prototyp: Benachrichtigungen gelten als eingeschaltet, damit die Einstellungen sichtbar sind
+  const push = new PushState();
+  push.status = "an";
   const my = $derived(mode === "mrx" ? M.MRX : M.ME);
   const myUid = $derived(mode === "mrx" ? "u-km" : "u-ur");
   const cuts = $derived([...M.game.locked, ...(variant === "verkleinerung" ? ["norden"] : [])]);
@@ -69,4 +73,5 @@
     signal("nachricht");
   }}
   onlogout={() => go("/prototyp/1")}
+  {push}
 />

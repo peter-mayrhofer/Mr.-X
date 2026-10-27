@@ -26,5 +26,10 @@ export const M = {
   wartezeit: (min: number) => `Regeländerung: Wartezeit nach einer Übergabe jetzt ${min} Min.`,
   pause: "Das Spiel ist pausiert. Bitte stehen bleiben – es geht gleich weiter.",
   weiter: "Weiter geht's! Das Spiel läuft wieder.",
+  warteEnde: "Die Wartezeit ist vorbei – ihr dürft weiter!",
+  warten: (min: number) => `Ihr wart in der Nähe der Übergabe: ${min} Min stehen bleiben.`,
+  gefangen: (min: number) => `Ihr wurdet gefangen: ${min} Min warten, dann geht die Jagd weiter.`,
+  vorsprung: (min: number) => `Die Fahne gehört euch – ${min} Min Vorsprung, lauft!`,
+  wartenHand: (min: number) => `Die Spielleitung hat euch ${min} Min Wartezeit gegeben.`,
   ende: (sieger: string) => `Spielende! ${sieger} ist der letzte Mister X und hat gewonnen!`,
 };

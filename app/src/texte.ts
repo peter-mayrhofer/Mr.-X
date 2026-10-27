@@ -500,6 +500,12 @@ export const T = {
       nachricht: "Nachrichten der Spielleitung",
       spiel: "Spielstart und -ende",
     },
+    pushAus: "Benachrichtigungen sind auf diesem Gerät aus. Dann verpasst ihr Meldungen, wenn das Handy in der Tasche ist.",
+    pushEin: "Benachrichtigungen einschalten",
+    pushVerweigert:
+      "Benachrichtigungen sind blockiert. In den Einstellungen des Browsers bzw. Handys für diese Seite erlauben, dann neu laden.",
+    pushNichtMoeglich:
+      "Dieser Browser kann keine Benachrichtigungen. iPhone: Teilen-Symbol → „Zum Home-Bildschirm“, dann die App von dort öffnen.",
     standort: "Standort",
     hintergrund: "Im Hintergrund senden (Android-App)",
     wach: "Bildschirm wach halten",

@@ -204,3 +204,13 @@ schneidet das Spielfeld (≥ 1000 m²). Der Server prüft zusätzlich Form, Grö
 neuen Beitritt („Dieses Spiel ist archiviert“); es lässt sich reaktivieren. „Löschen“ entfernt das Spiel samt Archiv,
 Passwörtern und Index endgültig; angemeldete Geräte bekommen den freundlichen Hinweis „entfernt“. Der Organisator kann
 jedes Spiel ohne Admin-Passwort als Spielleitung öffnen.
+
+### E-30 Push: eigener schlanker Service Worker, Versand nur am Server
+**Entscheidung:** Benachrichtigungen verschickt ausschließlich der Spiel-Server (`functions/src/push.ts`) mit dem
+Firebase Admin SDK; die Geräte legen nur ihren Token und die gewünschten Arten unter `games/{g}/push/{uid}` ab.
+Im Web sind es reine Daten-Nachrichten, die ein eigener kleiner Service Worker (`app/public/sw.js`) anzeigt – nicht
+doppelt, wenn die App gerade sichtbar ist. Android-Geräte (Meilenstein 9) bekommen zusätzlich eine
+System-Benachrichtigung. Ungültige Tokens werden beim Senden gelöscht. Im Emulator gibt es kein FCM: dort landet jede
+Benachrichtigung im Postausgang `pushOutbox/{g}`, so prüfen die Tests die Empfänger.
+**Warum:** Kein Gerät kann anderen Pushes schicken (Fälschungssicherheit), ein Service Worker ohne Offline-Cache
+verhindert veraltete App-Versionen, und die Empfängerauswahl ist als reine Funktion (`shared/push.ts`) getestet.

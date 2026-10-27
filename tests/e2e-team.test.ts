@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer, type ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { PUSH_TITLE } from "@mrx/shared";
 import { T } from "../app/src/texte.ts";
 import { call, db, device, resetEmulators, superAdminToken, val } from "./helpers.ts";
 
@@ -29,7 +30,7 @@ async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
     viewport: { width: 390, height: 844 },
     locale: "de-AT",
     reducedMotion: "reduce",
-    permissions: ["geolocation"],
+    permissions: ["geolocation", "notifications"],
     geolocation: { latitude: HAUPTPLATZ.latitude + dLat, longitude: HAUPTPLATZ.longitude, accuracy: 8 },
   });
   const page = await ctx.newPage();
@@ -42,6 +43,7 @@ async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
     await page.getByRole("heading", { name: T.onboarding.schritte[0].titel }).waitFor();
     await page.getByRole("button", { name: T.allgemein.weiter, exact: true }).click();
     await page.getByRole("button", { name: T.onboarding.schritte[1].knopf, exact: true }).click();
+    await page.getByRole("button", { name: T.onboarding.schritte[2].knopf, exact: true }).click();
     await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
   } else await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
   await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
@@ -82,11 +84,20 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     const p = phones.Urfahr!;
     await visible(p.page, `${T.lobby.check.standort}: ${T.lobby.gut}`);
     await expect.poll(() => val(`games/${G}/pos/${p.id}/lat`), { timeout: 15_000 }).toBeCloseTo(HAUPTPLATZ.latitude, 4);
+    // Benachrichtigungen erlaubt → Gerät ist mit Token und Push-Arten registriert, Warteraum zeigt es an
+    await expect
+      .poll(async () => Object.values(((await val(`games/${G}/push`)) ?? {}) as Record<string, { platform: string }>).length)
+      .toBe(1);
+    await visible(p.page, `${T.lobby.check.push}: ${T.lobby.gut}`);
   }, 90_000);
 
   it("Start: Mister X sieht den roten Modus, Jäger die Wartezeit mit Countdown", async () => {
     await api("startGame", { mrx: phones.Urfahr!.id });
     await visible(phones.Urfahr!.page, T.status.ihrSeidMrx);
+    // nur Urfahr hat Benachrichtigungen erlaubt → bekommt „Ihr seid Mister X!“ (im Emulator im Postausgang statt bei Google)
+    await expect
+      .poll(async () => Object.values(((await val(`pushOutbox/${G}`)) ?? {}) as Record<string, { title: string }>).map((x) => x.title))
+      .toContain(PUSH_TITLE.neuerMrx);
     const lock = phones.Traun!.page.getByRole("alertdialog", { name: T.wartezeit.titel });
     await lock.waitFor();
     expect(await lock.getByText(T.wartezeit.grundStart).isVisible()).toBe(true);

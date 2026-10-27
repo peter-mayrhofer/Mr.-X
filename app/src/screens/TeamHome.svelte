@@ -55,6 +55,7 @@
   import IconButton from "../ui/IconButton.svelte";
   import { clock } from "../lib/clock.svelte.ts";
   import { uhr, vor, meter } from "../lib/format.ts";
+  import type { PushState } from "../lib/push.svelte.ts";
   import { T } from "../texte.ts";
 
   type Tab = "karte" | "chat" | "regeln" | "mehr";
@@ -70,6 +71,7 @@
     zoneOverride?: ZoneStatus;
     onsend: (text: string, channel: "alle" | "dm") => void;
     onlogout: () => void;
+    push?: PushState;
   }
 
   let {
@@ -81,6 +83,7 @@
     zoneOverride,
     onsend,
     onlogout,
+    push,
   }: Props = $props();
   let sub = $state<"menu" | "einstellungen" | "team">("menu");
   let ruleHint = $state(true);
@@ -225,7 +228,7 @@
           <RulesView config={view.config} />
         {:else if sub === "einstellungen"}
           <AppBar title={T.einstellungen.titel} onback={() => (sub = "menu")} />
-          <SettingsView {onlogout} />
+          <SettingsView {onlogout} {push} />
         {:else if sub === "team"}
           <AppBar title={T.mehr.team} onback={() => (sub = "menu")} />
           <div class="teaminfo">

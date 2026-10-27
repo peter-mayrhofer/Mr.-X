@@ -4,6 +4,7 @@
 import {
   bestPosition,
   MELDUNG,
+  PUSH_TITLE,
   results,
   uhr,
   type ChatMessage,
@@ -11,6 +12,7 @@ import {
   type CutEvent,
   type GameState,
   type HandoverRecord,
+  type Lock,
   type Member,
   type Pause,
   type Position,
@@ -21,6 +23,7 @@ import {
   type TeamStats,
 } from "@mrx/shared";
 import { clean, db, newKey, val } from "./util.ts";
+import { notify } from "./push.ts";
 
 export const MIN = 60_000;
 
@@ -77,12 +80,11 @@ export async function writeReport(
   }
   const id = newKey();
   const r: Report = { teamId: o.mrx, lat: found.pos.lat, lng: found.pos.lng, t: o.now, posAt: found.pos.t, src: found.src, kind: o.kind };
+  const text = o.text ?? MELDUNG.meldung(name, found.src, uhr(found.pos.t));
   await db()
     .ref()
-    .update({
-      [`games/${g}/reports/${id}`]: r,
-      ...sysMsg(g, o.text ?? MELDUNG.meldung(name, found.src, uhr(found.pos.t)), o.now, { reportId: id }),
-    });
+    .update({ [`games/${g}/reports/${id}`]: r, ...sysMsg(g, text, o.now, { reportId: id }) });
+  await notify(g, "meldung", { all: true }, PUSH_TITLE.meldung, text);
   return id;
 }
 
@@ -104,18 +106,51 @@ async function autoReport(g: string, due: number, now: number): Promise<boolean>
 
 /** Alles erledigen, was jetzt fällig ist (Takt jede Minute, und jedes Handy darf anstoßen: `poke`). Idempotent. */
 export async function advance(g: string, now = Date.now()): Promise<string[]> {
-  const [st, endAt] = await Promise.all([val<GameState>(`games/${g}/state`), val<number>(`secrets/${g}/endAt`)]);
+  const [st, endAt, locks] = await Promise.all([
+    val<GameState>(`games/${g}/state`),
+    val<number>(`secrets/${g}/endAt`),
+    val<Record<string, Lock>>(`games/${g}/locks`),
+  ]);
   if (st?.phase !== "laeuft") return [];
   if (endAt && endAt <= now) return (await finish(g, endAt, "zufall")) ? ["ende"] : [];
-  if (st.nextReportAt && st.nextReportAt <= now && (await autoReport(g, st.nextReportAt, now))) return ["meldung"];
-  return [];
+  const done: string[] = [];
+  if (st.nextReportAt && st.nextReportAt <= now && (await autoReport(g, st.nextReportAt, now))) done.push("meldung");
+  if (await releaseLocks(g, locks ?? {}, now)) done.push("wartezeit");
+  return done;
 }
 
-/** Nächster Termin (Meldung oder Ende) für den Takt – damit er bis zur Sekunde warten kann */
+/** Abgelaufene Wartezeiten entfernen und dem Team Bescheid geben – genau einmal (Transaktion je Wartezeit) */
+async function releaseLocks(g: string, locks: Record<string, Lock>, now: number): Promise<boolean> {
+  let any = false;
+  for (const [t, l] of Object.entries(locks)) {
+    if (l.until > now) continue;
+    let mine = false;
+    const r = await db()
+      .ref(`games/${g}/locks/${t}`)
+      .transaction((cur: Lock | null) => {
+        mine = false;
+        if (!cur) return cur;
+        if (cur.until !== l.until) return; // inzwischen neu gesetzt
+        mine = true;
+        return null;
+      });
+    if (r.committed && mine) {
+      any = true;
+      await notify(g, "wartezeit", { teams: [t] }, PUSH_TITLE.weiter, MELDUNG.warteEnde);
+    }
+  }
+  return any;
+}
+
+/** Nächster Termin (Meldung, Ende einer Wartezeit, Spielende) für den Takt – damit er bis zur Sekunde warten kann */
 export async function nextDue(g: string): Promise<number | null> {
-  const [st, endAt] = await Promise.all([val<GameState>(`games/${g}/state`), val<number>(`secrets/${g}/endAt`)]);
+  const [st, endAt, locks] = await Promise.all([
+    val<GameState>(`games/${g}/state`),
+    val<number>(`secrets/${g}/endAt`),
+    val<Record<string, Lock>>(`games/${g}/locks`),
+  ]);
   if (st?.phase !== "laeuft") return null;
-  return Math.min(st.nextReportAt ?? Infinity, endAt ?? Infinity);
+  return Math.min(st.nextReportAt ?? Infinity, endAt ?? Infinity, ...Object.values(locks ?? {}).map((l) => l.until));
 }
 
 /**
@@ -187,5 +222,6 @@ export async function finish(g: string, endedAt: number, reason: "zufall" | "not
     [`secrets/${g}/endAt`]: null,
   });
   await db().ref().update(upd);
+  await notify(g, "spiel", { all: true }, PUSH_TITLE.ende, Object.values(ende)[0]!.text);
   return true;
 }

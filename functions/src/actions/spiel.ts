@@ -6,6 +6,7 @@ import {
   DEFAULT_CONFIG,
   LIMITS,
   MELDUNG,
+  PUSH_TITLE,
   nextReportAfterIntervalChange,
   randomEnd,
   type ApiReason,
@@ -18,6 +19,7 @@ import {
 } from "@mrx/shared";
 import { audit, clean, db, fail, gameId, newKey, requireRole, str, val } from "../util.ts";
 import { advance, changeState, config, finish, MIN, sysMsg, teams, writeReport } from "../ablauf.ts";
+import { notify } from "../push.ts";
 
 type Req = CallableRequest<Record<string, unknown>>;
 const rand = () => randomInt(2 ** 30) / 2 ** 30;
@@ -53,7 +55,11 @@ export async function startGame(req: Req): Promise<ApiResults["startGame"]> {
   for (const t of ids)
     if (t !== mrx && cfg.headStartMin > 0) upd[`games/${g}/locks/${t}`] = { until: head, reason: "start" } satisfies Lock;
   await db().ref().update(upd);
-  await audit(g, who, "Spiel gestartet", `${ts[mrx].name} ist Mister X${drawn ? " (ausgelost)" : ""}`);
+  await Promise.all([
+    notify(g, "spiel", { all: true, except: [mrx] }, PUSH_TITLE.start, MELDUNG.start(ts[mrx].name, cfg.headStartMin)),
+    notify(g, "spiel", { teams: [mrx] }, PUSH_TITLE.neuerMrx, MELDUNG.vorsprung(cfg.headStartMin)),
+    audit(g, who, "Spiel gestartet", `${ts[mrx].name} ist Mister X${drawn ? " (ausgelost)" : ""}`),
+  ]);
   return { mrx };
 }
 
@@ -78,7 +84,7 @@ export async function pause(req: Req): Promise<ApiResults["pause"]> {
       [`games/${g}/pauses/${newKey()}`]: { from: now } satisfies Pause,
       ...sysMsg(g, MELDUNG.pause, now),
     });
-  await audit(g, who, "Pause");
+  await Promise.all([notify(g, "spiel", { all: true }, PUSH_TITLE.pause, MELDUNG.pause), audit(g, who, "Pause")]);
   return {};
 }
 
@@ -106,7 +112,10 @@ export async function resume(req: Req): Promise<ApiResults["resume"]> {
   for (const [k, p] of Object.entries(pauses ?? {})) if (p.to === undefined) upd[`games/${g}/pauses/${k}/to`] = now;
   if (endAt) upd[`secrets/${g}/endAt`] = endAt + d;
   await db().ref().update(upd);
-  await audit(g, who, "Fortgesetzt", `nach ${Math.round(d / MIN)} Min Pause`);
+  await Promise.all([
+    notify(g, "spiel", { all: true }, PUSH_TITLE.fortsetzung, MELDUNG.weiter),
+    audit(g, who, "Fortgesetzt", `nach ${Math.round(d / MIN)} Min Pause`),
+  ]);
   return {};
 }
 
@@ -175,6 +184,9 @@ export async function setConfig(req: Req): Promise<ApiResults["setConfig"]> {
     upd[`secrets/${g}/endAt`] = randomEnd(st.startedAt + paused, next.endMinH, next.endMaxH, rand(), now + MIN);
   }
   await db().ref().update(upd);
+  if (live && changed.includes("intervalMin"))
+    await notify(g, "spielfeld", { all: true }, PUSH_TITLE.regeln, MELDUNG.intervall(next.intervalMin));
+  if (live && changed.includes("waitMin")) await notify(g, "spielfeld", { all: true }, PUSH_TITLE.regeln, MELDUNG.wartezeit(next.waitMin));
   await audit(g, who, "Einstellungen geändert", changed.map((k) => `${k}: ${String(cur[k])} → ${String(next[k])}`).join(", "));
   return {};
 }
@@ -199,15 +211,17 @@ export async function setCut(req: Req): Promise<ApiResults["setCut"]> {
     return { ...cur, cuts };
   });
   if (!s) fail(why ?? "conflict", locked ? "Schon gesperrt" : "Schon frei");
+  const text = locked ? MELDUNG.gesperrt(cut.short) : MELDUNG.freigegeben(cut.short);
   await db()
     .ref()
-    .update({
-      [`games/${g}/cutLog/${newKey()}`]: { cut: id, locked, t: now },
-      ...sysMsg(g, locked ? MELDUNG.gesperrt(cut.short) : MELDUNG.freigegeben(cut.short), now),
-    });
+    .update({ [`games/${g}/cutLog/${newKey()}`]: { cut: id, locked, t: now }, ...sysMsg(g, text, now) });
+  if (st_live(s)) await notify(g, "spielfeld", { all: true }, locked ? PUSH_TITLE.spielfeld : PUSH_TITLE.regeln, text);
   await audit(g, who, locked ? "Bereich gesperrt" : "Bereich freigegeben", cut.short);
   return {};
 }
+
+/** Benachrichtigen nur im laufenden Spiel (vor dem Start sperrt die Spielleitung nur vor) */
+const st_live = (s: GameState | null) => s?.phase === "laeuft" || s?.phase === "pause";
 
 /** Wartezeit von Hand geben (1–30 Min) oder aufheben (0) */
 export async function setLock(req: Req): Promise<ApiResults["setLock"]> {
@@ -223,6 +237,7 @@ export async function setLock(req: Req): Promise<ApiResults["setLock"]> {
   await db()
     .ref(`games/${g}/locks/${t}`)
     .set(min ? ({ until: Date.now() + min * MIN, reason: "manuell" } satisfies Lock) : null);
+  if (min) await notify(g, "wartezeit", { teams: [t] }, PUSH_TITLE.warten, MELDUNG.wartenHand(min));
   await audit(g, who, min ? "Wartezeit gegeben" : "Wartezeit aufgehoben", min ? `${ts[t].name}: ${min} Min` : ts[t].name);
   return {};
 }
@@ -247,6 +262,7 @@ export async function announce(req: Req): Promise<ApiResults["announce"]> {
   await db()
     .ref(`games/${g}/chat`)
     .push(clean({ uid: who.uid, name: who.name, text, t: Date.now(), kind: "ann" }));
+  await notify(g, "durchsage", { all: true }, PUSH_TITLE.durchsage, text);
   await audit(g, who, "Durchsage", text);
   return {};
 }

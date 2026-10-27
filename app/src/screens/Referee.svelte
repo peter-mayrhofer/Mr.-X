@@ -25,6 +25,7 @@
   import { meter, mmss, uhr } from "../lib/format.ts";
   import { ApiError } from "../lib/api.ts";
   import { isOffline, trailOf, type Api, type StaffView } from "../lib/staff.ts";
+  import type { PushState } from "../lib/push.svelte.ts";
   import { T } from "../texte.ts";
 
   interface Props {
@@ -32,10 +33,11 @@
     api: Api;
     onsend: (text: string) => void;
     onlogout: () => void;
+    push?: PushState;
     /** Prototyp: Übergabe-Ablauf schon offen, mit vorgewähltem Team */
     preset?: string | null;
   }
-  let { view, api, onsend, onlogout, preset = null }: Props = $props();
+  let { view, api, onsend, onlogout, push, preset = null }: Props = $props();
 
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   let tab = $state<Tab>("karte");
@@ -174,7 +176,7 @@
           <div class="follow">
             <Switch label={T.schiri.folgen} hint={T.schiri.folgenHinweis} checked={view.follows} onchange={follow} />
           </div>
-          <SettingsView {onlogout} />
+          <SettingsView {onlogout} {push} />
         {/if}
       </div>
     {/if}

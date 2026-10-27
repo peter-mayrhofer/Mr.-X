@@ -94,3 +94,29 @@ npx firebase-tools hosting:channel:deploy prototyp --expires 30d
 
 Zeigt eine Adresse wie `https://mr-x-ooe-neu--prototyp-xxxx.web.app` – dort `#/prototyp` anhängen. Ändert keine
 veröffentlichte Version.
+
+## 9. Push-Benachrichtigungen
+
+Die App schickt Benachrichtigungen bei Mister-X-Meldungen, Übergaben, Wartezeiten, Durchsagen, Verkleinerung,
+Regeländerungen, Nachrichten der Spielleitung sowie Spielstart und -ende. Jedes Gerät wählt unter
+„Mehr → Einstellungen → Benachrichtigungen“, welche Arten es bekommt.
+
+**Einmalig in der Firebase-Konsole (empfohlen):**
+1. Zahnrad → **Projekteinstellungen** → Reiter **Cloud Messaging**.
+2. Prüfen, dass **„Firebase Cloud Messaging API (V1)“** als **aktiviert** angezeigt wird (sonst über das ⋮-Menü aktivieren).
+3. Unten bei **Web-Konfiguration → Web-Push-Zertifikate** auf **„Schlüsselpaar generieren“** klicken.
+4. Den angezeigten Schlüssel (lange Zeichenkette, kein Geheimnis) kopieren und in der Datei `app/.env` eintragen:
+   ```
+   VITE_FCM_VAPID_KEY=BC…hier der Schlüssel…
+   ```
+5. Neu veröffentlichen: `npm run build`, dann `npx firebase-tools deploy`.
+
+Ohne eigenen Schlüssel verwendet Firebase einen Standardschlüssel; manche Browser lehnen den ab – deshalb Schritt 3–5.
+
+**Hinweise für die Teams:**
+- **Android/Chrome:** beim Onboarding „Benachrichtigungen erlauben“ tippen.
+- **iPhone (ab iOS 16.4):** Benachrichtigungen gibt es nur, wenn die App über Teilen-Symbol → **„Zum Home-Bildschirm“**
+  hinzugefügt und von dort geöffnet wird.
+- Ist die App offen und sichtbar, meldet sie sich mit Ton und Vibration statt mit einer Benachrichtigung.
+
+**Kosten:** Firebase Cloud Messaging ist kostenlos.

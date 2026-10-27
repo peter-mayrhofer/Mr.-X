@@ -15,6 +15,7 @@
   import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
+  import { PushState } from "../lib/push.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import { signal } from "../lib/signal.ts";
   import { leaveGame } from "../lib/session.svelte.ts";
@@ -33,6 +34,8 @@
   const game = new GameData();
   const teamId = $derived(member.teamId ?? "");
   $effect(() => game.watch(g, { chat: true, dmTeam: teamId }));
+  const push = new PushState();
+  $effect(() => push.watch(g, uid));
 
   const phase = $derived(game.state?.phase);
   let tab = $state<"karte" | "chat" | "regeln" | "mehr">("karte");
@@ -190,15 +193,7 @@
       ok: !!gps.pos,
       icon: MapPin,
     },
-    ...("Notification" in window
-      ? [
-          {
-            label: `${T.lobby.check.push}: ${Notification.permission === "granted" ? T.lobby.gut : T.lobby.aus}`,
-            ok: Notification.permission === "granted",
-            icon: Bell,
-          },
-        ]
-      : []),
+    { label: `${T.lobby.check.push}: ${push.status === "an" ? T.lobby.gut : T.lobby.aus}`, ok: push.status === "an", icon: Bell },
     ...(gps.battery !== undefined ? [{ label: `${T.lobby.check.akku} ${gps.battery} %`, ok: gps.battery > 30, icon: BatteryMedium }] : []),
   ]);
 </script>
@@ -207,7 +202,7 @@
   <Onboarding
     actions={{
       1: () => startGps(),
-      ...("Notification" in window ? { 2: async () => void (await Notification.requestPermission()) } : {}),
+      2: async () => void (await push.enable()),
     }}
     ondone={() => {
       prefs.onboarded = true;
@@ -238,7 +233,7 @@
 {:else if phase === "beendet" && archive.value}
   <Results results={archive.value.results} teams={archive.value.teams} done={{ label: T.tabs.chat, onclick: () => (chatOnly = true) }} />
 {:else}
-  <TeamHome {view} bind:tab bind:scene {announcement} {shrinking} onsend={send} onlogout={logout} />
+  <TeamHome {view} bind:tab bind:scene {announcement} {shrinking} {push} onsend={send} onlogout={logout} />
 {/if}
 
 <style>

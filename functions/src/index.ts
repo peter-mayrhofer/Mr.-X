@@ -14,6 +14,7 @@ import { handover, undo } from "./actions/uebergabe.ts";
 import { removeMember, removeTeam, renameTeam, resetRound } from "./actions/runde.ts";
 
 export { onPosition } from "./position.ts";
+export { onDirectMessage } from "./nachrichten.ts";
 
 type Req = CallableRequest<Record<string, unknown>>;
 const ACTIONS: Record<ApiRequest["action"], (req: Req) => Promise<unknown>> = {

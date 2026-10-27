@@ -18,6 +18,7 @@
   import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
+  import { PushState } from "../lib/push.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import { signal } from "../lib/signal.ts";
   import { call } from "../lib/api.ts";
@@ -38,6 +39,9 @@
   const isAdmin = $derived(member.role === "admin");
   const game = new GameData();
   $effect(() => game.watch(g, { chat: true, live: true, admin: isAdmin }));
+  // Schiris: Push wie Teams (Meldungen, Übergaben, Durchsagen); die Spielleitung sitzt meist am Laptop
+  const push = new PushState();
+  $effect(() => (isAdmin ? undefined : push.watch(g, uid)));
   const phase = $derived(game.state?.phase);
 
   // Schiri: Standort mit Namen (Karte der anderen Schiris, Ersatz-Standort für Mister X)
@@ -138,7 +142,7 @@
   {:else if phase === "beendet" && archive.value}
     <Results results={archive.value.results} teams={archive.value.teams} />
   {:else}
-    <Referee {view} api={call} onsend={(text) => send(text, "alle")} onlogout={logout} />
+    <Referee {view} api={call} {push} onsend={(text) => send(text, "alle")} onlogout={logout} />
   {/if}
 {:else}
   <AdminShell {section} {gameName} phase={view.state.phase} {link} {unread} onlogout={logout}>

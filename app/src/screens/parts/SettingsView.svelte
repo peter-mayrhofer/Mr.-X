@@ -10,12 +10,15 @@
   import { theme, type ThemeChoice } from "../../lib/theme.svelte.ts";
   import { signal } from "../../lib/signal.ts";
   import { prefs } from "../../lib/prefs.svelte.ts";
+  import type { PushState } from "../../lib/push.svelte.ts";
+  import { PUSH_KINDS } from "@mrx/shared";
+  import Banner from "../../ui/Banner.svelte";
   import { T } from "../../texte.ts";
 
   interface Props {
     onlogout: () => void;
-    /** Push-Arten (Meilenstein 8) – ohne diese Angabe wird der Bereich nicht gezeigt */
-    push?: Record<string, boolean>;
+    /** Push auf diesem Gerät – ohne Angabe wird der Bereich nicht gezeigt (z. B. Großbild) */
+    push?: PushState | undefined;
     /** Hintergrund-Standort gibt es nur in der Android-App (Meilenstein 9) */
     background?: { checked: boolean };
   }
@@ -44,9 +47,18 @@
 
   {#if push}
     <Card label={T.einstellungen.push} icon={Bell}>
-      {#each Object.entries(T.einstellungen.pushArten) as [k, label] (k)}
-        <Switch {label} bind:checked={push[k]!} />
-      {/each}
+      {#if push.status === "an"}
+        {#each PUSH_KINDS as k (k)}
+          <Switch label={T.einstellungen.pushArten[k]} checked={push.prefs[k]} onchange={(on) => push.setPref(k, on)} />
+        {/each}
+      {:else if push.status === "aus"}
+        <p class="muted hint">{T.einstellungen.pushAus}</p>
+        <Button size="m" icon={Bell} onclick={() => push.enable()}>{T.einstellungen.pushEin}</Button>
+      {:else if push.status === "verweigert"}
+        <Banner tone="warn">{T.einstellungen.pushVerweigert}</Banner>
+      {:else}
+        <Banner tone="info">{T.einstellungen.pushNichtMoeglich}</Banner>
+      {/if}
     </Card>
   {/if}
 
