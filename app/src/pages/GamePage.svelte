@@ -21,7 +21,9 @@
   });
 </script>
 
-{#if session.removed}
+{#if session.removed === "version"}
+  <ErrorStates variant="veraltet" onaction={() => location.reload()} />
+{:else if session.removed}
   <ErrorStates
     variant="entfernt"
     onaction={async () => {

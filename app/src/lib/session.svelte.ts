@@ -1,7 +1,7 @@
 // Wer bin ich, in welchem Spiel, mit welcher Rolle? Die Sitzung (Token vom Beitritt) bleibt im Gerät gespeichert; dazu
 // eine Live-Verbindung zum Spielraum (Snapshot + Änderungen, shared/client.ts). Wird ein Gerät entfernt (Admin, neue
 // Runde) oder ist die Sitzung abgelaufen, sagt der Server den Grund – die App erklärt es freundlich (Screen 23).
-import { Live } from "@mrx/shared/client";
+import { Live, type ByeReason } from "@mrx/shared/client";
 import type { GameInfo, JoinResult, Note, PositionIn, Role, View, ViewKey } from "@mrx/shared";
 import { WS_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
@@ -29,8 +29,8 @@ class Session {
   view = $state.raw<View | null>(null);
   online = $state(false);
   lastDataAt = $state(Date.now());
-  /** Gerät wurde aus dem Spiel entfernt, neue Runde oder Sitzung abgelaufen */
-  removed = $state(false);
+  /** Gerät wurde aus dem Spiel entfernt (neue Runde, Spiel gelöscht), Sitzung abgelaufen oder App veraltet */
+  removed = $state<ByeReason | false>(false);
   superAdmin = $state(false);
   /** öffentlicher Web-Push-Schlüssel des Servers */
   vapid = $state<string | null>(null);
@@ -93,7 +93,7 @@ function connect(s: Saved) {
       for (const fn of viewListeners) fn(v, changed);
     },
     onNote: (n) => noteListeners.forEach((fn) => fn(n)),
-    onBye: () => (session.removed = true),
+    onBye: (r) => (session.removed = r),
     onStatus: (on) => {
       session.online = on;
       if (on) session.lastDataAt = Date.now();
@@ -147,7 +147,7 @@ export const superLogout = () => setSuper(null);
 
 tokens.onSession = (kind) => {
   if (kind === "super") setSuper(null);
-  else session.removed = true;
+  else session.removed = "session";
 };
 
 // beim Start: gespeicherte Sitzungen übernehmen

@@ -6,6 +6,7 @@ wird eine Entscheidung geändert, bekommt sie einen neuen Eintrag mit Verweis.
 ---
 
 ### E-01 Realtime Database statt Firestore
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Firebase Realtime Database (bestehende Instanz `europe-west1`).
 **Warum:** Der Großteil des Verkehrs sind kleine, häufige Standort-Updates, die an wenige Empfänger (Admin, Schiris,
 Großbild) verteilt werden. Die Realtime Database rechnet nach **Datenmenge** ab (10 GB Download gratis), Firestore nach
@@ -24,6 +25,7 @@ ohne Sonderkonfiguration.
 **Verworfen:** React (größer, Neurendern muss manuell gezügelt werden), Vue (gleichwertig, aber größer), SvelteKit (unnötig).
 
 ### E-03 Server-Autorität mit Cloud Functions 2nd gen, ein Aktions-Endpunkt
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle spielentscheidenden Aktionen laufen über **eine** aufrufbare Function `api` (Feld `action`),
 dazu `tick` (Scheduler, jede Minute), `onPosition` (Datenbank-Trigger), `tracker` (HTTP), `cleanup` (täglich).
 Region `europe-west1` (wie die Datenbank), Node 22.
@@ -34,6 +36,7 @@ sauber getrennte Module mit eigener Prüfung.
 beheben, kosten aber ≈ 5–10 €/Monat → nicht verwendet; der `tick` hält die Region während des Spiels ohnehin aktiv.
 
 ### E-04 Zeitgesteuerte Ereignisse: Minuten-Takt + „Warten bis zur Sekunde“
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Cloud Scheduler ruft `tick` jede Minute auf. `tick` sucht alle Ereignisse, die in den nächsten 60 s
 fällig sind (Meldung, Spielende, Ablauf von Wartezeiten), wartet bis zum exakten Zeitpunkt und führt sie als Transaktion aus.
 **Warum:** Sekundengenau, funktioniert ohne jedes Handy, kein zusätzliches Produkt. Doppelte Ausführung durch
@@ -43,6 +46,7 @@ Intervalländerung/Übergabe aufwendig); Spiel-Logik auf Handys (Kernproblem des
 **Grenze:** Ein Lauf kostet bis zu 60 s Instanzzeit – bei vielen gleichzeitigen Spielen später auf Cloud Tasks umstellen.
 
 ### E-05 Login: anonym + serverseitig geprüftes Passwort; Super-Admin per Google + Custom Claim
+> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Teams, Schiris, Spiel-Admins melden sich mit einem **anonymen** Firebase-Konto an und treten einem
 Spiel über `api: join` mit Passwort/Code bei. Der Server speichert die Rolle in `games/{g}/members/{uid}`
 (nur vom Server schreibbar). Der Super-Admin meldet sich mit **Google** an; eine Function prüft die E-Mail gegen die
@@ -53,6 +57,7 @@ aktualisiert werden (Token-Erneuerung). Google-Login für den Organisator ist be
 **Verworfen:** E-Mail/Passwort-Konten pro Admin (Verwaltungsaufwand), Admin-Konto „wer zuerst kommt“ (Prototyp – unsicher).
 
 ### E-06 Passwörter gehasht (scrypt) in `/secrets`, niemand liest sie
+> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Team-Passwort, Schiri-Code, Admin-Passwort und Großbild-Schlüssel werden mit `scrypt` + Salt gehasht in
 `secrets/{g}` gespeichert; Rules: `.read: false, .write: false`. Der Admin sieht das Team-Passwort nach dem Festlegen
 **einmal** und kann jederzeit ein neues setzen (statt es später auszulesen).
@@ -84,11 +89,13 @@ Distanz, wenn der Schritt plausibel ist (Genauigkeit ≤ 50 m, ≥ 10 m, ≤ 25 
 **Warum:** Datenschutz für Minderjährige (keine Bewegungsprofile), manipulationssichere Statistik, keine zusätzlichen Lesezugriffe.
 
 ### E-10 Ein Spiel = Mandant unter `games/{spielcode}`
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle Daten eines Spiels liegen unter `games/{g}` (+ `secrets/{g}`); Spiel-Code ist ein lesbarer
 Kurzname (`linz-2027`), der auch im QR-Link steckt und notfalls eingetippt werden kann.
 **Warum:** Mehrere Spiele/Orte ohne Vermischung, einfache Löschung, einfache Rules.
 
 ### E-11 Push über FCM mit Token-Liste statt Topics
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Jedes Gerät speichert sein FCM-Token + gewählte Push-Arten unter `games/{g}/push/{uid}`; der Server
 sendet gezielt (alle / ein Team / Staff) per `sendEachForMulticast`.
 **Warum:** Topics können nicht nach Geräte-Einstellungen filtern. Bei < 100 Geräten pro Spiel ist die Token-Liste trivial.
@@ -117,11 +124,13 @@ gebündelt (so funktioniert `firebase deploy` mit Code aus `shared/` ohne Tricks
 **Warum:** Eine Wahrheit für Spielregeln: Countdown in der App und Meldung am Server rechnen mit derselben Funktion.
 
 ### E-16 Tests: Vitest, Rules-Unit-Testing, Playwright; CI auf GitHub Actions
+> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Vitest (Logik, Functions mit Emulator), `@firebase/rules-unit-testing` (Rechte inkl. Angriffsversuche),
 Playwright (E2E mit simulierten Handys, Fake-GPS, Zeitraffer über verkürzte Intervalle wie im Prototyp), Lasttest als
 Node-Skript gegen den Emulator. GitHub Actions: Lint, Typecheck, Tests bei jedem Push; APK-Build; Preview-Deploy.
 
 ### E-17 APK-Verteilung über Firebase Hosting
+> **Abgelöst durch E-38** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Die signierte APK wird von GitHub Actions gebaut und beim Deploy unter `https://mr-x-ooe.web.app/app.apk`
 abgelegt (+ QR-Code im Admin und auf dem Flyer).
 **Warum:** Das Repository ist privat – Downloads aus GitHub-Releases bräuchten ein GitHub-Konto.
@@ -143,6 +152,7 @@ Sofort-Meldung bei Übergabe (F10), Ersatzgerät pro Team (F14); die übrigen Fr
 **Offen:** Vektor-Logos (F1) und Datenschutz-Kontakt (F12) – werden spätestens für Meilenstein 12 gebraucht.
 
 ### E-21 Eigene Datenbank-Instanz und Hosting-Site für den Neubau
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Der Neubau verwendet die Realtime-Database-Instanz `mr-x-ooe-neu` (europe-west1) und die Hosting-Site
 `mr-x-ooe-neu` im selben Firebase-Projekt. Der Organisator legt beide einmal in der Konsole an (Blaze erlaubt mehrere
 Instanzen kostenlos; Kosten zählen gemeinsam).
@@ -154,11 +164,13 @@ Abnahme = neue App auf die Standard-Site deployen (Anleitung folgt in Meilenstei
 zweiter Budget-Alarm, Logins doppelt).
 
 ### E-22 Emulator-Projekt `demo-mrx` für Tests
+> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle automatisierten Tests laufen gegen die Firebase-Emulatoren mit der Projekt-ID `demo-mrx`.
 **Warum:** `demo-`-Projekte haben garantiert keinen Zugriff auf echte Firebase-Dienste – ein Test kann nie versehentlich
 Produktionsdaten verändern, und CI braucht keine Zugangsdaten.
 
 ### E-23 Anstoßen durch die Handys (`poke`) zusätzlich zum Minuten-Takt
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Jedes Mitglied darf `api: poke` aufrufen – z. B. wenn sein Countdown abgelaufen ist. Der Server
 erledigt dann nur, was wirklich fällig ist (Meldung, Spielende); alles läuft als Transaktion auf `state`, darum meldet
 er auch bei 30 gleichzeitigen Aufrufen genau einmal. Der Takt (`tick`, jede Minute, wartet bis zur Sekunde) bleibt die
@@ -206,6 +218,7 @@ Passwörtern und Index endgültig; angemeldete Geräte bekommen den freundlichen
 jedes Spiel ohne Admin-Passwort als Spielleitung öffnen.
 
 ### E-30 Push: eigener schlanker Service Worker, Versand nur am Server
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Benachrichtigungen verschickt ausschließlich der Spiel-Server (`functions/src/push.ts`) mit dem
 Firebase Admin SDK; die Geräte legen nur ihren Token und die gewünschten Arten unter `games/{g}/push/{uid}` ab.
 Im Web sind es reine Daten-Nachrichten, die ein eigener kleiner Service Worker (`app/public/sw.js`) anzeigt – nicht
@@ -216,6 +229,7 @@ Benachrichtigung im Postausgang `pushOutbox/{g}`, so prüfen die Tests die Empf�
 verhindert veraltete App-Versionen, und die Empfängerauswahl ist als reine Funktion (`shared/push.ts`) getestet.
 
 ### E-31 Android-App mit Capacitor, Web-Inhalte in der APK
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Die Android-App packt die gebaute Web-App in die APK (keine Fernladung von der Website). Nativ
 ergänzt werden nur: Standort über `@capacitor-community/background-geolocation` (Vordergrund-Dienst mit
 Dauer-Benachrichtigung), Senden per nativem HTTP an die REST-Schnittstelle der Datenbank (gleiche Rules, ID-Token),
@@ -225,3 +239,87 @@ Push über `@capacitor/push-notifications` und ein eigenes 30-Zeilen-Plugin „A
 einigen Minuten gedrosselt, natives HTTP nicht. Kommerzielle Hintergrund-Standort-Plugins wären für Release-Builds
 kostenpflichtig.
 **Verworfen:** App lädt die Website (`server.url`) – von Capacitor nicht für den Produktivbetrieb vorgesehen.
+
+---
+
+## Meilenstein 9b: Umzug auf Cloudflare
+
+### E-32 Cloudflare statt Firebase: ein Worker, ein Spielraum (Durable Object) pro Spiel, D1
+**Entscheidung:** Auf Wunsch des Organisators (`NACHRICHT-AN-FRONTEND.md`) läuft der Neubau komplett bei Cloudflare im
+**Gratis-Tarif ohne Zahlungsart**. Ein **Worker** liefert die App (Static Assets) und die API unter derselben Adresse aus
+und leitet weiter. **Ein Durable Object pro Spiel** („Spielraum“, `server/src/room.ts`, SQLite-Speicher) hält den ganzen
+Spielzustand im Speicher, ist die einzige Stelle, die ihn ändert, verteilt Änderungen über WebSockets (Hibernation) und
+weckt sich per **Alarm** für Meldungen, Wartezeiten, Spielende und Löschfristen – auch ohne ein einziges Handy online.
+**D1** hält nur spielübergreifende Daten: Spieleliste der Verwaltung und Archiv. Ein kleines zweites Durable Object
+(`Zentrale`) verwaltet das Organisator-Passwort. Ein täglicher Cron löscht nach Frist (Chat im Archiv 30 Tage, Archiv 1 Jahr).
+**Warum:** Ein Anbieter für alles, keine Kreditkarte; Durable Objects verarbeiten alles eines Spiels nacheinander – die
+Transaktionen und der Minuten-Takt aus E-03/E-04/E-23 entfallen, Meldungen kommen sekundengenau per Alarm.
+**Abweichungen von `PROMPT-BACKEND.md`, begründet:**
+- **Befehle per HTTP (`POST /api`), Live-Daten per WebSocket.** Befehle brauchen eine Antwort und sichere Wiederholung
+  (Kennung `rid`) – das ist mit HTTP einfacher und robuster als eigene Antwort-Zuordnung im WebSocket; Standorte gehen über
+  die ohnehin offene Verbindung.
+- **Spiel-Admins** bekommen weiterhin ein Admin-Passwort pro Spiel (wie bisher in der App), keine eigenen Konten.
+- **Zonen-Vorlage „Linz Innenstadt“** bleibt im Code (`shared/vorlagen/linz.ts`), nicht in D1 – es gibt nur eine.
+- **Tracker-Schnittstelle** folgt in Meilenstein 11.
+**Verworfen:** Cloudflare Pages (Worker mit Static Assets ist der aktuelle Weg und hält App + API zusammen), KV für
+Rate-Limits (im Spielraum gezählt, ohne extra Produkt), Tabellen-Migrationen per Befehl (der Server legt die zwei
+D1-Tabellen beim ersten Zugriff selbst an – ein Schritt weniger für den Organisator).
+
+### E-33 Anmeldung: Sitzungs-Tokens, PBKDF2, Organisator mit Setup-Geheimnis
+**Entscheidung:** Kein externer Login-Anbieter. `join` prüft Passwort/Code im Spielraum und gibt ein **HMAC-signiertes
+Token** zurück (Spiel + Gerätekennung, gültig 7 Tage). **Widerrufen** wird über die Mitgliedschaft: entfernt, neue
+Runde, abgemeldet oder neues Admin-Passwort → die Gerätekennung ist im Spielraum unbekannt, jede Anfrage und jede
+Verbindung bekommt „Sitzung abgelaufen“. Passwörter und Codes werden mit **PBKDF2-SHA-256, 100 000 Runden** und Salz
+gehasht (das ist das Maximum der Cloudflare-Laufzeit; ≈ 12 ms, deshalb im Spielraum statt im Worker mit 10 ms
+CPU-Grenze). Der **Organisator** legt sein Passwort einmalig mit dem **Setup-Geheimnis** (Wrangler-Secret) fest;
+dasselbe Geheimnis setzt ein vergessenes Passwort zurück und macht dabei alle alten Organisator-Sitzungen ungültig
+(Passwort-Version im Token). Rate-Limits: 20 falsche Beitritte je IP und Spiel in 10 Min (großzügig wegen Carrier-NAT),
+5 falsche Organisator-Passwörter je IP in 10 Min.
+**Warum:** Keine E-Mail-Konten für Kinder/Jugendliche, kein Google-Konto nötig, Sitzungen sofort widerrufbar.
+**Verworfen:** JWT-Bibliothek (HMAC mit WebCrypto sind 20 Zeilen), kurze Token-Laufzeit mit Erneuerung (Widerruf läuft
+ohnehin über die Mitgliedschaft; Spielleitungen richten Spiele oft Tage vorher ein).
+
+### E-34 Push: Web Push mit eigenem VAPID-Schlüssel, Android lokal, keine Doppelungen
+**Entscheidung:** **Web Push** (Browser, iPhone-Web-App ab iOS 16.4) verschlüsselt der Server selbst nach RFC 8291 und
+unterschreibt nach RFC 8292 (VAPID) – gut 100 Zeilen WebCrypto in `server/src/webpush.ts`, geprüft mit dem Beispiel aus dem
+Standard. Die **Android-App** nutzt kein Firebase mehr: Benachrichtigungen kommen über die Live-Verbindung (`note`) und
+werden lokal angezeigt (`@capacitor/local-notifications`); verpasste kommen mit der Antwort auf den nächsten
+Hintergrund-Standort (`/api/pos`). Geräte mit **sichtbarer App** bekommen keinen Web-Push (`vis`), weil sich die App
+selbst mit Ton/Vibration meldet. Höchstens 40 Pushes pro Aufruf (Gratis-Grenze 50 Unteranfragen), der Rest im nächsten
+Alarm. Abgelaufene Abos (404/410) werden gelöscht.
+**Warum:** Kein Google-Konto, keine `google-services.json`, keine Kosten; vom Organisator so bestätigt (Android nur lokal).
+**Verworfen:** Bibliothek `web-push` (braucht Node-Krypto, läuft nicht im Worker), Web Push zusätzlich in der Android-WebView
+(doppelte Benachrichtigungen, kein Mehrwert, solange die App im Vordergrund-Dienst läuft).
+
+### E-35 Live-Protokoll: Snapshot + Änderungen, nach Rolle gefiltert
+**Entscheidung:** Beim Verbinden bekommt jedes Gerät einen **Snapshot** seiner Sicht, danach nur **Änderungen**
+(`[Teil, Kennung, Wert]`), jede Nachricht mit fortlaufender Nummer und Server-Zeit; bei einer Lücke holt die App einen
+neuen Snapshot. Gefiltert wird **jede** Änderung pro Verbindung nach der Rolle (`#filter` in `room.ts`) – Teams bekommen
+fremde Positionen nie, auch nicht versteckt. Standorte werden gesammelt (höchstens alle 2 s verteilt, alle 30 s
+gespeichert). Herzschlag `ping`/`pong` beantwortet die Laufzeit selbst, ohne den Spielraum aufzuwecken.
+Protokollversion: alte Apps werden freundlich zum Neuladen aufgefordert.
+**Warum:** Sparsam (siehe `CLOUDFLARE-LIMITS.md`), einfach im Client (`shared/client.ts`, rund 150 Zeilen, ohne Framework),
+und die Rechte stehen an genau einer Stelle.
+
+### E-36 Tests gegen die lokale Cloudflare-Laufzeit, ohne Workers-Test-Pool
+**Entscheidung:** Server-, Rechte- und Ende-zu-Ende-Tests starten den echten Worker mit `createTestHarness` aus
+`wrangler` (workerd, Spielräume, D1, Alarme, Cron) und sprechen ihn über HTTP/WebSocket an – wie die App. Nur mit der
+Variable `TEST_HOOKS=1` (nie in `wrangler.jsonc`) gibt es `/__test/…` zum Lesen/Ändern des Spielraums („Zeitraffer“) und
+einen Push-Postausgang statt Versand. Ein eigener Test legt den Spielraum gezielt schlafen (Hibernation) und prüft, dass
+Spielstand, Verbindungen und Alarme das überstehen.
+**Warum:** `@cloudflare/vitest-pool-workers` verlangt Vitest 4.1, das Projekt nutzt Vitest 5. Über HTTP/WebSocket zu
+testen prüft außerdem genau das, was die App erlebt.
+
+### E-37 Android im Hintergrund: Standort per HTTP alle 30 s
+**Entscheidung:** Ist die Android-App im Hintergrund, sendet sie per nativem HTTP an `/api/pos` und nur alle 30 s
+(sonst alle 10–30 s über die Verbindung). Die Adresse des Servers kommt beim Bauen der APK aus `VITE_API_URL`
+(Repository-Variable `MRX_API_URL`, Standard `https://mister-x.mr-x-ooe.workers.dev`); der Server erlaubt dafür die
+Herkunft `https://localhost` (CORS).
+**Warum:** Android drosselt das Netzwerk der WebView im Hintergrund; 30 s halten den Standort frisch (Meldungen nehmen
+Standorte bis 2 Min) und lassen bei 30 Teams genug Reserve im Tageslimit.
+
+### E-38 APK-Verteilung
+**Entscheidung:** Die signierte APK baut GitHub Actions (Release). Ohne GitHub-Konto für die Teams: die APK nach
+`app/public/mister-x.apk` legen und veröffentlichen → `https://…workers.dev/mister-x.apk` (Static Assets, kostenlos,
+nie im Repository; Anleitung `BETRIEB.md` Schritt 9).
+

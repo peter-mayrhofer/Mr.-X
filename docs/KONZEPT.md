@@ -1,7 +1,9 @@
 # Konzept: Neubau „Mister X – Rote Falken“
 
 Stand: Meilenstein 1 (Analyse & Konzept) + Design-Prototyp – **vom Organisator bestätigt am 27.10.2026**
-(alle Vorschläge aus Abschnitt 9 angenommen, siehe E-20).
+(alle Vorschläge aus Abschnitt 9 angenommen, siehe E-20). **Aktualisiert in Meilenstein 9b:** Der Server läuft jetzt bei
+**Cloudflare** statt Firebase (E-32 bis E-38); Architektur, Datenhaltung, Abläufe und Kosten unten entsprechend.
+Schnittstelle: [`API.md`](API.md), Betrieb: [`BETRIEB.md`](BETRIEB.md), Limits: [`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md).
 Begründungen zu allen Entscheidungen: [`ENTSCHEIDUNGEN.md`](ENTSCHEIDUNGEN.md). Offene Fragen: [Abschnitt 9](#9-offene-fragen-bitte-beantworten).
 
 ---
@@ -10,14 +12,14 @@ Begründungen zu allen Entscheidungen: [`ENTSCHEIDUNGEN.md`](ENTSCHEIDUNGEN.md).
 
 | Thema | Prototyp (`app.js`, 540 Zeilen) | Problem | Neubau |
 |---|---|---|---|
-| Spiel-Logik | läuft im Browser (`tick()` jede Sekunde, Transaktion auf `reports/{slot}`) | Sind Admin- und Mister-X-Handy offline, passiert nichts. Zufallsende nur, wenn Admin-Handy offen ist. | **Server-Autorität**: Cloud Functions + minütlicher Takt |
-| Geheimnisse | `secret/teamPw` im Klartext, Admin liest es; Admin-Konto = „wer zuerst kommt“ | Passwort im Klartext, Admin-Übernahme beim ersten Aufruf möglich | Passwörter **gehasht** (scrypt), nur Functions lesen `/secrets`; Super-Admin per Google-Login + Freigabeliste |
-| Rechte | Rules prüfen Rolle, aber `game`, `handovers`, `locks` sind für **jeden Schiri** frei beschreibbar | Ein Schiri-Handy kann das Spiel beliebig verändern | Spielzustand ist **nur** für Functions schreibbar; Clients senden Aktionen |
+| Spiel-Logik | läuft im Browser (`tick()` jede Sekunde, Transaktion auf `reports/{slot}`) | Sind Admin- und Mister-X-Handy offline, passiert nichts. Zufallsende nur, wenn Admin-Handy offen ist. | **Server-Autorität**: ein Spielraum pro Spiel (Cloudflare Durable Object) mit Alarmen |
+| Geheimnisse | `secret/teamPw` im Klartext, Admin liest es; Admin-Konto = „wer zuerst kommt“ | Passwort im Klartext, Admin-Übernahme beim ersten Aufruf möglich | Passwörter **gehasht** (PBKDF2), nur der Server kennt sie; Organisator mit eigenem Passwort (Setup-Geheimnis) |
+| Rechte | Rules prüfen Rolle, aber `game`, `handovers`, `locks` sind für **jeden Schiri** frei beschreibbar | Ein Schiri-Handy kann das Spiel beliebig verändern | Spielzustand ändert **nur** der Server; Geräte senden Befehle |
 | Standort | `watchPosition` nur bei offenem Bildschirm, alle 15 m / 30 s | Hintergrund unmöglich | Android-App mit Foreground-Service; Web wie bisher + Wake Lock |
 | Distanz | Handy zählt selbst und schreibt `stats/dist` | manipulierbar, GPS-Sprünge zählen mit | Server zählt aus aufeinanderfolgenden Punkten (Plausibilität) |
 | Spielfeld | fest in `zones.js`, Toleranz über 8 Prüfpunkte | nur Linz, Näherung bis 1,5 m | Spielfeld pro Spiel in der Datenbank, Toleranz auf 0,4 m genau, exakter Abstand zur Grenze für Warnungen; **Linz-Polygone 1:1 übernommen** |
 | Schiris | melden sich als Team an, Admin befördert | umständlich, Schiri erscheint kurz als Team | eigener **Schiri-Code** |
-| Benachrichtigung | Ton + Vibration nur bei offener Seite | nichts bei gesperrtem Handy | FCM-Push (Android-App, PWA) + In-App-Ton |
+| Benachrichtigung | Ton + Vibration nur bei offener Seite | nichts bei gesperrtem Handy | Web Push (PWA) bzw. lokale Benachrichtigungen (Android-App) + In-App-Ton |
 
 **Übernommen werden die Abläufe**, die sich bewährt haben: Team-Login mit gemeinsamem Team-Passwort, Übergabe mit
 Umkreis-Wartezeit, Rückgängig, Strafübergabe, Sofort-Meldung, Durchsage, Offline-Warnung nach 3 Min, Zufallsende-Fenster,
@@ -33,59 +35,60 @@ flowchart LR
   subgraph Geräte
     W["Web-App (PWA)<br/>iPhone, Android-Browser, Laptop"]
     A["Android-App (Capacitor)<br/>gleicher Code + Hintergrund-GPS"]
-    T["GPS-Tracker / Traccar Client<br/>(optional)"]
+    T["GPS-Tracker / Traccar Client<br/>(optional, Meilenstein 11)"]
   end
-  subgraph Firebase["Firebase (Projekt mr-x-ooe, Region europe-west1)"]
-    AU[Authentication]
-    DB[(Realtime Database)]
-    F["Cloud Functions (2nd gen)<br/>= Spiel-Server"]
-    S["Cloud Scheduler<br/>Takt jede Minute"]
-    M[Cloud Messaging FCM]
-    H[Hosting]
+  subgraph CF["Cloudflare (Gratis-Tarif, keine Zahlungsart)"]
+    WK["Worker<br/>App-Dateien + /api + /ws"]
+    R["Spielraum je Spiel<br/>(Durable Object: Zustand, WebSockets, Alarme)"]
+    Z["Zentrale<br/>(Organisator-Passwort)"]
+    D[("D1<br/>Spieleliste, Archiv")]
+    C["Cron täglich<br/>Löschfristen"]
   end
+  P["Push-Dienste der Browser<br/>(Web Push, VAPID)"]
   OFM["OpenFreeMap<br/>Vektor-Kartenkacheln"]
-  W & A -- "lesen live, schreiben nur:<br/>eigener Standort, Chat" --> DB
-  W & A -- "Aktionen (Übergabe, Start, …)" --> F
-  T -- "HTTP mit Geräte-Token" --> F
-  S --> F
-  F -- "einzige Instanz, die den<br/>Spielzustand schreibt" --> DB
-  F --> M --> W & A
-  H --> W
+  W & A -- "Befehle: POST /api" --> WK
+  W & A <-- "Live: WebSocket /ws<br/>(Snapshot + Änderungen, nach Rolle gefiltert)" --> WK
+  A -- "Hintergrund: POST /api/pos" --> WK
+  T -. "HTTP mit Geräte-Token" .-> WK
+  WK --> R & Z
+  R --> D
+  C --> D
+  R -- "Web Push" --> P --> W
   W & A --> OFM
 ```
 
-**Grundprinzip:** Handys *lesen* den Spielzustand live aus der Datenbank und *schreiben* nur zwei Dinge direkt:
-ihren eigenen Standort und normale Chat-Nachrichten (beides durch Security Rules streng geprüft).
-**Alles Spielentscheidende** (Start, Meldungen, Übergabe, Wartezeiten, Sperrbereiche, Ende, Auswertung) passiert in den
-Cloud Functions. Ein Handy kann eine Aktion *anfragen* („Übergabe an Team B“), der Server prüft Rolle, Zustand und Zeit
-und führt sie aus – oder lehnt sie ab.
+**Grundprinzip:** Jedes Spiel hat **einen Spielraum** – die einzige Stelle, die den Spielzustand ändert. Geräte senden
+**Befehle** („Übergabe an Team B“); der Spielraum prüft Rolle, Zustand und Zeit und führt sie aus oder lehnt sie ab.
+Über eine **Live-Verbindung** bekommt jedes Gerät genau das, was seine Rolle sehen darf, und schickt seinen Standort.
+Meldungen, Wartezeiten und das Spielende löst der Spielraum per **Alarm** selbst aus – auch wenn kein Handy online ist.
 
 ### 2.1 Bausteine
 
 | Baustein | Technik | Aufgabe |
 |---|---|---|
 | **App** | TypeScript (strict), Svelte 5, Vite, MapLibre GL, PWA (Service Worker) | Eine Codebasis für Web und Android |
-| **Android-Hülle** | Capacitor 8, `@capacitor-community/background-geolocation`, `@capacitor/push-notifications` | Hintergrund-Standort mit Dauer-Benachrichtigung, Push |
-| **Spiel-Server** | Cloud Functions 2nd gen (Node 22), Region `europe-west1` (gleich wie die Datenbank) | `api` (eine aufrufbare Funktion für alle Aktionen), `tick` (jede Minute), `onPosition` (Plausibilität, Distanz; die Spielfeld-Warnung rechnet die App mit derselben Funktion aus `shared/`), `tracker` (HTTP), `cleanup` (täglich) |
-| **Datenbank** | Realtime Database (`europe-west1`, besteht schon) | Live-Zustand, Standorte, Chat, Archiv |
-| **Login** | Firebase Auth: *anonym* für Teams/Schiris/Spiel-Admins (+ serverseitig geprüftes Passwort), *Google* für Super-Admin | keine E-Mail-Konten für Kinder/Jugendliche nötig |
-| **Push** | FCM (Android-App, Web-Push; iPhone nur als installierte PWA ab iOS 16.4) | Meldung, Übergabe, Wartezeit, Durchsage … |
+| **Android-Hülle** | Capacitor 8, `@capacitor-community/background-geolocation`, `@capacitor/local-notifications` | Hintergrund-Standort mit Dauer-Benachrichtigung, lokale Benachrichtigungen |
+| **Worker** | Cloudflare Worker mit Static Assets (`server/src/index.ts`) | liefert die App aus, prüft Tokens, leitet Befehle und Verbindungen an den Spielraum |
+| **Spielraum** | Durable Object mit SQLite-Speicher, WebSocket-Hibernation, Alarm (`server/src/room.ts`) | Zustand, Regeln, Rechte, Live-Verteilung, Zeitsteuerung, Web Push |
+| **Datenbank** | D1 (`server/src/d1.ts`) | Spieleliste der Verwaltung, Archiv (mit Löschfristen) |
+| **Login** | eigene Sitzungs-Tokens (HMAC), Passwörter mit PBKDF2; Organisator mit Setup-Geheimnis + Passwort | keine E-Mail-Konten, kein Google-Konto nötig |
+| **Push** | Web Push mit VAPID (Browser, iPhone-Web-App ab iOS 16.4); Android-App: lokale Benachrichtigungen aus der Verbindung | Meldung, Übergabe, Wartezeit, Durchsage … |
 | **Karte** | MapLibre GL + OpenFreeMap-Vektorkacheln, **eigener Kartenstil** (hell/dunkel/Sonne) | kostenlos, ohne Schlüssel, ohne Tracking; Fallback OSM-Raster |
-| **Gemeinsamer Code** | `shared/` – reine TypeScript-Module ohne Firebase | Meldeplan, Geometrie/Zonen, Wartezeit-Umkreis, Standortquellen, Auswertung, Texte, Typen. Von App **und** Functions genutzt, mit Unit-Tests |
+| **Gemeinsamer Code** | `shared/` – reine TypeScript-Module | Meldeplan, Geometrie/Zonen, Wartezeit-Umkreis, Standortquellen, Auswertung, Push-Empfänger, Typen, Protokoll, Client-Bibliothek. Von App **und** Server genutzt, mit Unit-Tests |
 
 ### 2.2 Ordnerstruktur (Monorepo mit npm-Workspaces)
 
 ```
-shared/      reine Spiel-Logik + Typen + Linz-Vorlage (getestet mit Vitest)
+shared/      reine Spiel-Logik, Typen, Vertrag (api.ts, protocol.ts), Client-Bibliothek, Linz-Vorlage
 app/         Svelte-App (Web + Android via Capacitor, Ordner app/android/)
   src/ui/        Komponenten-Bibliothek (Design-System)
   src/screens/   die 23 Screens
   src/map/       Karte + Kartenstile
-  src/lib/       Firebase, Standort, Push, Ton, Zeit
+  src/lib/       Sitzung, Live-Daten, Standort, Push, Ton, Zeit
   src/texte.ts   alle Texte zentral
-functions/   Cloud Functions (TypeScript, gebündelt mit esbuild)
-tests/       Rules-Tests, Function-Tests (Emulator), E2E (Playwright), Lasttest
-docs/        Konzept, Entscheidungen, Handbücher, Screenshots
+server/      Cloudflare Worker + Spielraum + Zentrale (wrangler.jsonc)
+tests/       Server-, Rechte-, Ruhezustand- und E2E-Tests gegen die lokale Cloudflare-Laufzeit (Playwright)
+docs/        Konzept, Entscheidungen, API, Betrieb, Limits, Handbücher, Screenshots
 legacy/      alter Prototyp (nur Referenz; die Live-Version bleibt bis zur Abnahme auf dem Haupt-Branch)
 ```
 
@@ -97,18 +100,18 @@ legacy/      alter Prototyp (nur Referenz; die Live-Version bleibt bis zur Abnah
 
 | Rolle | Zugang | Technisch |
 |---|---|---|
-| **Super-Admin** | „Mit Google anmelden“ (z. B. `mr.x.rf.ooe@gmail.com`) | Google-Login; Function prüft E-Mail gegen Freigabeliste (Deploy-Parameter `SUPER_ADMINS`) und setzt **Custom Claim** `superAdmin` |
-| **Spiel-Admin** | Spiel-Code + Name + **Admin-Passwort** (vom Super-Admin pro Spiel vergeben) | anonymes Konto + Function `join` prüft Passwort-Hash → Eintrag `members/{uid} = admin` |
+| **Super-Admin** (Organisator) | Organisator-Passwort (einmalig mit dem **Setup-Geheimnis** festgelegt) | Zentrale prüft den PBKDF2-Hash → Organisator-Token mit Passwort-Version |
+| **Spiel-Admin** | Spiel-Code + Name + **Admin-Passwort** (vom Super-Admin pro Spiel vergeben) | Spielraum prüft den Hash → Mitglied `admin` + Sitzungs-Token |
 | **Schiri** | Spiel-Code + Name + **Schiri-Code** | wie oben, Rolle `schiri` |
 | **Team** | QR-Code/Link (enthält Spiel-Code) + Teamname + **Team-Passwort** | wie oben, Rolle `team`; ein zweites Handy kann demselben Team beitreten (Ersatzgerät) |
 | **Großbild** | Link mit Großbild-Schlüssel (Admin zeigt QR) | Rolle `screen`: sieht alles wie Admin, darf nichts ändern |
 | **Zuschauer** (optional, pro Spiel einschaltbar) | öffentlicher Zuschauer-Link | Rolle `viewer`: nur Mister-X-Meldungen + Ereignisse, **keine** Live-Positionen, kein Chat |
 
-`members/{uid}` schreibt **ausschließlich** der Server. Die Security Rules lesen daraus die Rolle.
+Die Mitgliederliste führt **ausschließlich** der Spielraum; aus ihr kommt die Rolle jedes Geräts.
 Mehrere Spiel-Admins pro Spiel sind möglich (jeder mit eigenem Namen → im Protokoll nachvollziehbar).
-Fehlversuche beim Beitritt werden pro Gerät **und** pro IP gezählt (max. 5 in 10 Min).
+Fehlversuche beim Beitritt werden pro IP und Spiel gezählt (max. 20 in 10 Min, großzügig wegen Mobilfunk-NAT).
 
-### 3.2 Rechte-Matrix (durchgesetzt in Security Rules **und** Functions, automatisiert getestet)
+### 3.2 Rechte-Matrix (durchgesetzt im Spielraum, automatisiert getestet inkl. Angriffsversuchen)
 
 | Daten / Aktion | Team | Mister-X-Team | Schiri | Spiel-Admin | Großbild | Zuschauer | Super-Admin |
 |---|---|---|---|---|---|---|---|
@@ -123,68 +126,57 @@ Fehlversuche beim Beitritt werden pro Gerät **und** pro IP gezählt (max. 5 in 
 | Passwörter/Codes, Teams & Schiris verwalten, Neue Runde, Protokoll lesen | ✖ | ✖ | ✖ | ✔ | ✖ | ✖ | ✔ |
 | Spiele anlegen/archivieren/löschen, Spiel-Admin-Passwort | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | ✔ |
 
-Lesezugriffe werden in der Realtime Database **nur auf Blatt-Ebene** vergeben (z. B. `games/{id}/reports`), nie auf
-`games/{id}` – sonst würden die Rules die Positionen über den Eltern-Knoten freigeben. Genau dieser „Datenbank-Trick“
-wird im Rule-Test geprüft (lesen von `/`, `/games`, `/games/{id}`, `/games/{id}/pos`, `/secrets` als Team → verweigert).
+Gefiltert wird **jede** Nachricht pro Verbindung, bevor sie rausgeht – Teams bekommen fremde Positionen nicht einmal
+versteckt im Datenverkehr. `tests/rechte.test.ts` liest dafür den rohen Datenverkehr aller Rollen mit.
 
 ---
 
-## 4. Datenmodell (Realtime Database)
+## 4. Datenmodell (Spielraum + D1)
 
-`{g}` = Spiel-Code (z. B. `linz-2027`), `{t}` = Team-ID, `{uid}` = Firebase-Konto eines Geräts.
-Spalte **schreibt**: *F* = nur Functions, *C* = Client (mit Rules-Prüfung).
+Jedes Spiel ist ein Spielraum mit diesen Teilen (gespeichert je Teil im SQLite-Speicher des Durable Objects).
+`{t}` = Team-ID, `{uid}` = Gerätekennung (vom Beitritt). Wer was sieht: siehe [`API.md`](API.md), Abschnitt 3.3.
 
-| Pfad | Inhalt | liest | schreibt |
-|---|---|---|---|
-| `games/{g}/info` | Name, Ort, Phase (`vorbereitung`, `laeuft`, `pause`, `beendet`), Zuschauer erlaubt? | alle Mitglieder | F |
-| `games/{g}/config` | `intervalMin` (10), `headStartMin` (10), `waitMin` (5), `radiusM` (200), `toleranceM` (20), `undoMin` (2), `endMinH`/`endMaxH` (3/4), Regeltext | Mitglieder | F |
-| `games/{g}/field` | Spielfeld-Polygon + Sperrbereiche `{id: {name, farbe, reihenfolge, polygon}}` | Mitglieder | F |
-| `games/{g}/state` | `mrx`, `mrxSince`, `startedAt`, `pausedAt`, `lastReportAt`, `nextReportAt`, `cuts` (gesperrte Bereiche), `rev` | Mitglieder | F |
-| `games/{g}/members/{uid}` | Rolle, Team-ID, Name, `followsFlag` (Schiri folgt der Fahne) | Admin; jeder seinen eigenen | F |
-| `games/{g}/teams/{t}` | Name, Kürzel (2 Buchstaben), Farbe | Mitglieder | F |
-| `games/{g}/pos/{t}` | `lat, lng, acc, t, uid, heading?, akku?, suspect?` | Admin, Schiri, Großbild | C (nur Mitglied von `{t}`) |
-| `games/{g}/staffPos/{uid}` | Standort von Schiris | Admin, Schiri, Großbild | C (nur eigener) |
-| `games/{g}/trackerPos/{gerät}` | Tracker-Positionen | Admin, Schiri, Großbild | F |
-| `games/{g}/reports/{id}` | Mister-X-Meldung: Team, Ort, `posAt`, `t`, Quelle (`handy`/`tracker`/`schiri`/`letzter`), Art (`auto`/`sofort`/`uebergabe`), `void` | Mitglieder | F |
-| `games/{g}/handovers/{id}` | `from, to, at, type (start/fang/strafe), by, ort, prev (für Rückgängig), undoneAt` | Mitglieder | F |
-| `games/{g}/locks/{t}` | `until`, Grund (Start/Übergabe/manuell) | Mitglieder | F |
-| `games/{g}/stats/{t}` | Distanz (m). Zeit und Anzahl als Mister X rechnet `shared/results` live aus den Übergaben (E-24) | Mitglieder | F |
-| `games/{g}/pauses/{id}` | `from`, `to` – Pausen des laufenden Spiels (für Countdown und Auswertung) | Mitglieder | F |
-| `games/{g}/cutLog/{id}` | `cut`, `locked`, `t` – Verlauf der Verkleinerung (für Replay) | Mitglieder | F |
-| `games/{g}/track/{t}` | letzter angenommener Punkt pro Team (nur für die Strecken-Berechnung) | **niemand** | F |
-| `running/{g}` | Liste laufender Spiele für den Takt | **niemand** | F |
-| `games/{g}/chat/{id}` | `uid, name, text, t, kind (msg/sys/ann), ev (Verweis auf Meldung)` | Mitglieder außer Zuschauer | C nur `kind=msg` (Länge ≤ 300, max. 1 Nachricht / 2 s); F für `sys`/`ann` |
-| `games/{g}/dm/{t}/{id}` | Direktkanal Team ↔ Admin | Admin + Team `{t}` | C (Admin oder Team `{t}`) |
-| `games/{g}/audit/{id}` | Protokoll: wer, wann, was | Admin | F |
-| `games/{g}/rate/{uid}` | Zeitstempel der letzten eigenen Nachricht (Chat-Bremse: max. 1 Nachricht / 2 s, geprüft von den Rules) | – | C (nur eigener, nur zusammen mit einer Nachricht sinnvoll) |
-| `rate/join/{schlüssel}` | Fehlversuche beim Beitritt pro Gerät und pro IP (IP nur gehasht) | niemand | F |
-| `games/{g}/devices/{gerät}` | Tracker: Name, Zuordnung (`team:{t}` oder `fahne`), zuletzt gesehen | Admin | F |
-| `games/{g}/push/{uid}` | FCM-Token, Plattform, gewählte Push-Arten | eigener | C (nur eigener) |
-| `games/{g}/archive/{lauf}` | Auswertung, Übergaben, Mister-X-Meldungen, Verkleinerungen, Pausen, Spielfeld, Chat, Teamnamen | Mitglieder außer Zuschauer (enthält den Chat) | F |
-| `secrets/{g}` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, **Spielende-Zeitpunkt**, Tracker-Tokens | **niemand** | F |
-| `userGames/{uid}` | in welchem Spiel ist dieses Gerät (für „angemeldet bleiben“); `removedFrom` = vom Admin entfernt | eigener | F |
-| `gameIndex/{g}` | Liste aller Spiele für Super-Admin | Super-Admin | F |
+| Teil | Inhalt | sieht |
+|---|---|---|
+| `info` | Name, Phase (`vorbereitung`, `laeuft`, `pause`, `beendet`), Zuschauer erlaubt?, archiviert? | alle Mitglieder |
+| `config` | `intervalMin` (10), `headStartMin` (10), `waitMin` (5), `radiusM` (200), `undoMin` (2), `endMinH`/`endMaxH` (3/4) | alle |
+| `field` | Spielfeld-Polygon, Toleranz, Sperrbereiche `{id: {name, kurz, farbe, reihenfolge, polygon}}` | alle |
+| `state` | `mrx`, `mrxSince`, `startedAt`, `pausedAt`, `lastReportAt`, `nextReportAt`, `cuts`, `lastHandover`, `run`, `rev` | alle |
+| `teams/{t}` | Name, Kürzel, Farbe | alle |
+| `reports`, `handovers`, `locks`, `pauses`, `cutLog`, `stats` | Meldungen (mit Quelle/Art/`void`), Übergaben (mit Vorzustand für Rückgängig), Wartezeiten, Pausen, Verkleinerungen, Strecke je Team | alle |
+| `chat`, `dm/{t}` | Gruppenchat (`msg`/`sys`/`ann`), Direktkanal Team ↔ Spielleitung | Chat: alle außer Zuschauer; Direktkanal: Team `{t}` + Spielleitung |
+| `positions/{t}`, `staff/{uid}` | letzter Standort je Team bzw. Schiri (`lat, lng, acc, t, heading?, battery?, suspect?`) | **nur** Spielleitung, Schiri, Großbild |
+| `members/{uid}`, `audit` | Geräte mit Rolle/Team/Name/`followsFlag`; Protokoll (wer, wann, was) | nur Spielleitung (jeder sieht seinen eigenen Eintrag als `me`) |
+| `track/{t}` | letzter angenommener Punkt je Team für die Strecke | **niemand** |
+| `push/{uid}` | Web-Push-Abo + gewünschte Arten | nur das Gerät selbst (`me.push`) |
+| `secrets` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, **geheimes Spielende** | **niemand** |
+| `rate` | Fehlversuche beim Beitritt je IP (gehasht) | niemand |
+| `purgeAt` | Löschfrist für den Chat nach Spielende | niemand |
 
-**Bewusst nicht gespeichert:** lückenlose Bewegungsprofile. `pos` enthält immer nur den **letzten** Standort pro Team.
-Die Distanz wird beim Eintreffen jedes neuen Punkts serverseitig aufsummiert (`onPosition` bekommt alten und neuen Wert),
-ohne die Spur zu speichern. Nur Mister-X-*Meldungen* (die ohnehin alle gesehen haben) kommen ins Archiv.
+**D1** (spielübergreifend): `games` (Spieleliste der Verwaltung: Name, Phase, Anzahl Teams, archiviert) und
+`archive` (je beendetem Lauf: Auswertung, Meldungen, Übergaben, Verkleinerungen, Pausen, Spielfeld, Teamnamen;
+Chat getrennt, damit er nach 30 Tagen gelöscht werden kann).
+
+**Bewusst nicht gespeichert:** lückenlose Bewegungsprofile. Es gibt immer nur den **letzten** Standort pro Team; die
+Strecke wird beim Eintreffen jedes Punkts aufsummiert, ohne die Spur zu speichern. Nur Mister-X-*Meldungen* (die ohnehin
+alle gesehen haben) kommen ins Archiv. Bei Spielende werden alle Live-Standorte sofort gelöscht.
 
 ---
 
 ## 5. Spielregeln → Umsetzung (Server)
 
 Die Nummern verweisen auf das Original-Regelblatt (`PROMPT-NEUBAU.md`, Abschnitt 1). Alle Zeiten sind **Server-Zeit**;
-die Handys rechnen ihren Countdown mit dem gemessenen Zeitversatz zum Server (`.info/serverTimeOffset`).
+die Handys rechnen ihren Countdown mit der Server-Zeit, die in jeder Nachricht der Live-Verbindung steht.
 
 | # | Regel | Umsetzung |
 |---|---|---|
 | 1, 2 | Mister X startet zuerst, nach 10 Min Meldung, dann laufen alle los | Start: `mrx` gesetzt, **Startsperre** (`locks`) für alle Jäger bis `startedAt + headStartMin`; erste Meldung genau dann |
-| 3, 4 | Tapperl → Übergabe; altes Team + Teams in der Nähe warten 5 Min | `api: handover` (nur Schiri/Admin). Übergabeort = Standort des neuen Mister X (Fallback: alter Mister X, Schiri). Gesperrt: altes Team + alle Teams mit **frischem** Standort im Umkreis `radiusM`; der neue Mister X nie. Sofort eine Meldung („Übergabe-Meldung“), nächste automatische Meldung nach `intervalMin` |
+| 3, 4 | Tapperl → Übergabe; altes Team + Teams in der Nähe warten 5 Min | Befehl `handover` (nur Schiri/Admin). Übergabeort = Standort des neuen Mister X (Fallback: alter Mister X, Schiri). Gesperrt: altes Team + alle Teams mit **frischem** Standort im Umkreis `radiusM`; der neue Mister X nie. Sofort eine Meldung („Übergabe-Meldung“), nächste automatische Meldung nach `intervalMin` |
 | 5 | Meldung alle 10 (später 5) Min | `nextReportAt = lastReportAt + intervalMin`. Bei Intervalländerung: `max(lastReportAt + neu, jetzt + 1 Min)` → Mister X hat immer mind. 1 Min Vorwarnung |
 | 7, 9 | nicht in Gebäuden / Grenzstraßen gehören dazu | Spielfeld mit Toleranz (`toleranceM`, Standard 20 m; Prüfung über 32 Punkte im Kreis, auf 0,4 m genau). Abstand zur Grenze für die Mister-X-Warnung exakt. Gebäude prüft die App nicht (Schiri) |
-| 10 | Verkleinerung | `api: setCuts` → Bereich gesperrt, System-Meldung + Push „Der Norden wird gesperrt!“ |
-| 11, 13 | Schiri/Admin entscheidet, Strafübergabe | `api: handover` mit `type: strafe`; Spielfeld-Warnung geht an Mister X + Schiri + Admin, Konsequenz entscheidet der Mensch |
-| 12 | Wer am Ende Mister X ist, gewinnt | Zufallszeitpunkt gleichverteilt in `[Start + endMinH, Start + endMaxH]`, nur in `secrets/` gespeichert; `tick` beendet das Spiel |
+| 10 | Verkleinerung | Befehl `setCut` → Bereich gesperrt, System-Meldung + Push „Der Norden wird gesperrt!“ |
+| 11, 13 | Schiri/Admin entscheidet, Strafübergabe | Befehl `handover` mit `type: strafe`; Spielfeld-Warnung geht an Mister X + Schiri + Admin, Konsequenz entscheidet der Mensch |
+| 12 | Wer am Ende Mister X ist, gewinnt | Zufallszeitpunkt gleichverteilt in `[Start + endMinH, Start + endMaxH]`, nur in `secrets` gespeichert; der Alarm des Spielraums beendet das Spiel |
 | – | Rückgängig | nur die **letzte** Übergabe, nur innerhalb `undoMin` (2 Min), stellt `mrx`, `mrxSince`, `nextReportAt` aus `prev` wieder her, entfernt die dadurch gesetzten Wartezeiten, markiert die Übergabe-Meldung als `void` |
 | – | Sofort-Meldung (Strafe) | zusätzliche Meldung, Meldeplan läuft unverändert weiter |
 | – | Pause (Vorschlag) | friert Meldeplan, Wartezeiten und Spielende ein; beim Fortsetzen werden alle Zeiten um die Pausendauer verschoben |
@@ -197,7 +189,7 @@ die Handys rechnen ihren Countdown mit dem gemessenen Zeitversatz zum Server (`.
 
 Jede Meldung speichert ihre Quelle; die App zeigt sie transparent an („Standort vom Schiri“).
 
-**Plausibilität (`onPosition`):** Punkte mit Genauigkeit > 50 m zählen nicht zur Distanz; Sprünge mit > 25 m/s
+**Plausibilität (beim Eintreffen jedes Standorts im Spielraum):** Punkte mit Genauigkeit > 50 m zählen nicht zur Distanz; Sprünge mit > 25 m/s
 (90 km/h) werden als `suspect` markiert und weder für Distanz noch für Umkreis-Wartezeit verwendet; Bewegungen < 10 m
 gelten als GPS-Rauschen.
 
@@ -209,66 +201,57 @@ gelten als GPS-Rauschen.
 
 ```mermaid
 sequenceDiagram
-  participant CS as Cloud Scheduler
-  participant T as Function tick
-  participant DB as Realtime Database
-  participant FCM as Push (FCM)
-  participant H as Handys
-  CS->>T: jede Minute (auch wenn kein Handy online ist)
-  T->>DB: laufende Spiele + state lesen
-  Note over T: Termin fällig in den nächsten 60 s?<br/>→ bis zur exakten Sekunde warten
-  T->>DB: Transaktion auf state (nur wenn nextReportAt unverändert = idempotent)
-  T->>DB: Standortquellen lesen (Tracker > Mister-X-Handy > Schiri > letzter)
-  T->>DB: reports/{id}, chat (System-Meldung), state.nextReportAt += Intervall
-  T->>FCM: „Mister X wurde gemeldet“ an alle Push-Geräte
-  DB-->>H: live: neuer Marker (Radar-Ping), Countdown springt neu
+  participant R as Spielraum (Alarm)
+  participant P as Web Push
+  participant H as Handys (Live-Verbindung)
+  Note over R: Alarm genau zu nextReportAt (auch ohne ein Handy online)
+  R->>R: Standortquelle wählen (Tracker > Mister-X-Handy > Schiri > letzter)
+  R->>R: Meldung + System-Nachricht speichern, nextReportAt += Intervall, nächsten Alarm stellen
+  R-->>H: Änderung an alle (Radar-Ping, Countdown springt neu) + Benachrichtigung
+  R->>P: Web Push an Geräte mit Abo, deren App gerade nicht sichtbar ist
 ```
 
-Ein minütlicher Takt plus „warten bis zur Sekunde“ ergibt sekundengenaue Meldungen ohne Cloud Tasks.
-Zwei überlappende Läufe sind harmlos, weil jede Änderung als Transaktion mit erwartetem Zustand läuft.
+Der Spielraum macht eins nach dem anderen – zwei gleichzeitige Auslöser können nie doppelt melden.
 
 ### 6.2 Übergabe (Fang) und Rückgängig
 
 ```mermaid
 sequenceDiagram
   participant S as Schiri-Handy
-  participant A as Function api
-  participant DB as Realtime Database
-  participant FCM as Push
+  participant R as Spielraum
+  participant H as alle Handys
   S->>S: „Übergabe“ → Team wählen (sortiert nach Nähe) → Art → Bestätigen
-  S->>A: handover {to, type, expectedMrx, requestId}
-  A->>A: Rolle Schiri/Admin? Spiel läuft? to ≠ Mister X?
-  A->>DB: Transaktion state: nur wenn mrx == expectedMrx (kein Doppel-Fang, wenn zwei Schiris gleichzeitig drücken)
-  A->>DB: handovers/{id} mit prev, locks (altes Team + Umkreis), reports (Übergabe-Meldung), stats, chat, audit
-  A->>FCM: neues MrX: „Ihr seid Mister X!“ · gesperrte Teams: „5 Min warten“ · alle: „Übergabe“
-  A-->>S: ok (+ Liste gesperrter Teams)
+  S->>R: POST /api handover {to, type, expectedMrx, requestId}
+  R->>R: Rolle Schiri/Admin? Spiel läuft? Mister X noch expectedMrx? (zwei Schiris gleichzeitig → nur einer zählt)
+  R->>R: Übergabe mit Vorzustand, Wartezeiten (altes Team + Umkreis), Übergabe-Meldung, Chat, Protokoll
+  R-->>H: Änderungen + Benachrichtigungen: „Ihr seid Mister X!“ · „5 Min warten“ · „Übergabe“
+  R-->>S: ok (+ Liste gesperrter Teams)
   Note over S: „Rückgängig“ 2 Min lang sichtbar
-  S->>A: undo {handoverId}
-  A->>DB: nur letzte Übergabe & < 2 Min → state aus prev, locks entfernen, Meldung void, audit
+  S->>R: undo {handoverId}
+  R->>R: nur letzte Übergabe & < 2 Min → Zustand aus Vorzustand, Wartezeiten zurück, Meldung ungültig, Protokoll
 ```
 
-Netzabbruch während der Übergabe: Die App wiederholt die Anfrage mit derselben `requestId`; der Server erkennt sie und
+Netzabbruch während der Übergabe: Die App wiederholt die Anfrage mit derselben Kennung; der Spielraum erkennt sie und
 führt nichts doppelt aus.
 
 ### 6.3 Spielende
 
 ```mermaid
 sequenceDiagram
-  participant T as tick / api (Notstopp)
-  participant DB as Realtime Database
-  participant FCM as Push
-  T->>DB: jetzt ≥ secrets.endAt (oder Notstopp durch Admin)
-  T->>DB: Transaktion: Phase = beendet, endedAt
-  T->>DB: Auswertung berechnen (shared/results) → archive/{lauf}
-  T->>DB: pos, staffPos, trackerPos löschen (Datenschutz)
-  T->>FCM: „Spielende! Gewinner: …“
-  Note over DB: Handys zeigen Feier-Animation + Auswertung
+  participant R as Spielraum (Alarm oder Notstopp)
+  participant D as D1
+  participant H as Handys
+  R->>R: jetzt ≥ geheimes Spielende (oder Notstopp durch Admin) → Phase beendet
+  R->>R: Auswertung (shared/results), Live-Standorte löschen (Datenschutz), Chat-Löschfrist stellen
+  R->>D: Archiv-Eintrag (Auswertung, Meldungen, Übergaben, Chat getrennt)
+  R-->>H: Änderungen + „Spielende! Gewinner: …“
+  Note over H: Feier-Animation + Auswertung
 ```
 
 ### 6.4 Beitritt per QR-Code
 
-QR-Code → `https://mr-x-ooe.web.app/#/s/linz-2027` → Startseite mit vorausgefülltem Spiel → Teamname + Team-Passwort →
-`api: join` → Onboarding (Standort, Benachrichtigungen, Akku, Regeln kurz) → Warteraum. Das Gerät merkt sich das Spiel;
+QR-Code → `https://mister-x.mr-x-ooe.workers.dev/#/s/linz-2027` → Startseite mit vorausgefülltem Spiel → Teamname +
+Team-Passwort → Befehl `join` (liefert das Sitzungs-Token) → Onboarding (Standort, Benachrichtigungen, Akku, Regeln kurz) → Warteraum. Das Gerät merkt sich das Spiel;
 wird das Team entfernt oder eine neue Runde vorbereitet, landet das Gerät mit einer freundlichen Erklärung auf der Startseite.
 
 ---
@@ -283,36 +266,22 @@ wird das Team entfernt oder eine neue Runde vorbereitet, landet das Gerät mit e
 - **iPhone (ehrlich):** Safari/PWA sendet **keinen** Standort, wenn der Bildschirm aus ist oder eine andere App offen ist.
   Lösung im Spiel: Bildschirm anlassen (Wake Lock), Powerbank. Push funktioniert nur, wenn die Web-App zum
   Home-Bildschirm hinzugefügt wurde (ab iOS 16.4). Für Mister X fängt der Schiri-Fallback Lücken auf.
-- **Offline:** Firebase puffert Schreibvorgänge; die App zeigt „Offline – letzte Daten von 14:32“. Aktionen (Übergabe)
-  sind idempotent. Die Kartenkacheln des Spielfelds werden beim Beitritt vorgeladen (≈ 30 Kacheln, erlaubt laut
+- **Offline:** Die Live-Verbindung verbindet sich mit wachsender Pause selbst neu und holt dann einen frischen Snapshot;
+  der neueste Standort wartet und geht danach raus. Die App zeigt „Offline – letzte Daten von 14:32“. Befehle werden bei
+  Netzfehlern mit derselben Kennung wiederholt und nie doppelt ausgeführt. Die Kartenkacheln des Spielfelds werden beim Beitritt vorgeladen (≈ 30 Kacheln, erlaubt laut
   OpenFreeMap-Nutzungsbedingungen), damit die Karte auch in Unterführungen da ist.
 - **Akku:** kein Dauer-Neuzeichnen (Svelte aktualisiert nur geänderte Stellen), Countdown-Animation per CSS,
   Karte zeichnet nur bei Datenänderung neu.
 
 ---
 
-## 8. Kostenabschätzung (Blaze-Tarif)
+## 8. Kosten
 
-Annahme pro Spiel: 30 Teams, 4 Schiris, 2 Admins, 1 Großbild, 4 Stunden; ein paar Spiele pro Jahr.
-
-| Dienst | Verbrauch pro Spiel | Gratis-Kontingent | Kosten |
-|---|---|---|---|
-| Realtime Database – Download | ≈ 33 000 Standort-Updates × 7 Empfänger × ~250 B ≈ 60 MB + Chat/Meldungen/Neuverbindungen ≈ 60 MB → **≈ 120 MB** | 10 GB / Monat | 0 € |
-| Realtime Database – Speicher | < 10 MB (keine Bewegungsprofile) | 1 GB | 0 € |
-| Cloud Functions – Aufrufe | `onPosition` ≈ 33 000, `api` ≈ 1 000, `tick` 43 200 / Monat (jede Minute) | 2 Mio. / Monat | 0 € |
-| Cloud Functions – Rechenzeit | `tick` wartet max. 60 s pro Minute → ≈ 4 h Instanzzeit pro Spiel ≈ 2 400 vCPU-s, 3 600 GiB-s | 180 000 vCPU-s, 360 000 GiB-s / Monat | 0 € |
-| Cloud Scheduler | 2 Jobs (`tick`, `cleanup`) | 3 Jobs pro Rechnungskonto | 0 € |
-| Cloud Messaging (Push) | beliebig | unbegrenzt | 0 € |
-| Hosting | App ≈ 0,5 MB × 50 Geräte = 25 MB; APK ≈ 8 MB × 30 = 240 MB (einmal pro Jahr) | 10 GB Speicher, 360 MB / Tag | 0 € (Spitze am APK-Tag ≤ 0,05 €) |
-| Artifact Registry (Function-Images) | ≈ 0,3–1 GB | 0,5 GB | **≤ 0,10 € / Monat** – mit Aufräum-Regel (`firebase functions:artifacts:setpolicy`) praktisch 0 € |
-| Authentication | ≈ 50 anonyme Konten / Spiel | 50 000 aktive Nutzer / Monat | 0 € |
-| Kartenkacheln (OpenFreeMap) | ≈ 50 Geräte × 100 Kacheln | unbegrenzt, gratis | 0 € |
-
-**Ergebnis: ≈ 0 € pro Monat** (schlimmstenfalls einige Cent). Empfehlung: **Budget-Alarm bei 5 €** mit E-Mail bei
-50 %, 90 %, 100 % (Achtung: ein Budget-Alarm warnt nur, er stoppt nichts). Anleitung folgt in
-`docs/FIREBASE-EINRICHTUNG.md` (Meilenstein 3), sobald der Blaze-Tarif gebraucht wird.
-
-Der Lasttest (Meilenstein 12) misst diese Zahlen im Emulator nach und korrigiert die Tabelle.
+**0 €.** Alles läuft im Cloudflare-Gratis-Tarif **ohne Zahlungsart**; ohne Zahlungsart kann nichts abgerechnet werden –
+wird ein Tageslimit überschritten, schlagen Anfragen bis Mitternacht (UTC) fehl. Ein Spiel mit 30 Teams über 4 Stunden
+braucht im schlimmsten Fall etwa ein Fünftel der Tageslimits. Rechnung und Quellen: [`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md).
+Kartenkacheln (OpenFreeMap) sind kostenlos. Der Lasttest (Meilenstein 12) misst die Zahlen in der lokalen
+Cloudflare-Laufzeit nach.
 
 ---
 
@@ -329,13 +298,13 @@ als Standard. **Noch zu liefern:** Vektor-Logos (F1), Kontakt des Verantwortlich
 | F4 | Sehen sich **Jäger-Teams gegenseitig** auf der Karte? | **Nein** (wie bisher) |
 | F5 | Sieht **Mister X die Jäger**? | **Nein** (wie bisher) |
 | F6 | **Zuschauer-/Eltern-Modus**? Was darf er zeigen? | Ja, pro Spiel einschaltbar: nur Mister-X-Meldungen, Übergaben, Spielfeld, Rangliste – **keine** Live-Positionen, kein Chat |
-| F7 | Wer ist **Super-Admin**? Wie viele Spiel-Admins? | Super-Admin: `mr.x.rf.ooe@gmail.com` (Google-Login). Beliebig viele Spiel-Admins über das Admin-Passwort, jeder mit Namen |
+| F7 | Wer ist **Super-Admin**? Wie viele Spiel-Admins? | Super-Admin: der Organisator (Konto `mr.x.rf.ooe@gmail.com` bei Cloudflare; in der App eigenes Organisator-Passwort, E-33). Beliebig viele Spiel-Admins über das Admin-Passwort, jeder mit Namen |
 | F8 | Soll der Start-Mister-X **ausgelost** werden können? | **Ja**, mit Los-Animation; alternativ direkt wählen |
 | F9 | **Vorsprung am Start** = Meldeintervall oder eigener Wert? | eigener Wert `headStartMin`, Standard 10 Min |
 | F10 | Nach einer Übergabe **sofort** den Standort des neuen Mister X melden? (`SPEC.md`: ja) | **Ja**, Übergabe-Meldung am Übergabeort |
 | F11 | **Umkreis** für die Wartezeit nach Übergabe? | 200 m (wie Prototyp), live änderbar |
 | F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Die Kinderfreunde OÖ – bitte Adresse/E-Mail nennen |
-| F13 | **APK-Verteilung:** Das Repository ist privat → GitHub-Downloads brauchen ein Konto. | APK über Firebase Hosting ausliefern (`https://mr-x-ooe.web.app/app.apk`) + QR-Code |
+| F13 | **APK-Verteilung:** Das Repository ist privat → GitHub-Downloads brauchen ein Konto. | APK über die eigene Adresse ausliefern (`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk`, E-38) + QR-Code |
 | F14 | Darf ein Team ein **zweites Handy** (Ersatzgerät) anmelden? | **Ja**, gleiches Team-Passwort; das jeweils neueste Signal zählt |
 
 ---

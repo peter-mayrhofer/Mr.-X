@@ -66,17 +66,15 @@ GitHub → Repository → **Settings → Secrets and variables → Actions → N
 | `ANDROID_KEYSTORE_PASSWORD` | Passwort aus 2.1 |
 | `ANDROID_KEY_ALIAS` | `misterx` |
 | `ANDROID_KEY_PASSWORD` | Passwort aus 2.1 (dasselbe, wenn keytool nicht extra gefragt hat) |
-| `GOOGLE_SERVICES_JSON` | siehe 2.3 (für Benachrichtigungen) |
 
-### 2.3 Benachrichtigungen für Android (google-services.json)
+### 2.3 Adresse des Spiel-Servers
 
-1. Firebase-Konsole → Projekt **mr-x-ooe** → Zahnrad → **Projekteinstellungen** → unten **„App hinzufügen“** → Android.
-2. Paketname: **`at.rotefalken.misterx`**, App-Name „Mister X“ → **App registrieren**.
-3. **`google-services.json` herunterladen** (die weiteren Schritte im Assistenten überspringen).
-4. In Text umwandeln wie in 2.1 (`certutil -encode google-services.json gs.b64`, erste/letzte Zeile löschen) und als
-   Secret `GOOGLE_SERVICES_JSON` speichern.
+Die App enthält die Adresse des Servers fest (Standard `https://mister-x.mr-x-ooe.workers.dev`, siehe
+[`BETRIEB.md`](BETRIEB.md)). Nur bei einer anderen Adresse: GitHub → **Settings → Secrets and variables → Actions →
+Variables → New repository variable** `MRX_API_URL` = z. B. `https://mister-x.meine-subdomain.workers.dev`.
 
-Ohne dieses Secret funktioniert die App trotzdem – nur Benachrichtigungen bei geschlossener App fehlen dann.
+Benachrichtigungen brauchen **keine** weitere Einrichtung: Die App zeigt sie selbst an (lokale Benachrichtigungen),
+es gibt kein Firebase und keine `google-services.json` mehr.
 
 ---
 
@@ -107,7 +105,11 @@ Die APK liegt unter `app/android/app/build/outputs/apk/debug/app-debug.apk`.
 ## 4. Verhalten im Hintergrund
 
 - Der Standort wird über einen **Vordergrund-Dienst** ermittelt (Android verlangt dafür die Dauer-Benachrichtigung).
-- Gesendet wird über **natives HTTP** direkt an die Datenbank (mit Anmeldung, dieselben Zugriffsregeln wie im Browser),
-  weil Android das Netzwerk der App-Oberfläche im Hintergrund nach einigen Minuten drosselt.
+- Ist die App sichtbar, geht der Standort über die Live-Verbindung. Im Hintergrund sendet sie über **natives HTTP**
+  (`/api/pos`, mit dem Sitzungs-Token, alle 30 s), weil Android das Netzwerk der App-Oberfläche im Hintergrund nach
+  einigen Minuten drosselt. Die Antwort bringt Benachrichtigungen mit, die die App vielleicht verpasst hat.
+- **Benachrichtigungen** (Meldung, Übergabe, Wartezeit, Durchsage …) zeigt die App selbst an, sobald sie im Hintergrund
+  ist – über die Verbindung sofort, sonst spätestens mit dem nächsten Standort (≤ 30 s). Ist die App ganz geschlossen
+  (Dauer-Benachrichtigung weggewischt), kommen keine Benachrichtigungen – darum im Onboarding den Hinweis beachten.
 - Nach dem Spielende sendet die App keinen Standort mehr; die Dauer-Benachrichtigung verschwindet, wenn die App
   geschlossen bzw. das Team abgemeldet wird.

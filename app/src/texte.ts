@@ -533,6 +533,11 @@ export const T = {
       text: "Prüft den Spiel-Code auf dem Zettel. Groß-/Kleinschreibung ist egal.",
       knopf: "Code eingeben",
     },
+    veraltet: {
+      titel: "Neue Version",
+      text: "Die App wurde aktualisiert. Bitte einmal neu laden – ihr bleibt angemeldet.",
+      knopf: "Neu laden",
+    },
     entfernt: {
       titel: "Ihr wurdet abgemeldet",
       text: "Die Spielleitung hat eine neue Runde vorbereitet oder euer Team entfernt. Meldet euch einfach neu an.",

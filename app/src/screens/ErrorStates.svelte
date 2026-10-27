@@ -13,6 +13,7 @@
     verweigert: { icon: MapPinOff, ...F.verweigert, tone: "danger" },
     nichtGefunden: { icon: SearchX, ...F.nichtGefunden, tone: "info" },
     entfernt: { icon: LogIn, ...F.entfernt, tone: "info" },
+    veraltet: { icon: RefreshCw, ...F.veraltet, tone: "info" },
   } as const;
   const v = $derived(MAP[(variant in MAP ? variant : "offline") as keyof typeof MAP]);
   const IconC = $derived(v.icon);
