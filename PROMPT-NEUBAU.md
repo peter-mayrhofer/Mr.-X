@@ -1,5 +1,9 @@
 # Auftrag: Kompletter Neubau der App „Mister X – Rote Falken“
 
+> **⚠️ Änderung (Stand später):** Das Backend läuft **nicht auf Firebase**, sondern komplett auf **Cloudflare (Gratis-Tarif)**
+> und wird von einem eigenen Agenten nach `PROMPT-BACKEND.md` gebaut. Für das Frontend gilt `NACHRICHT-AN-FRONTEND.md`.
+> Alle Firebase-Angaben in diesem Dokument sind dadurch überholt.
+
 > Dieser Prompt richtet sich an eine KI (Coding-Agent), die selbstständig über mehrere Tage arbeiten darf.
 > Lies ihn vollständig, bevor du anfängst. Er beschreibt das Spiel, den Ist-Stand, alle Anforderungen,
 > das gewünschte Design, die Qualitätsansprüche und den Arbeitsablauf.
