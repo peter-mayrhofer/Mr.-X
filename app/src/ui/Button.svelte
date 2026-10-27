@@ -103,7 +103,7 @@
   }
   .ok {
     background: var(--ok);
-    color: #fff;
+    color: var(--on-ok);
   }
   .warn {
     background: var(--warn);

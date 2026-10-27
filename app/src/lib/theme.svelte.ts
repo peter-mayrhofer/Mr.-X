@@ -37,6 +37,8 @@ class ThemeState {
 
 export const theme = new ThemeState();
 dark.addEventListener("change", (e) => (theme.systemDark = e.matches));
+// sofort setzen (vor dem ersten Zeichnen), sonst startet die App kurz dunkel und blendet dann um
+document.documentElement.dataset.theme = theme.active;
 
 $effect.root(() => {
   $effect(() => {

@@ -115,6 +115,7 @@
   --warn-text: var(--gelb-400);
   --warn-soft: rgb(255 197 49 / 0.14);
   --ok: var(--gruen-400);
+  --on-ok: #04210f;
   --ok-text: var(--gruen-400);
   --ok-soft: rgb(47 191 113 / 0.14);
   --info: var(--blau-400);
@@ -139,7 +140,7 @@
   --line-strong: #9fb1c1;
   --text: var(--nacht-900);
   --text-2: #3e5468;
-  --text-3: #5b7186;
+  --text-3: #4a6075;
   --accent: var(--rot-500);
   --accent-press: var(--rot-600);
   --on-accent: #fff;
@@ -150,7 +151,8 @@
   --warn-text: var(--gelb-700);
   --warn-soft: rgb(255 197 49 / 0.22);
   --ok: var(--gruen-700);
-  --ok-text: var(--gruen-700);
+  --on-ok: #fff;
+  --ok-text: #0e6538;
   --ok-soft: rgb(19 122 68 / 0.12);
   --info: var(--blau-700);
   --info-text: var(--blau-700);
@@ -185,6 +187,7 @@
   --warn-text: #000;
   --warn-soft: #fff3b0;
   --ok: #006b2e;
+  --on-ok: #fff;
   --ok-text: #006b2e;
   --ok-soft: #dff5e7;
   --info: #0040a0;

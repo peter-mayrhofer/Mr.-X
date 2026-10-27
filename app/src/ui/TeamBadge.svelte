@@ -47,7 +47,8 @@
     width: var(--size);
     height: var(--size);
     border-radius: 50%;
-    background: var(--c);
+    /* abgedunkelt, damit das weiße Kürzel auf jeder Teamfarbe ≥ 4,5:1 hat (WCAG AA) */
+    background: color-mix(in oklab, var(--c) 78%, #000);
     color: #fff;
     border: 2px solid rgb(255 255 255 / 0.9);
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
@@ -70,7 +71,8 @@
       0 0 0 6px var(--me);
   }
   .offline {
-    opacity: 0.55;
+    /* gedämpft statt durchsichtig – Kürzel bleibt lesbar */
+    background: color-mix(in oklab, var(--c) 35%, #3a4450);
     border-style: dashed;
   }
   .sub {

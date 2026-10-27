@@ -80,6 +80,6 @@
   }
   .ok {
     background: var(--ok);
-    color: #fff;
+    color: var(--on-ok);
   }
 </style>

@@ -121,9 +121,10 @@
     gap: var(--sp-2);
     align-items: center;
   }
+  /* durchgestrichen + Hinweis „rückgängig gemacht“ – ohne Transparenz, damit der Kontrast reicht */
   .undone .act,
   .undone .det {
     text-decoration: line-through;
-    opacity: 0.7;
+    color: var(--text-3);
   }
 </style>

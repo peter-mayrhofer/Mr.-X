@@ -69,7 +69,7 @@
     <div class="bar" role="img" aria-label={timeline.map(([id, ms]) => `${team(id).name} ${dauer(ms)}`).join(", ")}>
       {#each timeline as [id, ms], i (i)}
         {@const t = team(id)}
-        <span style:flex={ms} style:background={t.color} title="{t.name}: {dauer(ms)}">{ms >= total / 12 ? t.short : ""}</span>
+        <span style:flex={ms} style:--c={t.color} title="{t.name}: {dauer(ms)}">{ms >= total / 12 ? t.short : ""}</span>
       {/each}
     </div>
     <div class="axis num"><span>0:00</span><span>{dauer(total)}</span></div>
@@ -178,6 +178,7 @@
   .bar span {
     display: grid;
     place-items: center;
+    background: color-mix(in oklab, var(--c) 78%, #000);
     color: #fff;
     font-family: var(--font-display);
     font-weight: 800;

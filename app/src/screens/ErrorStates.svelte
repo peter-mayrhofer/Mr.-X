@@ -31,7 +31,7 @@
   {/if}
 
   {#if variant === "offline"}
-    <div class="skel" aria-label="Letzte bekannte Daten werden angezeigt">
+    <div class="skel" aria-hidden="true">
       <Skeleton h="56px" r="var(--r-l)" />
       <Skeleton h="180px" r="var(--r-l)" />
       <Skeleton w="60%" h="20px" />

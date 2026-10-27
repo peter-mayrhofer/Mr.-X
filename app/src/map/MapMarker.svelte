@@ -34,7 +34,7 @@
     {#if p.name}<span class="name" class:mrx={p.mrx}>{p.name}</span>{/if}
   </div>
 {:else if p.kind === "me"}
-  <div class="me" aria-label={p.label}>
+  <div class="me" role="img" aria-label={p.label}>
     {#if p.heading !== undefined}
       <span class="heading" style:rotate="{p.heading}deg"
         ><Navigation2 size={30} fill="currentColor" strokeWidth={1} aria-hidden="true" /></span
