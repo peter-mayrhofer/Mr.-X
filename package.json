@@ -5,7 +5,8 @@
   "workspaces": [
     "shared",
     "app",
-    "functions"
+    "functions",
+    "server"
   ],
   "scripts": {
     "dev": "npm -w app run dev",

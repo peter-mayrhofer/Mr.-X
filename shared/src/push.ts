@@ -1,14 +1,13 @@
-// Push-Benachrichtigungen (Abschnitt 7.6): wer bekommt was. Rein, damit es ohne Firebase getestet werden kann.
-import type { Member } from "./api.ts";
+// Push-Benachrichtigungen (Abschnitt 7.6): wer bekommt was. Rein, damit es ohne Server getestet werden kann.
+import type { Member, PushSub } from "./api.ts";
 import type { Role } from "./types.ts";
 
 export type PushKind = "meldung" | "uebergabe" | "wartezeit" | "durchsage" | "spielfeld" | "nachricht" | "spiel";
 export const PUSH_KINDS: PushKind[] = ["meldung", "uebergabe", "wartezeit", "durchsage", "spielfeld", "nachricht", "spiel"];
 
-/** games/{g}/push/{uid} – vom Gerät selbst geschrieben */
+/** Push-Einstellung eines Geräts (Aktion pushSubscribe): Web-Push-Abo (fehlt in der Android-App) + gewünschte Arten */
 export interface PushReg {
-  token: string;
-  platform: "web" | "android";
+  sub?: PushSub;
   /** abgeschaltete Arten stehen auf false; fehlend = an */
   prefs?: Partial<Record<PushKind, boolean>>;
   t?: number;
@@ -16,22 +15,22 @@ export interface PushReg {
 
 export type PushTarget = { all: true; except?: string[] } | { teams: string[] } | { roles: Role[] };
 
+/** Geräte (uid), die eine Benachrichtigung bekommen – egal ob per Web-Push oder über die offene Verbindung */
 export function pushTargets(
-  regs: Record<string, PushReg>,
   members: Record<string, Member>,
+  regs: Record<string, PushReg>,
   target: PushTarget,
   kind: PushKind,
-): { uid: string; token: string; platform: PushReg["platform"] }[] {
-  return Object.entries(regs)
-    .filter(([uid, r]) => {
-      const m = members[uid];
-      if (!m || r.prefs?.[kind] === false) return false; // nicht mehr im Spiel bzw. abgeschaltet
+): string[] {
+  return Object.entries(members)
+    .filter(([uid, m]) => {
+      if (regs[uid]?.prefs?.[kind] === false) return false; // abgeschaltet
       if (m.role === "screen") return false; // Großbild zeigt alles selbst an
       if ("teams" in target) return !!m.teamId && target.teams.includes(m.teamId);
       if ("roles" in target) return target.roles.includes(m.role);
       return !(m.teamId && target.except?.includes(m.teamId));
     })
-    .map(([uid, r]) => ({ uid, token: r.token, platform: r.platform }));
+    .map(([uid]) => uid);
 }
 
 /** Überschriften der Benachrichtigungen; der Text ist meist die System-Meldung aus dem Chat */
