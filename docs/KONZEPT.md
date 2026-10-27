@@ -14,7 +14,7 @@ Begründungen zu allen Entscheidungen: [`ENTSCHEIDUNGEN.md`](ENTSCHEIDUNGEN.md).
 | Rechte | Rules prüfen Rolle, aber `game`, `handovers`, `locks` sind für **jeden Schiri** frei beschreibbar | Ein Schiri-Handy kann das Spiel beliebig verändern | Spielzustand ist **nur** für Functions schreibbar; Clients senden Aktionen |
 | Standort | `watchPosition` nur bei offenem Bildschirm, alle 15 m / 30 s | Hintergrund unmöglich | Android-App mit Foreground-Service; Web wie bisher + Wake Lock |
 | Distanz | Handy zählt selbst und schreibt `stats/dist` | manipulierbar, GPS-Sprünge zählen mit | Server zählt aus aufeinanderfolgenden Punkten (Plausibilität) |
-| Spielfeld | fest in `zones.js`, Toleranz über 8 Prüfpunkte | nur Linz, Näherung | Spielfeld pro Spiel in der Datenbank, exakte Abstandsberechnung zur Grenze; **Linz-Polygone 1:1 übernommen** |
+| Spielfeld | fest in `zones.js`, Toleranz über 8 Prüfpunkte | nur Linz, Näherung bis 1,5 m | Spielfeld pro Spiel in der Datenbank, Toleranz auf 0,4 m genau, exakter Abstand zur Grenze für Warnungen; **Linz-Polygone 1:1 übernommen** |
 | Schiris | melden sich als Team an, Admin befördert | umständlich, Schiri erscheint kurz als Team | eigener **Schiri-Code** |
 | Benachrichtigung | Ton + Vibration nur bei offener Seite | nichts bei gesperrtem Handy | FCM-Push (Android-App, PWA) + In-App-Ton |
 
@@ -174,7 +174,7 @@ die Handys rechnen ihren Countdown mit dem gemessenen Zeitversatz zum Server (`.
 | 1, 2 | Mister X startet zuerst, nach 10 Min Meldung, dann laufen alle los | Start: `mrx` gesetzt, **Startsperre** (`locks`) für alle Jäger bis `startedAt + headStartMin`; erste Meldung genau dann |
 | 3, 4 | Tapperl → Übergabe; altes Team + Teams in der Nähe warten 5 Min | `api: handover` (nur Schiri/Admin). Übergabeort = Standort des neuen Mister X (Fallback: alter Mister X, Schiri). Gesperrt: altes Team + alle Teams mit **frischem** Standort im Umkreis `radiusM`; der neue Mister X nie. Sofort eine Meldung („Übergabe-Meldung“), nächste automatische Meldung nach `intervalMin` |
 | 5 | Meldung alle 10 (später 5) Min | `nextReportAt = lastReportAt + intervalMin`. Bei Intervalländerung: `max(lastReportAt + neu, jetzt + 1 Min)` → Mister X hat immer mind. 1 Min Vorwarnung |
-| 7, 9 | nicht in Gebäuden / Grenzstraßen gehören dazu | Spielfeld mit Toleranz (`toleranceM`, Standard 20 m, exakt als Abstand zur Grenzlinie berechnet). Gebäude prüft die App nicht (Schiri) |
+| 7, 9 | nicht in Gebäuden / Grenzstraßen gehören dazu | Spielfeld mit Toleranz (`toleranceM`, Standard 20 m; Prüfung über 32 Punkte im Kreis, auf 0,4 m genau). Abstand zur Grenze für die Mister-X-Warnung exakt. Gebäude prüft die App nicht (Schiri) |
 | 10 | Verkleinerung | `api: setCuts` → Bereich gesperrt, System-Meldung + Push „Der Norden wird gesperrt!“ |
 | 11, 13 | Schiri/Admin entscheidet, Strafübergabe | `api: handover` mit `type: strafe`; Spielfeld-Warnung geht an Mister X + Schiri + Admin, Konsequenz entscheidet der Mensch |
 | 12 | Wer am Ende Mister X ist, gewinnt | Zufallszeitpunkt gleichverteilt in `[Start + endMinH, Start + endMaxH]`, nur in `secrets/` gespeichert; `tick` beendet das Spiel |

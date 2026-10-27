@@ -1,0 +1,200 @@
+/*
+ * Design-Tokens „Fahndung in Rot-Weiß“ (docs/KONZEPT.md, Abschnitt 10; docs/ENTSCHEIDUNGEN.md E-12).
+ * Komponenten verwenden nur diese Variablen, nie feste Farbwerte.
+ * Themes: data-theme="dunkel" | "hell" | "sonne" am <html>. Mister-X-Modus: data-mrx am <html>.
+ */
+:root {
+  /* Markenfarben – exakt aus assets/logos/ gemessen */
+  --rf-rot: #c51a1a;
+  --rf-blau: #214c6b;
+  --kf-rot: #dc0219;
+  --kf-blau: #005ca8;
+
+  /* Paletten */
+  --rot-300: #ff8a80;
+  --rot-400: #ff6a5c;
+  --rot-500: #c51a1a;
+  --rot-600: #a31414;
+  --rot-700: #7f0e0e;
+  --nacht-950: #07111a;
+  --nacht-900: #0b1825;
+  --nacht-850: #0e1c29;
+  --nacht-800: #152b40;
+  --nacht-700: #1d3a55;
+  --nacht-600: #214c6b;
+  --nacht-300: #8fb3cf;
+  --nacht-100: #dde8f1;
+  --gelb-400: #ffc531;
+  --gelb-700: #7a5200;
+  --gruen-400: #2fbf71;
+  --gruen-700: #137a44;
+  --blau-400: #3b9cff;
+  --blau-700: #1565c0;
+
+  /* Schrift */
+  --font-text: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", sans-serif;
+  --fs-s: 16px; /* Mindestgröße */
+  --fs-m: 17px;
+  --fs-l: 20px;
+  --fs-xl: 24px;
+  --fs-2xl: 32px;
+  --fs-3xl: 44px;
+  --fs-4xl: 64px;
+  --fs-5xl: 96px;
+  --fs-6xl: 160px; /* Großbild */
+  --lh: 1.45;
+  --tracking-caps: 0.08em;
+
+  /* Abstände (4-px-Raster) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --gutter: 16px;
+
+  /* Radien */
+  --r-s: 8px;
+  --r-m: 14px;
+  --r-l: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* Touch-Ziele */
+  --touch: 48px;
+  --touch-l: 56px;
+  --touch-xl: 72px;
+
+  /* Bewegung (150–400 ms, nie blockierend) */
+  --dur-1: 150ms;
+  --dur-2: 250ms;
+  --dur-3: 400ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Ebenen */
+  --z-ui: 10;
+  --z-sheet: 30;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+
+  --border-w: 1px;
+  --border-strong: 2px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---------- Dunkel (Standard im Spiel) ---------- */
+:root,
+[data-theme="dunkel"] {
+  color-scheme: dark;
+  --bg: var(--nacht-950);
+  --surface: var(--nacht-850);
+  --surface-2: var(--nacht-800);
+  --surface-3: var(--nacht-700);
+  --glass: rgb(11 24 37 / 0.88);
+  --line: #24425c;
+  --line-strong: #36597a;
+  --text: #f3f6f9;
+  --text-2: #a8bbcc;
+  --text-3: #7d93a8;
+  --accent: var(--rot-500);
+  --accent-press: var(--rot-600);
+  --on-accent: #fff;
+  --accent-text: var(--rot-400);
+  --accent-soft: rgb(197 26 26 / 0.18);
+  --warn: var(--gelb-400);
+  --on-warn: #1a1200;
+  --warn-text: var(--gelb-400);
+  --warn-soft: rgb(255 197 49 / 0.14);
+  --ok: var(--gruen-400);
+  --ok-text: var(--gruen-400);
+  --ok-soft: rgb(47 191 113 / 0.14);
+  --info: var(--blau-400);
+  --info-text: #7cbcff;
+  --info-soft: rgb(59 156 255 / 0.14);
+  --me: var(--blau-400);
+  --focus: var(--gelb-400);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.25);
+  --shadow-2: 0 12px 32px rgb(0 0 0 / 0.5);
+  --scrim: rgb(3 8 13 / 0.7);
+}
+
+/* ---------- Hell ---------- */
+[data-theme="hell"] {
+  color-scheme: light;
+  --bg: #f2f5f8;
+  --surface: #fff;
+  --surface-2: #e8eef3;
+  --surface-3: #d9e3eb;
+  --glass: rgb(255 255 255 / 0.92);
+  --line: #c9d5df;
+  --line-strong: #9fb1c1;
+  --text: var(--nacht-900);
+  --text-2: #3e5468;
+  --text-3: #5b7186;
+  --accent: var(--rot-500);
+  --accent-press: var(--rot-600);
+  --on-accent: #fff;
+  --accent-text: #b01515;
+  --accent-soft: rgb(197 26 26 / 0.1);
+  --warn: var(--gelb-400);
+  --on-warn: #1a1200;
+  --warn-text: var(--gelb-700);
+  --warn-soft: rgb(255 197 49 / 0.22);
+  --ok: var(--gruen-700);
+  --ok-text: var(--gruen-700);
+  --ok-soft: rgb(19 122 68 / 0.12);
+  --info: var(--blau-700);
+  --info-text: var(--blau-700);
+  --info-soft: rgb(21 101 192 / 0.1);
+  --me: var(--blau-700);
+  --focus: var(--blau-700);
+  --shadow-1: 0 1px 2px rgb(11 24 37 / 0.12), 0 4px 12px rgb(11 24 37 / 0.08);
+  --shadow-2: 0 12px 32px rgb(11 24 37 / 0.18);
+  --scrim: rgb(11 24 37 / 0.5);
+}
+
+/* ---------- Sonne (Hochkontrast für draußen) ---------- */
+[data-theme="sonne"] {
+  color-scheme: light;
+  --bg: #fff;
+  --surface: #fff;
+  --surface-2: #f2f2f2;
+  --surface-3: #e0e0e0;
+  --glass: #fff;
+  --line: #000;
+  --line-strong: #000;
+  --text: #000;
+  --text-2: #111;
+  --text-3: #222;
+  --accent: #b30000;
+  --accent-press: #800000;
+  --on-accent: #fff;
+  --accent-text: #b30000;
+  --accent-soft: #ffe5e5;
+  --warn: #ffd000;
+  --on-warn: #000;
+  --warn-text: #000;
+  --warn-soft: #fff3b0;
+  --ok: #006b2e;
+  --ok-text: #006b2e;
+  --ok-soft: #dff5e7;
+  --info: #0040a0;
+  --info-text: #0040a0;
+  --info-soft: #e0ebff;
+  --me: #0040a0;
+  --focus: #000;
+  --shadow-1: none;
+  --shadow-2: none;
+  --scrim: rgb(0 0 0 / 0.6);
+  --border-w: 2px;
+  --border-strong: 3px;
+}

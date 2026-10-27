@@ -1,0 +1,220 @@
+<!--
+  Rahmen für einen Prototyp-Screen: zeigt Screen n mit Variante (?v=…).
+  Der Griff am linken Rand öffnet das Prototyp-Menü (Übersicht, vor/zurück, Zustände, Darstellung).
+  ?clean blendet den Griff aus (für Screenshots).
+-->
+<script lang="ts">
+  import { ChevronLeft, ChevronRight, LayoutGrid, X } from "@lucide/svelte";
+  import { go, query } from "../lib/router.svelte.ts";
+  import { theme, type ThemeChoice } from "../lib/theme.svelte.ts";
+  import { T } from "../texte.ts";
+  import { SCREENS } from "./registry.ts";
+  import Segmented from "../ui/Segmented.svelte";
+  import Start from "../screens/Start.svelte";
+  import Join from "../screens/Join.svelte";
+  import StaffLogin from "../screens/StaffLogin.svelte";
+  import Onboarding from "../screens/Onboarding.svelte";
+  import Lobby from "../screens/Lobby.svelte";
+  import TeamHome from "../screens/TeamHome.svelte";
+  import Referee from "../screens/Referee.svelte";
+  import AdminShell from "../screens/admin/AdminShell.svelte";
+  import AdminLive from "../screens/admin/AdminLive.svelte";
+  import AdminControl from "../screens/admin/AdminControl.svelte";
+  import AdminTeams from "../screens/admin/AdminTeams.svelte";
+  import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
+  import AdminLog from "../screens/admin/AdminLog.svelte";
+  import BigScreen from "../screens/BigScreen.svelte";
+  import Results from "../screens/Results.svelte";
+  import Archive from "../screens/Archive.svelte";
+  import SuperAdmin from "../screens/SuperAdmin.svelte";
+  import ErrorStates from "../screens/ErrorStates.svelte";
+
+  let { n }: { n: number } = $props();
+  const q = query();
+  const def = $derived(SCREENS.find((s) => s.n === n) ?? SCREENS[0]!);
+  const v = $derived(q.get("v") ?? def.variants?.[0]?.id ?? "");
+  const clean = q.has("clean");
+  let open = $state(false);
+  let choice = $state<ThemeChoice>(theme.choice);
+
+  const to = (k: number, variant = "") => go(`/prototyp/${k}${variant ? `?v=${variant}` : ""}`);
+</script>
+
+{#if n === 1}<Start game={v === "spiel" ? "Mister X Linz 2027" : undefined} />
+{:else if n === 2}<Join variant={v} />
+{:else if n === 3}<StaffLogin variant={v} />
+{:else if n === 4}<Onboarding variant={v} />
+{:else if n === 5}<Lobby />
+{:else if n === 6}<TeamHome variant={v} />
+{:else if n === 7}<TeamHome mode="mrx" variant={v} />
+{:else if n === 8}<TeamHome overlay="lock" />
+{:else if n === 9}<TeamHome
+    mode={v === "neu" ? "mrx" : "jaeger"}
+    overlay={v === "neu" ? "handover-neu" : v === "erwischt" ? "handover-erwischt" : "handover-alle"}
+  />
+{:else if n === 10}<TeamHome tab="chat" />
+{:else if n === 11}<TeamHome tab="regeln" />
+{:else if n === 12}<Referee variant={v} />
+{:else if n === 13}<AdminShell section={v === "chat" ? "chat" : "live"}><AdminLive chat={v === "chat"} /></AdminShell>
+{:else if n === 14}<AdminShell section="steuerung"><AdminControl vorStart={v === "vorStart"} /></AdminShell>
+{:else if n === 15}<AdminShell section="teams"><AdminTeams variant={v} /></AdminShell>
+{:else if n === 16}<AdminShell section="zonen"><ZoneEditor variant={v} /></AdminShell>
+{:else if n === 17}<AdminShell section="protokoll"><AdminLog /></AdminShell>
+{:else if n === 18}<BigScreen variant={v} />
+{:else if n === 19}<Results />
+{:else if n === 20}<Archive variant={v} />
+{:else if n === 21}<SuperAdmin />
+{:else if n === 22}<TeamHome tab="mehr" />
+{:else}<ErrorStates variant={v} />
+{/if}
+
+{#if !clean}
+  <button class="handle" onclick={() => (open = true)} aria-label="Prototyp-Menü öffnen" title="Prototyp-Menü">
+    <span>{n}</span>
+  </button>
+{/if}
+
+{#if open}
+  <button class="scrim" aria-label={T.allgemein.schliessen} onclick={() => (open = false)}></button>
+  <aside class="drawer" aria-label="Prototyp-Menü">
+    <header>
+      <strong class="display">Prototyp · {n}/23</strong>
+      <button class="x" onclick={() => (open = false)} aria-label={T.allgemein.schliessen}><X size={24} /></button>
+    </header>
+    <h2>{def.title}</h2>
+    <p class="muted">{def.who} – {def.desc}</p>
+    {#if def.variants}
+      <p class="caps lbl">Zustand</p>
+      <div class="vars">
+        {#each def.variants as x (x.id)}
+          <button class:on={x.id === v} onclick={() => to(n, x.id)}>{x.label}</button>
+        {/each}
+      </div>
+    {/if}
+    <p class="caps lbl">Darstellung</p>
+    <Segmented
+      label="Darstellung"
+      bind:value={choice}
+      onchange={(c) => theme.set(c)}
+      options={(["auto", "hell", "dunkel", "sonne"] as const).map((c) => ({ value: c, label: T.einstellungen.themes[c] }))}
+    />
+    <nav>
+      <button disabled={n <= 1} onclick={() => to(n - 1)}><ChevronLeft size={22} />Zurück</button>
+      <button onclick={() => go("/prototyp")}><LayoutGrid size={22} />Übersicht</button>
+      <button disabled={n >= 23} onclick={() => to(n + 1)}>Weiter<ChevronRight size={22} /></button>
+    </nav>
+  </aside>
+{/if}
+
+<style>
+  .handle {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    z-index: 90;
+    width: 28px;
+    height: 64px;
+    translate: 0 -50%;
+    border: 2px solid #fff;
+    border-left: 0;
+    border-radius: 0 12px 12px 0;
+    background: #6b2bd9;
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.75;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.4);
+  }
+  .handle:hover {
+    opacity: 1;
+  }
+  .scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 91;
+    border: 0;
+    background: rgb(0 0 0 / 0.5);
+  }
+  .drawer {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 92;
+    width: min(360px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    background: var(--surface);
+    border-right: 4px solid #6b2bd9;
+    overflow-y: auto;
+    animation: slide var(--dur-2) var(--ease-out);
+  }
+  @keyframes slide {
+    from {
+      translate: -100% 0;
+    }
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #8c5cff;
+  }
+  .x {
+    width: var(--touch);
+    height: var(--touch);
+    border: 0;
+    background: none;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .lbl {
+    color: var(--text-2);
+    margin-top: var(--sp-2);
+  }
+  .vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+  .vars button {
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    border: 2px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .vars button.on {
+    border-color: #8c5cff;
+    background: #8c5cff;
+    color: #fff;
+  }
+  nav {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-2);
+  }
+  nav button {
+    min-height: var(--touch);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: var(--r-m);
+    border: var(--border-w) solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  nav button:disabled {
+    opacity: 0.4;
+  }
+</style>

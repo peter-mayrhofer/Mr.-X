@@ -1,55 +1,72 @@
-# Mister X – Rote Falken OÖ
+# Mister X – Rote Falken (Neubau)
 
-Handy-Web-App für das Live-Spiel „Mister X“ in der Linzer Innenstadt. Spezifikation: [SPEC.md](SPEC.md).
+Live-Geländespiel der Roten Falken / Kinderfreunde Oberösterreich in der Linzer Innenstadt.
+Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md).
 
-## Dateien
+> **Die bisherige App bleibt unverändert online** (`https://mr-x-ooe.web.app`). Ihr Code liegt hier nur noch zur
+> Referenz unter [`legacy/`](legacy/) und wird weiter vom Branch `claude/vibrant-darwin-2gk2cj` aus veröffentlicht.
 
-| Datei | Inhalt |
+## Stand
+
+| Meilenstein | Inhalt | Status |
+|---|---|---|
+| 1 – Konzept | [`docs/KONZEPT.md`](docs/KONZEPT.md), [`docs/ENTSCHEIDUNGEN.md`](docs/ENTSCHEIDUNGEN.md) | fertig, **wartet auf Bestätigung** |
+| 2 – Design | Design-System, Kartenstil, Klick-Prototyp aller 23 Screens, [`docs/DESIGN.md`](docs/DESIGN.md) | fertig, **wartet auf Bestätigung** |
+| 3–13 | Server, Echtzeit, Android-App, Push … | nach Bestätigung |
+
+## Ordner
+
+| Ordner | Inhalt |
 |---|---|
-| `index.html` | Oberfläche |
-| `app.js` | Logik (Login, GPS, Meldungen, Übergabe, Chat, Auswertung) |
-| `zones.js` | Spielfeld und 4 sperrbare Bereiche (Koordinaten entlang der Straßen aus OpenStreetMap) |
-| `database.rules.json` | Zugriffsrechte (wer darf was sehen/schreiben) |
-| `test/e2e.js` | Automatischer Test mit simulierten Handys |
-| `test/zones.test.mjs` | Prüft die Spielfeld-Zonen (`node test/zones.test.mjs`) |
+| `shared/` | Spiel-Logik ohne Firebase (Geometrie, Spielfeld Linz, Regeln) – mit Tests |
+| `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/map/` = Karte, `src/texte.ts` = alle Texte |
+| `tests/` | Screenshot-Skript (später: Rechte-, Function- und Gesamtspiel-Tests) |
+| `docs/` | Konzept, Entscheidungen, Design, Screenshots |
+| `legacy/` | alter Prototyp (nur Referenz) |
 
-## Veröffentlichen (einmalig am PC)
+## Klick-Prototyp ansehen
 
-Voraussetzung: [Node.js](https://nodejs.org) installiert, Repo heruntergeladen.
+Voraussetzung: [Node.js 22](https://nodejs.org) installiert, Repository heruntergeladen. Befehle in der
+Eingabeaufforderung (Windows) oder im Terminal im Repository-Ordner ausführen.
 
-```sh
-npx firebase-tools login                       # mit mr.x.rf.ooe@gmail.com anmelden
-npx firebase-tools deploy --project mr-x-ooe   # lädt App + Zugriffsregeln hoch
-```
-
-Danach läuft die App unter **https://mr-x-ooe.web.app**.
-
-## Erster Start
-
-1. **„Ich bin Admin“** antippen und ein Admin-Passwort eingeben. Beim allerersten Mal wird damit das Admin-Konto
-   angelegt – danach gilt genau dieses Passwort (im Dashboard änderbar).
-2. Im Dashboard unter **„Team-Passwort“** ein Passwort festlegen und an die Teams weitergeben.
-3. Jede Ortsgruppe meldet sich auf **einem** Handy mit Teamname + Team-Passwort an.
-   Schiris melden sich genauso an, der Admin macht sie unter „Teams & Schiris“ zum Schiri.
-4. Admin wählt den Start-Mister-X und drückt **„Spiel starten“**.
-5. Nach Spielende wird das Spiel archiviert (Auswertung, Route von Mister X, Chat) und ist unter
-   **„Vergangene Spiele“** nachschaubar. Ein neues Spiel kann direkt gestartet werden.
-6. **„Neue Runde vorbereiten“** meldet alle Teams und Schiris ab und löscht das Team-Passwort.
-   Danach ein neues Team-Passwort festlegen. Admin und vergangene Spiele bleiben.
-
-**Admin-Extras:** Durchsage an alle (bleibt 3 Min oben stehen, mit Ton), „Mister X sofort melden“,
-Warnung bei Teams ohne Standort seit 3 Min, **„Großbild öffnen“** für Laptop/Beamer (Karte + Teams + Chat).
-Handys piepen und vibrieren bei Meldungen, Übergaben, Durchsagen und Admin-Nachrichten
-(Ton erst nach dem ersten Antippen der Seite – Browser-Vorgabe; „🔔 Ton testen“ unten).
-
-In Firebase muss unter Authentication → Anmeldemethode **„Anonym“** und **„E-Mail-Adresse/Passwort“** aktiviert sein.
-
-## Testen
+**Am eigenen PC:**
 
 ```sh
-npx firebase-tools emulators:start --only auth,database --project mr-x-ooe   # Terminal 1
-python3 -m http.server 8080                                                 # Terminal 2
-node test/e2e.js                                                            # Terminal 3 (braucht playwright)
+npm ci
+npm run dev
 ```
 
-Im Browser: `http://localhost:8080/?emu` verwendet den Emulator statt der echten Datenbank.
+Dann im Browser `http://localhost:5173/#/prototyp` öffnen. Mit dem Handy im selben WLAN geht die Adresse, die
+`npm run dev` unter „Network“ anzeigt.
+
+**Online zum Weitergeben (Firebase-Vorschau, ändert die Live-Version nicht):**
+
+```sh
+npm ci
+npm run build
+npx firebase-tools login
+npx firebase-tools hosting:channel:deploy prototyp --expires 30d
+```
+
+Der letzte Befehl zeigt eine Adresse wie `https://mr-x-ooe--prototyp-xxxx.web.app` – die ist 30 Tage gültig.
+Am Ende `#/prototyp` anhängen.
+
+> ⚠️ **Von diesem Branch nie `firebase deploy` ausführen** – das würde die laufende alte App ersetzen.
+> Bis zur Abnahme nur `hosting:channel:deploy` verwenden.
+
+Im Prototyp öffnet der lila Griff am linken Bildschirmrand ein Menü mit allen Zuständen eines Screens
+(z. B. „Durchsage“, „Offline“) und der Darstellung (Hell, Dunkel, Sonne).
+Die Komponenten-Bibliothek liegt unter `#/komponenten`.
+
+## Entwickeln
+
+```sh
+npm run lint     # ESLint + Prettier
+npm run check    # TypeScript (strict) + Svelte
+npm test         # Unit-Tests (Vitest)
+npm run build    # App bauen (app/dist)
+```
+
+Screenshots aller Screens (dunkel/hell/Sonne) neu erzeugen: `npm run build`, dann in `app/`
+`npx vite preview --port 4173` starten und im Hauptordner `npm run screenshots` ausführen.
+GitHub Actions führt Lint, Typecheck, Tests und Build bei jedem Push aus.

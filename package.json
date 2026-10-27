@@ -1,0 +1,34 @@
+{
+  "name": "mister-x",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "app"
+  ],
+  "scripts": {
+    "dev": "npm -w app run dev",
+    "build": "npm -w app run build",
+    "preview": "npm -w app run preview",
+    "test": "vitest run",
+    "check": "tsc -p shared && npm -w app run check",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "screenshots": "node tests/screenshots.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.0.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-svelte": "^4.1.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
