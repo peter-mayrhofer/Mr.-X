@@ -26,6 +26,8 @@ export function fieldOverlays(
   locked: string[],
   preview: string[] = [],
 ): Pick<Overlays, "mask" | "boundary" | "cuts" | "preview"> {
+  // noch kein Spielfeld gezeichnet (Zonen-Editor) → nichts abdunkeln
+  if (field.base.length < 4) return { mask: EMPTY, boundary: EMPTY, cuts: EMPTY, preview: EMPTY };
   const allowed = allowedArea(field, locked);
   return {
     mask: fc([

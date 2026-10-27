@@ -66,7 +66,8 @@ export class GameData {
       );
     const subs: Unsubscribe[] = [
       on<Config>(`${p}/config`, (v) => (this.config = v)),
-      on<Field>(`${p}/field`, (v) => (this.field = v)),
+      // RTDB speichert keine leeren Listen → leeres Spielfeld kommt ohne base/cuts an
+      on<Field>(`${p}/field`, (v) => (this.field = v && { ...v, base: v.base ?? [], cuts: v.cuts ?? {} })),
       on<GameState>(`${p}/state`, (v) => (this.state = v)),
       on<Record<string, Team>>(`${p}/teams`, (v) => (this.teams = v ?? {})),
       on<Record<string, Report>>(`${p}/reports`, (v) => (this.reports = list(v))),

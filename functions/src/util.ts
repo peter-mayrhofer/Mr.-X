@@ -21,6 +21,7 @@ const CODE: Record<ApiReason, FunctionsErrorCode> = {
   wrongPhase: "failed-precondition",
   conflict: "aborted",
   tooLate: "deadline-exceeded",
+  archived: "failed-precondition",
 };
 
 /** Ablehnung mit Grund; die App zeigt den passenden Text aus texte.ts */

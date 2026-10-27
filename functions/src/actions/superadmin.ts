@@ -1,9 +1,18 @@
 // Super-Admin (Organisator): Freischaltung per Google-Login + Freigabeliste, Spiele anlegen (Abschnitt 5, E-05).
 import { getAuth } from "firebase-admin/auth";
 import type { CallableRequest } from "firebase-functions/v2/https";
-import { DEFAULT_CONFIG, LIMITS, LINZ_INNENSTADT, type ApiResults, type Field, type GameInfo } from "@mrx/shared";
+import {
+  DEFAULT_CONFIG,
+  LIMITS,
+  LINZ_INNENSTADT,
+  type ApiResults,
+  type Field,
+  type GameInfo,
+  type GameState,
+  type Member,
+} from "@mrx/shared";
 import { SUPER_ADMINS } from "../env.ts";
-import { audit, db, fail, gameId, isSuperAdmin, str, uidOf } from "../util.ts";
+import { audit, db, fail, gameId, isSuperAdmin, str, uidOf, val } from "../util.ts";
 import { hashSecret, newToken } from "../secrets.ts";
 
 /** Custom Claim `superAdmin` setzen bzw. entfernen – nur für bestätigte E-Mails auf der Freigabeliste */
@@ -48,4 +57,41 @@ export async function createGame(req: CallableRequest<Record<string, unknown>>):
     });
   await audit(g, { uid, name: String(req.auth?.token.email ?? "Super-Admin"), role: "superadmin" }, "Spiel angelegt", name);
   return { gameId: g };
+}
+
+const running = async (g: string) => {
+  const p = (await val<GameState>(`games/${g}/state`))?.phase;
+  return p === "laeuft" || p === "pause";
+};
+
+/** Archivieren (Abschnitt 5): Spiel bleibt lesbar (Archiv, Auswertung), aber niemand kann mehr beitreten */
+export async function archiveGame(req: CallableRequest<Record<string, unknown>>): Promise<ApiResults["archiveGame"]> {
+  const uid = uidOf(req);
+  if (!isSuperAdmin(req)) fail("forbidden");
+  const g = gameId(req.data.gameId);
+  if (!(await val(`gameIndex/${g}`))) fail("notFound", "Spiel nicht gefunden");
+  if (await running(g)) fail("wrongPhase", "Zuerst das Spiel beenden");
+  const on = req.data.archived !== false;
+  await db()
+    .ref()
+    .update({ [`gameIndex/${g}/archived`]: on || null, [`games/${g}/info/archived`]: on || null });
+  await audit(
+    g,
+    { uid, name: String(req.auth?.token.email ?? "Super-Admin"), role: "superadmin" },
+    on ? "Spiel archiviert" : "Spiel reaktiviert",
+  );
+  return {};
+}
+
+/** Endgültig löschen – mit allen Daten inkl. Archiv. Geräte im Spiel bekommen den Hinweis „entfernt“. */
+export async function deleteGame(req: CallableRequest<Record<string, unknown>>): Promise<ApiResults["deleteGame"]> {
+  if (!isSuperAdmin(req)) fail("forbidden");
+  const g = gameId(req.data.gameId);
+  if (!(await val(`gameIndex/${g}`))) fail("notFound", "Spiel nicht gefunden");
+  if (await running(g)) fail("wrongPhase", "Zuerst das Spiel beenden");
+  const members = (await val<Record<string, Member>>(`games/${g}/members`)) ?? {};
+  const upd: Record<string, unknown> = { [`games/${g}`]: null, [`secrets/${g}`]: null, [`gameIndex/${g}`]: null, [`running/${g}`]: null };
+  for (const uid of Object.keys(members)) upd[`userGames/${uid}`] = { removedFrom: g };
+  await db().ref().update(upd);
+  return {};
 }

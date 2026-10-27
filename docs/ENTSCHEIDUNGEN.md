@@ -191,3 +191,16 @@ Nach dem Spielende sendet die App nichts mehr. Ton, Vibration und Szenen gibt es
 App – wer neu lädt, bekommt keine alten Übergaben noch einmal vorgespielt. Der Ungelesen-Zähler zählt Nachrichten und
 Durchsagen, keine System-Meldungen (die zeigt die Karte).
 **Warum:** Akku schonen (Abschnitt 9.1), aber der Standort bleibt für Meldungen und Umkreis immer „frisch“ (2 Min).
+
+### E-28 Spielfeld nur vor dem Start ändern, Prüfung an beiden Enden
+**Entscheidung:** Der Zonen-Editor speichert über `api: setField`. Das geht nur vor dem Start oder nach dem Ende; im
+laufenden Spiel ist der Editor schreibgeschützt (Bereiche sperren geht weiter unter „Steuerung“). Editor und Server
+prüfen mit derselben Funktion (`shared/feld.ts`): mindestens 3 Punkte, keine Selbstüberschneidung, jeder Sperrbereich
+schneidet das Spielfeld (≥ 1000 m²). Der Server prüft zusätzlich Form, Größe (≤ 2000 Punkte, ≤ 12 Bereiche) und Farben.
+**Warum:** Ein Spielfeld, das sich mitten im Spiel verschiebt, würde Warnungen und Sperren für alle verändern.
+
+### E-29 Archivieren und Löschen
+**Entscheidung:** „Archivieren“ (nur Organisator, nicht im laufenden Spiel) lässt alle Daten lesbar, sperrt aber jeden
+neuen Beitritt („Dieses Spiel ist archiviert“); es lässt sich reaktivieren. „Löschen“ entfernt das Spiel samt Archiv,
+Passwörtern und Index endgültig; angemeldete Geräte bekommen den freundlichen Hinweis „entfernt“. Der Organisator kann
+jedes Spiel ohne Admin-Passwort als Spielleitung öffnen.

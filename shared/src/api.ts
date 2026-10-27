@@ -1,5 +1,5 @@
 // Vertrag zwischen App und Spiel-Server (Function `api`). Eine Quelle für beide Seiten.
-import type { Config, Role } from "./types.ts";
+import type { Config, Field, Role } from "./types.ts";
 
 export type JoinRole = Role;
 export type SecretKind = "teamPw" | "schiriCode" | "adminPw";
@@ -30,7 +30,11 @@ export type ApiRequest =
   | { action: "resetRound"; gameId: string }
   | { action: "removeMember"; gameId: string; uid: string }
   | { action: "removeTeam"; gameId: string; teamId: string }
-  | { action: "renameTeam"; gameId: string; teamId: string; name: string };
+  | { action: "renameTeam"; gameId: string; teamId: string; name: string }
+  // Spielfeld und Spiele verwalten (Meilenstein 7)
+  | { action: "setField"; gameId: string; field: Field }
+  | { action: "archiveGame"; gameId: string; archived: boolean }
+  | { action: "deleteGame"; gameId: string };
 
 export type JoinResult = { status: "joined"; role: Role; teamId?: string } | { status: "teamExists"; teamName: string };
 
@@ -59,6 +63,9 @@ export interface ApiResults {
   removeMember: Record<string, never>;
   removeTeam: Record<string, never>;
   renameTeam: Record<string, never>;
+  setField: Record<string, never>;
+  archiveGame: Record<string, never>;
+  deleteGame: Record<string, never>;
 }
 
 /** Gründe für Ablehnungen – die App übersetzt sie in Texte (texte.ts) */
@@ -77,7 +84,9 @@ export type ApiReason =
   /** jemand anderer war schneller (z. B. zwei Schiris übergeben gleichzeitig) */
   | "conflict"
   /** Rückgängig nur kurz nach der Übergabe */
-  | "tooLate";
+  | "tooLate"
+  /** Spiel ist archiviert – kein Beitritt mehr */
+  | "archived";
 
 export interface Member {
   role: Role;
@@ -92,4 +101,5 @@ export interface GameInfo {
   phase: "vorbereitung" | "laeuft" | "pause" | "beendet";
   createdAt: number;
   spectators: boolean;
+  archived?: boolean;
 }

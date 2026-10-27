@@ -5,30 +5,33 @@
 -->
 <script lang="ts">
   import type { Map as MLMap, MapMouseEvent, MapTouchEvent } from "maplibre-gl";
-  import { CircleCheck, Download, Eye, EyeOff, Plus, Trash, Undo2, Upload } from "@lucide/svelte";
-  import { areaM2, cutInField, selfIntersection, type Field, type LngLat, type Polygon } from "@mrx/shared";
+  import { CircleCheck, Download, Eye, EyeOff, LayoutTemplate, Plus, Save, Trash, Undo2, Upload } from "@lucide/svelte";
+  import { fieldProblems, LINZ_INNENSTADT, type Field, type LngLat, type Polygon } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import Button from "../../ui/Button.svelte";
   import Banner from "../../ui/Banner.svelte";
   import Stepper from "../../ui/Stepper.svelte";
   import TextField from "../../ui/TextField.svelte";
   import IconButton from "../../ui/IconButton.svelte";
-  import Pill from "../../ui/Pill.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { T } from "../../texte.ts";
-  import * as M from "../../proto/mock.svelte.ts";
 
-  let { variant = "" }: { variant?: string } = $props();
-
-  function startField(v: string): Field {
-    const f = structuredClone($state.snapshot(M.field)) as Field;
-    // Fehlerzustand vorführen: zwei Eckpunkte vertauscht → Linie kreuzt sich
-    if (v === "fehler") [f.base[40], f.base[60]] = [f.base[60]!, f.base[40]!];
-    return f;
+  interface Props {
+    /** Spielfeld beim Öffnen (Änderungen von anderen Geräten werden nicht hineingemischt) */
+    initial: Field;
+    /** im laufenden Spiel nur ansehen */
+    readonly?: boolean;
+    onsave: (f: Field) => Promise<void>;
   }
-  // Prototyp-Screens werden pro Route neu erzeugt → Startwert aus der Variante ist gewollt
+  let { initial, readonly = false, onsave }: Props = $props();
+
   // svelte-ignore state_referenced_locally
-  let field = $state<Field>(startField(variant));
+  let field = $state<Field>({ ...($state.snapshot(initial) as Field), cuts: { ...$state.snapshot(initial.cuts ?? {}) } });
+  // Stand beim Öffnen = gespeichert (Vergleich für „ungespeicherte Änderungen“)
+  // svelte-ignore state_referenced_locally
+  let saved = $state(JSON.stringify(field));
+  let saving = $state(false);
+  const dirty = $derived(JSON.stringify(field) !== saved);
   let sel = $state<string>("base");
   let vtx = $state<number | null>(null);
   let preview = $state<string[]>([]);
@@ -46,7 +49,9 @@
   const edit = $derived<GeoJSON.FeatureCollection>({
     type: "FeatureCollection",
     features: [
-      { type: "Feature", properties: { color }, geometry: { type: "LineString", coordinates: [...pts, pts[0]!] } },
+      ...(pts.length
+        ? [{ type: "Feature", properties: { color }, geometry: { type: "LineString", coordinates: [...pts, pts[0]!] } } as GeoJSON.Feature]
+        : []),
       ...pts.map((p, i): GeoJSON.Feature => ({
         type: "Feature",
         properties: { kind: "mid", i, color },
@@ -64,16 +69,54 @@
     return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   }
 
-  // Validierung
-  const problems = $derived.by(() => {
-    const out: string[] = [];
-    if (selfIntersection(field.base)) out.push(`${T.zonen.spielfeld}: ${T.zonen.fehlerKreuz}`);
-    for (const [id, c] of Object.entries(field.cuts)) {
-      if (selfIntersection(c.poly)) out.push(`${c.short}: ${T.zonen.fehlerKreuz}`);
-      else if (areaM2(cutInField(field, id)) < 1000) out.push(`${c.short}: ${T.zonen.fehlerAussen}`);
+  // Validierung – dieselbe Prüfung macht der Server beim Speichern
+  const TEXT = { leer: T.zonen.fehlerLeer, kreuz: T.zonen.fehlerKreuz, aussen: T.zonen.fehlerAussen };
+  const problems = $derived(
+    fieldProblems(field).map((p) => `${p.id === "base" ? T.zonen.spielfeld : (field.cuts[p.id]?.short ?? p.id)}: ${TEXT[p.kind]}`),
+  );
+
+  /** Quadrat um die Kartenmitte als Startform */
+  function square(map: MLMap | undefined, d: number): Polygon {
+    const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
+    return [
+      [c.lng - d, c.lat - d],
+      [c.lng + d, c.lat - d],
+      [c.lng + d, c.lat + d],
+      [c.lng - d, c.lat + d],
+      [c.lng - d, c.lat - d],
+    ];
+  }
+  function newBase() {
+    snapshot();
+    field.base = square(mapRef, 0.006);
+    sel = "base";
+  }
+  function removeCut() {
+    if (sel === "base") return;
+    snapshot();
+    delete field.cuts[sel];
+    preview = preview.filter((x) => x !== sel);
+    sel = "base";
+  }
+  function loadTemplate() {
+    snapshot();
+    field = structuredClone(LINZ_INNENSTADT);
+    sel = "base";
+    toast(T.zonen.vorlageGeladen, "ok");
+  }
+  async function save() {
+    saving = true;
+    try {
+      const snap = $state.snapshot(field) as Field;
+      await onsave(snap);
+      saved = JSON.stringify(snap);
+      toast(T.zonen.gespeichert, "ok");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : T.apiFehler.network, "warn");
+    } finally {
+      saving = false;
     }
-    return out;
-  });
+  }
 
   function setPts(next: LngLat[]) {
     const ring = [...next, next[0]!];
@@ -96,22 +139,16 @@
   }
 
   function addCut(map: MLMap | undefined) {
-    const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
-    const d = 0.0015;
     snapshot();
-    const id = `bereich-${Object.keys(field.cuts).length + 1}`;
+    let n = Object.keys(field.cuts).length + 1;
+    while (field.cuts[`bereich-${n}`]) n++;
+    const id = `bereich-${n}`;
     field.cuts[id] = {
       name: T.zonen.neuerBereich,
       short: T.zonen.neuerBereich,
       color: "#e84393",
-      order: Object.keys(field.cuts).length + 1,
-      poly: [
-        [c.lng - d, c.lat - d],
-        [c.lng + d, c.lat - d],
-        [c.lng + d, c.lat + d],
-        [c.lng - d, c.lat + d],
-        [c.lng - d, c.lat - d],
-      ],
+      order: Math.min(20, Object.keys(field.cuts).length + 1),
+      poly: square(map, 0.0015),
     };
     sel = id;
   }
@@ -168,9 +205,9 @@
           }),
       );
       sel = "base";
-      toast("GeoJSON importiert", "ok");
+      toast(T.zonen.importiert, "ok");
     } catch {
-      toast("Datei ist kein gültiges GeoJSON mit Polygonen", "warn");
+      toast(T.zonen.importFehler, "warn");
     }
   }
 
@@ -180,6 +217,7 @@
     mapRef = map;
     let drag: number | null = null;
     const down = (e: MapMouseEvent | MapTouchEvent) => {
+      if (readonly) return;
       const f = map.queryRenderedFeatures(e.point, { layers: ["edit-vertex", "edit-mid"] })[0];
       if (!f) return;
       e.preventDefault();
@@ -228,16 +266,27 @@
       padding={{ top: 40, bottom: 40, left: 40, right: 40 }}
       label={T.zonen.titel}
     />
-    <div class="tools" role="toolbar" aria-label="Werkzeuge">
-      <IconButton icon={Undo2} label={T.allgemein.zurueck} onclick={undo} />
-      <IconButton icon={Trash} label={T.zonen.punktWeg} disabled={vtx === null} onclick={removeVertex} />
-    </div>
-    <p class="tip">Punkt ziehen = verschieben · kleinen Punkt ziehen = {T.zonen.punktHinzu}</p>
+    {#if !readonly}
+      <div class="tools" role="toolbar" aria-label={T.zonen.werkzeuge}>
+        <IconButton icon={Undo2} label={T.allgemein.zurueck} onclick={undo} />
+        <IconButton icon={Trash} label={T.zonen.punktWeg} disabled={vtx === null} onclick={removeVertex} />
+      </div>
+      <p class="tip">{T.zonen.tipp}</p>
+    {/if}
   </div>
 
   <aside class="panel">
     <h2>{T.zonen.titel}</h2>
-    <Pill tone="info">{T.zonen.vorlage}</Pill>
+    {#if readonly}<Banner tone="info">{T.zonen.nurAnsehen}</Banner>{/if}
+    <TextField label={T.zonen.feldName} bind:value={field.name} disabled={readonly} />
+    {#if !field.base.length}
+      <Banner tone="info">{T.zonen.nochKeinFeld}</Banner>
+      <div class="row">
+        <Button size="m" icon={Plus} disabled={readonly} onclick={newBase}>{T.zonen.feldAnlegen}</Button>
+        <Button variant="secondary" size="m" icon={LayoutTemplate} disabled={readonly} onclick={loadTemplate}>{T.zonen.vorlageLaden}</Button
+        >
+      </div>
+    {/if}
 
     {#if problems.length}
       <Banner tone="danger" title="Bitte prüfen">
@@ -271,23 +320,28 @@
         </li>
       {/each}
     </ul>
-    <Button variant="secondary" size="m" icon={Plus} onclick={() => addCut(mapRef)}>{T.zonen.neuerBereich}</Button>
+    {#if !readonly}
+      <Button variant="secondary" size="m" icon={Plus} disabled={!field.base.length} onclick={() => addCut(mapRef)}
+        >{T.zonen.neuerBereich}</Button
+      >
+    {/if}
 
     {#if cut}
       <div class="props">
-        <TextField label="Name" bind:value={cut.name} />
-        <TextField label="Kurzname (Karte, Meldungen)" bind:value={cut.short} />
+        <TextField label={T.zonen.name} bind:value={cut.name} disabled={readonly} />
+        <TextField label={T.zonen.kurzname} bind:value={cut.short} disabled={readonly} />
         <div class="row">
-          <label class="color">Farbe <input type="color" bind:value={cut.color} /></label>
-          <Stepper label={T.zonen.reihenfolge} bind:value={cut.order} unit="" min={1} max={9} />
+          <label class="color">{T.zonen.farbe} <input type="color" bind:value={cut.color} disabled={readonly} /></label>
+          {#if !readonly}<Stepper label={T.zonen.reihenfolge} bind:value={cut.order} unit="" min={1} max={20} />{/if}
         </div>
+        {#if !readonly}<Button variant="danger" size="m" icon={Trash} onclick={removeCut}>{T.zonen.bereichLoeschen}</Button>{/if}
       </div>
     {/if}
 
-    <Stepper label={T.zonen.toleranz} bind:value={field.toleranceM} unit="m" min={0} max={50} step={5} />
+    {#if !readonly}<Stepper label={T.zonen.toleranz} bind:value={field.toleranceM} unit="m" min={0} max={50} step={5} />{/if}
 
     <div class="row">
-      <Button variant="secondary" size="m" icon={Upload} onclick={() => file.click()}>{T.zonen.importieren}</Button>
+      {#if !readonly}<Button variant="secondary" size="m" icon={Upload} onclick={() => file.click()}>{T.zonen.importieren}</Button>{/if}
       <Button variant="secondary" size="m" icon={Download} onclick={exportGeo}>{T.zonen.exportieren}</Button>
       <input
         bind:this={file}
@@ -297,9 +351,14 @@
         onchange={(e) => importGeo(e.currentTarget.files?.[0])}
       />
     </div>
-    <Button block disabled={problems.length > 0} onclick={() => toast(T.allgemein.prototyp(T.allgemein.speichern))}
-      >{T.allgemein.speichern}</Button
-    >
+    {#if !readonly}
+      {#if field.base.length}
+        <Button variant="ghost" size="m" icon={LayoutTemplate} onclick={loadTemplate}>{T.zonen.vorlageLaden}</Button>
+      {/if}
+      <Button block icon={Save} loading={saving} disabled={problems.length > 0 || !dirty || saving} onclick={save}
+        >{dirty ? T.allgemein.speichern : T.zonen.allesGespeichert}</Button
+      >
+    {/if}
   </aside>
 </div>
 

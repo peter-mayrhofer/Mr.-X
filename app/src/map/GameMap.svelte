@@ -65,8 +65,15 @@
     edit,
   });
 
+  /** Linzer Innenstadt, solange es noch kein Spielfeld gibt */
+  const LINZ: [[number, number], [number, number]] = [
+    [14.27, 48.295],
+    [14.305, 48.312],
+  ];
+  const box = () => (field.base.length >= 4 ? bounds(field.base) : LINZ);
+
   export function fitField(animate = true) {
-    map?.fitBounds(bounds(field.base), { padding, animate, duration: 600 });
+    map?.fitBounds(box(), { padding, animate, duration: 600 });
   }
 
   export function flyTo(p: Point, zoom = 16.5) {
@@ -87,7 +94,7 @@
       const m = new ml.Map({
         container: el,
         style: mapStyle(theme.active, overlays),
-        bounds: bounds(field.base),
+        bounds: box(),
         fitBoundsOptions: { padding },
         interactive,
         attributionControl: { compact: true },

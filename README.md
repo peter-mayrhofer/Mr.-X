@@ -16,7 +16,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 4 – Spiel-Kern | Start (gewählt/ausgelost), Meldungen mit Standort-Fallback, Übergabe/Strafübergabe/Rückgängig, Wartezeiten im Umkreis, Verkleinerung, Pause, Zufallsende/Notstopp, Auswertung + Archiv, Neue Runde – alles am Server | fertig |
 | 5 – Team & Mister X | Onboarding mit Standort-Freigabe, Warteraum mit Checks, Karte mit Spur und Countdown, Wartezeit, Übergabe-Szenen, Durchsagen, Verkleinerung, Spielfeld-Warnung, Chat, Regeln, Auswertung; eigener Standort wird adaptiv gesendet | fertig |
 | 6 – Schiri & Spielleitung | Schiri: Karte aller Teams, nächste Jäger, Übergabe nach Nähe mit Wartezeit-Vorschau, Rückgängig, „Ich begleite Mister X“. Spielleitung: Live-Übersicht mit Warnungen, Start (wählen/auslosen), Pause, Notstopp, Regeln live, Verkleinerung, Sofort-Meldung, Durchsage, Teams & Zugänge, Postfach, Protokoll | fertig |
-| 7–13 | Zonen-Editor, Push, Android-App, Großbild, Archiv, Tracker … | in Arbeit |
+| 7 – Spielfeld & Spiele | Zonen-Editor (Punkte ziehen/einfügen/löschen, Sperrbereiche mit Name, Farbe, Reihenfolge, Toleranz, Vorschau, Prüfung, GeoJSON-Import/-Export, Linz-Vorlage), Speichern mit Prüfung am Server; Organisator: Spiele öffnen ohne Passwort, archivieren, reaktivieren, löschen | fertig |
+| 8–13 | Push, Android-App, Großbild, Archiv & Replay, Tracker, Härtung, Abnahme | in Arbeit |
 
 ## Ordner
 

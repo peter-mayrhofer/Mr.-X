@@ -1,7 +1,7 @@
 // Zugang zu einem Spiel: Beitritt mit Passwort/Code, Abmelden, Passwörter festlegen, Großbild-Link.
 import type { CallableRequest } from "firebase-functions/v2/https";
 import { LIMITS, sameName, teamColor, teamShort, type ApiResults, type Member, type Role, type SecretKind, type Team } from "@mrx/shared";
-import { audit, db, fail, gameId, requireRole, str, uidOf } from "../util.ts";
+import { audit, db, fail, gameId, isSuperAdmin, requireRole, str, uidOf } from "../util.ts";
 import { hashKey, hashSecret, newToken, sameToken, verifySecret } from "../secrets.ts";
 
 const WINDOW_MS = 10 * 60_000;
@@ -50,6 +50,7 @@ export async function join(req: CallableRequest<Record<string, unknown>>): Promi
     db().ref(`games/${g}/config/spectators`).get(),
   ]);
   if (!infoSnap.exists()) fail("notFound", "Spiel nicht gefunden");
+  if ((infoSnap.val() as { archived?: boolean }).archived) fail("archived", "Spiel ist archiviert");
   const sec = (secSnap.val() ?? {}) as Partial<Record<SecretKind | "screenKey", string>>;
 
   const keys = [`u_${uid}`, `ip_${hashKey(req.rawRequest?.ip ?? "?")}`];
@@ -61,7 +62,8 @@ export async function join(req: CallableRequest<Record<string, unknown>>): Promi
     if (!sec.teamPw) fail("noTeamPassword", "Noch kein Team-Passwort festgelegt");
     ok = await verifySecret(secret, sec.teamPw);
   } else if (role === "schiri") ok = await verifySecret(secret, sec.schiriCode);
-  else if (role === "admin") ok = await verifySecret(secret, sec.adminPw);
+  // der Organisator öffnet jedes Spiel ohne Admin-Passwort (Abschnitt 5)
+  else if (role === "admin") ok = isSuperAdmin(req) || (await verifySecret(secret, sec.adminPw));
   else if (role === "screen") ok = sameToken(secret, sec.screenKey);
   else if (cfgSnap.val() === false) fail("noSpectators", "Zuschauer sind in diesem Spiel nicht vorgesehen");
   if (!ok) {

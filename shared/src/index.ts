@@ -5,5 +5,6 @@ export * from "./teams.ts";
 export * from "./defaults.ts";
 export * from "./api.ts";
 export * from "./spiel.ts";
+export * from "./feld.ts";
 export { M as MELDUNG, uhr } from "./meldungen.ts";
 export { LINZ_INNENSTADT } from "./vorlagen/linz.ts";

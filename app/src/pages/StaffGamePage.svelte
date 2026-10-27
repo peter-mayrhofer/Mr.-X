@@ -13,6 +13,7 @@
   import AdminControl from "../screens/admin/AdminControl.svelte";
   import AdminTeams from "../screens/admin/AdminTeams.svelte";
   import AdminLog from "../screens/admin/AdminLog.svelte";
+  import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
   import { GameData, pokeWhenDue, sendMessage } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps } from "../lib/gps.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
@@ -102,7 +103,7 @@
     phase === "beendet" && game.state?.run ? `games/${g}/archive/${game.state.run}` : null,
   );
 
-  const SECTIONS: Section[] = ["live", "steuerung", "teams", "chat", "protokoll"];
+  const SECTIONS: Section[] = ["live", "steuerung", "teams", "zonen", "chat", "protokoll"];
   const asked = $derived(query(router.path).get("b") as Section | null);
   const section = $derived<Section>(asked && SECTIONS.includes(asked) ? asked : phase === "vorbereitung" ? "steuerung" : "live");
   const link = (id: Section) => (SECTIONS.includes(id) ? `/spiel?b=${id}` : null);
@@ -149,6 +150,14 @@
       <AdminControl {view} api={call} onstarted={() => go("/spiel?b=live")} onstopped={() => go("/spiel?b=live")} />
     {:else if section === "teams"}
       <AdminTeams {view} api={call} joinUrl="{base}#/s/{g}" screenUrl={(k) => `${base}#/g/${g}?k=${k}`} />
+    {:else if section === "zonen"}
+      <ZoneEditor
+        initial={view.field}
+        readonly={phase === "laeuft" || phase === "pause"}
+        onsave={async (field) => {
+          await call({ action: "setField", gameId: g, field });
+        }}
+      />
     {:else if section === "chat"}
       <AdminChat {view} {seen} onthread={(t) => (seen[t] = clock.now)} onsend={send} />
     {:else}

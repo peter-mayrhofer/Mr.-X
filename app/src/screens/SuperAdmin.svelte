@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-  import { Archive, ArrowRight, KeyRound, Link, LogIn, Plus, Trash } from "@lucide/svelte";
+  import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, Plus, Trash } from "@lucide/svelte";
   import { GAME_ID, LIMITS, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
@@ -34,11 +34,13 @@
     onadminpw: (id: string, pw: string) => Promise<void>;
     inviteUrl: (id: string) => string;
     onarchive?: (id: string) => void;
+    onunarchive?: (id: string) => void;
     ondelete?: (id: string) => void;
     onback: () => void;
   }
 
-  let { email, allowed, games, onlogin, oncreate, onopen, onadminpw, inviteUrl, onarchive, ondelete, onback }: Props = $props();
+  let { email, allowed, games, onlogin, oncreate, onopen, onadminpw, inviteUrl, onarchive, onunarchive, ondelete, onback }: Props =
+    $props();
 
   let creating = $state(false);
   let name = $state("");
@@ -145,6 +147,12 @@
               <Button size="m" variant="secondary" icon={Link} onclick={() => copy(inviteUrl(g.id))}>{T.superadmin.einladung}</Button>
               {#if onarchive && g.phase !== "archiviert"}<Button size="m" variant="secondary" icon={Archive} onclick={() => onarchive(g.id)}
                   >{T.superadmin.archivieren}</Button
+                >{/if}
+              {#if onunarchive && g.phase === "archiviert"}<Button
+                  size="m"
+                  variant="secondary"
+                  icon={ArchiveRestore}
+                  onclick={() => onunarchive(g.id)}>{T.superadmin.reaktivieren}</Button
                 >{/if}
               {#if ondelete}<Button size="m" variant="danger" icon={Trash} onclick={() => (del = g)}>{T.allgemein.loeschen}</Button>{/if}
             </div>

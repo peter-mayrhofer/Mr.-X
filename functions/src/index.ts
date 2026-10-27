@@ -6,7 +6,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import type { ApiRequest } from "@mrx/shared";
 import { fail, val } from "./util.ts";
 import { advance, nextDue } from "./ablauf.ts";
-import { claimSuperAdmin, createGame } from "./actions/superadmin.ts";
+import { archiveGame, claimSuperAdmin, createGame, deleteGame } from "./actions/superadmin.ts";
+import { setField } from "./actions/feld.ts";
 import { join, leave, screenLink, setSecret } from "./actions/access.ts";
 import * as spiel from "./actions/spiel.ts";
 import { handover, undo } from "./actions/uebergabe.ts";
@@ -29,6 +30,9 @@ const ACTIONS: Record<ApiRequest["action"], (req: Req) => Promise<unknown>> = {
   removeMember,
   removeTeam,
   renameTeam,
+  setField,
+  archiveGame,
+  deleteGame,
 };
 
 export const api = onCall<Record<string, unknown>>({ concurrency: 80 }, (req) => {

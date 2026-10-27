@@ -7,7 +7,10 @@
   import AdminTeams from "../screens/admin/AdminTeams.svelte";
   import AdminLog from "../screens/admin/AdminLog.svelte";
   import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
+  import type { Field } from "@mrx/shared";
   import { go } from "../lib/router.svelte.ts";
+  import { toast } from "../ui/toast.svelte.ts";
+  import { T } from "../texte.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import * as M from "./mock.svelte.ts";
   import { fakeApi, staffView } from "./staffMock.svelte.ts";
@@ -25,6 +28,12 @@
     archiv: "/prototyp/20?v=liste",
   };
   let seen = $state<Record<string, number>>({});
+  // Fehlerzustand vorführen: zwei Eckpunkte vertauscht → Linie kreuzt sich
+  function broken(): Field {
+    const f = structuredClone($state.snapshot(M.field)) as Field;
+    [f.base[40], f.base[60]] = [f.base[60]!, f.base[40]!];
+    return f;
+  }
 </script>
 
 <AdminShell {section} gameName={view.gameName} phase={view.state.phase} link={(id) => LINKS[id]} unread={3}>
@@ -47,7 +56,10 @@
       joinUrl="https://mr-x-ooe-neu.web.app/#/s/linz-2027"
       screenUrl={(k) => `https://mr-x-ooe-neu.web.app/#/g/linz-2027?k=${k}`}
     />
-  {:else if section === "zonen"}<ZoneEditor {variant} />
+  {:else if section === "zonen"}<ZoneEditor
+      initial={variant === "fehler" ? broken() : M.field}
+      onsave={async () => toast(T.allgemein.prototyp(T.allgemein.speichern))}
+    />
   {:else}<AdminLog audit={M.audit} />
   {/if}
 </AdminShell>
