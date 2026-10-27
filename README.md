@@ -10,7 +10,9 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 
 | Für wen | Dokument |
 |---|---|
-| Spielleitung: Spiel vorbereiten, durchführen, nachbereiten | [`docs/ADMIN-HANDBUCH.md`](docs/ADMIN-HANDBUCH.md) |
+| **Abnahme: was fertig ist, wie getestet, bekannte Grenzen** | [`docs/ABNAHME.md`](docs/ABNAHME.md) |
+| Spielleitung: Spiel vorbereiten, durchführen, nachbereiten | [`docs/ADMIN-HANDBUCH.md`](docs/ADMIN-HANDBUCH.md), [`docs/SPIELTAG-CHECKLISTE.md`](docs/SPIELTAG-CHECKLISTE.md) |
+| Feldtest mit 3–5 Handys in der Innenstadt | [`docs/FELDTEST.md`](docs/FELDTEST.md) |
 | Teams: App holen, beitreten, spielen | [`docs/TEAM-ANLEITUNG.md`](docs/TEAM-ANLEITUNG.md), Flyer: [`docs/flyer-beispiel.pdf`](docs/flyer-beispiel.pdf) (in der App: Teams & Zugänge → Drucken) |
 | Organisator: Server einrichten und veröffentlichen (Windows, ohne Programmierkenntnisse) | [`docs/BETRIEB.md`](docs/BETRIEB.md) |
 | Android-App bauen, signieren, verteilen | [`docs/ANDROID-APK.md`](docs/ANDROID-APK.md) |
@@ -34,7 +36,7 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 10 – Großbild & Archiv | Großbild für Laptop/Beamer (Karte mit allen Teams, Mister X + Spur, Countdown, Spielzeit, Rangliste, Ereignis-Ticker, große Durchsagen), Zuschauer-Ansicht fürs Handy ohne Live-Positionen, Auswertung mit Feier, Archiv mit Wiederholung (Zeitschieberegler), Sichern als Datei, Drucken | fertig |
 | 11 – Tracker | Endpunkt `/tracker` im OsmAnd-/Traccar-Format (auch JSON des neuen Traccar Client), Geräte-Kennung mit Schlüssel, Zuordnung „Gerät → Team / Fahne“ in der Spielleitung mit Einrichtungs-Anleitung, Tracker der Fahne als erste Standortquelle, Team-Tracker vor Handy | fertig |
 | 12 – Härtung | Gesamtspiel-Test über die echte App (alle Rollen, Start bis Neue Runde), Lasttest mit 30 Teams/49 Geräten mit gemessenem Verbrauch ([`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) §5), Barrierefreiheit aller Screens automatisch geprüft (WCAG 2.1 AA), Performance (Lighthouse mobil 96/100/100), Löschfristen nachgeschärft und vollständiger Datenschutzhinweis, Android-App von der Startseite, A4-Flyer, Handbücher | fertig |
-| 13 – Abnahme | Abnahmebericht, Feldtest-Anleitung, Spieltag-Checkliste | in Arbeit |
+| 13 – Abnahme | [Abnahmebericht](docs/ABNAHME.md) (Stand, Tests, bekannte Grenzen), [Feldtest-Anleitung](docs/FELDTEST.md) mit Protokoll, [Spieltag-Checkliste](docs/SPIELTAG-CHECKLISTE.md) | fertig – Feldtest mit echten Handys steht aus |
 
 ## Ordner
 

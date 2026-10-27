@@ -10,4 +10,4 @@
 </script>
 
 <AppBar title={T.regeln.titel} onback={() => history.back()} />
-<RulesView config={cfg ?? DEFAULT_CONFIG} />
+<main><RulesView config={cfg ?? DEFAULT_CONFIG} /></main>
