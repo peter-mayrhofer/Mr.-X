@@ -1,5 +1,11 @@
 # Auftrag: Backend für „Mister X – Rote Falken“ auf Cloudflare
 
+> **Hinweis (aktueller Stand):** Der Frontend-Agent hat die Meilensteine 1–8 bereits mit Firebase gebaut
+> (Branch `claude/elegant-volta-i3dbpr`: `app/`, `functions/`, `shared/`, `tests/`). Der Umzug auf Cloudflare wird deshalb
+> **vom selben Agenten** als Meilenstein „9b“ erledigt (siehe `NACHRICHT-AN-FRONTEND.md`). Dieses Dokument dient ihm als
+> **Anforderungs-Referenz für das Backend**; die Abschnitte über einen zweiten Agenten, eigenen Branch und Ordner-Aufteilung
+> (0, 1.1–1.3, 3, 11) gelten dann nicht. Der bestehende Vertrag `shared/src/api.ts` wird weiterverwendet.
+
 > Dieser Prompt richtet sich an eine KI (Coding-Agent), die selbstständig über mehrere Tage arbeiten darf.
 > Lies ihn vollständig, bevor du anfängst. Antworte und dokumentiere **auf Deutsch**.
 
