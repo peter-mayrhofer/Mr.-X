@@ -9,9 +9,12 @@ export function nextReportAfterIntervalChange(lastReportAt: number, intervalMin:
   return Math.max(lastReportAt + intervalMin * MIN, now + MIN);
 }
 
-/** Regel 12: geheimer Zufallszeitpunkt im Fenster [Start + minH, Start + maxH] (rand ∈ [0,1)) */
-export function randomEnd(startedAt: number, minH: number, maxH: number, rand: number): number {
-  const lo = Math.min(minH, maxH),
-    hi = Math.max(minH, maxH);
-  return startedAt + (lo + rand * (hi - lo)) * 60 * MIN;
+/**
+ * Regel 12: geheimer Zufallszeitpunkt im Fenster [Start + minH, Start + maxH] (rand ∈ [0,1)).
+ * `notBefore`: bei Änderung des Fensters im laufenden Spiel nur noch aus dem Rest des Fensters ziehen.
+ */
+export function randomEnd(startedAt: number, minH: number, maxH: number, rand: number, notBefore = 0): number {
+  const lo = Math.max(startedAt + Math.min(minH, maxH) * 60 * MIN, notBefore),
+    hi = Math.max(startedAt + Math.max(minH, maxH) * 60 * MIN, lo);
+  return lo + rand * (hi - lo);
 }

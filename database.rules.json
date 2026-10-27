@@ -31,8 +31,14 @@
         "stats": {
           ".read": "auth != null && (root.child('games').child($g).child('members').child(auth.uid).exists() || auth.token.superAdmin === true)"
         },
-        "archive": {
+        "pauses": {
           ".read": "auth != null && (root.child('games').child($g).child('members').child(auth.uid).exists() || auth.token.superAdmin === true)"
+        },
+        "cutLog": {
+          ".read": "auth != null && (root.child('games').child($g).child('members').child(auth.uid).exists() || auth.token.superAdmin === true)"
+        },
+        "archive": {
+          ".read": "auth != null && (auth.token.superAdmin === true || (root.child('games').child($g).child('members').child(auth.uid).exists() && root.child('games').child($g).child('members').child(auth.uid).child('role').val() !== 'viewer'))"
         },
         "members": {
           ".read": "auth != null && (auth.token.superAdmin === true || root.child('games').child($g).child('members').child(auth.uid).child('role').val() === 'admin')",

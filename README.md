@@ -13,7 +13,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 1 – Konzept | [`docs/KONZEPT.md`](docs/KONZEPT.md), [`docs/ENTSCHEIDUNGEN.md`](docs/ENTSCHEIDUNGEN.md) | fertig, bestätigt |
 | 2 – Design | Design-System, Kartenstil, Klick-Prototyp aller 23 Screens, [`docs/DESIGN.md`](docs/DESIGN.md) | fertig, bestätigt |
 | 3 – Fundament | Firebase (eigene Datenbank + Website, E-21), Security Rules mit Tests, Spiel-Server, Anmeldung aller Rollen | fertig |
-| 4–13 | Spielablauf am Server, Karte, Android-App, Push … | in Arbeit |
+| 4 – Spiel-Kern | Start (gewählt/ausgelost), Meldungen mit Standort-Fallback, Übergabe/Strafübergabe/Rückgängig, Wartezeiten im Umkreis, Verkleinerung, Pause, Zufallsende/Notstopp, Auswertung + Archiv, Neue Runde – alles am Server | fertig |
+| 5–13 | Oberflächen mit echten Daten, Push, Android-App, Großbild, Tracker … | in Arbeit |
 
 ## Ordner
 
@@ -21,7 +22,7 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 |---|---|
 | `shared/` | Spiel-Logik ohne Firebase (Geometrie, Spielfeld Linz, Regeln) – mit Tests |
 | `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/pages/` = Seiten mit Daten, `src/map/` = Karte, `src/texte.ts` = alle Texte |
-| `functions/` | Spiel-Server (Cloud Functions): Beitritt, Passwörter, Spiele anlegen – später der ganze Spielablauf |
+| `functions/` | Spiel-Server (Cloud Functions): Beitritt, Passwörter, Spiele anlegen, der ganze Spielablauf (`ablauf.ts`, `actions/`), Takt, Strecken-Berechnung |
 | `database.rules.json` | Zugriffsregeln der Datenbank (wer darf was lesen/schreiben) |
 | `tests/` | Rechte-Tests, Server-Tests, Ende-zu-Ende-Tests mit simulierten Handys, Screenshot-Skript |
 | `docs/` | Konzept, Entscheidungen, Design, Screenshots |

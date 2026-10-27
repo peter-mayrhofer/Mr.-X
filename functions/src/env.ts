@@ -7,3 +7,5 @@ export const SUPER_ADMINS = defineString("SUPER_ADMINS", { description: "E-Mail-
 export const DATABASE_URL = defineString("DATABASE_URL", { default: "https://mr-x-ooe-neu.europe-west1.firebasedatabase.app" });
 
 export const REGION = "europe-west1";
+/** Name der Datenbank-Instanz für Trigger (muss zur DATABASE_URL passen) */
+export const DB_INSTANCE = "mr-x-ooe-neu";

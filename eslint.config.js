@@ -19,4 +19,6 @@ export default defineConfig(
   },
   // TypeScript prüft undefinierte Namen selbst (inkl. globaler Typen wie GeoJSON)
   { files: ["**/*.ts", "**/*.svelte"], rules: { "no-undef": "off" } },
+  // `const { weg: _, ...rest } = x` zum Weglassen von Feldern
+  { rules: { "@typescript-eslint/no-unused-vars": ["error", { varsIgnorePattern: "^_", ignoreRestSiblings: true }] } },
 );

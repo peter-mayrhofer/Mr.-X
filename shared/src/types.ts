@@ -81,6 +81,11 @@ export interface Handover {
   type: HandoverType;
   byName: string;
   undoneAt?: number;
+  lat?: number;
+  lng?: number;
+  /** Teams, die dadurch Wartezeit bekamen */
+  locked?: string[];
+  reportId?: string;
 }
 
 export interface Lock {
@@ -97,8 +102,33 @@ export interface GameState {
   endedAt?: number;
   lastReportAt?: number;
   nextReportAt?: number;
-  /** gesperrte Bereiche: id → Zeitpunkt der Sperre */
-  cuts: Record<string, number>;
+  /** gesperrte Bereiche: id → Zeitpunkt der Sperre (RTDB speichert keine leeren Objekte → optional) */
+  cuts?: Record<string, number>;
+  /** letzte Übergabe (nur sie kann rückgängig gemacht werden) */
+  lastHandover?: string;
+  /** Archiv-Eintrag des beendeten Laufs */
+  run?: string;
+  /** zählt jede Änderung hoch – Aktionen prüfen damit, ob der Zustand noch stimmt */
+  rev: number;
+}
+
+/** Übergabe, wie der Server sie speichert: mit Vorzustand für „Rückgängig“ */
+export interface HandoverRecord extends Handover {
+  byUid: string;
+  prev?: Pick<GameState, "mrx" | "mrxSince" | "lastReportAt" | "nextReportAt">;
+  /** Wartezeiten vor der Übergabe (nur Teams, die schon eine hatten) */
+  prevLocks?: Record<string, Lock>;
+}
+
+export interface CutEvent {
+  cut: string;
+  locked: boolean;
+  t: number;
+}
+
+export interface Pause {
+  from: number;
+  to?: number;
 }
 
 export type ChatKind = "msg" | "sys" | "ann";
@@ -122,8 +152,7 @@ export interface AuditEntry {
   details: string;
 }
 
+/** Zeit und Anzahl als Mister X rechnet `results()` aus den Übergaben – gespeichert wird nur die Strecke */
 export interface TeamStats {
   distM: number;
-  mrxMs: number;
-  mrxCount: number;
 }

@@ -45,11 +45,16 @@ const SEED = {
       },
       audit: { a1: { t: 1, action: "x" } },
       devices: { d1: { label: "Tracker" } },
+      pauses: { p1: { from: 1, to: 2 } },
+      cutLog: { k1: { cut: "nord", locked: true, t: 1 } },
+      archive: { run1: { name: "Test", chat: { c1: { text: "x" } } } },
+      track: { t1: { lat: 48.3, lng: 14.29, acc: 5, t: 1 } },
     },
     g2: { members: { other: { role: "admin", name: "Fremd", joinedAt: 1 } }, pos: { x: { lat: 1, lng: 1, acc: 1, t: 1 } } },
   },
   secrets: { g1: { teamPw: "scrypt$…", adminPw: "scrypt$…" } },
   userGames: { team1: { gameId: "g1", role: "team" } },
+  running: { g1: true },
   gameIndex: { g1: { name: "Test" } },
 };
 
@@ -100,8 +105,13 @@ describe("Lesen: Live-Positionen nur für Admin, Schiri, Großbild", () => {
 
 describe("Lesen: Spielzustand für Mitglieder", () => {
   it.each(["team1", "viewer1", "screen1", "schiri1", "admin1"])("%s liest Meldungen, Zustand, Teams", async (uid) => {
-    for (const p of ["config", "field", "state", "teams", "reports", "handovers", "locks", "stats", "archive"])
+    for (const p of ["config", "field", "state", "teams", "reports", "handovers", "locks", "stats", "pauses", "cutLog"])
       await assertSucceeds(read(uid, `games/g1/${p}`));
+  });
+  it("Archiv enthält den Chat → nicht für Zuschauer", async () => {
+    for (const uid of ["team1", "screen1", "schiri1", "admin1"]) await assertSucceeds(read(uid, "games/g1/archive"));
+    await assertFails(read("viewer1", "games/g1/archive"));
+    await assertFails(read("viewer1", "games/g1/archive/run1/chat"));
   });
   it("Fremde lesen nur den Spielnamen", async () => {
     await assertSucceeds(read("stranger", "games/g1/info"));
@@ -113,6 +123,17 @@ describe("Lesen: Spielzustand für Mitglieder", () => {
 describe("Lesen: Geheimes", () => {
   it.each(["team1", "admin1", "schiri1", "stranger"])("%s liest keine Passwörter", (uid) => assertFails(read(uid, "secrets/g1")));
   it("auch der Super-Admin nicht", () => assertFails(read("sa", "secrets", { superAdmin: true })));
+  it("letzter Streckenpunkt und Takt-Liste nur am Server", async () => {
+    for (const [uid, claims] of [
+      ["admin1", {}],
+      ["schiri1", {}],
+      ["sa", { superAdmin: true }],
+    ] as const) {
+      await assertFails(read(uid, "games/g1/track", claims));
+      await assertFails(read(uid, "games/g1/track/t1", claims));
+      await assertFails(read(uid, "running", claims));
+    }
+  });
   it("Mitgliederliste nur Admin, eigener Eintrag für jeden", async () => {
     await assertFails(read("team1", "games/g1/members"));
     await assertFails(read("team1", "games/g1/members/team2"));
@@ -162,6 +183,9 @@ describe("Schreiben: Spielzustand nur über den Server", () => {
     "info/name",
     "audit/x",
     "archive/x",
+    "pauses/x",
+    "cutLog/x",
+    "track/t1",
   ];
   it.each(["team1", "schiri1", "admin1"])("%s ändert nichts direkt", async (uid) => {
     for (const p of PATHS) await assertFails(write(uid, `games/g1/${p}`, { x: 1 }));

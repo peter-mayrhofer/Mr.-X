@@ -157,3 +157,29 @@ zweiter Budget-Alarm, Logins doppelt).
 **Entscheidung:** Alle automatisierten Tests laufen gegen die Firebase-Emulatoren mit der Projekt-ID `demo-mrx`.
 **Warum:** `demo-`-Projekte haben garantiert keinen Zugriff auf echte Firebase-Dienste – ein Test kann nie versehentlich
 Produktionsdaten verändern, und CI braucht keine Zugangsdaten.
+
+### E-23 Anstoßen durch die Handys (`poke`) zusätzlich zum Minuten-Takt
+**Entscheidung:** Jedes Mitglied darf `api: poke` aufrufen – z. B. wenn sein Countdown abgelaufen ist. Der Server
+erledigt dann nur, was wirklich fällig ist (Meldung, Spielende); alles läuft als Transaktion auf `state`, darum meldet
+er auch bei 30 gleichzeitigen Aufrufen genau einmal. Der Takt (`tick`, jede Minute, wartet bis zur Sekunde) bleibt die
+Sicherheit, wenn kein Handy online ist.
+**Warum:** Meldungen kommen sekundengenau, auch wenn Cloud Scheduler einmal ein paar Sekunden zu spät startet. Für die
+Tests („Zeitraffer“) werden Termine in der Datenbank vorverlegt und dann angestoßen – der Spiel-Server braucht dafür
+keinen eigenen Test-Modus.
+
+### E-24 Nur die Strecke wird gespeichert, alles andere wird aus den Übergaben berechnet
+**Entscheidung:** `stats/{t}` enthält nur `distM`. Zeit als Mister X, Anzahl, Sieger und Zeitstrahl rechnet
+`shared/results()` aus Übergaben und Pausen – am Server fürs Archiv, in der App für die Live-Rangliste.
+**Warum:** Keine doppelte Buchführung: „Rückgängig“ und Pausen müssen so keine Zähler korrigieren.
+
+### E-25 Übergabe-Kennung kommt vom Handy
+**Entscheidung:** Das Handy erzeugt pro Übergabe eine zufällige `requestId`; sie ist zugleich der Schlüssel unter
+`handovers/` und steht in `state.lastHandover`. Kommt dieselbe Anfrage nach einem Netzabbruch nochmal, antwortet der
+Server mit dem schon gespeicherten Ergebnis.
+**Warum:** Idempotenz ohne zusätzlichen Speicher (Abschnitt 9.1).
+
+### E-26 Neue Runde nur vor dem Start oder nach dem Ende
+**Entscheidung:** „Neue Runde vorbereiten“ geht nur, wenn kein Spiel läuft (sonst zuerst Notstopp). Teams und Schiris
+werden abgemeldet (Hinweis auf ihrem Gerät), das Team-Passwort gelöscht; Spielleitung, Großbild, Zuschauer, Schiri-Code,
+Einstellungen, Spielfeld, Protokoll und Archiv bleiben.
+**Warum:** So kann ein laufendes Spiel nicht versehentlich gelöscht werden, und das Archiv entsteht immer vollständig.

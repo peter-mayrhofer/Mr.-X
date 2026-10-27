@@ -478,6 +478,9 @@ export const T = {
     tooMany: "Zu viele Versuche. Bitte in 10 Minuten noch einmal.",
     forbidden: "Dafür fehlen die Rechte.",
     exists: "Diesen Spiel-Code gibt es schon.",
+    wrongPhase: "Das geht gerade nicht – das Spiel ist in einem anderen Abschnitt.",
+    conflict: "Jemand anderer war schneller. Die Anzeige ist jetzt aktuell – bitte prüfen.",
+    tooLate: "Zu spät – Rückgängig geht nur kurz nach der Übergabe.",
     network: "Keine Verbindung zum Server. Bitte nochmal versuchen.",
   },
 

@@ -18,6 +18,9 @@ const CODE: Record<ApiReason, FunctionsErrorCode> = {
   tooMany: "resource-exhausted",
   forbidden: "permission-denied",
   exists: "already-exists",
+  wrongPhase: "failed-precondition",
+  conflict: "aborted",
+  tooLate: "deadline-exceeded",
 };
 
 /** Ablehnung mit Grund; die App zeigt den passenden Text aus texte.ts */
@@ -61,6 +64,11 @@ export async function requireRole(
   if (isSuperAdmin(req)) return { uid, name: String(req.auth?.token.email ?? "Super-Admin"), role: "superadmin" };
   fail("forbidden");
 }
+
+export const val = async <T>(path: string): Promise<T | null> => (await db().ref(path).get()).val() as T | null;
+export const newKey = () => db().ref().push().key!;
+/** RTDB nimmt kein `undefined` – vor dem Schreiben entfernen (null bleibt = löschen) */
+export const clean = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 /** Protokoll (Abschnitt 7.7): wer hat wann was ausgelöst */
 export function audit(g: string, who: { uid: string; name: string; role: string }, action: string, details = "") {

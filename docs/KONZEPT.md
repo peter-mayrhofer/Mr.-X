@@ -66,7 +66,7 @@ und führt sie aus – oder lehnt sie ab.
 |---|---|---|
 | **App** | TypeScript (strict), Svelte 5, Vite, MapLibre GL, PWA (Service Worker) | Eine Codebasis für Web und Android |
 | **Android-Hülle** | Capacitor 8, `@capacitor-community/background-geolocation`, `@capacitor/push-notifications` | Hintergrund-Standort mit Dauer-Benachrichtigung, Push |
-| **Spiel-Server** | Cloud Functions 2nd gen (Node 22), Region `europe-west1` (gleich wie die Datenbank) | `api` (eine aufrufbare Funktion für alle Aktionen), `tick` (jede Minute), `onPosition` (Plausibilität, Distanz, Spielfeld-Warnung), `tracker` (HTTP), `cleanup` (täglich) |
+| **Spiel-Server** | Cloud Functions 2nd gen (Node 22), Region `europe-west1` (gleich wie die Datenbank) | `api` (eine aufrufbare Funktion für alle Aktionen), `tick` (jede Minute), `onPosition` (Plausibilität, Distanz; die Spielfeld-Warnung rechnet die App mit derselben Funktion aus `shared/`), `tracker` (HTTP), `cleanup` (täglich) |
 | **Datenbank** | Realtime Database (`europe-west1`, besteht schon) | Live-Zustand, Standorte, Chat, Archiv |
 | **Login** | Firebase Auth: *anonym* für Teams/Schiris/Spiel-Admins (+ serverseitig geprüftes Passwort), *Google* für Super-Admin | keine E-Mail-Konten für Kinder/Jugendliche nötig |
 | **Push** | FCM (Android-App, Web-Push; iPhone nur als installierte PWA ab iOS 16.4) | Meldung, Übergabe, Wartezeit, Durchsage … |
@@ -148,7 +148,11 @@ Spalte **schreibt**: *F* = nur Functions, *C* = Client (mit Rules-Prüfung).
 | `games/{g}/reports/{id}` | Mister-X-Meldung: Team, Ort, `posAt`, `t`, Quelle (`handy`/`tracker`/`schiri`/`letzter`), Art (`auto`/`sofort`/`uebergabe`), `void` | Mitglieder | F |
 | `games/{g}/handovers/{id}` | `from, to, at, type (start/fang/strafe), by, ort, prev (für Rückgängig), undoneAt` | Mitglieder | F |
 | `games/{g}/locks/{t}` | `until`, Grund (Start/Übergabe/manuell) | Mitglieder | F |
-| `games/{g}/stats/{t}` | Distanz (m), Zeit als Mister X, Anzahl | Mitglieder | F |
+| `games/{g}/stats/{t}` | Distanz (m). Zeit und Anzahl als Mister X rechnet `shared/results` live aus den Übergaben (E-24) | Mitglieder | F |
+| `games/{g}/pauses/{id}` | `from`, `to` – Pausen des laufenden Spiels (für Countdown und Auswertung) | Mitglieder | F |
+| `games/{g}/cutLog/{id}` | `cut`, `locked`, `t` – Verlauf der Verkleinerung (für Replay) | Mitglieder | F |
+| `games/{g}/track/{t}` | letzter angenommener Punkt pro Team (nur für die Strecken-Berechnung) | **niemand** | F |
+| `running/{g}` | Liste laufender Spiele für den Takt | **niemand** | F |
 | `games/{g}/chat/{id}` | `uid, name, text, t, kind (msg/sys/ann), ev (Verweis auf Meldung)` | Mitglieder außer Zuschauer | C nur `kind=msg` (Länge ≤ 300, max. 1 Nachricht / 2 s); F für `sys`/`ann` |
 | `games/{g}/dm/{t}/{id}` | Direktkanal Team ↔ Admin | Admin + Team `{t}` | C (Admin oder Team `{t}`) |
 | `games/{g}/audit/{id}` | Protokoll: wer, wann, was | Admin | F |
@@ -156,7 +160,7 @@ Spalte **schreibt**: *F* = nur Functions, *C* = Client (mit Rules-Prüfung).
 | `rate/join/{schlüssel}` | Fehlversuche beim Beitritt pro Gerät und pro IP (IP nur gehasht) | niemand | F |
 | `games/{g}/devices/{gerät}` | Tracker: Name, Zuordnung (`team:{t}` oder `fahne`), zuletzt gesehen | Admin | F |
 | `games/{g}/push/{uid}` | FCM-Token, Plattform, gewählte Push-Arten | eigener | C (nur eigener) |
-| `games/{g}/archive/{lauf}` | Auswertung, Übergaben, Mister-X-Meldungen, Chat, Teamnamen, Protokoll | Mitglieder | F |
+| `games/{g}/archive/{lauf}` | Auswertung, Übergaben, Mister-X-Meldungen, Verkleinerungen, Pausen, Spielfeld, Chat, Teamnamen | Mitglieder außer Zuschauer (enthält den Chat) | F |
 | `secrets/{g}` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, **Spielende-Zeitpunkt**, Tracker-Tokens | **niemand** | F |
 | `userGames/{uid}` | in welchem Spiel ist dieses Gerät (für „angemeldet bleiben“); `removedFrom` = vom Admin entfernt | eigener | F |
 | `gameIndex/{g}` | Liste aller Spiele für Super-Admin | Super-Admin | F |
