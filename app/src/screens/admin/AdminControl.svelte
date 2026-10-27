@@ -1,6 +1,6 @@
 <!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
 <script lang="ts">
-  import { Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer } from "@lucide/svelte";
+  import { Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
   import { nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
@@ -185,6 +185,9 @@
     <Card label={T.admin.spielstatus} icon={Timer}>
       <Pill dot>{T.superadmin.phase.beendet}</Pill>
       <p class="muted">{T.admin.beendetHinweis}</p>
+      {#if onstopped}
+        <div class="row"><Button variant="secondary" size="m" icon={Trophy} onclick={onstopped}>{T.admin.auswertungZeigen}</Button></div>
+      {/if}
     </Card>
   {/if}
 

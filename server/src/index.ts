@@ -144,7 +144,7 @@ async function tracker(req: Request, env: Env): Promise<Response> {
 
 /** nur mit TEST_HOOKS=1 (lokale Tests): Spielraum lesen/ändern, Alarm sofort auslösen, alles zurücksetzen */
 async function test(req: Request, env: Env, path: string): Promise<Response> {
-  const b = (await req.json()) as { g?: string; op?: "get" | "set" | "tick" | "outbox" | "drop"; path?: string; value?: unknown };
+  const b = (await req.json()) as { g?: string; op?: "get" | "set" | "tick" | "outbox" | "drop" | "usage"; path?: string; value?: unknown };
   if (path === "/__test/reset") {
     await ensureSchema(env.DB);
     const games = await env.DB.prepare("SELECT id FROM games").all<{ id: string }>();

@@ -203,6 +203,8 @@ export class GameRoom extends DurableObject<Env> {
   #liveTimer: ReturnType<typeof setTimeout> | undefined;
   #liveSavedAt = 0;
   #indexed = "";
+  /** Verbrauch seit dem Aufwachen, so wie Cloudflare zählt (Lasttest, docs/CLOUDFLARE-LIMITS.md §5) */
+  usage = { requests: 0, wsIn: 0, alarms: 0, rows: 0, wsOut: 0, bytesOut: {} as Record<string, number> };
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -303,6 +305,7 @@ export class GameRoom extends DurableObject<Env> {
       for (const k of this.#dirty) o[k] = this.d[k];
       // ohne await: die Laufzeit bündelt Schreibvorgänge und hält Antworten zurück, bis sie gespeichert sind
       void this.ctx.storage.put(o);
+      this.usage.rows += this.#dirty.size;
       if (LIVE_KEYS.some((k) => this.#dirty.has(k))) this.#liveSavedAt = Date.now();
       this.#dirty.clear();
     }
@@ -316,6 +319,7 @@ export class GameRoom extends DurableObject<Env> {
   // ---------- Aufrufe vom Worker ----------
 
   async api(req: ApiCall, a: Auth): Promise<ApiReply> {
+    this.usage.requests++;
     const rid = typeof req.rid === "string" && req.rid.length <= 40 ? `${a.uid ?? "-"}:${req.rid}` : null;
     const again = rid ? this.#done.get(rid) : undefined;
     if (again) return again;
@@ -338,6 +342,7 @@ export class GameRoom extends DurableObject<Env> {
 
   /** Android-App im Hintergrund: Standort per HTTP, Antwort = Benachrichtigungen seit `since` */
   nativePos(uid: string, p: PositionIn, since: number): ApiReply<{ notes: Note[] }> {
+    this.usage.requests++;
     if (!this.d.members[uid]) return { ok: false, reason: "session", message: "Sitzung abgelaufen" };
     this.position(uid, p);
     const notes = this.#notes.filter((n) => n.t > since && n.to.includes(uid)).map(({ to: _, ...n }) => n);
@@ -362,6 +367,7 @@ export class GameRoom extends DurableObject<Env> {
   // ---------- Live-Verbindungen ----------
 
   override async fetch(req: Request): Promise<Response> {
+    this.usage.requests++;
     const uid = req.headers.get("x-uid") ?? "";
     const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
     const ok = !!this.d.info && !!this.d.members[uid];
@@ -381,6 +387,7 @@ export class GameRoom extends DurableObject<Env> {
   }
 
   override webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
+    this.usage.wsIn++;
     if (typeof msg !== "string" || msg.length > 2000) return;
     const a = ws.deserializeAttachment() as Att;
     let m: { t?: string; p?: unknown; on?: unknown };
@@ -467,7 +474,11 @@ export class GameRoom extends DurableObject<Env> {
 
   #raw(ws: WebSocket, msg: ServerMsg) {
     try {
-      ws.send(JSON.stringify(msg));
+      const s = JSON.stringify(msg);
+      ws.send(s);
+      const role = this.d.members[(ws.deserializeAttachment() as Att | null)?.uid ?? ""]?.role ?? "-";
+      this.usage.wsOut++;
+      this.usage.bytesOut[role] = (this.usage.bytesOut[role] ?? 0) + s.length;
     } catch {
       /* Verbindung gerade weg */
     }
@@ -566,6 +577,7 @@ export class GameRoom extends DurableObject<Env> {
    * Fahne → erste Quelle für Mister-X-Meldungen; Team → Standort des Teams. Liefert false bei unbekanntem Schlüssel.
    */
   trackerPos(key: string, raw: unknown): boolean {
+    this.usage.requests++;
     const keys = this.d.secrets.deviceKeys ?? {};
     const id = Object.keys(keys).find((k) => sameText(key, keys[k]));
     const dev = id ? this.d.devices[id] : undefined;
@@ -592,6 +604,7 @@ export class GameRoom extends DurableObject<Env> {
     if (Date.now() - this.#liveSavedAt >= POS_SAVE_MS) {
       this.#liveSavedAt = Date.now();
       void this.ctx.storage.put(Object.fromEntries(LIVE_KEYS.map((k) => [k, this.d[k]])));
+      this.usage.rows += LIVE_KEYS.length;
     } else if (patches.length) this.#liveTimer = setTimeout(() => this.#flushLive(), POS_SAVE_MS);
   }
 
@@ -602,11 +615,15 @@ export class GameRoom extends DurableObject<Env> {
     const cur = await this.ctx.storage.getAlarm();
     if (due === Infinity) {
       if (cur !== null) await this.ctx.storage.deleteAlarm();
-    } else if (cur !== due) await this.ctx.storage.setAlarm(due);
+    } else if (cur !== due) {
+      await this.ctx.storage.setAlarm(due);
+      this.usage.rows++;
+    }
   }
 
   /** Alarm: fällige Meldung, Wartezeiten, Spielende, Löschfrist; dann Pushes senden. Auch ohne ein Handy online. */
   override async alarm() {
+    this.usage.alarms++;
     await this.tick();
   }
 
@@ -658,10 +675,11 @@ export class GameRoom extends DurableObject<Env> {
 
   // ---------- nur Tests (TEST_HOOKS) ----------
 
-  async test(op: "get" | "set" | "tick" | "outbox" | "drop", path = "", value?: unknown): Promise<unknown> {
+  async test(op: "get" | "set" | "tick" | "outbox" | "drop" | "usage", path = "", value?: unknown): Promise<unknown> {
     if (!this.env.TEST_HOOKS) throw new Error("nur in Tests");
     if (op === "tick") return this.tick();
     if (op === "outbox") return this.outbox;
+    if (op === "usage") return this.usage;
     // Funkloch nachstellen: alle Verbindungen ohne Abschiedsgrund trennen
     if (op === "drop") return this.ctx.getWebSockets().forEach((ws) => ws.close(1012, "Neustart"));
     const parts = path.split("/").filter(Boolean);

@@ -104,8 +104,48 @@ alle Android-Handys im Hintergrund), meist unter 5 %. Zwei Spiele am selben Tag 
 - **Android im Hintergrund nur alle 30 s**, im Vordergrund über die ohnehin offene Verbindung.
 - **Push nur an Geräte, deren App nicht sichtbar ist** – sichtbare Apps zeigen es selbst an.
 
-## 5. Nachmessen
+## 5. Nachgemessen (Lasttest, Meilenstein 12)
 
-Der simulierte Gesamtspiel-Test (Meilenstein 12) zählt Anfragen, Nachrichten und geschriebene Zeilen in der lokalen
-Cloudflare-Laufzeit und trägt die gemessenen Werte hier nach. Im Betrieb zeigt das Cloudflare-Dashboard unter
-**Workers & Pages → mister-x → Metrics** den tatsächlichen Verbrauch (siehe [`BETRIEB.md`](BETRIEB.md)).
+`tests/last.test.ts` lässt in der lokalen Cloudflare-Laufzeit (workerd, dieselbe wie im Betrieb) ein Spiel mit
+**30 Teams (36 Handys), 10 Schiris, 1 Spielleitung und 2 Großbildern = 49 Geräten** laufen. Im **Zeitraffer** sendet
+jedes Handy und jeder Schiri etwa **jede Sekunde** einen Standort (≈ 11× öfter als im Spiel); in derselben Minute
+passieren außerdem 2 Meldungen, 1 Übergabe, 10 Chat-Nachrichten, 1 Durchsage und 1 Verkleinerung. Der Spielraum zählt
+mit, was Cloudflare abrechnet. Ergebnis vom 27.10.2026 (Dauer 1 Minute):
+
+| Messwert | gemessen | Bedeutung |
+|---|---|---|
+| Standorte gesendet / eingehende Nachrichten | 2 508 / **2 508** | jeder Standort ist genau eine Nachricht – keine versteckten Zusatznachrichten |
+| Befehle (`/api`) / Alarme | 13 / 2 | entspricht den ausgelösten Ereignissen |
+| geschriebene Zeilen | 47 (≈ 45 pro Minute) | Standorte: 5 Zeilen alle 30 s; jeder Befehl ≈ 3 Zeilen |
+| Verzögerung, bis ein Standort bei der Spielleitung ist | **Median 0,4 s, 95 % unter 1,1 s** | gesammelt alle 2 s, also nie älter als ≈ 2,5 s |
+| Snapshot beim Verbinden (Spielleitung, 30 Teams) | **36 KB** | auch mit schwachem Netz in Sekunden geladen |
+| Daten an die Spielleitung | 28 KB pro Minute im Zeitraffer | im echten Spiel ≈ 2,6 KB/min ≈ **0,6 MB in 4 Stunden** |
+| Daten an ein Team-Handy | 10 KB pro Minute (nur Ereignisse) | Teams bekommen keine fremden Standorte – im Spiel deutlich weniger |
+
+**Hochrechnung auf 4 Stunden Spiel** (Standort alle 12 s):
+
+| Posten | Rechnung | Ergebnis |
+|---|---|---|
+| DO-Anfragen durch Standorte | 46 Geräte × 1 200 Standorte = 55 200 Nachrichten ÷ 20 (gemessen: 1 Standort = 1 Nachricht) | 2 760 |
+| DO-Anfragen sonst | Befehle ≈ 630, Verbindungsaufbau ≈ 490, Alarme ≈ 150 (Abschnitt 3.1) | ≈ 1 270 |
+| **DO-Anfragen gesamt** | | **≈ 4 000 (4 %)** |
+| Zeilen durch Standorte | 10 pro Minute × 240 Minuten (zeitabhängig, gemessen) | 2 400 |
+| Zeilen durch Befehle und Alarme | 630 × ≈ 3 + 150 | ≈ 2 000 |
+| **Zeilen geschrieben gesamt** | | **≈ 4 400 (4,4 %)** |
+
+Selbst wenn man die zusammengedrängte Testminute stur mit 240 multipliziert (also 13 Befehle und 2 Alarme *jede*
+Minute, viel mehr als im Spiel), bleibt es bei ≈ 6 200 DO-Anfragen und ≈ 10 800 Zeilen – **beides unter 11 %**. Der
+Test prüft genau diese Obergrenze (< 20 %) bei jedem Lauf in der CI.
+
+Nicht lokal messbar sind die **Laufzeit (GB-s)** und die **CPU-Zeit**; dafür gilt die Rechnung in Abschnitt 3.3
+(Spielraum während des Spiels durchgehend wach: 1 800 GB-s = 14 %).
+
+Längerer Lauf zum Nachmessen (z. B. 10 Minuten):
+
+```bat
+set MRX_LAST_S=600
+npx vitest run --project server tests/last.test.ts --silent=false
+```
+
+Im Betrieb zeigt das Cloudflare-Dashboard unter **Workers & Pages → mister-x → Metrics** den tatsächlichen Verbrauch
+(siehe [`BETRIEB.md`](BETRIEB.md)) – nach dem ersten Feldtest dort nachsehen und hier eintragen.

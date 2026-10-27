@@ -350,6 +350,7 @@ export const T = {
     geplantesEnde: "Geplantes Ende:",
     imProtokoll: "im Protokoll vermerkt",
     beendetHinweis: "Die Auswertung steht im Archiv. Für ein neues Spiel: „Teams & Zugänge“ → „Neue Runde vorbereiten“.",
+    auswertungZeigen: "Auswertung ansehen",
     vorschauFeld: "Vorschau Spielfeld",
     frei: "frei",
     keineBereiche: "Dieses Spielfeld hat keine Sperrbereiche.",

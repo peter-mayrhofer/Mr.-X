@@ -82,6 +82,8 @@
 
   onMount(() => {
     let alive = true;
+    // die Karte gibt es schon vor „load“ – wird die Ansicht vorher verlassen, muss sie trotzdem weg (WebGL-Kontexte sind knapp)
+    let created: MLMap | undefined;
     // MapLibre 6 lädt seinen Worker relativ zum eigenen Modul – nach dem Bündeln stimmt das nicht mehr, daher explizit
     void Promise.all([
       import("maplibre-gl"),
@@ -91,7 +93,7 @@
       if (!alive) return;
       ML = ml;
       ml.setWorkerUrl(worker.default);
-      const m = new ml.Map({
+      const m = (created = new ml.Map({
         container: el,
         style: mapStyle(theme.active, overlays),
         bounds: box(),
@@ -101,7 +103,7 @@
         dragRotate: false,
         pitchWithRotate: false,
         maxZoom: 19,
-      });
+      }));
       m.touchZoomRotate.disableRotation();
       m.setMissingStyleImageResolver((id) => {
         if (id.startsWith("hatch-") && !m.hasImage(id)) m.addImage(id, hatchImage(id.slice(6) as typeof theme.active), { pixelRatio: 2 });
@@ -120,6 +122,7 @@
       m.on("zoomend", names);
       names();
       m.on("load", () => {
+        if (!alive) return;
         // Namensnennung eingeklappt („i“-Knopf), damit sie keine Bedienelemente verdeckt
         el.querySelector(".maplibregl-compact-show")?.classList.remove("maplibregl-compact-show");
         map = m;
@@ -128,13 +131,11 @@
     });
     return () => {
       alive = false;
+      created?.remove();
     };
   });
 
-  onDestroy(() => {
-    markers.forEach((x) => unmount(x.inst));
-    map?.remove();
-  });
+  onDestroy(() => markers.forEach((x) => unmount(x.inst)));
 
   // Theme-Wechsel: Stil neu setzen, MapLibre übernimmt nur die Unterschiede
   $effect(() => {

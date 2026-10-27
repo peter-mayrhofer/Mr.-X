@@ -82,6 +82,17 @@ export const tick = async (g: string) => (await hook({ g, op: "tick" })) as stri
 export const outbox = async (g: string) =>
   (await hook({ g, op: "outbox" })) as { kind: string; title: string; body: string; to: string[]; push: string[]; t: number }[];
 
+/** Verbrauch des Spielraums seit dem Aufwachen (Anfragen, Nachrichten, geschriebene Zeilen, gesendete Zeichen je Rolle) */
+export const usage = async (g: string) =>
+  (await hook({ g, op: "usage" })) as {
+    requests: number;
+    wsIn: number;
+    alarms: number;
+    rows: number;
+    wsOut: number;
+    bytesOut: Record<string, number>;
+  };
+
 /** alle Live-Verbindungen des Spiels trennen (Funkloch) */
 export const drop = async (g: string) => void (await hook({ g, op: "drop" }));
 
@@ -89,8 +100,8 @@ export async function resetServer() {
   await hook({}, "/__test/reset");
 }
 
-/** Live-Verbindung wie die App; sammelt Sicht, Benachrichtigungen und Abschiedsgrund */
-export function connect(token: string) {
+/** Live-Verbindung wie die App; sammelt Sicht, Benachrichtigungen und Abschiedsgrund (`on`: bei jeder neuen Sicht) */
+export function connect(token: string, on?: (v: View) => void) {
   const s = {
     view: null as View | null,
     notes: [] as Note[],
@@ -115,6 +126,7 @@ export function connect(token: string) {
     onView: (v) => {
       s.view = v;
       s.msgs++;
+      on?.(v);
     },
     onNote: (n) => s.notes.push(n),
     onBye: (r) => (s.bye = r),
