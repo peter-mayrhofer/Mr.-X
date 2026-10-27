@@ -53,6 +53,13 @@
 
   <Card label={T.start.datenschutz} icon={ShieldCheck}>
     <p class="muted">{T.datenschutz.kurz}</p>
+    <details class="privacy">
+      <summary>{T.datenschutz.voll}</summary>
+      {#each T.datenschutz.abschnitte as a (a.titel)}
+        <h3>{a.titel}</h3>
+        <p>{a.text}</p>
+      {/each}
+    </details>
   </Card>
 </div>
 
@@ -145,5 +152,16 @@
   details p {
     padding: 0 var(--sp-4) var(--sp-4);
     color: var(--text-2);
+  }
+  .privacy {
+    margin-top: var(--sp-3);
+  }
+  .privacy h3 {
+    padding: var(--sp-2) var(--sp-4) var(--sp-1);
+    font-family: var(--font-text);
+    font-size: var(--fs-m);
+    font-weight: 700;
+    line-height: var(--lh);
+    letter-spacing: 0;
   }
 </style>

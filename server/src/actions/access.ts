@@ -72,6 +72,8 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
   const now = Date.now();
 
   const ipKey = `ip_${await hashKey(a.ip ?? "?")}`;
+  // Datensparsamkeit: Prüfsummen von IP-Adressen nur so lange aufheben wie die Sperre (10 Min)
+  for (const [k, v] of Object.entries(room.d.rate)) if (now - v.since >= WINDOW_MS) room.put("rate", k, null);
   const r = room.d.rate[ipKey];
   if (role !== "viewer" && r && now - r.since < WINDOW_MS && r.n >= MAX_FAILS) fail("tooMany", "Zu viele Versuche");
 

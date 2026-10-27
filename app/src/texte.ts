@@ -32,6 +32,8 @@ export const T = {
     spielGefunden: "Spiel gefunden",
     datenschutz: "Datenschutz",
     hilfe: "Hilfe",
+    androidApp: "Android-App installieren",
+    androidHinweis: "Empfohlen: sendet den Standort auch bei gesperrtem Bildschirm",
   },
 
   beitritt: {
@@ -608,12 +610,32 @@ export const T = {
     nichtKopiert: "Kopieren nicht möglich – Link bitte markieren",
     grossbildHinweis: "Der Link enthält einen Schlüssel – nur auf dem Laptop in der Zentrale öffnen.",
     grossbildZeigen: "Link anzeigen",
-    flyer: [
-      "1. QR-Code mit der Handy-Kamera scannen",
-      "2. Teamname eingeben",
-      "3. Team-Passwort: ______________________",
-      "Android: App installieren · iPhone: im Browser öffnen und „Zum Home-Bildschirm“",
-    ],
+    /** A4-Flyer zum Drucken (QR-Code für Teams → Drucken) */
+    flyer: {
+      scannen: "Mit der Handy-Kamera scannen",
+      code: "Spiel-Code",
+      passwort: "Team-Passwort",
+      notfall: "Notfall: Spielleitung",
+      schritte: [
+        {
+          titel: "Android",
+          text: "QR-Code scannen. Erscheint „Android-App installieren“: antippen, Installation erlauben, App öffnen, „Team beitreten“, Spiel-Code eingeben. Sonst einfach im Browser weiter.",
+        },
+        {
+          titel: "iPhone",
+          text: "QR-Code scannen, in Safari unten auf „Teilen“ → „Zum Home-Bildschirm“ und Mister X von dort öffnen.",
+        },
+        {
+          titel: "Beitreten",
+          text: "Teamname und Team-Passwort eingeben. Zweites Handy: gleicher Teamname → „Als Ersatzgerät beitreten“.",
+        },
+        {
+          titel: "Erlauben",
+          text: "Standort und Benachrichtigungen erlauben. Android-App: Akku-Optimierung ausschalten. iPhone: Bildschirm anlassen.",
+        },
+      ],
+      mitnehmen: "Mitnehmen: Powerbank und Halstuch (gilt in den Öffis als Fahrschein).",
+    },
   },
 
   /** Ablehnungen des Spiel-Servers (shared/api.ts ApiReason) */
@@ -665,5 +687,42 @@ export const T = {
 
   datenschutz: {
     kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung, sie werden nach Spielende gelöscht. Kein Tracking, keine Werbung.",
+    voll: "Vollständiger Datenschutzhinweis",
+    kontakt: "mr.x.rf.ooe@gmail.com",
+    /** DSGVO Art. 13 – kurz und verständlich; Fristen wie im Server umgesetzt (docs/KONZEPT.md, Löschfristen) */
+    abschnitte: [
+      {
+        titel: "Wer ist verantwortlich?",
+        text: "Die Roten Falken / Kinderfreunde Oberösterreich als Veranstalter des Spiels. Kontakt für alle Fragen zum Datenschutz: mr.x.rf.ooe@gmail.com",
+      },
+      {
+        titel: "Welche Daten?",
+        text: "Euer Teamname bzw. bei Schiris und Spielleitung der Vorname; während des Spiels der Standort des Handys (Position, Genauigkeit, Richtung, Akkustand); Chat-Nachrichten; welche Benachrichtigungen ihr wollt. Keine E-Mail-Adresse, keine Telefonnummer, kein Konto. Nach einem falschen Passwort wird zum Schutz vor Passwort-Raten eine Prüfsumme der IP-Adresse höchstens 10 Minuten lang gespeichert.",
+      },
+      {
+        titel: "Wofür?",
+        text: "Nur für das Spiel: Mister X melden, Wartezeiten nach einem Fang berechnen, vor der Spielfeldgrenze warnen und eure Sicherheit (die Spielleitung sieht, wo ihr seid). Kein Tracking, keine Werbung, keine Weitergabe an andere.",
+      },
+      {
+        titel: "Wer sieht was?",
+        text: "Die Standorte der Jäger-Teams sehen nur Spielleitung, Schiris und das Großbild in der Zentrale – andere Teams und Zuschauer nicht. Den gemeldeten Standort von Mister X sehen alle Mitspielenden.",
+      },
+      {
+        titel: "Wie lange?",
+        text: "Live-Standorte bis zum Spielende, dann werden sie sofort gelöscht. Chat und Protokoll der Spielleitung: 30 Tage nach Spielende. Auswertung mit Meldungen von Mister X und Übergaben: 1 Jahr. Die Anmeldung auf eurem Handy gilt 7 Tage oder bis ihr euch abmeldet.",
+      },
+      {
+        titel: "Wo werden die Daten verarbeitet?",
+        text: "Auf Servern von Cloudflare (Auftragsverarbeiter); die Spieldaten liegen in der Regel in einem Rechenzentrum in Europa, Cloudflare ist für Übermittlungen in die USA nach dem EU-US-Datenschutzrahmen zertifiziert. Die Kartenbilder kommen von OpenFreeMap bzw. OpenStreetMap: diese Dienste sehen eure IP-Adresse und welche Kartenausschnitte geladen werden, aber keine Spieldaten. Benachrichtigungen laufen verschlüsselt über den Push-Dienst eures Browsers bzw. Handys.",
+      },
+      {
+        titel: "Rechtsgrundlage",
+        text: "Die Teilnahme an der Veranstaltung (Art. 6 Abs. 1 lit. b DSGVO). Euren Standort teilt ihr mit eurer Einwilligung („Standort erlauben“, Art. 6 Abs. 1 lit. a DSGVO) – ihr könnt sie jederzeit in den Einstellungen des Handys widerrufen. Unter 14 Jahren braucht es dafür die Zustimmung der Eltern.",
+      },
+      {
+        titel: "Eure Rechte",
+        text: "Ihr habt das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch und Datenübertragbarkeit – schreibt einfach an die Kontaktadresse oben. Beschweren könnt ihr euch bei der Österreichischen Datenschutzbehörde (www.dsb.gv.at).",
+      },
+    ],
   },
 } as const;

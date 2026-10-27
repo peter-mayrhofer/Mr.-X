@@ -151,8 +151,8 @@ Jedes Spiel ist ein Spielraum mit diesen Teilen (gespeichert je Teil im SQLite-S
 | `track/{t}` | letzter angenommener Punkt je Team für die Strecke | **niemand** |
 | `push/{uid}` | Web-Push-Abo + gewünschte Arten | nur das Gerät selbst (`me.push`) |
 | `secrets` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, Tracker-Schlüssel, **geheimes Spielende** | **niemand** |
-| `rate` | Fehlversuche beim Beitritt je IP (gehasht) | niemand |
-| `purgeAt` | Löschfrist für den Chat nach Spielende | niemand |
+| `rate` | Fehlversuche beim Beitritt je IP (gehasht), nach 10 Min gelöscht | niemand |
+| `purgeAt` | Löschfrist für Chat und Protokoll nach Spielende (30 Tage) | niemand |
 
 **D1** (spielübergreifend): `games` (Spieleliste der Verwaltung: Name, Phase, Anzahl Teams, archiviert) und
 `archive` (je beendetem Lauf: Auswertung, Meldungen, Übergaben, Verkleinerungen, Pausen, Spielfeld, Teamnamen;
@@ -161,6 +161,18 @@ Chat getrennt, damit er nach 30 Tagen gelöscht werden kann).
 **Bewusst nicht gespeichert:** lückenlose Bewegungsprofile. Es gibt immer nur den **letzten** Standort pro Team; die
 Strecke wird beim Eintreffen jedes Punkts aufsummiert, ohne die Spur zu speichern. Nur Mister-X-*Meldungen* (die ohnehin
 alle gesehen haben) kommen ins Archiv. Bei Spielende werden alle Live-Standorte sofort gelöscht.
+
+**Löschfristen** (im Server umgesetzt und getestet, Datenschutzhinweis in der App unter Regeln → Datenschutz):
+
+| Was | Frist |
+|---|---|
+| Live-Standorte (Teams, Schiris, Tracker) | sofort bei Spielende |
+| Chat, Direktnachrichten, Protokoll der Spielleitung | 30 Tage nach Spielende (bzw. sofort bei „Neue Runde“) |
+| Archiv (Auswertung, Meldungen von Mister X, Übergaben, Teamnamen) | 1 Jahr (täglicher Cron) |
+| Chat im Archiv | 30 Tage (täglicher Cron) |
+| Prüfsumme der IP-Adresse nach falschem Passwort | 10 Minuten |
+| Anmeldung auf dem Gerät (Sitzungs-Token) | 7 Tage, Abmelden/„Neue Runde“/Entfernen sofort |
+| alles eines Spiels | „Löschen“ in der Verwaltung |
 
 ---
 

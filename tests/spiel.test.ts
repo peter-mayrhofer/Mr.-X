@@ -398,13 +398,15 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
     expect(await val(`games/${G}/positions`)).toEqual({});
     phone.close();
   });
-  it("Löschfrist: Chat wird geleert", async () => {
+  it("Löschfrist: Chat und Protokoll werden geleert", async () => {
+    expect(Object.keys(await val(`games/${G}/audit`)).length).toBeGreaterThan(0);
     await set(`games/${G}/purgeAt`, Date.now() - 1000);
     await eventually(
       () => val(`games/${G}/chat`),
       (c) => Object.keys(c).length === 0,
     );
     expect(await val(`games/${G}/purgeAt`)).toBeNull();
+    expect(await val(`games/${G}/audit`)).toEqual({});
   });
 });
 
@@ -417,6 +419,10 @@ describe("Neue Runde", () => {
     expect(await state()).toMatchObject({ phase: "vorbereitung" });
     for (const p of ["teams", "reports", "handovers", "chat", "pauses", "cutLog", "stats"])
       expect(await val(`games/${G}/${p}`)).toEqual({});
+    // neues Protokoll: nur noch „Neue Runde vorbereitet“
+    expect(Object.values((await val(`games/${G}/audit`)) as Record<string, { action: string }>).map((a) => a.action)).toEqual([
+      "Neue Runde vorbereitet",
+    ]);
     expect((await ok(admin, "archiveList")).runs).toHaveLength(1);
     expect(await val(`secrets/${G}/teamPw`)).toBeNull();
     expect(await val(`secrets/${G}/schiriCode`)).toMatch(/^pbkdf2\$/);

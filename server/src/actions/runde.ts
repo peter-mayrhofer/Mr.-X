@@ -31,6 +31,7 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
     "positions",
     "staff",
     "track",
+    "audit",
   ] as const)
     room.set(k, {});
   room.set("purgeAt", null);

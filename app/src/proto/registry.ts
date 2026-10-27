@@ -19,6 +19,7 @@ export const SCREENS: ScreenDef[] = [
     variants: [
       { id: "", label: "Ohne Spiel" },
       { id: "spiel", label: "Aus QR-Link" },
+      { id: "android", label: "Android-Browser" },
     ],
   },
   {

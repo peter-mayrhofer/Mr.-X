@@ -43,6 +43,7 @@
 
 {#if n === 1}<Start
     game={v === "spiel" ? "Mister X Linz 2027" : undefined}
+    apk={v === "android" ? "/mister-x.apk" : null}
     links={{
       join: v === "spiel" ? "/prototyp/2?v=spiel" : "/prototyp/2",
       schiri: "/prototyp/3?v=schiri",

@@ -20,7 +20,11 @@ export class Zentrale extends DurableObject<Env> {
   async #tooMany(ip: string): Promise<{ key: string; hit: () => Promise<void> }> {
     const key = `fail:${await hashKey(ip)}`;
     const now = Date.now();
-    const cur = await this.ctx.storage.get<{ n: number; since: number }>(key);
+    // Datensparsamkeit: Prüfsummen von IP-Adressen nur so lange aufheben wie die Sperre (10 Min)
+    const old = await this.ctx.storage.list<{ since: number }>({ prefix: "fail:" });
+    const gone = [...old].filter(([, v]) => now - v.since >= WINDOW_MS).map(([k]) => k);
+    if (gone.length) await this.ctx.storage.delete(gone);
+    const cur = gone.includes(key) ? undefined : await this.ctx.storage.get<{ n: number; since: number }>(key);
     if (cur && now - cur.since < WINDOW_MS && cur.n >= MAX_FAILS) fail("tooMany", "Zu viele Versuche – bitte 10 Minuten warten");
     return {
       key,

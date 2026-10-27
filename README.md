@@ -6,6 +6,17 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 > **Die bisherige App bleibt unverändert online** (`https://mr-x-ooe.web.app`). Ihr Code liegt hier nur noch zur
 > Referenz unter [`legacy/`](legacy/) und wird weiter vom Branch `claude/vibrant-darwin-2gk2cj` aus veröffentlicht.
 
+## Anleitungen
+
+| Für wen | Dokument |
+|---|---|
+| Spielleitung: Spiel vorbereiten, durchführen, nachbereiten | [`docs/ADMIN-HANDBUCH.md`](docs/ADMIN-HANDBUCH.md) |
+| Teams: App holen, beitreten, spielen | [`docs/TEAM-ANLEITUNG.md`](docs/TEAM-ANLEITUNG.md), Flyer: [`docs/flyer-beispiel.pdf`](docs/flyer-beispiel.pdf) (in der App: Teams & Zugänge → Drucken) |
+| Organisator: Server einrichten und veröffentlichen (Windows, ohne Programmierkenntnisse) | [`docs/BETRIEB.md`](docs/BETRIEB.md) |
+| Android-App bauen, signieren, verteilen | [`docs/ANDROID-APK.md`](docs/ANDROID-APK.md) |
+| Kosten und Gratis-Limits | [`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) |
+| Technik: Aufbau, Schnittstelle, Entscheidungen | [`docs/KONZEPT.md`](docs/KONZEPT.md), [`docs/API.md`](docs/API.md), [`docs/ENTSCHEIDUNGEN.md`](docs/ENTSCHEIDUNGEN.md) |
+
 ## Stand
 
 | Meilenstein | Inhalt | Status |
@@ -22,7 +33,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 9b – Umzug auf Cloudflare | Worker + ein Spielraum (Durable Object) pro Spiel + D1, Live-Verbindung nach Rolle gefiltert, Alarme statt Takt, eigene Anmeldung (Organisator-Passwort mit Setup-Geheimnis), Web Push mit VAPID, Android mit lokalen Benachrichtigungen; Firebase entfernt. [`docs/BETRIEB.md`](docs/BETRIEB.md), [`docs/API.md`](docs/API.md), [`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) | fertig |
 | 10 – Großbild & Archiv | Großbild für Laptop/Beamer (Karte mit allen Teams, Mister X + Spur, Countdown, Spielzeit, Rangliste, Ereignis-Ticker, große Durchsagen), Zuschauer-Ansicht fürs Handy ohne Live-Positionen, Auswertung mit Feier, Archiv mit Wiederholung (Zeitschieberegler), Sichern als Datei, Drucken | fertig |
 | 11 – Tracker | Endpunkt `/tracker` im OsmAnd-/Traccar-Format (auch JSON des neuen Traccar Client), Geräte-Kennung mit Schlüssel, Zuordnung „Gerät → Team / Fahne“ in der Spielleitung mit Einrichtungs-Anleitung, Tracker der Fahne als erste Standortquelle, Team-Tracker vor Handy | fertig |
-| 12–13 | Härtung, Abnahme | in Arbeit |
+| 12 – Härtung | Gesamtspiel-Test über die echte App (alle Rollen, Start bis Neue Runde), Lasttest mit 30 Teams/49 Geräten mit gemessenem Verbrauch ([`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) §5), Barrierefreiheit aller Screens automatisch geprüft (WCAG 2.1 AA), Performance (Lighthouse mobil 96/100/100), Löschfristen nachgeschärft und vollständiger Datenschutzhinweis, Android-App von der Startseite, A4-Flyer, Handbücher | fertig |
+| 13 – Abnahme | Abnahmebericht, Feldtest-Anleitung, Spieltag-Checkliste | in Arbeit |
 
 ## Ordner
 
@@ -32,7 +44,7 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | `app/` | Die App (Svelte + TypeScript). `src/ui/` = Komponenten, `src/screens/` = Screens, `src/pages/` = Seiten mit Daten, `src/map/` = Karte, `src/texte.ts` = alle Texte, `android/` = Android-Projekt (Capacitor) |
 | `server/` | Spiel-Server auf Cloudflare: Worker (`index.ts`), Spielraum je Spiel (`room.ts`, Regeln in `ablauf.ts` und `actions/`), Organisator-Zugang (`zentrale.ts`), Web Push, Konfiguration `wrangler.jsonc` |
 | `tests/` | Server-, Rechte- (inkl. Angriffe), Ruhezustand- und Ende-zu-Ende-Tests mit simulierten Handys, Screenshot-Skript |
-| `docs/` | Konzept, Entscheidungen, API, Betrieb, Limits, Design, Screenshots |
+| `docs/` | Handbuch Spielleitung, Anleitung Teams, Flyer, Betrieb, Konzept, Entscheidungen, API, Limits, Design, Screenshots |
 | `legacy/` | alter Prototyp (nur Referenz) |
 
 ## Klick-Prototyp ansehen
@@ -88,6 +100,7 @@ npm run build    # App bauen
 ```
 
 Screenshots aller Screens (dunkel/hell/Sonne) neu erzeugen: `npm run build`, dann in `app/`
-`npx vite preview --port 4173` starten und im Hauptordner `npm run screenshots` ausführen.
+`npx vite preview --port 4173` starten und im Hauptordner `npm run screenshots` ausführen; genauso erzeugt
+`npm run flyer` das Beispiel-PDF [`docs/flyer-beispiel.pdf`](docs/flyer-beispiel.pdf).
 GitHub Actions führt bei jedem Push Lint, Typecheck, alle Tests (auch gegen den lokalen Cloudflare-Server) und den
 Build aus.

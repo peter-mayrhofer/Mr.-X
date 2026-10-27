@@ -364,3 +364,36 @@ dieselbe Plausibilitätsprüfung und Strecke wie für Handys.
 **Verworfen:** eigener Traccar-Server (≈ 5 €/Monat, IDEEN.md), Tracker-Token als eigene Sitzung (ein Geräteschlüssel
 in der Kennung ist alles, was Traccar Client übertragen kann).
 
+---
+
+## Meilenstein 12: Härtung
+
+### E-42 Nachladen statt einer großen Datei, gemeinsame Teile gebündelt
+**Entscheidung:** Spielleitung (inkl. Spielfeld-Editor), Großbild, Archiv, Verwaltung und der Klick-Prototyp werden
+erst geladen, wenn sie gebraucht werden (`{#await import(…)}`); Team-Handys laden nur Start, Beitritt und ihre
+Spielansicht. Gemeinsam genutzte Module fasst eine Bündel-Regel (`app/vite.config.ts`) in **eine** Datei zusammen.
+Ergebnis: Startseite ≈ 102 statt 132 KB JavaScript (gzip); Lighthouse mobil 96/100/100, erste Anzeige ≈ 2,2 s.
+**Warum:** Kinder-Handys mit schwachem Mobilfunk. Ohne die Bündel-Regel entstanden ≈ 20 Mini-Dateien, die über
+langsame Verbindungen sogar langsamer waren als vorher (gemessen).
+**Verworfen:** die Kartenbibliothek nicht nachladen (sie war schon vorher eigene Datei und kommt erst mit der Karte).
+
+### E-43 Datensparsamkeit nachgeschärft
+**Entscheidung:** Das Protokoll der Spielleitung (enthält Namen) wird wie der Chat 30 Tage nach Spielende und bei
+„Neue Runde“ gelöscht; Prüfsummen von IP-Adressen (Schutz gegen Passwort-Raten) nur so lange wie die Sperre (10 Min).
+Vollständiger Datenschutzhinweis (Art. 13 DSGVO, kindgerecht formuliert) in der App unter Regeln → Datenschutz.
+**Offen (F12):** Name und Anschrift des Verantwortlichen bestätigt der Verein; bis dahin nennt der Hinweis die
+Roten Falken / Kinderfreunde OÖ mit der Projekt-Adresse `mr.x.rf.ooe@gmail.com`.
+
+### E-44 Android-App von der Startseite
+**Entscheidung:** Liegt `mister-x.apk` am Server (BETRIEB.md Schritt 9), zeigt die Startseite im Android-Browser
+„Android-App installieren“. Ob die Datei da ist, prüft die Seite mit einer HEAD-Anfrage (fehlt sie, liefert der Server
+die App-Seite als HTML – dann kein Knopf). Der Flyer erklärt beide Wege.
+**Warum:** Teams scannen ohnehin den QR-Code – so kommen sie ohne GitHub-Konto und ohne extra Link zur App, die den
+Standort auch bei gesperrtem Bildschirm sendet.
+
+### E-45 Barrierefreiheit automatisch geprüft
+**Entscheidung:** `tests/barrierefreiheit.test.ts` prüft mit axe-core jeden Screen in jeder Variante in dunkel, hell
+und Sonne (WCAG 2.1 A/AA plus axe-Empfehlungen). Gefundene Mängel wurden behoben (Kontraste der Team-Abzeichen,
+gedämpfte Schrift, Seitenbereiche, Überschriften). Im Modus „Bewegung reduzieren“ gibt es keine Übergänge mehr.
+**Warum:** Kontraste draußen in der Sonne sind Spielqualität, nicht Kür – und ein Test verhindert Rückschritte.
+

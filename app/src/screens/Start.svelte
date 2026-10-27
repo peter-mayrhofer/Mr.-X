@@ -1,6 +1,6 @@
 <!-- Screen 1: Splash / Startseite. Großes Logo, App-Name, zwei klare Wege. -->
 <script lang="ts">
-  import { CircleCheck, ShieldCheck, Users, Crown } from "@lucide/svelte";
+  import { CircleCheck, Crown, ShieldCheck, Smartphone, Users } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
   import Logo from "../ui/Logo.svelte";
   import { go } from "../lib/router.svelte.ts";
@@ -10,9 +10,11 @@
     /** Spielname aus dem QR-Link */
     game?: string | null | undefined;
     links: { join: string; schiri: string; admin: string; help: string };
+    /** Android im Browser und die APK liegt am Server: Download-Link */
+    apk?: string | null;
   }
 
-  let { game, links }: Props = $props();
+  let { game, links, apk }: Props = $props();
 </script>
 
 <main class="start">
@@ -36,6 +38,10 @@
     {/if}
     <Button size="xl" block icon={Users} onclick={() => go(links.join)}>{T.start.teamBeitreten}</Button>
     <p class="hint">{T.start.teamHinweis}</p>
+    {#if apk}
+      <a class="apk" href={apk} download><Smartphone size={22} strokeWidth={2.4} aria-hidden="true" />{T.start.androidApp}</a>
+      <p class="hint">{T.start.androidHinweis}</p>
+    {/if}
     <div class="staff">
       <Button variant="secondary" icon={ShieldCheck} onclick={() => go(links.schiri)}>{T.start.schiri}</Button>
       <Button variant="secondary" icon={Crown} onclick={() => go(links.admin)}>{T.start.admin}</Button>
@@ -130,6 +136,24 @@
   .actions {
     display: grid;
     gap: var(--sp-3);
+  }
+  /* sieht aus wie ein zweitrangiger Knopf, ist aber ein Download-Link */
+  .apk {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--touch);
+    border: var(--border-strong) solid var(--line);
+    border-radius: var(--r-m);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-l);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    text-decoration: none;
   }
   .found {
     display: flex;

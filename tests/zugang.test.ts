@@ -173,6 +173,13 @@ describe("Beitritt", () => {
     expect(JSON.stringify(await val(`games/${G}/rate`))).not.toContain("203.0.113"); // IP nur gehasht
     await set(`games/${G}/rate`, {});
   });
+  it("Prüfsummen der IP-Adressen werden nach Ablauf der Sperre (10 Min) gelöscht", async () => {
+    await set(`games/${G}/rate/ip_alt`, { n: 3, since: Date.now() - 11 * 60_000 });
+    await set(`games/${G}/rate/ip_neu`, { n: 3, since: Date.now() - 60_000 });
+    await call(null, { action: "join", gameId: G, role: "viewer", name: "" });
+    expect(Object.keys(await val(`games/${G}/rate`))).toEqual(["ip_neu"]);
+    await set(`games/${G}/rate`, {});
+  });
   it("Protokoll enthält keine Passwörter", async () => {
     const all = JSON.stringify(await val(`games/${G}/audit`));
     expect(all).toContain("Team-Passwort festgelegt");

@@ -149,5 +149,7 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
 export function purgeChat(room: GameRoom) {
   room.set("chat", {});
   room.set("dm", {});
+  // das Protokoll nennt Namen von Teams und Schiris – gleiche Frist wie der Chat
+  room.set("audit", {});
   room.set("purgeAt", null);
 }

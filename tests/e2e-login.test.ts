@@ -188,6 +188,25 @@ describe("Anmeldung über die App", () => {
     await page.getByText("Wels 2028").waitFor();
   });
 
+  it("Android im Browser: „Android-App installieren“ nur, wenn die APK am Server liegt", async () => {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      locale: "de-AT",
+      userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36",
+    });
+    const page = await ctx.newPage();
+    await page.goto(URL);
+    await page.getByRole("button", { name: T.start.teamBeitreten, exact: true }).waitFor();
+    await page.waitForTimeout(500);
+    expect(await page.getByRole("link", { name: T.start.androidApp }).count()).toBe(0);
+    await page.route("**/mister-x.apk", (r) =>
+      r.fulfill({ status: 200, contentType: "application/vnd.android.package-archive", body: "" }),
+    );
+    await page.reload();
+    expect(await page.getByRole("link", { name: T.start.androidApp }).getAttribute("href")).toBe("/mister-x.apk");
+    await ctx.close();
+  });
+
   it("unbekanntes Spiel im QR-Link wird freundlich erklärt", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/s/gibts-nicht`);

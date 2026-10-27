@@ -11,6 +11,7 @@
   import Button from "../../ui/Button.svelte";
   import TextField from "../../ui/TextField.svelte";
   import Modal from "../../ui/Modal.svelte";
+  import Logo from "../../ui/Logo.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { ApiError } from "../../lib/api.ts";
   import { T } from "../../texte.ts";
@@ -38,6 +39,9 @@
     adminPw: T.admin.adminPasswort,
   };
   const qr = (s: string) => renderSVG(s, { border: 2, whiteColor: "#fff", blackColor: "#000" });
+  const F = T.zugang.flyer;
+  /** Spiel-Code fürs Abtippen (Android-App): letzter Teil des Beitritts-Links …/#/s/<code> */
+  const code = $derived(joinUrl.split("/").pop() ?? "");
 
   async function save(kind: SecretKind, value: string | null) {
     busy = kind;
@@ -126,12 +130,35 @@
   {/if}
 </div>
 
-<!-- Druckansicht: Flyer mit QR-Code für die Teams -->
+<!-- Druckansicht: A4-Flyer für die Teams (QR-Code, Spiel-Code, die wichtigsten Schritte); Beispiel: docs/flyer-beispiel.pdf -->
 <section class="flyer" aria-hidden="true">
-  <h1>{gameName}</h1>
-  <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
-  <div class="bigqr">{@html qr(joinUrl)}</div>
-  {#each T.zugang.flyer as line (line)}<p>{line}</p>{/each}
+  <header class="fl-head">
+    <Logo height={60} onDark={false} />
+    <Logo which="kinderfreunde-ooe" height={40} onDark={false} />
+  </header>
+  <h1 class="fl-title">Mister <span class="fl-x">X</span></h1>
+  <p class="fl-game">{gameName}</p>
+  <div class="fl-main">
+    <figure class="fl-qr">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
+      {@html qr(joinUrl)}
+      <figcaption>{F.scannen}</figcaption>
+    </figure>
+    <dl class="fl-codes">
+      <dt>{F.code}</dt>
+      <dd class="fl-code">{code}</dd>
+      <dt>{F.passwort}</dt>
+      <dd class="fl-line"></dd>
+      <dt>{F.notfall}</dt>
+      <dd class="fl-line"></dd>
+    </dl>
+  </div>
+  <ol class="fl-steps">
+    {#each F.schritte as s, i (s.titel)}<li><b>{i + 1}. {s.titel}</b> {s.text}</li>{/each}
+  </ol>
+  <p class="fl-small">{F.mitnehmen}</p>
+  <p class="fl-small">{T.datenschutz.kurz}</p>
+  <p class="fl-url">{joinUrl}</p>
 </section>
 
 <Modal
@@ -191,8 +218,7 @@
     border-radius: var(--r-s);
     overflow: hidden;
   }
-  .code :global(svg),
-  .bigqr :global(svg) {
+  .code :global(svg) {
     width: 100%;
     height: 100%;
     display: block;
@@ -216,19 +242,99 @@
     .flyer :global(*) {
       visibility: visible;
     }
+    /* nur die erste Seite: der (unsichtbare) Rest der App erzeugt sonst leere Seiten mit demselben Flyer */
+    :global(#app) {
+      height: 280mm;
+      overflow: hidden;
+    }
     .flyer {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      gap: 6mm;
       position: fixed;
       inset: 0;
-      padding: 24mm;
+      padding: 14mm 16mm;
       background: #fff;
       color: #000;
-      font-size: 20pt;
+      font-family: var(--font-text);
+      font-size: 12.5pt;
+      line-height: 1.35;
     }
-    .bigqr {
-      width: 110mm;
-      height: 110mm;
-      margin: 10mm 0;
+    .fl-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .fl-title {
+      font-family: var(--font-display);
+      font-size: 64pt;
+      font-weight: 800;
+      line-height: 0.9;
+      text-transform: uppercase;
+    }
+    .fl-x {
+      color: #b30000;
+    }
+    .fl-game {
+      font-size: 18pt;
+      font-weight: 700;
+      margin-top: -3mm;
+    }
+    .fl-main {
+      display: flex;
+      gap: 10mm;
+      align-items: center;
+    }
+    .fl-qr {
+      margin: 0;
+      width: 80mm;
+      flex: none;
+      text-align: center;
+      font-weight: 700;
+    }
+    .fl-qr :global(svg) {
+      width: 80mm;
+      height: 80mm;
+      display: block;
+    }
+    .fl-codes {
+      flex: 1;
+      display: grid;
+      gap: 2mm;
+      margin: 0;
+    }
+    .fl-codes dt {
+      font-size: 11pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .fl-codes dd {
+      margin: 0 0 4mm;
+    }
+    .fl-code {
+      font-family: var(--font-display);
+      font-size: 30pt;
+      font-weight: 800;
+    }
+    .fl-line {
+      height: 12mm;
+      border-bottom: 0.6mm solid #000;
+    }
+    .fl-steps {
+      display: grid;
+      gap: 3mm;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .fl-small {
+      font-size: 10.5pt;
+    }
+    .fl-url {
+      margin-top: auto;
+      font-size: 9pt;
+      word-break: break-all;
     }
   }
 </style>

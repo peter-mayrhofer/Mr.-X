@@ -17,6 +17,7 @@
     "test": "vitest run --project unit",
     "test:server": "vitest run --project server",
     "screenshots": "node tests/screenshots.mjs",
+    "flyer": "node tests/flyer.mjs",
     "schluessel": "node server/schluessel.mjs",
     "deploy": "npm run build && wrangler deploy -c server/wrangler.jsonc",
     "deploy:vorschau": "npm run build && wrangler deploy -c server/wrangler.jsonc --env vorschau"
