@@ -20,7 +20,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 8 – Benachrichtigungen | Push bei allen Spielereignissen, Push-Arten pro Gerät, Web-App-Manifest (iPhone: Home-Bildschirm), Ton/Vibration in der App | fertig |
 | 9 – Android-App | Capacitor-App mit Standort im Hintergrund (Vordergrund-Dienst, natives HTTP), Benachrichtigungen, Akku-Optimierung, eigenen Icons; signierte APK per GitHub Action ([`docs/ANDROID-APK.md`](docs/ANDROID-APK.md)) | fertig |
 | 9b – Umzug auf Cloudflare | Worker + ein Spielraum (Durable Object) pro Spiel + D1, Live-Verbindung nach Rolle gefiltert, Alarme statt Takt, eigene Anmeldung (Organisator-Passwort mit Setup-Geheimnis), Web Push mit VAPID, Android mit lokalen Benachrichtigungen; Firebase entfernt. [`docs/BETRIEB.md`](docs/BETRIEB.md), [`docs/API.md`](docs/API.md), [`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) | fertig |
-| 10–13 | Großbild, Archiv & Replay, Tracker, Härtung, Abnahme | in Arbeit |
+| 10 – Großbild & Archiv | Großbild für Laptop/Beamer (Karte mit allen Teams, Mister X + Spur, Countdown, Spielzeit, Rangliste, Ereignis-Ticker, große Durchsagen), Zuschauer-Ansicht fürs Handy ohne Live-Positionen, Auswertung mit Feier, Archiv mit Wiederholung (Zeitschieberegler), Sichern als Datei, Drucken | fertig |
+| 11–13 | Tracker, Härtung, Abnahme | in Arbeit |
 
 ## Ordner
 

@@ -24,6 +24,7 @@
   import BigScreen from "../screens/BigScreen.svelte";
   import Results from "../screens/Results.svelte";
   import Archive from "../screens/Archive.svelte";
+  import Replay from "../screens/Replay.svelte";
   import SuperAdmin from "../screens/SuperAdmin.svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
 
@@ -115,14 +116,18 @@
 {:else if n === 15}<ProtoAdmin section="teams" variant={v} />
 {:else if n === 16}<ProtoAdmin section="zonen" variant={v} />
 {:else if n === 17}<ProtoAdmin section="protokoll" />
-{:else if n === 18}<BigScreen variant={v} />
+{:else if n === 18}<BigScreen v={M.bigView(v)} viewer={v === "zuschauer"} />
 {:else if n === 19}<Results
     results={M.result}
     teams={M.teams}
     onarchive={() => go("/prototyp/20?v=replay")}
     onscreen={() => go("/prototyp/18")}
   />
-{:else if n === 20}<Archive variant={v} />
+{:else if n === 20}{#if v === "replay"}<Replay data={M.archiveData()} onback={() => to(20, "liste")} />{:else}<Archive
+      runs={M.archiveRuns}
+      onopen={() => to(20, "replay")}
+      onback={() => to(13)}
+    />{/if}
 {:else if n === 21}<SuperAdmin
     allowed
     games={M.games}

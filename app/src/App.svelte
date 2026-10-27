@@ -15,6 +15,11 @@
   import GamePage from "./pages/GamePage.svelte";
   import HelpPage from "./pages/HelpPage.svelte";
   import VerwaltungPage from "./pages/VerwaltungPage.svelte";
+  import ArchivePage from "./pages/ArchivePage.svelte";
+  import ScreenPage from "./pages/ScreenPage.svelte";
+  import { session } from "./lib/session.svelte.ts";
+  import { go } from "./lib/router.svelte.ts";
+  import { T } from "./texte.ts";
 
   const p = $derived(router.path.split("?")[0]);
   const proto = $derived(match("/prototyp/:n"));
@@ -22,6 +27,7 @@
   const staff = $derived(match("/staff/:rolle"));
   const viewer = $derived(match("/z/:spiel"));
   const screen = $derived(match("/g/:spiel"));
+  const archiveRun = $derived(match("/archiv/:lauf"));
 </script>
 
 <!-- Spiel-Ansicht: Bereichswechsel (?b=…) ohne Neuaufbau, damit die Live-Daten nicht neu geladen werden -->
@@ -36,6 +42,17 @@
   {:else if screen}<AutoJoinPage role="screen" gameId={screen.spiel!} />
   {:else if p === "/spiel"}<GamePage />
   {:else if p === "/hilfe"}<HelpPage />
+  {:else if p === "/archiv" || archiveRun}<ArchivePage run={archiveRun?.lauf} />
+  {:else if p === "/grossbild"}
+    <!-- Spielleitung/Schiri zeigt das Großbild direkt auf diesem Gerät (z. B. Laptop am Beamer) -->
+    {#if session.view && (session.role === "admin" || session.role === "schiri")}
+      <ScreenPage
+        gameName={session.view.info.name}
+        onleave={() => go("/spiel")}
+        leaveLabel={T.grossbild.zurueck}
+        onarchive={() => go("/archiv")}
+      />
+    {:else}<GamePage />{/if}
   {:else if p === "/verwaltung"}<VerwaltungPage />
   {:else}<StartPage />
   {/if}

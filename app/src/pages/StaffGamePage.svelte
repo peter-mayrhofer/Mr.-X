@@ -105,7 +105,9 @@
   const SECTIONS: Section[] = ["live", "steuerung", "teams", "zonen", "chat", "protokoll"];
   const asked = $derived(query(router.path).get("b") as Section | null);
   const section = $derived<Section>(asked && SECTIONS.includes(asked) ? asked : phase === "vorbereitung" ? "steuerung" : "live");
-  const link = (id: Section) => (SECTIONS.includes(id) ? `/spiel?b=${id}` : null);
+  // Großbild und Archiv sind eigene Seiten (Vollbild bzw. auch für Teams erreichbar)
+  const link = (id: Section) =>
+    id === "grossbild" ? "/grossbild" : id === "archiv" ? "/archiv" : SECTIONS.includes(id) ? `/spiel?b=${id}` : null;
   const base = `${location.origin}${location.pathname}`;
 
   async function send(text: string, ch: "alle" | "dm", teamId?: string) {
@@ -135,14 +137,19 @@
       onlogout={logout}
     />
   {:else if phase === "beendet" && archive.value}
-    <Results results={archive.value.results} teams={archive.value.teams} />
+    <Results results={archive.value.results} teams={archive.value.teams} onarchive={() => go("/archiv")} />
   {:else}
     <Referee {view} api={call} {push} onsend={(text) => send(text, "alle")} onlogout={logout} />
   {/if}
 {:else}
   <AdminShell {section} {gameName} phase={view.state.phase} {link} {unread} onlogout={logout}>
     {#if section === "live" && phase === "beendet" && archive.value}
-      <Results results={archive.value.results} teams={archive.value.teams} />
+      <Results
+        results={archive.value.results}
+        teams={archive.value.teams}
+        onarchive={() => go("/archiv")}
+        onscreen={() => go("/grossbild")}
+      />
     {:else if section === "live"}
       <AdminLive {view} api={call} />
     {:else if section === "steuerung"}

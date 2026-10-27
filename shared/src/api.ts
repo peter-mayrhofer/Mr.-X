@@ -1,5 +1,6 @@
 // Vertrag zwischen App und Spiel-Server (POST /api, docs/API.md). Eine Quelle für beide Seiten.
-import type { Config, Field, Role } from "./types.ts";
+import type { ChatMessage, Config, CutEvent, Field, Handover, Pause, Report, Role, Team } from "./types.ts";
+import type { Results } from "./spiel.ts";
 import type { PushKind } from "./push.ts";
 
 export type JoinRole = Role;
@@ -80,7 +81,28 @@ export interface ArchiveListEntry {
   name: string;
   startedAt: number;
   endedAt: number;
+  /** Name des Siegerteams */
   winner: string | null;
+  teams: number;
+  durationMs: number;
+  handovers: number;
+}
+
+/** Ein beendeter Lauf für Auswertung und Wiederholung (ohne Live-Standorte, ohne Bewegungsprofile) */
+export interface ArchiveData {
+  name: string;
+  reason: "zufall" | "notstopp";
+  startedAt: number;
+  endedAt: number;
+  results: Results;
+  teams: Record<string, Team>;
+  handovers: Record<string, Handover>;
+  reports: Record<string, Report>;
+  cutLog: Record<string, CutEvent>;
+  pauses: Record<string, Pause>;
+  field: Field;
+  /** nach 30 Tagen leer (Löschfrist) */
+  chat: Record<string, ChatMessage>;
 }
 
 export interface ApiResults {
@@ -117,7 +139,7 @@ export interface ApiResults {
   deleteChat: Record<string, never>;
   pushSubscribe: Record<string, never>;
   archiveList: { runs: ArchiveListEntry[] };
-  archiveGet: { archive: unknown };
+  archiveGet: { archive: ArchiveData };
 }
 
 /** Gründe für Ablehnungen – die App übersetzt sie in Texte (texte.ts) */

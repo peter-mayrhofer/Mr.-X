@@ -323,3 +323,26 @@ Standorte bis 2 Min) und lassen bei 30 Teams genug Reserve im Tageslimit.
 `app/public/mister-x.apk` legen und veröffentlichen → `https://…workers.dev/mister-x.apk` (Static Assets, kostenlos,
 nie im Repository; Anleitung `BETRIEB.md` Schritt 9).
 
+---
+
+## Meilenstein 10: Großbild, Zuschauer, Archiv
+
+### E-39 Großbild und Zuschauer: eine Ansicht, Daten vom Server gefiltert
+**Entscheidung:** Großbild und Zuschauer-Ansicht sind derselbe Screen (`BigScreen.svelte`); der Unterschied kommt allein
+aus dem, was der Server der Rolle schickt: dem Zuschauer fehlen Live-Positionen und Chat (also auch Durchsagen). Der
+Ereignis-Ticker wird deshalb aus Meldungen, Übergaben und Verkleinerungen gebaut, nicht aus dem Chat. Auf schmalen
+Bildschirmen (Eltern am Handy) stapelt sich die Ansicht untereinander. Die Spielleitung kann das Großbild direkt auf
+ihrem eigenen Gerät öffnen (`/#/grossbild`, z. B. Laptop am Beamer) und kommt mit einem Knopf zurück – ohne zweites
+Gerät oder Großbild-Link. Nach dem Spielende rechnet die Ansicht die Auswertung mit derselben Funktion wie der Server
+(`shared/results`), weil Zuschauer das Archiv nicht lesen dürfen (es enthält den Chat). Eine Durchsage steht 60 s groß
+da und lässt sich antippen und ausblenden.
+**Warum:** Ein Screen, eine Rechte-Stelle (Server), keine „versteckten“ Daten im Zuschauer-Gerät.
+
+### E-40 Wiederholung im Gerät, Export als Datei und Druck
+**Entscheidung:** Die Wiederholung lädt einen Archiv-Lauf einmal (`archiveGet`) und rechnet jede Reglerstellung im
+Gerät aus (`shared/replay.ts`, mit Unit-Tests): Spur des damaligen Mister X seit der letzten Übergabe, Fangorte,
+gesperrte Bereiche. „Als Datei sichern“ lädt den Lauf als JSON herunter (Sicherung, Weitergabe), „Drucken“ druckt
+Auswertung und Chat ohne Karte (der Browser kann daraus ein PDF machen).
+**Verworfen:** Bild/PDF der Karte erzeugen (die WebGL-Karte müsste dafür dauerhaft langsamer zeichnen; nice-to-have
+laut Auftrag) – ein Bildschirmfoto der Wiederholung erfüllt denselben Zweck.
+

@@ -1,20 +1,19 @@
 <!--
-  „/spiel“: alles nach dem Beitritt. Teams: TeamPage, Schiri und Spielleitung: StaffGamePage.
-  Großbild und Zuschauer sehen vorerst den Warteraum – ihre Ansichten folgen in Meilenstein 10.
+  „/spiel“: alles nach dem Beitritt. Teams: TeamPage, Schiri und Spielleitung: StaffGamePage,
+  Großbild und Zuschauer: ScreenPage (Zuschauer ohne Live-Positionen).
 -->
 <script lang="ts">
-  import Lobby from "../screens/Lobby.svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
   import TeamPage from "./TeamPage.svelte";
   import StaffGamePage from "./StaffGamePage.svelte";
+  import ScreenPage from "./ScreenPage.svelte";
   import { session, leaveGame } from "../lib/session.svelte.ts";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
   const g = $derived(session.gameId);
   const view = $derived(session.view);
-  const list = $derived(Object.entries(view?.teams ?? {}).map(([id, t]) => ({ id, ...t })));
 
   $effect(() => {
     if (session.ready && !session.gameId && !session.removed) go("/");
@@ -41,15 +40,13 @@
   <TeamPage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
 {:else if view.me.role === "schiri" || view.me.role === "admin"}
   <StaffGamePage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
+{:else if view.me.role === "screen"}
+  <ScreenPage gameName={view.info.name} onarchive={() => go("/archiv")} />
 {:else}
-  <Lobby
+  <ScreenPage
     gameName={view.info.name}
-    roleLabel={T.warten.rolle[view.me.role]}
-    name={view.me.name}
-    teams={list}
-    config={view.config}
-    onrules={() => go("/hilfe")}
-    onlogout={async () => {
+    viewer
+    onleave={async () => {
       await leaveGame();
       go("/");
     }}

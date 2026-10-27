@@ -91,7 +91,8 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 | `chat` | Team, Schiri, Spielleitung | `text`, `dm?` (Team-Id = Direktkanal) | `{ id }` |
 | `deleteChat` | Spielleitung | `id`, `dm?` | `{}` |
 | `pushSubscribe` | Mitglied | `sub` (Web-Push-Abo; `null` = keins; weglassen = behalten), `prefs` | `{}` |
-| `archiveList` / `archiveGet` | Team, Schiri, Spielleitung, Großbild | `run` | `{ runs }` / `{ archive }` |
+| `archiveList` | Team, Schiri, Spielleitung, Großbild | – | `{ runs: [{ run, name, startedAt, endedAt, winner (Teamname), teams, durationMs, handovers }] }` |
+| `archiveGet` | Team, Schiri, Spielleitung, Großbild | `run` | `{ archive }` (`ArchiveData`: Auswertung, Teams, Übergaben, Meldungen, Verkleinerungen, Pausen, Spielfeld, Chat – keine Standorte) |
 
 Der Organisator darf jeden Befehl der Spielleitung auch ohne Beitritt ausführen und tritt jedem Spiel ohne Admin-Passwort
 als Spielleitung bei.

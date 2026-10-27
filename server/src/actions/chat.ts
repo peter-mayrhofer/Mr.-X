@@ -1,6 +1,16 @@
 // Chat (Abschnitt 7.5): Gruppenchat und Direktkanal Team ↔ Spielleitung, Moderation; Push-Einstellungen des Geräts;
 // Archiv (Meilenstein 10) aus D1.
-import { LIMITS, PUSH_KINDS, PUSH_TITLE, type ApiResults, type ChatMessage, type PushKind, type PushReg, type PushSub } from "@mrx/shared";
+import {
+  LIMITS,
+  PUSH_KINDS,
+  PUSH_TITLE,
+  type ApiResults,
+  type ArchiveData,
+  type ChatMessage,
+  type PushKind,
+  type PushReg,
+  type PushSub,
+} from "@mrx/shared";
 import { fail, newKey, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
 
@@ -74,10 +84,24 @@ export function pushSubscribe(room: GameRoom, d: D, a: Auth): ApiResults["pushSu
 
 export async function archiveList(room: GameRoom, _d: D, a: Auth): Promise<ApiResults["archiveList"]> {
   room.who(a, ["team", "schiri", "admin", "screen"]);
-  const r = await room.env.DB.prepare("SELECT run, name, startedAt, endedAt, winner FROM archive WHERE game = ?1 ORDER BY endedAt DESC")
+  const r = await room.env.DB.prepare("SELECT run, data FROM archive WHERE game = ?1 ORDER BY endedAt DESC")
     .bind(room.d.gid)
-    .all<{ run: string; name: string; startedAt: number; endedAt: number; winner: string | null }>();
-  return { runs: r.results };
+    .all<{ run: string; data: string }>();
+  return {
+    runs: r.results.map(({ run, data }) => {
+      const x = JSON.parse(data) as Omit<ArchiveData, "chat">;
+      return {
+        run,
+        name: x.name,
+        startedAt: x.startedAt,
+        endedAt: x.endedAt,
+        winner: x.results.winner ? (x.teams[x.results.winner]?.name ?? null) : null,
+        teams: Object.keys(x.teams).length,
+        durationMs: x.results.durationMs,
+        handovers: x.results.handovers,
+      };
+    }),
+  };
 }
 
 export async function archiveGet(room: GameRoom, d: D, a: Auth): Promise<ApiResults["archiveGet"]> {
@@ -86,5 +110,10 @@ export async function archiveGet(room: GameRoom, d: D, a: Auth): Promise<ApiResu
     .bind(room.d.gid, String(d.run ?? ""))
     .first<{ data: string; chat: string | null }>();
   if (!row) fail("notFound", "Kein Archiv-Eintrag");
-  return { archive: { ...(JSON.parse(row.data) as object), chat: row.chat ? (JSON.parse(row.chat) as unknown) : {} } };
+  return {
+    archive: {
+      ...(JSON.parse(row.data) as Omit<ArchiveData, "chat">),
+      chat: row.chat ? (JSON.parse(row.chat) as ArchiveData["chat"]) : {},
+    },
+  };
 }

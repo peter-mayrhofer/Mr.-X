@@ -436,6 +436,20 @@ export const T = {
     zeitAlsMrx: "Zeit als Mister X",
     faenge: "Fänge",
     ereignisse: "Ereignisse",
+    karte: "Spielfeld Großbild",
+    gleich: "Gleich geht's los!",
+    teamsAngemeldet: (n: number) => `${n} ${n === 1 ? "Team" : "Teams"} angemeldet`,
+    pause: "Pause",
+    nochNichts: "Noch keine Ereignisse",
+    zuschauer: "Zuschauer-Ansicht · nur Mister-X-Meldungen",
+    evMeldung: (team: string) => `Mister X gemeldet (${team})`,
+    evUebergabe: (neu: string, alt: string) => `${neu} hat ${alt} gefangen`,
+    evSperre: (bereich: string) => `Gesperrt: ${bereich}`,
+    evFrei: (bereich: string) => `Wieder frei: ${bereich}`,
+    oeffnen: "Großbild öffnen",
+    hinweis: "Zeigt das Spiel groß für Laptop oder Beamer in der Zentrale – mit allen Positionen. Dieses Gerät bleibt dabei Spielleitung.",
+    zurueck: "Zurück zur Spielleitung",
+    ausblenden: "Ausblenden",
   },
 
   ende: {
@@ -463,6 +477,12 @@ export const T = {
     auswertung: "Auswertung",
     chat: "Chat",
     leer: "Noch keine vergangenen Spiele.",
+    ansicht: "Ansicht",
+    sichern: "Als Datei sichern",
+    drucken: "Drucken",
+    notstopp: "durch Notstopp beendet",
+    chatGeloescht: "Kein Chat (nach 30 Tagen automatisch gelöscht).",
+    nichtGefunden: "Dieser Lauf ist nicht (mehr) im Archiv.",
   },
 
   superadmin: {

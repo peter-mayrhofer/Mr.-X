@@ -129,7 +129,8 @@ describe("Anmeldung über die App", () => {
   it("Zuschauer-Link ohne Passwort", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/z/${G}`);
-    await page.getByText(T.warten.angemeldetAls(T.warten.rolle.viewer, "Zuschauer")).waitFor();
+    await page.getByText(T.grossbild.zuschauer).waitFor();
+    await page.getByText(T.grossbild.gleich).waitFor();
   });
 
   it("Großbild über den Link aus dem Admin-Bereich", async () => {
@@ -139,7 +140,8 @@ describe("Anmeldung über die App", () => {
     expect(link).toContain(`#/g/${G}?k=`);
     const { page } = await phone();
     await page.goto(link.replace(/^https?:\/\/[^/]+\//, URL));
-    await page.getByText(T.warten.angemeldetAls(T.warten.rolle.screen, "Großbild")).waitFor();
+    await page.getByText(T.grossbild.gleich).waitFor();
+    await page.getByText(T.grossbild.teamsAngemeldet(2)).waitFor();
   });
 
   it("Organisator: falsches Passwort abgelehnt", async () => {

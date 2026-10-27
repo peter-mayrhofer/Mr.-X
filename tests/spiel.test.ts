@@ -367,7 +367,8 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
     expect(s).toMatchObject({ phase: "beendet", endedAt: endAt });
     const runs = (await ok(admin, "archiveList")).runs as { run: string; winner: string }[];
     expect(runs).toHaveLength(1);
-    expect(runs[0]).toMatchObject({ run: s.run, winner: s.mrx });
+    const teams = await val(`games/${G}/teams`);
+    expect(runs[0]).toMatchObject({ run: s.run, winner: teams[s.mrx].name, teams: 4, handovers: 3 });
     const arch = (await ok(admin, "archiveGet", { run: s.run })).archive as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(arch.results.winner).toBe(s.mrx);
     expect(arch.reason).toBe("zufall");

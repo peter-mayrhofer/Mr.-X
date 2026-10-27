@@ -230,7 +230,12 @@
     onlogout={logout}
   />
 {:else if phase === "beendet" && archive.value}
-  <Results results={archive.value.results} teams={archive.value.teams} done={{ label: T.tabs.chat, onclick: () => (chatOnly = true) }} />
+  <Results
+    results={archive.value.results}
+    teams={archive.value.teams}
+    onarchive={() => go("/archiv")}
+    done={{ label: T.tabs.chat, onclick: () => (chatOnly = true) }}
+  />
 {:else}
   <TeamHome {view} bind:tab bind:scene {announcement} {shrinking} {push} onsend={send} onlogout={logout} />
 {/if}

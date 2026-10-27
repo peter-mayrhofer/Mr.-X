@@ -2,6 +2,7 @@
 // Im echten Spiel kommen dieselben Strukturen aus der Datenbank (shared/types.ts).
 import {
   LINZ_INNENSTADT,
+  inField,
   type AuditEntry,
   type Results,
   type ChatMessage,
@@ -342,3 +343,119 @@ export const games = [
   { id: "wels-test", name: "Testspiel Wels", phase: "vorbereitung", teams: 0, admins: 1 },
   { id: "linz-2026", name: "Mister X Linz 2026", phase: "archiviert", teams: 24, admins: 2 },
 ];
+
+/** Großbild (Screen 18) aus den Testdaten; Variante „zuschauer“ ohne Positionen, „durchsage“ mit Durchsage */
+export function bigView(variant: string): import("../screens/BigScreen.svelte").BigView {
+  const viewer = variant === "zuschauer";
+  return {
+    gameName: "Mister X Linz 2027",
+    field,
+    intervalMin: config.intervalMin,
+    state: {
+      phase: game.phase,
+      mrx: game.mrx,
+      mrxSince: game.mrxSince,
+      startedAt: game.startedAt,
+      nextReportAt: game.nextReportAt,
+      lastReportAt: game.lastReportAt,
+      cuts: Object.fromEntries(game.locked.map((c) => [c, at(-20)])),
+      rev: 1,
+    },
+    teams,
+    positions: viewer ? undefined : positions,
+    reports,
+    handovers,
+    locks: Object.fromEntries(Object.entries(locks).map(([t, until]) => [t, { until, reason: "uebergabe" as const }])),
+    pauses: [],
+    cutLog: game.locked.map((c, i) => ({ id: `k${i}`, cut: c, locked: true, t: at(-20) })),
+    stats,
+    chat: viewer
+      ? undefined
+      : variant === "durchsage"
+        ? [
+            ...chat,
+            {
+              id: "ann-proto",
+              uid: "a",
+              name: "Peter",
+              kind: "ann",
+              t: clock.now - 1000,
+              text: "Treffpunkt nach dem Spiel: Hauptplatz beim Brunnen!",
+            },
+          ]
+        : chat,
+  };
+}
+
+/** Archiv-Liste (Screen 20) */
+export const archiveRuns: import("@mrx/shared").ArchiveListEntry[] = archive.map((a, i) => ({
+  run: a.id,
+  name: a.name,
+  startedAt: a.date,
+  endedAt: a.date + a.durationMs,
+  winner: a.winner,
+  teams: a.teams,
+  durationMs: a.durationMs,
+  handovers: i ? 14 : 17,
+}));
+
+/** Wiederholung (Screen 20): synthetisches Spiel – Meldungen alle 10 Min, Übergaben laut Zeitstrahl, deterministisch */
+export function archiveData(): import("@mrx/shared").ArchiveData {
+  const start = archive[0]!.date;
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  let p = { lat: 48.3036, lng: 14.2878 };
+  const reports: Record<string, Report> = {};
+  const hos: Record<string, import("@mrx/shared").Handover> = {};
+  const cuts = [
+    { at: 95 * MIN, id: "westen" },
+    { at: 150 * MIN, id: "norden" },
+    { at: 190 * MIN, id: "osten" },
+  ];
+  let t = 0;
+  let prev: string | undefined;
+  for (const [teamId, ms] of result.timeline) {
+    hos[`h${Object.keys(hos).length}`] = {
+      to: teamId,
+      at: start + t,
+      type: prev ? "fang" : "start",
+      byName: "Schiri",
+      ...(prev ? { from: prev, ...p } : {}),
+    };
+    for (let m = 0; m < ms / MIN; m += 10) {
+      const locked = cuts.filter((c) => c.at <= t + m * MIN).map((c) => c.id);
+      for (let k = 0; k < 20; k++) {
+        const q = { lat: p.lat + (rnd() - 0.5) * 0.004, lng: p.lng + (rnd() - 0.5) * 0.006 };
+        if (inField(q, field, locked)) {
+          p = q;
+          break;
+        }
+      }
+      const at = start + t + m * MIN;
+      reports[`r${String(Object.keys(reports).length).padStart(3, "0")}`] = {
+        teamId,
+        ...p,
+        t: at,
+        posAt: at,
+        src: "handy",
+        kind: m ? "auto" : "uebergabe",
+      };
+    }
+    t += ms;
+    prev = teamId;
+  }
+  return {
+    name: archive[0]!.name,
+    reason: "zufall",
+    startedAt: start,
+    endedAt: start + t,
+    results: result,
+    teams,
+    handovers: hos,
+    reports,
+    cutLog: Object.fromEntries(cuts.map((c, i) => [`k${i}`, { cut: c.id, locked: true, t: start + c.at }])),
+    pauses: {},
+    field,
+    chat: Object.fromEntries(chat.map((m, i) => [`c${String(i).padStart(3, "0")}`, { ...m, t: start + (i + 1) * 9 * MIN }])),
+  };
+}
