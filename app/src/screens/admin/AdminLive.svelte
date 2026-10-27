@@ -70,6 +70,12 @@
       lng: p.lng,
       props: { kind: "staff" as const, name: p.name ?? T.status.schiri },
     })),
+    // Tracker in der Fahne (Team-Tracker erscheinen als Standort ihres Teams)
+    ...Object.entries(view.devices).flatMap(([id, d]) =>
+      d.assign === "fahne" && d.pos
+        ? [{ key: `dev-${id}`, lat: d.pos.lat, lng: d.pos.lng, props: { kind: "staff" as const, name: d.name } }]
+        : [],
+    ),
   ]);
 
   async function run(fn: () => Promise<unknown>, okText?: string) {

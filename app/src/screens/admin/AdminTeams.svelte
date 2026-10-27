@@ -15,6 +15,8 @@
   import Button from "../../ui/Button.svelte";
   import Modal from "../../ui/Modal.svelte";
   import AccessPanel from "../parts/AccessPanel.svelte";
+  import TrackerPanel from "../parts/TrackerPanel.svelte";
+  import { API_URL } from "../../lib/server.ts";
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { vor } from "../../lib/format.ts";
@@ -31,7 +33,7 @@
   }
   let { view, api, joinUrl, screenUrl, variant = "teams" }: Props = $props();
   // svelte-ignore state_referenced_locally
-  let tab = $state(variant === "schiris" || variant === "zugaenge" ? variant : "teams");
+  let tab = $state(variant === "schiris" || variant === "zugaenge" || variant === "tracker" ? variant : "teams");
   let action = $state<string | null>(null);
   let rename = $state<{ id: string; name: string } | null>(null);
   let kick = $state<{ kind: "team" | "member"; id: string; name: string } | null>(null);
@@ -63,6 +65,7 @@
       { value: "teams", label: `${T.admin.teams} (${teamIds.length})` },
       { value: "schiris", label: `${T.admin.schiris} (${schiris.length})` },
       { value: "zugaenge", label: T.admin.zugaenge },
+      { value: "tracker", label: `${T.tracker.tab} (${Object.keys(view.devices).length})` },
     ]}
   />
 
@@ -128,6 +131,21 @@
         <p class="muted">{T.admin.keineSchiris}</p>
       {/each}
     </div>
+  {:else if tab === "tracker"}
+    <TrackerPanel
+      gameId={g}
+      devices={view.devices}
+      teams={view.teams}
+      serverUrl="{API_URL || location.origin}/tracker"
+      onadd={(name) => api({ action: "addDevice", gameId: g, name })}
+      onassign={async (device, assign) => {
+        await api({ action: "setDevice", gameId: g, device, assign });
+      }}
+      onremove={async (device) => {
+        await api({ action: "removeDevice", gameId: g, device });
+      }}
+      onkey={async (device) => (await api({ action: "deviceKey", gameId: g, device })).key}
+    />
   {:else}
     <AccessPanel
       gameName={view.gameName}

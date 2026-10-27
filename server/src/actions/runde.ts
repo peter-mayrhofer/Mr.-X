@@ -34,6 +34,13 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
   ] as const)
     room.set(k, {});
   room.set("purgeAt", null);
+  // Tracker bleiben angelegt (Hardware), Zuordnungen zu Teams gibt es nicht mehr; die Fahne bleibt die Fahne
+  room.set(
+    "devices",
+    Object.fromEntries(
+      Object.entries(room.d.devices).map(([id, { pos: _p, ...dev }]) => [id, { ...dev, assign: dev.assign === "fahne" ? "fahne" : null }]),
+    ),
+  );
   room.audit(who, "Neue Runde vorbereitet");
   return {};
 }
@@ -61,6 +68,7 @@ export function removeTeam(room: GameRoom, d: D, a: Auth): ApiResults["removeTea
   room.put("locks", t, null);
   room.put("track", t, null);
   for (const [uid, m] of Object.entries(room.d.members)) if (m.teamId === t) room.removeMember(uid, "removed");
+  for (const [id, dev] of Object.entries(room.d.devices)) if (dev.assign === t) room.put("devices", id, { ...dev, assign: null });
   room.audit(who, "Team entfernt", team.name);
   return {};
 }

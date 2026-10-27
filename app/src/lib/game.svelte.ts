@@ -5,6 +5,7 @@ import type {
   ChatMessage,
   Config,
   CutEvent,
+  Device,
   Field,
   GameState,
   Handover,
@@ -48,6 +49,8 @@ export class GameData {
   /** nur Schiri, Spielleitung, Großbild: Live-Standorte */
   positions = $state.raw<Record<string, Position>>({});
   staff = $state.raw<Record<string, Position & { name?: string }>>({});
+  /** Tracker (Spielleitung, Schiri, Großbild) */
+  devices = $state.raw<Record<string, Device>>({});
   /** nur Spielleitung */
   members = $state.raw<Record<string, Member>>({});
   audit = $state.raw<Keyed<AuditEntry>[]>([]);
@@ -84,6 +87,7 @@ export class GameData {
     }
     if (has("positions")) this.positions = { ...v.positions };
     if (has("staff")) this.staff = { ...v.staff };
+    if (has("devices")) this.devices = { ...v.devices };
     if (has("members")) this.members = { ...v.members };
     if (has("audit")) this.audit = list(v.audit);
   }

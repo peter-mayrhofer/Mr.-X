@@ -485,6 +485,34 @@ export const T = {
     nichtGefunden: "Dieser Lauf ist nicht (mehr) im Archiv.",
   },
 
+  tracker: {
+    tab: "Tracker",
+    erklaerung:
+      "GPS-Tracker oder alte Handys mit der kostenlosen App „Traccar Client“. Ein Tracker in der Fahne ist immer bei Mister X und wird für Meldungen zuerst genommen; ein Team-Tracker ersetzt das Handy des Teams.",
+    fahne: "Fahne (Mister X)",
+    frei: "nicht zugeordnet",
+    sendet: "sendet",
+    still: "still",
+    nochNichts: "noch kein Standort",
+    keine: "Noch keine Tracker angelegt.",
+    name: "Name des Geräts",
+    namePlatzhalter: "z. B. Tracker Fahne",
+    hinzufuegen: "Tracker hinzufügen",
+    einrichtung: "Einrichtung",
+    einrichtungFuer: (n: string) => `Einrichtung für ${n}`,
+    zuordnungFuer: (n: string) => `Zuordnung für ${n}`,
+    zuordnung: "Gehört zu",
+    zugeordnet: (n: string, wem: string) => `${n}: ${wem}`,
+    schritt1:
+      "Am Gerät die App „Traccar Client“ installieren (Play Store bzw. App Store, kostenlos) – bei einem GPS-Tracker stattdessen die Anleitung des Herstellers für einen eigenen Server (OsmAnd-Protokoll).",
+    schritt2: "Als Geräte-Kennung (Device identifier) eintragen:",
+    schritt3: "Als Server-Adresse (Server URL) eintragen:",
+    schritt4: "Genauigkeit „hoch“, Intervall 10 Sekunden, Entfernung 0 – dann den Dienst einschalten.",
+    schritt5: "Nach wenigen Sekunden steht hier „sendet“. Akku-Optimierung für die App ausschalten.",
+    geheim: "Die Geräte-Kennung ist wie ein Passwort – nicht weitergeben. Wird ein Gerät verloren, hier löschen.",
+    loeschenFrage: "Das Gerät kann danach keine Standorte mehr senden.",
+  },
+
   superadmin: {
     titel: "Spiele verwalten",
     angemeldet: "Angemeldet als Organisator",

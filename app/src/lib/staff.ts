@@ -8,6 +8,7 @@ import {
   type ApiResults,
   type AuditEntry,
   type Config,
+  type Device,
   type Field,
   type GameState,
   type Handover,
@@ -29,6 +30,7 @@ export interface StaffView {
   teams: Record<string, Team>;
   positions: Record<string, Position>;
   staff: Record<string, Position & { name?: string }>;
+  devices: Record<string, Device>;
   reports: Keyed<Report>[];
   handovers: Keyed<Handover>[];
   locks: Record<string, Lock>;

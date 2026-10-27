@@ -3,6 +3,7 @@
 // (Hibernation: schlafende Verbindungen kosten nichts) und weckt sich per Alarm für Meldungen, Wartezeiten und Spielende.
 import { DurableObject } from "cloudflare:workers";
 import {
+  FRESH_MS,
   PROTOCOL_VERSION,
   SEES_POSITIONS,
   WS_CLOSE,
@@ -14,6 +15,7 @@ import {
   type ChatMessage,
   type Config,
   type CutEvent,
+  type Device,
   type Field,
   type GameInfo,
   type GameState,
@@ -37,6 +39,7 @@ import {
   type View,
 } from "@mrx/shared";
 import { fail, newKey, reply, type Env } from "./util.ts";
+import { sameText } from "./auth.ts";
 import { sendPush } from "./webpush.ts";
 import { ACTIONS } from "./actions/index.ts";
 import { advance, nextDue, purgeChat } from "./ablauf.ts";
@@ -61,10 +64,20 @@ export interface Data {
   audit: Record<string, AuditEntry & { uid: string }>;
   positions: Record<string, Position>;
   staff: Record<string, Position & { name?: string }>;
+  /** Tracker (Meilenstein 11) mit Zuordnung und letztem Standort */
+  devices: Record<string, Device>;
   /** letzter angenommener Punkt je Team (nur am Server, für Strecke und Plausibilität – kein Bewegungsprofil) */
   track: Record<string, Position>;
   push: Record<string, PushReg>;
-  secrets: { teamPw?: string; schiriCode?: string; adminPw?: string; screenKey?: string; endAt?: number };
+  secrets: {
+    teamPw?: string;
+    schiriCode?: string;
+    adminPw?: string;
+    screenKey?: string;
+    endAt?: number;
+    /** Schlüssel der Tracker (Teil der Geräte-Kennung) */
+    deviceKeys?: Record<string, string>;
+  };
   /** Fehlversuche beim Beitritt je IP (gehasht) */
   rate: Record<string, { n: number; since: number }>;
   /** Löschfrist: Chat dieses Laufs wird dann geleert (Datenschutz, F3) */
@@ -91,6 +104,7 @@ const KEYS: Key[] = [
   "audit",
   "positions",
   "staff",
+  "devices",
   "track",
   "push",
   "secrets",
@@ -100,7 +114,9 @@ const KEYS: Key[] = [
 /** Teile, die jedes Mitglied sieht */
 const PUBLIC = new Set<string>(["info", "config", "field", "state", "teams", "reports", "handovers", "locks", "pauses", "cutLog", "stats"]);
 /** Standorte, die nur gesammelt alle 2 s verteilt und höchstens alle 30 s gespeichert werden */
-const LIVE_KEYS: Key[] = ["positions", "staff", "track", "stats"];
+const LIVE_KEYS: Key[] = ["positions", "staff", "devices", "track", "stats"];
+/** Tracker senden oft – mehr als ein Punkt alle 5 s bringt nichts */
+const TRACKER_MIN_GAP_MS = 5000;
 const POS_BATCH_MS = 2000;
 const POS_SAVE_MS = 30_000;
 const POS_MIN_GAP_MS = 1000;
@@ -146,6 +162,7 @@ const empty = (): Data => ({
   audit: {},
   positions: {},
   staff: {},
+  devices: {},
   track: {},
   push: {},
   secrets: {},
@@ -409,6 +426,7 @@ export class GameRoom extends DurableObject<Env> {
     if (SEES_POSITIONS.includes(m.role)) {
       v.positions = d.positions;
       v.staff = d.staff;
+      v.devices = d.devices;
     }
     if (m.role === "admin") {
       v.members = d.members;
@@ -437,6 +455,7 @@ export class GameRoom extends DurableObject<Env> {
         return id.split("/")[0] === m.teamId ? [key, id, value] : null;
       case "positions":
       case "staff":
+      case "devices":
         return SEES_POSITIONS.includes(m.role) ? [key, id, value] : null;
       case "members":
       case "audit":
@@ -508,28 +527,60 @@ export class GameRoom extends DurableObject<Env> {
     if (!p) return;
     this.#posAt.set(uid, now);
     if (m.role === "team" && m.teamId) {
-      const t = m.teamId;
-      if (this.d.state.phase === "laeuft") {
-        // Plausibilität und Strecke (E-09): nur gegen den letzten angenommenen Punkt
-        const step = stepCheck(this.d.track[t] ?? null, p);
-        if (step.kind === "jump") p.suspect = true;
-        else if (step.kind === "reset" || step.kind === "move") {
-          this.d.track[t] = { lat: p.lat, lng: p.lng, acc: p.acc, t: p.t };
-          if (step.kind === "move") {
-            const s = { distM: (this.d.stats[t]?.distM ?? 0) + Math.round(step.distM) };
-            this.d.stats[t] = s;
-            this.#livePatches.set(`stats/${t}`, ["stats", t, s]);
-          }
-        }
-      }
-      this.d.positions[t] = p;
-      this.#livePatches.set(`positions/${t}`, ["positions", t, p]);
+      // Tracker des Teams hat Vorrang vor dem Handy, solange er frisch sendet
+      if (Object.values(this.d.devices).some((dev) => dev.assign === m.teamId && dev.pos && now - dev.pos.t <= FRESH_MS)) return;
+      this.#teamPos(m.teamId, p);
     } else if (m.role === "schiri" || m.role === "admin") {
       const s = { ...p, name: m.name };
       this.d.staff[uid] = s;
-      this.#livePatches.set(`staff/${uid}`, ["staff", uid, s]);
-    } else return;
+      this.#live("staff", uid, s);
+    }
+  }
+
+  /** neuer Standort eines Teams (Handy oder Tracker): Plausibilität, Strecke, verteilen */
+  #teamPos(t: string, p: Position) {
+    if (this.d.state.phase === "laeuft") {
+      // Plausibilität und Strecke (E-09): nur gegen den letzten angenommenen Punkt
+      const step = stepCheck(this.d.track[t] ?? null, p);
+      if (step.kind === "jump") p.suspect = true;
+      else if (step.kind === "reset" || step.kind === "move") {
+        this.d.track[t] = { lat: p.lat, lng: p.lng, acc: p.acc, t: p.t };
+        if (step.kind === "move") {
+          const s = { distM: (this.d.stats[t]?.distM ?? 0) + Math.round(step.distM) };
+          this.d.stats[t] = s;
+          this.#live("stats", t, s);
+        }
+      }
+    }
+    this.d.positions[t] = p;
+    this.#live("positions", t, p);
+  }
+
+  #live(key: Key, id: string, value: unknown) {
+    this.#livePatches.set(`${key}/${id}`, [key as Patch[0], id, value]);
     if (!this.#liveTimer) this.#liveTimer = setTimeout(() => this.#flushLive(), POS_BATCH_MS);
+  }
+
+  /**
+   * Standort von einem Tracker (POST/GET /tracker, Meilenstein 11). `key` = Schlüssel aus der Geräte-Kennung.
+   * Fahne → erste Quelle für Mister-X-Meldungen; Team → Standort des Teams. Liefert false bei unbekanntem Schlüssel.
+   */
+  trackerPos(key: string, raw: unknown): boolean {
+    const keys = this.d.secrets.deviceKeys ?? {};
+    const id = Object.keys(keys).find((k) => sameText(key, keys[k]));
+    const dev = id ? this.d.devices[id] : undefined;
+    if (!id || !dev) return false;
+    const now = Date.now();
+    if (this.d.state.phase === "beendet" || now - (this.#posAt.get(`dev:${id}`) ?? 0) < TRACKER_MIN_GAP_MS) return true;
+    const p = validPos(raw, now);
+    if (!p) return true;
+    this.#posAt.set(`dev:${id}`, now);
+    p.tracker = true;
+    const next = { ...dev, pos: p };
+    this.d.devices[id] = next;
+    this.#live("devices", id, next);
+    if (dev.assign && dev.assign !== "fahne" && this.d.teams[dev.assign]) this.#teamPos(dev.assign, { ...p });
+    return true;
   }
 
   /** gesammelte Standorte verteilen (höchstens alle 2 s) und gelegentlich speichern (höchstens alle 30 s) */

@@ -1,5 +1,5 @@
 // Cloudflare-Konfiguration (docs/BETRIEB.md). Ein Worker liefert die App aus und ist der Spiel-Server:
-// /api, /api/pos, /ws und /health laufen durch den Worker, alles andere sind die Dateien der App (app/dist).
+// /api, /api/pos, /ws, /tracker und /health laufen durch den Worker, alles andere sind die Dateien der App (app/dist).
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "mister-x",
@@ -10,7 +10,7 @@
     "directory": "../app/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api", "/api/*", "/ws", "/health", "/__test/*"],
+    "run_worker_first": ["/api", "/api/*", "/ws", "/tracker", "/health", "/__test/*"],
   },
   // ein Spielraum pro Spiel (SQLite-Speicher, im Gratis-Tarif die einzige Art) + die Zentrale für den Organisator-Login
   "durable_objects": {

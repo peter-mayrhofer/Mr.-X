@@ -17,15 +17,24 @@ import type { Data, GameRoom } from "./room.ts";
 /** Chat-Aufbewahrung nach Spielende (F3) */
 export const CHAT_KEEP_MS = 30 * DAY;
 
-/** Wo ist Mister X? Quellen nach Abschnitt 4.3: Mister-X-Handy, sonst ein Schiri, der der Fahne folgt; sonst der letzte bekannte. */
+/** Neuester Standort eines Trackers in der Fahne (die Fahne ist immer bei Mister X) */
+export const flagTracker = (d: Data): Position | undefined =>
+  Object.values(d.devices)
+    .filter((dev) => dev.assign === "fahne" && dev.pos)
+    .map((dev) => dev.pos!)
+    .sort((a, b) => b.t - a.t)[0];
+
+/**
+ * Wo ist Mister X? Quellen nach Abschnitt 4.3: Tracker der Fahne, Mister-X-Handy (bzw. Tracker des Teams), ein Schiri,
+ * der der Fahne folgt; sonst der letzte bekannte.
+ */
 export function locate(d: Data, mrx: string, now: number): { pos: Position; src: ReportSource } | null {
   const following = Object.entries(d.members)
     .filter(([, m]) => m.role === "schiri" && m.followsFlag)
     .map(([uid]) => d.staff[uid])
     .filter((p) => p != null)
     .sort((a, b) => b.t - a.t);
-  // ponytail: Tracker der Fahne kommt mit der Tracker-Schnittstelle (Meilenstein 11) als erste Quelle dazu
-  return bestPosition({ team: d.positions[mrx], schiri: following[0] }, now);
+  return bestPosition({ tracker: flagTracker(d), team: d.positions[mrx], schiri: following[0] }, now);
 }
 
 /** Meldung schreiben (+ System-Nachricht im Chat). Ohne irgendeinen Standort nur ein Hinweis im Chat. */
@@ -121,6 +130,7 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   // Datenschutz (Abschnitt 9.2): Live-Standorte sofort löschen, Chat nach der Frist
   room.set("positions", {});
   room.set("staff", {});
+  room.set("devices", Object.fromEntries(Object.entries(d.devices).map(([id, { pos: _p, ...dev }]) => [id, dev])));
   room.set("track", {});
   room.set("locks", {});
   room.set("secrets", { ...d.secrets, endAt: undefined });

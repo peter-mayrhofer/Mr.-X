@@ -49,6 +49,11 @@ export type ApiRequest =
   // Push (Web Push, VAPID): Abo dieses Geräts und gewünschte Arten
   // sub weglassen = Abo bleibt, nur Arten ändern; null = kein Web-Push (Android-App: lokale Benachrichtigungen)
   | { action: "pushSubscribe"; gameId: string; sub?: PushSub | null; prefs: Partial<Record<PushKind, boolean>> }
+  // Tracker (Meilenstein 11): Gerät anlegen (liefert den Schlüssel für die Geräte-Kennung), zuordnen, entfernen
+  | { action: "addDevice"; gameId: string; name: string }
+  | { action: "setDevice"; gameId: string; device: string; assign: string | null }
+  | { action: "removeDevice"; gameId: string; device: string }
+  | { action: "deviceKey"; gameId: string; device: string }
   // Archiv (Meilenstein 10)
   | { action: "archiveList"; gameId: string }
   | { action: "archiveGet"; gameId: string; run: string }
@@ -138,6 +143,10 @@ export interface ApiResults {
   chat: { id: string };
   deleteChat: Record<string, never>;
   pushSubscribe: Record<string, never>;
+  addDevice: { device: string; key: string };
+  setDevice: Record<string, never>;
+  removeDevice: Record<string, never>;
+  deviceKey: { key: string };
   archiveList: { runs: ArchiveListEntry[] };
   archiveGet: { archive: ArchiveData };
 }

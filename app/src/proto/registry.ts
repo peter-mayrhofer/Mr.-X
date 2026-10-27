@@ -157,6 +157,7 @@ export const SCREENS: ScreenDef[] = [
       { id: "teams", label: "Teams" },
       { id: "schiris", label: "Schiris" },
       { id: "zugaenge", label: "Zugänge" },
+      { id: "tracker", label: "Tracker" },
     ],
   },
   {

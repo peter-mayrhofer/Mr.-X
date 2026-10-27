@@ -56,6 +56,20 @@ export interface Position extends Point {
   heading?: number;
   battery?: number;
   suspect?: boolean;
+  /** kam von einem Tracker (nicht vom Handy) */
+  tracker?: boolean;
+}
+
+/**
+ * Externes Gerät (GPS-Tracker oder altes Handy mit „Traccar Client“, Meilenstein 11). `assign`: „fahne“ = steckt in
+ * der Fahne und ist damit immer bei Mister X; Team-Id = Standort dieses Teams (hat Vorrang vor dem Handy); null = frei.
+ */
+export interface Device {
+  name: string;
+  assign: string | null;
+  createdAt: number;
+  /** letzter Standort (nur Spielleitung, Schiri, Großbild sehen ihn) */
+  pos?: Position;
 }
 
 export type ReportSource = "handy" | "tracker" | "schiri" | "letzter";

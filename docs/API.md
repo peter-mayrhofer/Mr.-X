@@ -13,6 +13,7 @@ Alles läuft unter **einer Adresse** (z. B. `https://mister-x.mr-x-ooe.workers.d
 | `POST /api` | JSON | Befehle: Beitritt, Spielsteuerung, Chat, Verwaltung … |
 | `GET /ws` | WebSocket | Live-Verbindung eines Geräts zu seinem Spiel |
 | `POST /api/pos` | JSON | Standort der Android-App im Hintergrund (natives HTTP) |
+| `GET`/`POST /tracker` | OsmAnd/Traccar | Standorte von GPS-Trackern und „Traccar Client“ (Abschnitt 5a) |
 | `GET /health` | JSON | Status: `{"ok":true,"protocol":1}` |
 
 Die Android-App (Adresse `https://localhost`) darf `/api` über CORS aufrufen; alle anderen fremden Seiten nicht.
@@ -91,6 +92,9 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 | `chat` | Team, Schiri, Spielleitung | `text`, `dm?` (Team-Id = Direktkanal) | `{ id }` |
 | `deleteChat` | Spielleitung | `id`, `dm?` | `{}` |
 | `pushSubscribe` | Mitglied | `sub` (Web-Push-Abo; `null` = keins; weglassen = behalten), `prefs` | `{}` |
+| `addDevice` | Spielleitung | `name` | `{ device, key }` – Geräte-Kennung für den Tracker: `{spiel-code}.{key}` |
+| `setDevice` | Spielleitung | `device`, `assign` (`"fahne"`, Team-Id oder `null`) | `{}` |
+| `removeDevice` / `deviceKey` | Spielleitung | `device` | `{}` / `{ key }` |
 | `archiveList` | Team, Schiri, Spielleitung, Großbild | – | `{ runs: [{ run, name, startedAt, endedAt, winner (Teamname), teams, durationMs, handovers }] }` |
 | `archiveGet` | Team, Schiri, Spielleitung, Großbild | `run` | `{ archive }` (`ArchiveData`: Auswertung, Teams, Übergaben, Meldungen, Verkleinerungen, Pausen, Spielfeld, Chat – keine Standorte) |
 
@@ -169,7 +173,7 @@ im Direktkanal ist die Kennung `"teamId/nachrichtId"`. `applyPatch()` in `shared
 | `info`, `config`, `field`, `state`, `teams`, `reports`, `handovers`, `locks`, `pauses`, `cutLog`, `stats` | ✔ | ✔ | ✔ | ✔ | ✔ |
 | `chat` | ✔ | ✔ | ✔ | ✔ | ✖ |
 | `dm` (Direktkanäle) | nur eigener | ✖ | alle | ✖ | ✖ |
-| `positions`, `staff` (Live-Standorte) | **✖** | ✔ | ✔ | ✔ | **✖** |
+| `positions`, `staff`, `devices` (Live-Standorte, Tracker) | **✖** | ✔ | ✔ | ✔ | **✖** |
 | `members`, `audit` | ✖ | ✖ | ✔ | ✖ | ✖ |
 | Passwort-Hashes, geheimes Spielende, Streckenpunkte, Push-Abos anderer | ✖ | ✖ | ✖ | ✖ | ✖ |
 
@@ -190,6 +194,31 @@ Content-Type: application/json
 Antwort: `{ "ok": true, "result": { "notes": [ { "id": "…", "kind": "wartezeit", "title": "Bitte stehen bleiben", "body": "…", "t": 1793122700000 } ] } }`
 – alle Benachrichtigungen für dieses Gerät seit `since`, die es vielleicht verpasst hat (die App zeigt jede nur einmal).
 Gesendet wird im Hintergrund höchstens alle 30 s ([`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md)).
+
+## 5a. Tracker: `/tracker`
+
+Kompatibel mit dem **OsmAnd-Protokoll**, wie es die kostenlose App **„Traccar Client“** und viele GPS-Tracker sprechen.
+Im Gerät werden eingetragen: **Server-Adresse** `https://mister-x.mr-x-ooe.workers.dev/tracker` und **Geräte-Kennung**
+`{spiel-code}.{schlüssel}` (zeigt die App unter Teams & Zugänge → Tracker → Einrichtung).
+
+```http
+POST /tracker?id=linz-2027.k3J9xQ2mZp1aB7cD&lat=48.3059&lon=14.2862&timestamp=1793122720&accuracy=6&batt=77&bearing=90
+```
+
+Ebenso als Formular-Daten oder als JSON des neuen Traccar Client:
+
+```json
+{ "device_id": "linz-2027.k3J9xQ2mZp1aB7cD",
+  "location": { "timestamp": "2026-10-27T17:22:00Z", "coords": { "latitude": 48.3059, "longitude": 14.2862, "accuracy": 8, "heading": 90 }, "battery": { "level": 0.42 } } }
+```
+
+Antwort `200 OK` (angenommen), `403` (unbekanntes Gerät), `400` (unvollständig). Zeit in Sekunden, Millisekunden oder
+ISO; fehlt die Genauigkeit, wird `hdop × 5` bzw. 25 m angenommen. Höchstens ein Punkt alle 5 s pro Gerät; nach dem
+Spielende wird nichts mehr gespeichert, bei Spielende werden alle Tracker-Standorte gelöscht.
+
+**Zuordnung:** `fahne` = Tracker steckt in der Fahne → **erste Standortquelle** für Mister-X-Meldungen und Übergabeort
+(Reihenfolge: Tracker der Fahne > Mister-X-Gerät > Schiri, der der Fahne folgt > letzter bekannter). Team-Id = der
+Tracker **ist** der Standort dieses Teams und hat Vorrang vor dem Handy, solange er frisch sendet (≤ 2 Min).
 
 ## 5. Push
 

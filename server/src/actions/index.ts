@@ -7,6 +7,7 @@ import { handover, undo } from "./uebergabe.ts";
 import { removeMember, removeTeam, renameTeam, resetRound } from "./runde.ts";
 import { archiveGame, deleteGame, setField } from "./feld.ts";
 import { archiveGet, archiveList, chat, deleteChat, pushSubscribe } from "./chat.ts";
+import { addDevice, deviceKey, removeDevice, setDevice } from "./geraete.ts";
 
 type Action = (room: GameRoom, d: Record<string, unknown>, a: Auth) => unknown;
 
@@ -32,4 +33,8 @@ export const ACTIONS: Partial<Record<ApiRequest["action"], Action>> = {
   pushSubscribe,
   archiveList,
   archiveGet,
+  addDevice,
+  setDevice,
+  removeDevice,
+  deviceKey,
 };

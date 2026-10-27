@@ -52,6 +52,15 @@ export function staffView(as: "schiri" | "admin", phase: StaffView["state"]["pha
     teams: M.teams,
     positions: M.positions,
     staff: Object.fromEntries(M.staff.map((s) => [s.uid, { ...s.pos, name: s.name }])),
+    devices: {
+      d1: {
+        name: "Tracker Fahne",
+        assign: "fahne",
+        createdAt: 1,
+        pos: { ...M.positions[M.MRX]!, t: Date.now() - 20_000, battery: 64, tracker: true },
+      },
+      d2: { name: "Altes Handy Wels", assign: "wels", createdAt: 2 },
+    },
     reports: M.reports,
     handovers: sim.handovers,
     locks: sim.locks,

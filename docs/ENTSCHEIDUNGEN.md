@@ -346,3 +346,21 @@ Auswertung und Chat ohne Karte (der Browser kann daraus ein PDF machen).
 **Verworfen:** Bild/PDF der Karte erzeugen (die WebGL-Karte müsste dafür dauerhaft langsamer zeichnen; nice-to-have
 laut Auftrag) – ein Bildschirmfoto der Wiederholung erfüllt denselben Zweck.
 
+---
+
+## Meilenstein 11: Tracker
+
+### E-41 Tracker über das OsmAnd-Protokoll, Kennung = Spiel-Code + Schlüssel
+**Entscheidung:** Externe Geräte senden an `/tracker` im **OsmAnd-Protokoll** (Parameter oder Formular; zusätzlich das
+JSON des neuen Traccar Client) – das sprechen die kostenlose App „Traccar Client“ und viele 4G-Tracker, ohne eigenen
+Traccar-Server. Die **Geräte-Kennung** ist `{spiel-code}.{schlüssel}`: der Worker findet daran den Spielraum ohne
+Datenbank-Abfrage, der Spielraum prüft den Schlüssel in konstanter Zeit. Zuordnung durch die Spielleitung: **Fahne**
+(erste Quelle für Meldungen und Übergabeort, IDEEN.md) oder **Team** (ersetzt das Handy, solange der Tracker frisch
+sendet) oder frei (nur zum Testen sichtbar). Höchstens ein Punkt alle 5 s pro Gerät, höchstens 20 Geräte pro Spiel.
+Datenschutz wie bei Handys: Tracker-Standorte sehen nur Spielleitung, Schiri und Großbild; bei Spielende gelöscht;
+„Neue Runde“ hebt Team-Zuordnungen auf (die Teams gibt es nicht mehr), die Fahne bleibt.
+**Warum:** Kein Hardware-Kauf nötig, um es auszuprobieren (altes Handy + Traccar Client), keine zusätzlichen Kosten,
+dieselbe Plausibilitätsprüfung und Strecke wie für Handys.
+**Verworfen:** eigener Traccar-Server (≈ 5 €/Monat, IDEEN.md), Tracker-Token als eigene Sitzung (ein Geräteschlüssel
+in der Kennung ist alles, was Traccar Client übertragen kann).
+

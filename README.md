@@ -21,7 +21,8 @@ Dieser Branch enthält den **Neubau** nach [`PROMPT-NEUBAU.md`](PROMPT-NEUBAU.md
 | 9 – Android-App | Capacitor-App mit Standort im Hintergrund (Vordergrund-Dienst, natives HTTP), Benachrichtigungen, Akku-Optimierung, eigenen Icons; signierte APK per GitHub Action ([`docs/ANDROID-APK.md`](docs/ANDROID-APK.md)) | fertig |
 | 9b – Umzug auf Cloudflare | Worker + ein Spielraum (Durable Object) pro Spiel + D1, Live-Verbindung nach Rolle gefiltert, Alarme statt Takt, eigene Anmeldung (Organisator-Passwort mit Setup-Geheimnis), Web Push mit VAPID, Android mit lokalen Benachrichtigungen; Firebase entfernt. [`docs/BETRIEB.md`](docs/BETRIEB.md), [`docs/API.md`](docs/API.md), [`docs/CLOUDFLARE-LIMITS.md`](docs/CLOUDFLARE-LIMITS.md) | fertig |
 | 10 – Großbild & Archiv | Großbild für Laptop/Beamer (Karte mit allen Teams, Mister X + Spur, Countdown, Spielzeit, Rangliste, Ereignis-Ticker, große Durchsagen), Zuschauer-Ansicht fürs Handy ohne Live-Positionen, Auswertung mit Feier, Archiv mit Wiederholung (Zeitschieberegler), Sichern als Datei, Drucken | fertig |
-| 11–13 | Tracker, Härtung, Abnahme | in Arbeit |
+| 11 – Tracker | Endpunkt `/tracker` im OsmAnd-/Traccar-Format (auch JSON des neuen Traccar Client), Geräte-Kennung mit Schlüssel, Zuordnung „Gerät → Team / Fahne“ in der Spielleitung mit Einrichtungs-Anleitung, Tracker der Fahne als erste Standortquelle, Team-Tracker vor Handy | fertig |
+| 12–13 | Härtung, Abnahme | in Arbeit |
 
 ## Ordner
 

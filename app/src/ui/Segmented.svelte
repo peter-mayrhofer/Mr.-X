@@ -30,6 +30,7 @@
 <style>
   .seg {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     padding: 4px;
     border-radius: var(--r-m);
@@ -37,7 +38,7 @@
     border: var(--border-w) solid var(--line);
   }
   button {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: var(--touch);
     border: 0;
     border-radius: calc(var(--r-m) - 4px);

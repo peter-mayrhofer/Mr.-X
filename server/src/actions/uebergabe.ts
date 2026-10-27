@@ -12,6 +12,7 @@ import {
 } from "@mrx/shared";
 import { fail, MIN, newKey } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { flagTracker } from "../ablauf.ts";
 
 type D = Record<string, unknown>;
 const REQUEST_ID = /^[A-Za-z0-9_-]{8,40}$/;
@@ -37,8 +38,10 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
   // F10: Übergabe-Meldung sofort, die nächste automatische nach dem vollen Intervall
   room.setState({ ...cur, mrx: to, mrxSince: now, lastReportAt: now, nextReportAt: now + cfg.intervalMin * MIN, lastHandover: rid });
 
-  // Übergabeort = Standort des neuen Mister X; sonst altes Mister-X-Handy, sonst der Schiri, der übergibt
+  // Übergabeort = Tracker der Fahne (wird gerade übergeben), sonst Standort des neuen Mister X, sonst altes
+  // Mister-X-Handy, sonst der Schiri, der übergibt
   const placeList: [Position | null, ReportSource][] = [
+    [fresh(flagTracker(room.d), now), "tracker"],
     [fresh(pos[to], now), "handy"],
     [fresh(pos[from], now), "handy"],
     [fresh(room.d.staff[who.uid], now), "schiri"],

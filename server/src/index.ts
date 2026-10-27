@@ -14,6 +14,7 @@ import {
 } from "@mrx/shared";
 import { verify } from "./auth.ts";
 import { ensureSchema } from "./d1.ts";
+import { parseTracker } from "./tracker.ts";
 import { DAY, type Env } from "./util.ts";
 import type { Auth } from "./room.ts";
 
@@ -133,6 +134,14 @@ async function nativePos(req: Request, env: Env): Promise<Response> {
   return out(req, (await room(env, c.g).nativePos(c.u, body.p, Number(body.since) || 0)) as ApiReply);
 }
 
+/** Tracker (OsmAnd/Traccar): Antwort nur Text – die Geräte zeigen bzw. werten sie nicht aus */
+async function tracker(req: Request, env: Env): Promise<Response> {
+  const fix = await parseTracker(req);
+  if (!fix || !GAME_ID.test(fix.gameId)) return new Response("Ungültig", { status: 400 });
+  const ok = await room(env, fix.gameId).trackerPos(fix.key, fix.p);
+  return new Response(ok ? "OK" : "Gerät unbekannt", { status: ok ? 200 : 403 });
+}
+
 /** nur mit TEST_HOOKS=1 (lokale Tests): Spielraum lesen/ändern, Alarm sofort auslösen, alles zurücksetzen */
 async function test(req: Request, env: Env, path: string): Promise<Response> {
   const b = (await req.json()) as { g?: string; op?: "get" | "set" | "tick" | "outbox" | "drop"; path?: string; value?: unknown };
@@ -155,6 +164,7 @@ export default {
       return path === "/api" ? api(req, env) : nativePos(req, env);
     }
     if (path === "/ws") return ws(req, env);
+    if (path === "/tracker") return tracker(req, env);
     if (path === "/health") return Response.json({ ok: true, protocol: PROTOCOL_VERSION });
     if (path.startsWith("/__test/") && env.TEST_HOOKS === "1") return test(req, env, path);
     return env.ASSETS.fetch(req);

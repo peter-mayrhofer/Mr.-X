@@ -8,6 +8,7 @@ import type {
   ChatMessage,
   Config,
   CutEvent,
+  Device,
   Field,
   GameState,
   Handover,
@@ -42,6 +43,8 @@ export interface View {
   /** nur Spielleitung, Schiri, Großbild */
   positions?: Record<string, Position>;
   staff?: Record<string, Position & { name?: string }>;
+  /** Tracker mit Zuordnung und letztem Standort (nur Spielleitung, Schiri, Großbild) */
+  devices?: Record<string, Device>;
   /** nur Spielleitung */
   members?: Record<string, Member>;
   audit?: Record<string, AuditEntry>;

@@ -147,9 +147,10 @@ Jedes Spiel ist ein Spielraum mit diesen Teilen (gespeichert je Teil im SQLite-S
 | `chat`, `dm/{t}` | Gruppenchat (`msg`/`sys`/`ann`), Direktkanal Team ↔ Spielleitung | Chat: alle außer Zuschauer; Direktkanal: Team `{t}` + Spielleitung |
 | `positions/{t}`, `staff/{uid}` | letzter Standort je Team bzw. Schiri (`lat, lng, acc, t, heading?, battery?, suspect?`) | **nur** Spielleitung, Schiri, Großbild |
 | `members/{uid}`, `audit` | Geräte mit Rolle/Team/Name/`followsFlag`; Protokoll (wer, wann, was) | nur Spielleitung (jeder sieht seinen eigenen Eintrag als `me`) |
+| `devices/{id}` | Tracker: Name, Zuordnung (`fahne` / Team / frei), letzter Standort | Spielleitung, Schiri, Großbild |
 | `track/{t}` | letzter angenommener Punkt je Team für die Strecke | **niemand** |
 | `push/{uid}` | Web-Push-Abo + gewünschte Arten | nur das Gerät selbst (`me.push`) |
-| `secrets` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, **geheimes Spielende** | **niemand** |
+| `secrets` | Passwort-Hashes (Admin/Schiri/Team), Großbild-Schlüssel, Tracker-Schlüssel, **geheimes Spielende** | **niemand** |
 | `rate` | Fehlversuche beim Beitritt je IP (gehasht) | niemand |
 | `purgeAt` | Löschfrist für den Chat nach Spielende | niemand |
 

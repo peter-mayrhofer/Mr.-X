@@ -79,6 +79,7 @@
           teams: game.teams,
           positions: game.positions,
           staff: game.staff,
+          devices: game.devices,
           reports: game.reports,
           handovers: game.handovers,
           locks: game.locks,
