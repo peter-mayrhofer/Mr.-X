@@ -1,6 +1,15 @@
 // Testdaten für den Klick-Prototyp. Zeiten relativ zum Laden der Seite, damit Countdowns echt laufen.
 // Im echten Spiel kommen dieselben Strukturen aus der Datenbank (shared/types.ts).
-import { LINZ_INNENSTADT, type AuditEntry, type ChatMessage, type Config, type Position, type Report, type Team } from "@mrx/shared";
+import {
+  LINZ_INNENSTADT,
+  type AuditEntry,
+  type Results,
+  type ChatMessage,
+  type Config,
+  type Position,
+  type Report,
+  type Team,
+} from "@mrx/shared";
 import { clock } from "../lib/clock.svelte.ts";
 
 const MIN = 60_000;
@@ -281,7 +290,7 @@ export const stats: Record<string, { distM: number; mrxMs: number; mrxCount: num
 };
 
 /** Ergebnis eines beendeten Spiels (Screen 19 + Archiv) */
-export const result = {
+export const result: Results = {
   winner: "auwiesen",
   durationMs: 221 * MIN,
   handovers: 17,
@@ -289,18 +298,22 @@ export const result = {
   longest: { teamId: "auwiesen", ms: 72 * MIN },
   most: { teamId: "pichling", count: 4 },
   farthest: { teamId: "ansfelden", m: 14_300 },
-  timeline: [
-    ["neueheimat", 12],
-    ["pichling", 19],
-    ["spallerhof", 14],
-    ["kleinmuenchen", 41],
-    ["pichling", 9],
-    ["traun", 22],
-    ["pichling", 11],
-    ["ebelsberg", 8],
-    ["pichling", 13],
-    ["auwiesen", 72],
-  ] as [string, number][],
+  mrxMs: {},
+  mrxCount: {},
+  timeline: (
+    [
+      ["neueheimat", 12],
+      ["pichling", 19],
+      ["spallerhof", 14],
+      ["kleinmuenchen", 41],
+      ["pichling", 9],
+      ["traun", 22],
+      ["pichling", 11],
+      ["ebelsberg", 8],
+      ["pichling", 13],
+      ["auwiesen", 72],
+    ] as [string, number][]
+  ).map(([t, m]) => [t, m * MIN]),
 };
 
 export const archive = [

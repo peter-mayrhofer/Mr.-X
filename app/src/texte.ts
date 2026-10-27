@@ -107,6 +107,9 @@ export const T = {
     startGeplant: (uhr: string) => `Start geplant um ${uhr}`,
     check: { standort: "Standort", push: "Benachrichtigungen", akku: "Akku" },
     gut: "gut",
+    sucht: "wird gesucht …",
+    aus: "aus",
+    nichtErlaubt: "nicht erlaubt",
     teams: (n: number) => `${n} Teams angemeldet`,
     nochKeine: "Noch keine Teams angemeldet.",
     regelnKurz: "Das Wichtigste",
@@ -145,6 +148,13 @@ export const T = {
     regeln: ["Fahne sichtbar", "Keine Gebäude", "Zusammenbleiben"],
     grenzeNah: (m: number) => `Achtung: nur noch ${m} m bis zur Spielfeldgrenze`,
     draussen: "Ihr seid außerhalb des Spielfelds! Sofort zurück!",
+    keinGps: "Euer Handy findet kein GPS – gemeldet wird dann der Standort eures Schiris.",
+  },
+
+  verkleinerung: {
+    titel: (bereich: string) => `${bereich} wird gesperrt!`,
+    text: "Der schraffierte Bereich gehört nicht mehr zum Spielfeld.",
+    frei: (bereich: string) => `${bereich} ist wieder frei`,
   },
 
   wartezeit: {
@@ -152,6 +162,7 @@ export const T = {
     grund: "Ihr wart in der Nähe der Übergabe. Mister X bekommt Vorsprung.",
     grundStart: "Mister X hat Vorsprung. Ihr dürft nach der ersten Meldung loslaufen.",
     grundAlterMrx: "Ihr wurdet gefangen. Der neue Mister X bekommt Vorsprung.",
+    grundManuell: "Die Spielleitung hat euch eine Wartezeit gegeben.",
     weiterUm: (uhr: string) => `Ihr dürft um ${uhr} weiter`,
     karte: "Karte ansehen",
   },
@@ -164,6 +175,7 @@ export const T = {
     vorsprung: (min: number) => `${min} Min Vorsprung – lauft!`,
     erwischt: "Erwischt!",
     erwischtText: (min: number) => `Ihr wurdet gefangen. Jetzt ${min} Min warten.`,
+    zurueck: "Die Übergabe wurde rückgängig gemacht.",
   },
 
   chat: {
@@ -177,6 +189,7 @@ export const T = {
     leer: "Noch keine Nachrichten.",
     zeichen: (n: number, max: number) => `${n}/${max}`,
     postfach: "Postfach",
+    zuSchnell: "Nicht so schnell – höchstens eine Nachricht alle 2 Sekunden.",
   },
 
   tabs: { karte: "Karte", chat: "Chat", regeln: "Regeln", mehr: "Mehr" },
@@ -246,6 +259,7 @@ export const T = {
     einstellungen: "Einstellungen",
     regeln: "Regeln & Hilfe",
     team: "Unser Team",
+    gelaufen: (strecke: string) => `${strecke} gelaufen`,
     abmelden: "Abmelden",
   },
 
@@ -369,6 +383,8 @@ export const T = {
     dauer: "Spieldauer",
     zeitstrahl: "Wer war wann Mister X?",
     archiv: "Zum Archiv",
+    zurKarte: "Karte & Chat",
+    auswertung: "Auswertung",
   },
 
   archiv: {

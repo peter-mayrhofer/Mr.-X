@@ -2,9 +2,43 @@
   Hauptansicht für Teams (Screens 6, 7, 8, 10, 11, 22): Vollbild-Karte, Statusleiste, Kartenknöpfe,
   untere Navigation Karte · Chat · Regeln · Mehr. Mister-X-Modus = rote Farbwelt + Rahmen (Abschnitt 7.3).
 -->
+<script module lang="ts">
+  import type { Config, Field, GameState, Lock, Position, Report, Team } from "@mrx/shared";
+  import type { Keyed, Msg } from "../lib/game.svelte.ts";
+
+  /** Alles, was die Team-Ansicht zeigt – im echten Spiel live aus der Datenbank, im Prototyp aus Testdaten */
+  export interface TeamView {
+    field: Field;
+    config: Config;
+    state: GameState;
+    teams: Record<string, Team>;
+    myTeamId: string;
+    myUid: string;
+    /** eigener Standort (GPS dieses Handys) */
+    me: Position | null;
+    reports: Keyed<Report>[];
+    /** eigene Wartezeit */
+    lock: (Lock & { caught?: boolean }) | null;
+    chat: Msg[];
+    dm: Msg[];
+    online: boolean;
+    lastDataAt: number;
+    distM: number;
+  }
+
+  /** Übergabe-Moment (Screen 9) */
+  export interface Scene {
+    variant: "alle" | "neuMrx" | "erwischt";
+    from: string;
+    to: string;
+    type: "fang" | "strafe";
+    at: number;
+  }
+</script>
+
 <script lang="ts">
   import { Flag, LogOut, Map as MapIcon, MessageCircle, Menu, ScrollText, Settings, Shrink, Users, X } from "@lucide/svelte";
-  import { zoneStatus } from "@mrx/shared";
+  import { distanceToBoundaryM, zoneStatus, type ZoneStatus } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import StatusCard from "./parts/StatusCard.svelte";
   import MapControls from "./parts/MapControls.svelte";
@@ -21,37 +55,53 @@
   import IconButton from "../ui/IconButton.svelte";
   import { clock } from "../lib/clock.svelte.ts";
   import { uhr, vor, meter } from "../lib/format.ts";
-  import { signal } from "../lib/signal.ts";
-  import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
-  import * as M from "../proto/mock.svelte.ts";
 
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   interface Props {
-    mode?: "jaeger" | "mrx";
+    view: TeamView;
     tab?: Tab;
-    overlay?: "lock" | "handover-alle" | "handover-neu" | "handover-erwischt" | null;
-    variant?: string;
+    scene?: Scene | null;
+    /** neueste Durchsage, solange sie oben stehen soll */
+    announcement?: Msg | null;
+    /** gerade gesperrter Bereich → Banner + Hervorhebung auf der Karte */
+    shrinking?: string | null;
+    /** nur Prototyp: Spielfeld-Warnung erzwingen */
+    zoneOverride?: ZoneStatus;
+    onsend: (text: string, channel: "alle" | "dm") => void;
+    onlogout: () => void;
   }
 
-  let { mode = "jaeger", tab = $bindable("karte"), overlay = $bindable(null), variant = "" }: Props = $props();
+  let {
+    view,
+    tab = $bindable("karte"),
+    scene = $bindable(null),
+    announcement = null,
+    shrinking = null,
+    zoneOverride,
+    onsend,
+    onlogout,
+  }: Props = $props();
   let sub = $state<"menu" | "einstellungen" | "team">("menu");
   let ruleHint = $state(true);
   let map: GameMap | undefined = $state();
+  let seen = $state(clock.now);
 
-  const isMrx = $derived(mode === "mrx");
-  const me = $derived(isMrx ? M.positions[M.MRX]! : M.positions[M.ME]!);
-  const myTeam = $derived(isMrx ? M.teams[M.MRX]! : M.teams[M.ME]!);
-  const mrxTeam = M.teams[M.MRX]!;
-  const shrinking = $derived(variant === "verkleinerung");
-  const locked = $derived(shrinking ? [...M.game.locked, "norden"] : M.game.locked);
-  const trail = $derived(M.reports.filter((r) => r.t >= M.game.mrxSince));
+  const st = $derived(view.state);
+  const isMrx = $derived(st.mrx === view.myTeamId);
+  const me = $derived(view.me);
+  const unknown: Team = { name: "–", short: "?", color: "#888" };
+  const myTeam = $derived(view.teams[view.myTeamId] ?? unknown);
+  const mrxTeam = $derived((st.mrx && view.teams[st.mrx]) || unknown);
+  const locked = $derived(Object.keys(st.cuts ?? {}));
+  // Spur seit der letzten Übergabe (Abschnitt 7.2), rückgängig gemachte Meldungen nicht
+  const trail = $derived(view.reports.filter((r) => !r.void && r.teamId === st.mrx && r.t >= (st.mrxSince ?? 0)));
   const last = $derived(trail.at(-1));
+  const firstReport = $derived(!st.lastReportAt || st.lastReportAt <= (st.startedAt ?? 0));
 
   // Spielfeld-Warnung für Mister X: gelb unter 50 m, rot draußen (Abschnitt 7.3)
-  const zone = $derived(
-    variant === "grenze" ? "grenze" : variant === "draussen" ? "draussen" : isMrx ? zoneStatus(me, M.field, locked) : "drinnen",
-  );
+  const zone = $derived<ZoneStatus>(zoneOverride ?? (isMrx && me ? zoneStatus(me, view.field, locked) : "drinnen"));
+  const edgeM = $derived(me && zone === "grenze" ? Math.round(distanceToBoundaryM(me, view.field, locked)) : 0);
 
   const pins = $derived<MapPin[]>([
     ...(last
@@ -64,15 +114,21 @@
               kind: "mrx" as const,
               label: vor(last.t, clock.now),
               sub: [uhr(last.t), T.karte.quelle[last.src]].filter(Boolean).join(" · "),
-              ping: M.game.ping,
+              ping: trail.length,
             },
           },
         ]
       : []),
-    { key: "me", lat: me.lat, lng: me.lng, props: { kind: "me" as const, heading: me.heading, label: T.karte.wir } },
+    ...(me ? [{ key: "me", lat: me.lat, lng: me.lng, props: { kind: "me" as const, heading: me.heading, label: T.karte.wir } }] : []),
   ]);
 
-  const unread = $derived(tab === "chat" ? 0 : 3);
+  // Ungelesen: Nachrichten und Durchsagen nach dem letzten Blick in den Chat (System-Meldungen zeigt die Karte)
+  $effect(() => {
+    if (tab === "chat") seen = Math.max(seen, view.chat.at(-1)?.t ?? 0, view.dm.at(-1)?.t ?? 0);
+  });
+  const unread = $derived(
+    tab === "chat" ? 0 : [...view.chat, ...view.dm].filter((m) => m.t > seen && m.kind !== "sys" && m.uid !== view.myUid).length,
+  );
   const tabs = $derived([
     { id: "karte", label: T.tabs.karte, icon: MapIcon },
     { id: "chat", label: T.tabs.chat, icon: MessageCircle, badge: unread },
@@ -81,61 +137,63 @@
   ]);
 
   function showReport(id: string) {
-    const r = M.reports.find((x) => x.id === id);
+    const r = view.reports.find((x) => x.id === id);
     tab = "karte";
     if (r) setTimeout(() => map?.flyTo(r), 50);
   }
 
-  function sendChat(text: string, ch: "alle" | "dm") {
-    const msg = { id: `p${Date.now()}`, uid: "u-ur", name: myTeam.name, teamId: M.ME, kind: "msg" as const, t: clock.now, text };
-    (ch === "alle" ? M.chat : M.dm).push(msg);
-    signal("nachricht");
-  }
+  const lockLeft = $derived(view.lock && !isMrx ? view.lock.until - clock.now : 0);
+  const cutName = (id: string) => view.field.cuts[id]?.short ?? id;
 </script>
 
 <div class="screen" class:mrx={isMrx}>
   <div class="mapzone">
     <GameMap
       bind:this={map}
-      field={M.field}
+      field={view.field}
       {locked}
-      preview={shrinking ? ["norden"] : []}
+      preview={shrinking ? [shrinking] : []}
       {trail}
       {pins}
-      accuracy={me}
+      accuracy={me ?? undefined}
       padding={{ top: 190, bottom: 90, left: 24, right: 90 }}
     />
 
     <div class="top">
-      {#if variant === "durchsage"}
-        <Banner tone="ann" title={T.chat.durchsage} live>Treffpunkt nach dem Spiel: Hauptplatz beim Brunnen.</Banner>
+      {#if announcement}
+        <Banner tone="ann" title={T.chat.durchsage} live>{announcement.text}</Banner>
       {/if}
       {#if shrinking}
         <div class="shrink">
-          <Banner tone="warn" icon={Shrink} title="Der Norden wird gesperrt!" live
-            >Schraffierter Bereich gehört nicht mehr zum Spielfeld.</Banner
-          >
+          <Banner tone="warn" icon={Shrink} title={T.verkleinerung.titel(cutName(shrinking))} live>{T.verkleinerung.text}</Banner>
         </div>
       {/if}
-      {#if isMrx && zone === "grenze"}
-        <Banner tone="warn" live>{T.mrx.grenzeNah(35)}</Banner>
-      {:else if isMrx && zone === "draussen"}
+      {#if zone === "grenze"}
+        <Banner tone="warn" live>{T.mrx.grenzeNah(edgeM || 35)}</Banner>
+      {:else if zone === "draussen"}
         <Banner tone="danger" live>{T.mrx.draussen}</Banner>
+      {:else if isMrx && !me}
+        <Banner tone="warn" live>{T.mrx.keinGps}</Banner>
       {/if}
       <StatusCard
         {mrxTeam}
         {isMrx}
-        nextReportAt={M.game.nextReportAt}
-        intervalMs={M.config.intervalMin * 60_000}
-        startedAt={M.game.startedAt}
-        gpsAcc={me.acc}
-        online={variant !== "offline"}
-        lastDataAt={clock.now - 4 * 60_000}
+        nextReportAt={st.nextReportAt ?? clock.now}
+        intervalMs={(firstReport ? view.config.headStartMin : view.config.intervalMin) * 60_000}
+        startedAt={st.startedAt ?? clock.now}
+        gpsAcc={me?.acc}
+        online={view.online}
+        lastDataAt={view.lastDataAt}
+        paused={st.phase === "pause"}
       />
     </div>
 
     <div class="side">
-      <MapControls onmrx={last ? () => map?.flyTo(last) : undefined} onme={() => map?.flyTo(me)} onfield={() => map?.fitField()} />
+      <MapControls
+        onmrx={last ? () => map?.flyTo(last) : undefined}
+        onme={me ? () => map?.flyTo(me) : undefined}
+        onfield={() => map?.fitField()}
+      />
     </div>
 
     <div class="bottom">
@@ -161,19 +219,19 @@
     {#if tab !== "karte"}
       <div class="pane">
         {#if tab === "chat"}
-          <ChatView group={M.chat} direct={M.dm} teams={M.teams} myUid="u-ur" onreport={showReport} onsend={sendChat} />
+          <ChatView group={view.chat} direct={view.dm} teams={view.teams} myUid={view.myUid} onreport={showReport} {onsend} />
         {:else if tab === "regeln"}
           <AppBar title={T.regeln.titel} />
-          <RulesView config={M.config} />
+          <RulesView config={view.config} />
         {:else if sub === "einstellungen"}
           <AppBar title={T.einstellungen.titel} onback={() => (sub = "menu")} />
-          <SettingsView onlogout={() => go("/prototyp/1")} />
+          <SettingsView {onlogout} />
         {:else if sub === "team"}
           <AppBar title={T.mehr.team} onback={() => (sub = "menu")} />
           <div class="teaminfo">
             <TeamBadge short={myTeam.short} color={myTeam.color} size={88} mrx={isMrx} />
             <h2>{myTeam.name}</h2>
-            <p class="muted">2 Geräte angemeldet · {meter(M.stats[M.ME]!.distM)} gelaufen</p>
+            <p class="muted">{T.mehr.gelaufen(meter(view.distM))}</p>
           </div>
         {:else}
           <AppBar title={T.mehr.titel} />
@@ -204,34 +262,22 @@
   <TabBar items={tabs} active={tab} onselect={(id) => ((tab = id as Tab), (sub = "menu"))} />
 </div>
 
-{#if overlay === "lock"}
-  <LockOverlay until={M.locks.bindermichl!} total={M.config.waitMin * 60_000} />
-{:else if overlay === "handover-alle"}
-  <HandoverScene
-    variant="alle"
-    from={M.teams.spallerhof!}
-    to={mrxTeam}
-    waitMin={M.config.waitMin}
-    at={clock.now}
-    onclose={() => (overlay = null)}
+{#if lockLeft > 0 && view.lock}
+  <LockOverlay
+    until={view.lock.until}
+    total={(view.lock.reason === "start" ? view.config.headStartMin : view.config.waitMin) * 60_000}
+    reason={view.lock.caught ? "alterMrx" : view.lock.reason}
   />
-{:else if overlay === "handover-neu"}
+{/if}
+{#if scene}
   <HandoverScene
-    variant="neuMrx"
-    from={M.teams.spallerhof!}
-    to={mrxTeam}
-    waitMin={M.config.waitMin}
-    at={clock.now}
-    onclose={() => (overlay = null)}
-  />
-{:else if overlay === "handover-erwischt"}
-  <HandoverScene
-    variant="erwischt"
-    from={M.teams.spallerhof!}
-    to={mrxTeam}
-    waitMin={M.config.waitMin}
-    at={clock.now}
-    onclose={() => (overlay = "lock")}
+    variant={scene.variant}
+    from={view.teams[scene.from] ?? unknown}
+    to={view.teams[scene.to] ?? unknown}
+    type={scene.type}
+    waitMin={view.config.waitMin}
+    at={scene.at}
+    onclose={() => (scene = null)}
   />
 {/if}
 

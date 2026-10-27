@@ -17,7 +17,7 @@
   import StaffLogin from "../screens/StaffLogin.svelte";
   import Onboarding from "../screens/Onboarding.svelte";
   import Lobby from "../screens/Lobby.svelte";
-  import TeamHome from "../screens/TeamHome.svelte";
+  import TeamHome from "./ProtoTeam.svelte";
   import Referee from "../screens/Referee.svelte";
   import AdminShell from "../screens/admin/AdminShell.svelte";
   import AdminLive from "../screens/admin/AdminLive.svelte";
@@ -75,7 +75,11 @@
     onsuperadmin={() => go("/prototyp/21")}
     onback={() => go("/prototyp/1")}
   />
-{:else if n === 4}<Onboarding variant={v} />
+{:else if n === 4}<Onboarding
+    variant={v}
+    actions={Object.fromEntries([1, 2, 3].map((i) => [i, () => toast(T.allgemein.prototyp("Freigabe"), "ok")]))}
+    ondone={() => go("/prototyp/5")}
+  />
 {:else if n === 5}<Lobby
     gameName="Mister X Linz 2027"
     myTeam={{ id: M.ME, ...M.teams[M.ME]! }}
@@ -108,7 +112,12 @@
 {:else if n === 16}<AdminShell section="zonen"><ZoneEditor variant={v} /></AdminShell>
 {:else if n === 17}<AdminShell section="protokoll"><AdminLog /></AdminShell>
 {:else if n === 18}<BigScreen variant={v} />
-{:else if n === 19}<Results />
+{:else if n === 19}<Results
+    results={M.result}
+    teams={M.teams}
+    onarchive={() => go("/prototyp/20?v=replay")}
+    onscreen={() => go("/prototyp/18")}
+  />
 {:else if n === 20}<Archive variant={v} />
 {:else if n === 21}<SuperAdmin
     email="mr.x.rf.ooe@gmail.com"

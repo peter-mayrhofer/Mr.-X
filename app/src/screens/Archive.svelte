@@ -35,7 +35,8 @@
       { at: 190 * MIN, id: "osten" },
     ];
     let t = 0;
-    for (const [teamId, mins] of M.result.timeline) {
+    for (const [teamId, ms] of M.result.timeline) {
+      const mins = ms / MIN;
       handovers.push({ at: t, to: teamId, ...p });
       for (let m = 0; m < mins; m += 10) {
         const locked = cuts.filter((c) => c.at <= t + m * MIN).map((c) => c.id);

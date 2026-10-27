@@ -8,19 +8,22 @@
   import Modal from "../../ui/Modal.svelte";
   import Logo from "../../ui/Logo.svelte";
   import { theme, type ThemeChoice } from "../../lib/theme.svelte.ts";
-  import { setMuted, signal } from "../../lib/signal.ts";
+  import { signal } from "../../lib/signal.ts";
+  import { prefs } from "../../lib/prefs.svelte.ts";
   import { T } from "../../texte.ts";
 
-  let { onlogout }: { onlogout: () => void } = $props();
+  interface Props {
+    onlogout: () => void;
+    /** Push-Arten (Meilenstein 8) – ohne diese Angabe wird der Bereich nicht gezeigt */
+    push?: Record<string, boolean>;
+    /** Hintergrund-Standort gibt es nur in der Android-App (Meilenstein 9) */
+    background?: { checked: boolean };
+  }
+
+  let { onlogout, push, background }: Props = $props();
 
   let choice = $state<ThemeChoice>(theme.choice);
-  let sound = $state(true);
-  let wake = $state(true);
-  let bg = $state(true);
-  const push = $state(Object.fromEntries(Object.keys(T.einstellungen.pushArten).map((k) => [k, true])) as Record<string, boolean>);
   let confirmOut = $state(false);
-
-  $effect(() => setMuted(!sound));
 </script>
 
 <div class="settings">
@@ -35,19 +38,27 @@
   </Card>
 
   <Card label={T.einstellungen.ton} icon={Volume2}>
-    <Switch label={T.einstellungen.tonAn} bind:checked={sound} />
+    <Switch label={T.einstellungen.tonAn} bind:checked={prefs.sound} />
     <Button variant="secondary" size="m" icon={Volume2} onclick={() => signal("uebergabe")}>{T.einstellungen.tonTesten}</Button>
   </Card>
 
-  <Card label={T.einstellungen.push} icon={Bell}>
-    {#each Object.entries(T.einstellungen.pushArten) as [k, label] (k)}
-      <Switch {label} bind:checked={push[k]} />
-    {/each}
-  </Card>
+  {#if push}
+    <Card label={T.einstellungen.push} icon={Bell}>
+      {#each Object.entries(T.einstellungen.pushArten) as [k, label] (k)}
+        <Switch {label} bind:checked={push[k]!} />
+      {/each}
+    </Card>
+  {/if}
 
   <Card label={T.einstellungen.standort} icon={MapPin}>
-    <Switch label={T.einstellungen.hintergrund} hint="Dauer-Benachrichtigung „Mister X läuft – Standort wird geteilt“" bind:checked={bg} />
-    <Switch label={T.einstellungen.wach} bind:checked={wake} />
+    {#if background}
+      <Switch
+        label={T.einstellungen.hintergrund}
+        hint="Dauer-Benachrichtigung „Mister X läuft – Standort wird geteilt“"
+        bind:checked={background.checked}
+      />
+    {/if}
+    <Switch label={T.einstellungen.wach} bind:checked={prefs.wake} />
   </Card>
 
   <Card label={T.einstellungen.ueber} icon={Info}>
@@ -55,7 +66,7 @@
       <Logo height={40} />
       <Logo which="kinderfreunde-ooe" height={30} />
     </div>
-    <p class="muted">{T.einstellungen.version} 2.0.0-prototyp · {T.app.voll}</p>
+    <p class="muted">{T.einstellungen.version} {__APP_VERSION__} · {T.app.voll}</p>
     <p class="muted">{T.datenschutz.kurz}</p>
   </Card>
 

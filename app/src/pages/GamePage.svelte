@@ -1,6 +1,6 @@
 <!--
-  „/spiel“: alles nach dem Beitritt. Meilenstein 3: Warteraum für alle Rollen, Spielleitung mit Zugängen.
-  Karte, Chat und Spielablauf folgen in Meilenstein 5/6.
+  „/spiel“: alles nach dem Beitritt. Teams: TeamPage (Meilenstein 5). Andere Rollen vorerst Warteraum, Spielleitung mit
+  Zugängen – Schiri- und Admin-Ansicht folgen in Meilenstein 6.
 -->
 <script lang="ts">
   import type { Config, Team } from "@mrx/shared";
@@ -8,6 +8,7 @@
   import ErrorStates from "../screens/ErrorStates.svelte";
   import AccessPanel from "../screens/parts/AccessPanel.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
+  import TeamPage from "./TeamPage.svelte";
   import { session, leaveGame } from "../lib/session.svelte.ts";
   import { live } from "../lib/live.svelte.ts";
   import { call } from "../lib/api.ts";
@@ -40,6 +41,8 @@
     <Skeleton h="40px" />
     <Skeleton h="200px" r="var(--r-l)" />
   </div>
+{:else if session.member.role === "team" && session.user}
+  <TeamPage {g} uid={session.user.uid} member={session.member} gameName={session.info.name} />
 {:else}
   <Lobby
     gameName={session.info.name}

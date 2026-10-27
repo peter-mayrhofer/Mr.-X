@@ -183,3 +183,11 @@ Server mit dem schon gespeicherten Ergebnis.
 werden abgemeldet (Hinweis auf ihrem Gerät), das Team-Passwort gelöscht; Spielleitung, Großbild, Zuschauer, Schiri-Code,
 Einstellungen, Spielfeld, Protokoll und Archiv bleiben.
 **Warum:** So kann ein laufendes Spiel nicht versehentlich gelöscht werden, und das Archiv entsteht immer vollständig.
+
+### E-27 Standort adaptiv senden, Ereignisse nur ab dem Öffnen melden
+**Entscheidung:** Das Handy sendet seinen Standort alle 10 s, wenn es sich mehr als 15 m bewegt hat, sonst spätestens
+alle 30 s (fragt dafür im Stillstand aktiv nach). Ungenaue Punkte gehen mit ihrer Genauigkeit mit; der Server wertet.
+Nach dem Spielende sendet die App nichts mehr. Ton, Vibration und Szenen gibt es nur für Ereignisse nach dem Öffnen der
+App – wer neu lädt, bekommt keine alten Übergaben noch einmal vorgespielt. Der Ungelesen-Zähler zählt Nachrichten und
+Durchsagen, keine System-Meldungen (die zeigt die Karte).
+**Warum:** Akku schonen (Abschnitt 9.1), aber der Standort bleibt für Meldungen und Umkreis immer „frisch“ (2 Min).

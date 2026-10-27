@@ -1,20 +1,25 @@
-<!-- Screen 4: Onboarding beim ersten Beitritt (4 kurze Screens). -->
+<!-- Screen 4: Onboarding beim ersten Beitritt (4 kurze Screens). Knöpfe ohne Aktion (z. B. Akku nur in der App) entfallen. -->
 <script lang="ts">
   import { BatteryMedium, BellRing, Check, Flag, MapPin, Smartphone } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
   import Banner from "../ui/Banner.svelte";
-  import { go } from "../lib/router.svelte.ts";
-  import { toast } from "../ui/toast.svelte.ts";
   import { T } from "../texte.ts";
 
-  let { variant = "1" }: { variant?: string } = $props();
+  interface Props {
+    variant?: string;
+    /** Schritt 2–4: die echte Freigabe anfragen */
+    actions?: Partial<Record<1 | 2 | 3, () => void | Promise<void>>>;
+    ondone: () => void;
+  }
+  let { variant = "1", actions = {}, ondone }: Props = $props();
   // svelte-ignore state_referenced_locally
   let step = $state(Math.min(4, Math.max(1, Number(variant) || 1)) - 1);
   const ICONS = [Flag, MapPin, BellRing, BatteryMedium];
   const s = $derived(T.onboarding.schritte[step]!);
   const IconC = $derived(ICONS[step]!);
 
-  const next = () => (step < 3 ? step++ : go("/prototyp/5"));
+  const next = () => (step < 3 ? step++ : ondone());
+  const action = $derived(actions[step as 1 | 2 | 3]);
 </script>
 
 <main class="ob">
@@ -22,7 +27,7 @@
     <div class="dots" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step + 1} aria-label="Schritt {step + 1} von 4">
       {#each [0, 1, 2, 3] as i (i)}<i class:on={i <= step}></i>{/each}
     </div>
-    <Button variant="ghost" size="m" onclick={() => go("/prototyp/5")}>{T.onboarding.ueberspringen}</Button>
+    <Button variant="ghost" size="m" onclick={ondone}>{T.onboarding.ueberspringen}</Button>
   </header>
 
   {#key step}
@@ -48,12 +53,12 @@
   {/key}
 
   <footer>
-    {#if "knopf" in s}
+    {#if "knopf" in s && action}
       <Button
         size="xl"
         block
-        onclick={() => {
-          toast(T.allgemein.prototyp(s.knopf), "ok");
+        onclick={async () => {
+          await action();
           next();
         }}>{s.knopf}</Button
       >

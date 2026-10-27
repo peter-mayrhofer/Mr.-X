@@ -1,0 +1,160 @@
+// Ende-zu-Ende (Meilenstein 5): drei simulierte Team-Handys mit Fake-GPS spielen durch die echte App –
+// Onboarding, Warteraum mit Standort-Check, Start mit Wartezeit, Meldung (Handys stoßen selbst an), Chat, Übergabe mit
+// Szenen, Rückgängig, Durchsage, Verkleinerung, Spielfeld-Warnung für Mister X, Spielende mit Auswertung.
+// Die Spielleitung bedient hier noch die Server-Schnittstelle direkt (ihre Oberfläche folgt in Meilenstein 6).
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createServer, type ViteDevServer } from "vite";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
+import { T } from "../app/src/texte.ts";
+import { call, db, device, resetEmulators, superAdminToken, val } from "./helpers.ts";
+
+const G = "linz-team";
+const PORT = 5181;
+const URL = `http://127.0.0.1:${PORT}/`;
+const HAUPTPLATZ = { latitude: 48.3059, longitude: 14.2862 };
+let vite: ViteDevServer;
+let browser: Browser;
+let admin: { uid: string; token: string };
+const phones: Record<string, { ctx: BrowserContext; page: Page; id: string }> = {};
+
+const api = async (action: string, extra: Record<string, unknown> = {}) => {
+  const r = await call(admin.token, { action, gameId: G, ...extra });
+  if (r.error) throw new Error(`${action}: ${r.error.message}`);
+  return r.result!;
+};
+const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
+
+async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    locale: "de-AT",
+    reducedMotion: "reduce",
+    permissions: ["geolocation"],
+    geolocation: { latitude: HAUPTPLATZ.latitude + dLat, longitude: HAUPTPLATZ.longitude, accuracy: 8 },
+  });
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => console.error("PAGEERROR", name, e.message));
+  await page.goto(`${URL}#/beitreten/${G}`);
+  await page.getByLabel(T.beitritt.teamname).fill(name);
+  await page.getByLabel(T.beitritt.passwort).fill("falke27");
+  await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+  if (viaOnboarding) {
+    await page.getByRole("heading", { name: T.onboarding.schritte[0].titel }).waitFor();
+    await page.getByRole("button", { name: T.allgemein.weiter, exact: true }).click();
+    await page.getByRole("button", { name: T.onboarding.schritte[1].knopf, exact: true }).click();
+    await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
+  } else await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
+  await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
+  const teams = (await val(`games/${G}/teams`)) as Record<string, { name: string }>;
+  const id = Object.entries(teams).find(([, t]) => t.name === name)![0];
+  phones[name] = { ctx, page, id };
+}
+
+beforeAll(async () => {
+  await resetEmulators();
+  const sa = await superAdminToken();
+  await call(sa, { action: "createGame", gameId: G, name: "Team-Test", template: "linz", adminPassword: "admin1234" });
+  admin = await device();
+  await call(admin.token, { action: "join", gameId: G, role: "admin", name: "Peter", secret: "admin1234" });
+  await api("setSecret", { kind: "teamPw", value: "falke27" });
+  vite = await createServer({
+    root: "app",
+    configFile: "app/vite.config.ts",
+    mode: "emu",
+    logLevel: "error",
+    server: { port: PORT, strictPort: true, host: "127.0.0.1" },
+  });
+  await vite.listen();
+  browser = await chromium.launch();
+}, 120_000);
+
+afterAll(async () => {
+  await browser?.close();
+  await vite?.close();
+});
+
+// mehrere Handys + Karte im Browser: großzügige Zeitgrenze pro Schritt (CI-Rechner sind langsamer)
+describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
+  it("Onboarding fragt den Standort an, Warteraum zeigt „Standort: gut“, Position kommt beim Server an", async () => {
+    await joinTeam("Urfahr", 0, true);
+    await joinTeam("Traun", 0.0005);
+    await joinTeam("Leonding", 0.003);
+    const p = phones.Urfahr!;
+    await visible(p.page, `${T.lobby.check.standort}: ${T.lobby.gut}`);
+    await expect.poll(() => val(`games/${G}/pos/${p.id}/lat`), { timeout: 15_000 }).toBeCloseTo(HAUPTPLATZ.latitude, 4);
+  }, 90_000);
+
+  it("Start: Mister X sieht den roten Modus, Jäger die Wartezeit mit Countdown", async () => {
+    await api("startGame", { mrx: phones.Urfahr!.id });
+    await visible(phones.Urfahr!.page, T.status.ihrSeidMrx);
+    const lock = phones.Traun!.page.getByRole("alertdialog", { name: T.wartezeit.titel });
+    await lock.waitFor();
+    expect(await lock.getByText(T.wartezeit.grundStart).isVisible()).toBe(true);
+    await visible(phones.Leonding!.page, "Urfahr");
+  });
+
+  it("Countdown abgelaufen → die Handys stoßen den Server an → Meldung auf der Karte", async () => {
+    await db.ref(`games/${G}/locks`).set(null);
+    await phones.Traun!.page.getByRole("alertdialog", { name: T.wartezeit.titel }).waitFor({ state: "detached" });
+    await db.ref(`games/${G}/state/nextReportAt`).set(Date.now() + 2000);
+    await expect.poll(async () => Object.keys((await val(`games/${G}/reports`)) ?? {}).length, { timeout: 20_000 }).toBe(1);
+    await visible(phones.Traun!.page, T.karte.letzteMeldung);
+  });
+
+  it("Chat: Nachricht kommt beim anderen Team an, mit Ungelesen-Zähler", async () => {
+    const t = phones.Traun!.page;
+    await t.getByRole("button", { name: T.tabs.chat, exact: true }).click();
+    await t.getByPlaceholder(T.chat.platzhalter).fill("Wir sind beim Brunnen!");
+    await t.getByRole("button", { name: T.chat.senden }).click();
+    const l = phones.Leonding!.page;
+    const chatTab = l.getByRole("button", { name: `${T.tabs.chat}, 1 neu`, exact: true });
+    await chatTab.waitFor({ timeout: 10_000 });
+    await chatTab.click();
+    await visible(l, "Wir sind beim Brunnen!");
+    await l.getByRole("button", { name: T.tabs.karte, exact: true }).click();
+    await t.getByRole("button", { name: T.tabs.karte, exact: true }).click();
+  });
+
+  it("Übergabe: neuer Mister X, Erwischt + Wartezeit, alle anderen sehen „Gefangen!“", async () => {
+    const before = (await val(`games/${G}/state/mrx`)) as string;
+    expect(before).toBe(phones.Urfahr!.id);
+    await api("handover", { to: phones.Traun!.id, type: "fang", expectedMrx: before, requestId: "e2e-fang-1" });
+    await phones.Traun!.page.getByRole("alertdialog", { name: T.uebergabe.ihrSeidMrx }).waitFor();
+    await visible(phones.Urfahr!.page, T.uebergabe.erwischt);
+    await visible(phones.Leonding!.page, T.uebergabe.gefangen);
+  });
+
+  it("Rückgängig schließt die Szene und erklärt es", async () => {
+    await api("undo", { handoverId: "e2e-fang-1" });
+    await phones.Traun!.page.getByRole("alertdialog", { name: T.uebergabe.ihrSeidMrx }).waitFor({ state: "detached" });
+    await visible(phones.Traun!.page, T.uebergabe.zurueck);
+    await visible(phones.Urfahr!.page, T.status.ihrSeidMrx);
+  });
+
+  it("Durchsage und Verkleinerung erscheinen groß oben", async () => {
+    // Szenen der Übergabe schließen
+    for (const n of ["Urfahr", "Leonding"]) {
+      const ok = phones[n]!.page.getByRole("alertdialog").getByRole("button", { name: T.allgemein.ok, exact: true });
+      if (await ok.isVisible()) await ok.click();
+    }
+    await api("announce", { text: "Treffpunkt Hauptplatz um 17 Uhr" });
+    await visible(phones.Leonding!.page, "Treffpunkt Hauptplatz um 17 Uhr");
+    await api("setCut", { cutId: "norden", locked: true });
+    await visible(phones.Leonding!.page, T.verkleinerung.titel("Norden"));
+  });
+
+  it("Mister X verlässt das Spielfeld → rote Warnung", async () => {
+    await phones.Urfahr!.ctx.setGeolocation({ latitude: 48.33, longitude: 14.24, accuracy: 8 });
+    await visible(phones.Urfahr!.page, T.mrx.draussen);
+  });
+
+  it("Spielende: alle sehen die Auswertung, Standorte sind gelöscht und werden nicht neu gesendet", async () => {
+    await db.ref(`secrets/${G}/endAt`).set(Date.now() - 1000);
+    await api("poke");
+    for (const n of ["Urfahr", "Traun", "Leonding"]) await visible(phones[n]!.page, T.ende.sieger);
+    await visible(phones.Traun!.page, "Urfahr");
+    await phones.Traun!.ctx.setGeolocation({ latitude: 48.307, longitude: 14.287, accuracy: 8 });
+    await new Promise((r) => setTimeout(r, 2500));
+    expect(await val(`games/${G}/pos`)).toBeNull();
+  });
+});

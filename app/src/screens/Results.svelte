@@ -1,23 +1,36 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
   import { Archive, Footprints, Medal, Repeat, Route, Timer } from "@lucide/svelte";
+  import type { Results, Team } from "@mrx/shared";
   import Confetti from "../ui/Confetti.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
   import Button from "../ui/Button.svelte";
   import Logo from "../ui/Logo.svelte";
   import { dauer, km } from "../lib/format.ts";
-  import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
-  import * as M from "../proto/mock.svelte.ts";
 
-  const R = M.result;
-  const winner = M.teams[R.winner]!;
-  const total = R.timeline.reduce((s, [, m]) => s + m, 0);
-  const awards = [
-    { icon: Timer, label: T.ende.laengste, team: R.longest.teamId, value: dauer(R.longest.ms) },
-    { icon: Repeat, label: T.ende.oefteste, team: R.most.teamId, value: `${R.most.count}×` },
-    { icon: Footprints, label: T.ende.distanz, team: R.farthest.teamId, value: km(R.farthest.m) },
-  ];
+  interface Props {
+    results: Results;
+    teams: Record<string, Team>;
+    onarchive?: () => void;
+    onscreen?: () => void;
+    /** z. B. „Zur Startseite“ für Teams nach dem Spiel */
+    done?: { label: string; onclick: () => void };
+  }
+  let { results: R, teams, onarchive, onscreen, done }: Props = $props();
+
+  const team = (id: string | null | undefined): Team => (id && teams[id]) || { name: "–", short: "?", color: "#888" };
+  const winner = $derived(team(R.winner));
+  const timeline = $derived(R.timeline ?? []);
+  const total = $derived(timeline.reduce((s, [, ms]) => s + ms, 0));
+  // RTDB speichert keine null-Werte → fehlende Auszeichnungen (z. B. niemand gelaufen) weglassen
+  const awards = $derived(
+    [
+      R.longest && { icon: Timer, label: T.ende.laengste, team: R.longest.teamId, value: dauer(R.longest.ms) },
+      R.most && { icon: Repeat, label: T.ende.oefteste, team: R.most.teamId, value: `${R.most.count}×` },
+      R.farthest && { icon: Footprints, label: T.ende.distanz, team: R.farthest.teamId, value: km(R.farthest.m) },
+    ].filter((a) => !!a),
+  );
 </script>
 
 <Confetti />
@@ -35,7 +48,7 @@
   <section class="awards">
     {#each awards as a (a.label)}
       {@const IconC = a.icon}
-      {@const t = M.teams[a.team]!}
+      {@const t = team(a.team)}
       <article>
         <IconC size={30} aria-hidden="true" />
         <p class="caps">{a.label}</p>
@@ -53,18 +66,19 @@
 
   <section class="timeline">
     <h2 class="caps">{T.ende.zeitstrahl}</h2>
-    <div class="bar" role="img" aria-label={R.timeline.map(([id, m]) => `${M.teams[id]!.name} ${m} Min`).join(", ")}>
-      {#each R.timeline as [id, m], i (i)}
-        {@const t = M.teams[id]!}
-        <span style:flex={m} style:background={t.color} title="{t.name}: {m} Min">{m >= 15 ? t.short : ""}</span>
+    <div class="bar" role="img" aria-label={timeline.map(([id, ms]) => `${team(id).name} ${dauer(ms)}`).join(", ")}>
+      {#each timeline as [id, ms], i (i)}
+        {@const t = team(id)}
+        <span style:flex={ms} style:background={t.color} title="{t.name}: {dauer(ms)}">{ms >= total / 12 ? t.short : ""}</span>
       {/each}
     </div>
-    <div class="axis num"><span>0:00</span><span>{dauer(total * 60_000)}</span></div>
+    <div class="axis num"><span>0:00</span><span>{dauer(total)}</span></div>
   </section>
 
   <div class="actions">
-    <Button size="xl" icon={Archive} onclick={() => go("/prototyp/20?v=replay")}>{T.ende.archiv}</Button>
-    <Button variant="secondary" icon={Medal} onclick={() => go("/prototyp/18")}>{T.admin.nav.grossbild}</Button>
+    {#if onarchive}<Button size="xl" icon={Archive} onclick={onarchive}>{T.ende.archiv}</Button>{/if}
+    {#if onscreen}<Button variant="secondary" icon={Medal} onclick={onscreen}>{T.admin.nav.grossbild}</Button>{/if}
+    {#if done}<Button size="xl" variant={onarchive ? "secondary" : "primary"} onclick={done.onclick}>{done.label}</Button>{/if}
   </div>
 </main>
 

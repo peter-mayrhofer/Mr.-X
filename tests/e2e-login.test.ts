@@ -31,6 +31,10 @@ async function googleEmulatorLogin(page: Page, email: string) {
   await popup.locator("#email-input").fill(email);
   await popup.locator("#sign-in").click();
 }
+/** Team-Handys sehen nach dem Beitritt zuerst das Onboarding */
+async function skipOnboarding(page: Page) {
+  await page.getByRole("button", { name: T.onboarding.ueberspringen, exact: true }).click();
+}
 const card = (page: Page, label: string) => page.locator("section.card", { has: page.getByRole("heading", { name: label, exact: true }) });
 
 beforeAll(async () => {
@@ -90,6 +94,7 @@ describe("Anmeldung über die App", () => {
     await page.getByText(T.apiFehler.wrongSecret).waitFor();
     await page.getByLabel(T.beitritt.passwort).fill("falke27");
     await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await skipOnboarding(page);
     await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
     await page.getByText("Urfahr", { exact: true }).first().waitFor();
 
@@ -106,6 +111,7 @@ describe("Anmeldung über die App", () => {
     await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
     await page.getByText(T.beitritt.zweitgeraet("urfahr")).waitFor();
     await page.getByRole("button", { name: T.beitritt.alsErsatz, exact: true }).click();
+    await skipOnboarding(page);
     await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
     expect(Object.keys(await val(`games/${G}/teams`))).toHaveLength(1);
   });
@@ -116,6 +122,7 @@ describe("Anmeldung über die App", () => {
     await page.getByLabel(T.beitritt.teamname).fill("Traun");
     await page.getByLabel(T.beitritt.passwort).fill("falke27");
     await page.getByRole("button", { name: T.beitritt.los, exact: true }).click();
+    await skipOnboarding(page);
     await page.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
     await adminPage.getByText(T.lobby.teams(2)).waitFor();
 

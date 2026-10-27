@@ -14,10 +14,15 @@
 <nav class="tabbar">
   {#each items as it (it.id)}
     {@const IconC = it.icon}
-    <button class:on={active === it.id} aria-current={active === it.id ? "page" : undefined} onclick={() => onselect(it.id)}>
+    <button
+      class:on={active === it.id}
+      aria-current={active === it.id ? "page" : undefined}
+      aria-label={it.badge ? `${it.label}, ${it.badge} neu` : it.label}
+      onclick={() => onselect(it.id)}
+    >
       <span class="ic">
         <IconC size={26} strokeWidth={active === it.id ? 2.6 : 2} aria-hidden="true" />
-        {#if it.badge}<span class="badge num" aria-label="{it.badge} neu">{it.badge}</span>{/if}
+        {#if it.badge}<span class="badge num" aria-hidden="true">{it.badge}</span>{/if}
       </span>
       <span class="lbl">{it.label}</span>
     </button>

@@ -13,14 +13,20 @@
   interface Props {
     until: number;
     total: number;
-    reason?: "uebergabe" | "start" | "alterMrx";
+    reason?: "uebergabe" | "start" | "alterMrx" | "manuell";
   }
 
   let { until, total, reason = "uebergabe" }: Props = $props();
   let peek = $state(false);
   const left = $derived(Math.max(0, until - clock.now));
   const text = $derived(
-    reason === "start" ? T.wartezeit.grundStart : reason === "alterMrx" ? T.wartezeit.grundAlterMrx : T.wartezeit.grund,
+    reason === "start"
+      ? T.wartezeit.grundStart
+      : reason === "alterMrx"
+        ? T.wartezeit.grundAlterMrx
+        : reason === "manuell"
+          ? T.wartezeit.grundManuell
+          : T.wartezeit.grund,
   );
 </script>
 
