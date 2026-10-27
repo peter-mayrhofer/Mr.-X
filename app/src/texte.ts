@@ -63,7 +63,7 @@ export const T = {
     schiriCode: "Schiri-Code",
     adminPasswort: "Admin-Passwort",
     los: "Anmelden",
-    superAdmin: "Organisator? Mit Google anmelden",
+    superAdmin: "Organisator? Zur Verwaltung",
   },
 
   onboarding: {
@@ -300,6 +300,8 @@ export const T = {
       grossbild: "Großbild",
       archiv: "Archiv",
     },
+    menue: "Menü der Spielleitung",
+    lage: "Lage und Aktionen",
     warnungen: "Warnungen",
     mrxOhneStandort: (min: number) => `Mister X ohne Standort seit ${min} Min`,
     teamOhneStandort: (team: string, min: number) => `${team} ohne Standort seit ${min} Min`,

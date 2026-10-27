@@ -74,7 +74,7 @@
   }
 </script>
 
-<div class="replay">
+<main class="replay">
   <AppBar title={data.name} {onback} />
   <div class="map">
     <GameMap
@@ -154,7 +154,7 @@
       </div>
     {/if}
   </div>
-</div>
+</main>
 
 <style>
   .replay {

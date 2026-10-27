@@ -53,8 +53,8 @@
       {view}
       api={fakeApi}
       {variant}
-      joinUrl="https://mr-x-ooe-neu.web.app/#/s/linz-2027"
-      screenUrl={(k) => `https://mr-x-ooe-neu.web.app/#/g/linz-2027?k=${k}`}
+      joinUrl="https://mister-x.mr-x-ooe.workers.dev/#/s/linz-2027"
+      screenUrl={(k) => `https://mister-x.mr-x-ooe.workers.dev/#/g/linz-2027?k=${k}`}
     />
   {:else if section === "zonen"}<ZoneEditor
       initial={variant === "fehler" ? broken() : M.field}

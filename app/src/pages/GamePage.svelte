@@ -6,8 +6,6 @@
   import ErrorStates from "../screens/ErrorStates.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
   import TeamPage from "./TeamPage.svelte";
-  import StaffGamePage from "./StaffGamePage.svelte";
-  import ScreenPage from "./ScreenPage.svelte";
   import { session, leaveGame } from "../lib/session.svelte.ts";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
@@ -39,18 +37,25 @@
 {:else if view.me.role === "team"}
   <TeamPage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
 {:else if view.me.role === "schiri" || view.me.role === "admin"}
-  <StaffGamePage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
-{:else if view.me.role === "screen"}
-  <ScreenPage gameName={view.info.name} onarchive={() => go("/archiv")} />
+  <!-- Teams brauchen den Spielleitungs- und Großbild-Teil nie: der wird erst hier geladen -->
+  {#await import("./StaffGamePage.svelte") then { default: StaffGamePage }}
+    <StaffGamePage {g} uid={session.uid} member={view.me} gameName={view.info.name} />
+  {/await}
 {:else}
-  <ScreenPage
-    gameName={view.info.name}
-    viewer
-    onleave={async () => {
-      await leaveGame();
-      go("/");
-    }}
-  />
+  {#await import("./ScreenPage.svelte") then { default: ScreenPage }}
+    {#if view.me.role === "screen"}
+      <ScreenPage gameName={view.info.name} onarchive={() => go("/archiv")} />
+    {:else}
+      <ScreenPage
+        gameName={view.info.name}
+        viewer
+        onleave={async () => {
+          await leaveGame();
+          go("/");
+        }}
+      />
+    {/if}
+  {/await}
 {/if}
 
 <style>

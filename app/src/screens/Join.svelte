@@ -61,7 +61,7 @@
   }
 </script>
 
-<div class="page">
+<main class="page">
   <AppBar title={T.beitritt.titel} {onback} />
   <form
     class="form"
@@ -103,7 +103,7 @@
       {/if}
     </div>
   </form>
-</div>
+</main>
 
 <style>
   .page {

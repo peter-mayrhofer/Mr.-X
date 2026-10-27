@@ -59,7 +59,7 @@
 </script>
 
 <div class="shell">
-  <aside class="side">
+  <aside class="side" aria-label={T.admin.menue}>
     <div class="brand">
       <Logo height={40} />
       <div>

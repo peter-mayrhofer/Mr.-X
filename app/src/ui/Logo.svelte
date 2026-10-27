@@ -13,7 +13,14 @@
   const alt = $derived(which === "rote-falken" ? "Rote Falken" : "Die Kinderfreunde Oberösterreich");
 </script>
 
-<img src="{import.meta.env.BASE_URL}logos/{which}{dark ? '-negativ' : ''}.png" {alt} style:height="{height}px" />
+<!-- width/height = Bildgröße: der Browser kennt das Seitenverhältnis vor dem Laden, nichts verrutscht -->
+<img
+  src="{import.meta.env.BASE_URL}logos/{which}{dark ? '-negativ' : ''}.png"
+  {alt}
+  width={which === "rote-falken" ? 200 : 260}
+  height={which === "rote-falken" ? 88 : 60}
+  style:height="{height}px"
+/>
 
 <style>
   img {

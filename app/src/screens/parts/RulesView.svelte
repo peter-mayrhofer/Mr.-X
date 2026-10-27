@@ -29,7 +29,7 @@
       <li>
         <span class="ic"><IconC size={28} strokeWidth={2.2} aria-hidden="true" /></span>
         <div>
-          <h3>{r.titel}</h3>
+          <h2 class="rt">{r.titel}</h2>
           <p>
             {#each mark(r.text) as part, i (i)}{#if /^\d+ Minuten$/.test(part)}<mark>{part}</mark>{:else}{part}{/if}{/each}
           </p>
@@ -110,7 +110,7 @@
     background: var(--accent-soft);
     color: var(--accent-text);
   }
-  h3 {
+  .rt {
     font-size: var(--fs-xl);
     margin-bottom: 2px;
   }

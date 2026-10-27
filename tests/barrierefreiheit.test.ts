@@ -1,6 +1,7 @@
 // Barrierefreiheit (Abschnitt 8.6, Meilenstein 12): axe-core prüft jeden Screen des Klick-Prototyps – dieselben
 // Komponenten wie die echte App – in jeder Variante und in allen drei Darstellungen (dunkel, hell, Sonne) auf
-// WCAG 2.1 A/AA: Kontraste, Beschriftungen für Screenreader, Rollen, Formular-Labels.
+// WCAG 2.1 A/AA: Kontraste, Beschriftungen für Screenreader, Rollen, Formular-Labels; dazu axe-Empfehlungen
+// (Seitenbereiche, Überschriften-Reihenfolge).
 // Geprüft wird die gebaute App (wie sie ausgeliefert wird) – der Entwicklungsserver lädt Seiten manchmal neu.
 import { createRequire } from "node:module";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -33,7 +34,7 @@ afterAll(async () => {
   rmSync(OUT, { recursive: true, force: true });
 });
 
-it("alle Screens und Varianten erfüllen WCAG 2.1 AA in dunkel, hell und Sonne", async () => {
+it("alle Screens und Varianten erfüllen WCAG 2.1 AA (und die axe-Empfehlungen) in dunkel, hell und Sonne", async () => {
   const jobs = THEMES.flatMap((theme) =>
     SCREENS.flatMap((s) => (s.variants?.length ? s.variants : [{ id: "" }]).map((v) => ({ theme, n: s.n, v: v.id, wide: !!s.wide }))),
   );
@@ -61,7 +62,9 @@ it("alle Screens und Varianten erfüllen WCAG 2.1 AA in dunkel, hell und Sonne",
       await page.addScriptTag({ path: AXE });
       const violations = await page.evaluate(async () => {
         const axe = (window as unknown as { axe: { run: (c: Document, o: object) => Promise<AxeResult> } }).axe;
-        const r = await axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } });
+        const r = await axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+        });
         return r.violations.flatMap((v) => v.nodes.map((n) => `${v.id}: ${n.target.join(" ")} – ${n.failureSummary.split("\n")[1] ?? ""}`));
       });
       for (const v of violations) found.push(`#${j.n}${j.v ? `?v=${j.v}` : ""} ${j.theme}: ${v.trim()}`);

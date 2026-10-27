@@ -9,7 +9,28 @@ const server = process.env.MRX_SERVER ?? "http://127.0.0.1:8787";
 export default defineConfig({
   plugins: [svelte()],
   define: { __APP_VERSION__: JSON.stringify(version) },
-  build: { target: "es2022", chunkSizeWarningLimit: 1200 },
+  build: {
+    target: "es2022",
+    chunkSizeWarningLimit: 1200,
+    // gemeinsam genutzte Module (Knöpfe, Symbole, Texte …) in eine Datei statt vieler Mini-Dateien – schneller über Mobilfunk;
+    // was nur Spielleitung, Großbild, Archiv oder Prototyp brauchen, bleibt draußen und wird erst bei Bedarf geladen
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "app",
+              minShareCount: 2,
+              test: (id) =>
+                !/[\\/]src[\\/](proto[\\/]|screens[\\/](admin[\\/]|BigScreen|Replay|Archive|SuperAdmin|parts[\\/](AccessPanel|TrackerPanel)))/.test(
+                  id,
+                ),
+            },
+          ],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": server,

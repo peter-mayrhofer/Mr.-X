@@ -149,7 +149,7 @@
   const cutName = (id: string) => view.field.cuts[id]?.short ?? id;
 </script>
 
-<div class="screen" class:mrx={isMrx}>
+<main class="screen" class:mrx={isMrx}>
   <div class="mapzone">
     <GameMap
       bind:this={map}
@@ -263,7 +263,7 @@
   </div>
 
   <TabBar items={tabs} active={tab} onselect={(id) => ((tab = id as Tab), (sub = "menu"))} />
-</div>
+</main>
 
 {#if lockLeft > 0 && view.lock}
   <LockOverlay

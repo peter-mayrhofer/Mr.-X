@@ -1,4 +1,4 @@
-// Hash-Router: funktioniert in Firebase Hosting und in der Capacitor-Hülle ohne Sonderkonfiguration (E-02).
+// Hash-Router: funktioniert auf jedem Webserver und in der Capacitor-Hülle ohne Sonderkonfiguration (E-02).
 const read = () => decodeURIComponent(location.hash.slice(1)) || "/";
 
 class Router {

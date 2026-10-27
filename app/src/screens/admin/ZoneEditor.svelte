@@ -275,7 +275,7 @@
     {/if}
   </div>
 
-  <aside class="panel">
+  <aside class="panel" aria-label={T.zonen.werkzeuge}>
     <h2>{T.zonen.titel}</h2>
     {#if readonly}<Banner tone="info">{T.zonen.nurAnsehen}</Banner>{/if}
     <TextField label={T.zonen.feldName} bind:value={field.name} disabled={readonly} />

@@ -11,7 +11,7 @@
   let { runs, onopen, onback }: { runs: ArchiveListEntry[] | null; onopen: (run: string) => void; onback: () => void } = $props();
 </script>
 
-<div class="list">
+<main class="list">
   <AppBar title={T.archiv.titel} {onback} />
   <div class="items">
     {#if !runs}
@@ -33,7 +33,7 @@
       {/each}
     {/if}
   </div>
-</div>
+</main>
 
 <style>
   .list {

@@ -114,6 +114,8 @@
   .title {
     font-size: clamp(72px, 24vw, 132px);
     line-height: 0.85;
+    /* immer eine Zeile – sonst springt alles, wenn die Schrift nachlädt (schmälere Ersatzschrift bricht um) */
+    white-space: nowrap;
     text-transform: uppercase;
     letter-spacing: -0.01em;
   }

@@ -148,7 +148,7 @@
   }
 </script>
 
-<div class="page">
+<main class="page">
   <AppBar title={T.superadmin.titel} {onback}>
     {#snippet actions()}
       {#if allowed}<Button size="m" icon={Plus} onclick={() => (creating = true)}>{T.superadmin.neu}</Button>{/if}
@@ -228,7 +228,7 @@
       {/each}
     {/if}
   </div>
-</div>
+</main>
 
 <BottomSheet open={creating} title={T.superadmin.neu} onclose={() => (creating = false)}>
   <div class="form">

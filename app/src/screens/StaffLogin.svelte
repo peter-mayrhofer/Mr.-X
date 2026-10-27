@@ -40,7 +40,7 @@
   }
 </script>
 
-<div class="page">
+<main class="page">
   <AppBar title={T.staffLogin.titel} {onback} />
   <form class="form" onsubmit={submit}>
     <Segmented
@@ -65,7 +65,7 @@
       <Button variant="ghost" type="button" onclick={onsuperadmin}>{T.staffLogin.superAdmin}</Button>
     </div>
   </form>
-</div>
+</main>
 
 <style>
   .page {

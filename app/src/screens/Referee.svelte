@@ -108,7 +108,7 @@
   }
 </script>
 
-<div class="screen">
+<main class="screen">
   <div class="mapzone">
     <GameMap
       bind:this={map}
@@ -192,7 +192,7 @@
     active={tab}
     onselect={(id) => (tab = id as Tab)}
   />
-</div>
+</main>
 
 <HandoverFlow {view} {api} bind:open={sheet} {preset} />
 

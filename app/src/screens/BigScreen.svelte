@@ -127,7 +127,7 @@
   const announcement = $derived((v.chat ?? []).filter((m) => m.kind === "ann" && clock.now - m.t < 60_000 && m.id !== hidden).at(-1));
 </script>
 
-<div class="big" data-theme="dunkel">
+<main class="big" data-theme="dunkel">
   <div class="map">
     <GameMap
       field={v.field}
@@ -148,7 +148,7 @@
       <Logo height={56} onDark />
       <Logo which="kinderfreunde-ooe" height={36} onDark />
     </header>
-    <p class="game">{v.gameName}</p>
+    <h1 class="game">{v.gameName}</h1>
 
     {#if !running}
       <section class="wait">
@@ -213,7 +213,7 @@
     </div>
   {/if}
   {#if viewer}<div class="viewer"><Flag size={22} aria-hidden="true" /> {T.grossbild.zuschauer}</div>{/if}
-</div>
+</main>
 
 <style>
   .big {
@@ -307,8 +307,11 @@
     margin-top: auto;
   }
   .game {
+    font-family: var(--font-text);
     font-size: 26px;
     font-weight: 700;
+    line-height: var(--lh);
+    letter-spacing: 0;
     color: #a8bbcc;
     margin-top: -12px;
   }

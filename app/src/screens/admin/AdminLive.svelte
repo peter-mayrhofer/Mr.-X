@@ -100,7 +100,7 @@
     </div>
   </div>
 
-  <aside class="panel">
+  <aside class="panel" aria-label={T.admin.lage}>
     {#if running}
       <Card label={T.status.misterX} icon={Flag} tone="accent">
         <div class="mrx">

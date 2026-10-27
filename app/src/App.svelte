@@ -5,18 +5,12 @@
 <script lang="ts">
   import { router, match } from "./lib/router.svelte.ts";
   import Toaster from "./ui/Toaster.svelte";
-  import Gallery from "./proto/Gallery.svelte";
-  import ProtoScreen from "./proto/ProtoScreen.svelte";
-  import Components from "./proto/Components.svelte";
   import StartPage from "./pages/StartPage.svelte";
   import JoinPage from "./pages/JoinPage.svelte";
   import StaffPage from "./pages/StaffPage.svelte";
   import AutoJoinPage from "./pages/AutoJoinPage.svelte";
   import GamePage from "./pages/GamePage.svelte";
   import HelpPage from "./pages/HelpPage.svelte";
-  import VerwaltungPage from "./pages/VerwaltungPage.svelte";
-  import ArchivePage from "./pages/ArchivePage.svelte";
-  import ScreenPage from "./pages/ScreenPage.svelte";
   import { session } from "./lib/session.svelte.ts";
   import { go } from "./lib/router.svelte.ts";
   import { T } from "./texte.ts";
@@ -32,9 +26,10 @@
 
 <!-- Spiel-Ansicht: Bereichswechsel (?b=…) ohne Neuaufbau, damit die Live-Daten nicht neu geladen werden -->
 {#key p === "/spiel" ? p : router.path}
-  {#if proto}<ProtoScreen n={Number(proto.n)} />
-  {:else if p === "/prototyp"}<Gallery />
-  {:else if p === "/komponenten"}<Components />
+  <!-- Prototyp, Verwaltung, Archiv, Großbild: erst bei Bedarf geladen -->
+  {#if proto}{#await import("./proto/ProtoScreen.svelte") then { default: ProtoScreen }}<ProtoScreen n={Number(proto.n)} />{/await}
+  {:else if p === "/prototyp"}{#await import("./proto/Gallery.svelte") then { default: Gallery }}<Gallery />{/await}
+  {:else if p === "/komponenten"}{#await import("./proto/Components.svelte") then { default: Components }}<Components />{/await}
   {:else if match("/s/:spiel")}<StartPage gameId={game?.spiel} />
   {:else if p === "/beitreten" || match("/beitreten/:spiel")}<JoinPage gameId={game?.spiel} />
   {:else if staff && (staff.rolle === "schiri" || staff.rolle === "admin")}<StaffPage role={staff.rolle} />
@@ -42,18 +37,21 @@
   {:else if screen}<AutoJoinPage role="screen" gameId={screen.spiel!} />
   {:else if p === "/spiel"}<GamePage />
   {:else if p === "/hilfe"}<HelpPage />
-  {:else if p === "/archiv" || archiveRun}<ArchivePage run={archiveRun?.lauf} />
+  {:else if p === "/archiv" || archiveRun}
+    {#await import("./pages/ArchivePage.svelte") then { default: ArchivePage }}<ArchivePage run={archiveRun?.lauf} />{/await}
   {:else if p === "/grossbild"}
     <!-- Spielleitung/Schiri zeigt das Großbild direkt auf diesem Gerät (z. B. Laptop am Beamer) -->
     {#if session.view && (session.role === "admin" || session.role === "schiri")}
-      <ScreenPage
-        gameName={session.view.info.name}
-        onleave={() => go("/spiel")}
-        leaveLabel={T.grossbild.zurueck}
-        onarchive={() => go("/archiv")}
-      />
+      {#await import("./pages/ScreenPage.svelte") then { default: ScreenPage }}
+        <ScreenPage
+          gameName={session.view.info.name}
+          onleave={() => go("/spiel")}
+          leaveLabel={T.grossbild.zurueck}
+          onarchive={() => go("/archiv")}
+        />
+      {/await}
     {:else}<GamePage />{/if}
-  {:else if p === "/verwaltung"}<VerwaltungPage />
+  {:else if p === "/verwaltung"}{#await import("./pages/VerwaltungPage.svelte") then { default: VerwaltungPage }}<VerwaltungPage />{/await}
   {:else}<StartPage />
   {/if}
 {/key}
