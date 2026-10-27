@@ -101,7 +101,10 @@ Jeder Screen liegt in drei Darstellungen vor: [`screens/dunkel/`](screens/dunkel
 
 ## Barrierefreiheit
 
-- Kontraste nach WCAG AA, Sonnen-Modus AAA (Rot `#B30000` auf Weiß 7,2 : 1).
+- Kontraste nach WCAG AA, Sonnen-Modus AAA (Rot `#B30000` auf Weiß 7,2 : 1) – **automatisch geprüft** für jeden Screen
+  in jeder Variante und Darstellung (`tests/barrierefreiheit.test.ts`, axe-core). Team-Abzeichen dunkeln die Teamfarbe
+  leicht ab, damit das weiße Kürzel auf jeder Farbe ≥ 4,5 : 1 hat.
+- „Bewegung reduzieren“: keine Übergänge, Animationen nur einen Augenblick lang.
 - Nie Information nur über Farbe: Wartezeit = Sanduhr, offline = gestrichelt + Symbol, Mister X = Fahne.
 - Alle Knöpfe mit Beschriftung oder `aria-label`, Dialoge über `<dialog>` (Fokus bleibt drin, Escape schließt),
   Countdown mit `role="timer"`, Durchsagen und Warnungen als `role="alert"`.

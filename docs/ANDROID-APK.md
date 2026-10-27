@@ -12,12 +12,13 @@ iPhones nutzen die Web-App (Safari → Teilen → „Zum Home-Bildschirm“) –
 
 ## 1. APK herunterladen (für Teams)
 
-1. Am Handy die Seite **Releases** des Repositorys öffnen (oder den Link/QR-Code der Spielleitung) und `mister-x.apk`
-   herunterladen.
+1. Am einfachsten: den QR-Code vom Flyer scannen – liegt die APK am Server ([`BETRIEB.md`](BETRIEB.md) Schritt 9),
+   zeigt die Startseite im Android-Browser **„Android-App installieren“**. Sonst die Seite **Releases** des
+   Repositorys öffnen und `mister-x.apk` herunterladen.
 2. Antippen → Android fragt: **„Installation aus unbekannten Quellen zulassen?“** → für den Browser bzw. „Dateien“
    **erlauben** → zurück → **Installieren**.
    (Der Hinweis kommt, weil die App nicht aus dem Play Store kommt. Sie ist mit dem Schlüssel der Roten Falken signiert.)
-3. App öffnen, Spiel-Code scannen bzw. eingeben, Team-Passwort.
+3. App öffnen → **Team beitreten** → Spiel-Code eingeben (steht auf dem Flyer), Teamname, Team-Passwort.
 4. Im Onboarding:
    - **Standort erlauben** → „Beim Verwenden der App“ wählen. Für das Senden im Hintergrund zeigt die App eine
      Dauer-Benachrichtigung – die bitte nicht wegwischen.

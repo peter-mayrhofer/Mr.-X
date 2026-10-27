@@ -134,7 +134,9 @@ variables → Actions → Variables → New repository variable**: Name `MRX_API
 
 **APK über die eigene Adresse verteilen (ohne GitHub-Konto für die Teams):** die fertige `mister-x.apk` (aus dem
 GitHub-Release) nach `app\public\mister-x.apk` kopieren und `npm run deploy` ausführen. Dann ist sie unter
-`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk` zum Herunterladen da (die Datei kommt nie ins Repository).
+`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk` zum Herunterladen da (die Datei kommt nie ins Repository), und
+die Startseite zeigt am Android-Handy den Knopf **„Android-App installieren“** – die Teams kommen also einfach über
+den QR-Code vom Flyer zur App.
 
 ## 10. Neue Version veröffentlichen
 
@@ -176,8 +178,9 @@ Adresse: `https://mister-x-vorschau.mr-x-ooe.workers.dev` – dort mit dem neuen
   npx wrangler d1 export mister-x --remote --output sicherung.sql -c server/wrangler.jsonc
   ```
 - Das Archiv eines Spiels (Auswertung, Meldungen, Übergaben, Chat) ist außerdem in der App unter **Archiv** abrufbar
-  (Meilenstein 10).
-- **Löschfristen** laufen automatisch: Live-Standorte sofort bei Spielende, Chat nach 30 Tagen, Archiv nach einem Jahr.
+  und lässt sich dort als Datei sichern.
+- **Löschfristen** laufen automatisch: Live-Standorte sofort bei Spielende, Chat und Protokoll nach 30 Tagen, Archiv
+  nach einem Jahr (Übersicht: [`KONZEPT.md`](KONZEPT.md), Löschfristen).
 
 ## 14. Eigene Domain (optional)
 
