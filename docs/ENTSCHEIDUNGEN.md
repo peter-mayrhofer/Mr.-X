@@ -381,10 +381,11 @@ langsame Verbindungen sogar langsamer waren als vorher (gemessen).
 **Entscheidung:** Das Protokoll der Spielleitung (enthält Namen) wird wie der Chat 30 Tage nach Spielende und bei
 „Neue Runde“ gelöscht; Prüfsummen von IP-Adressen (Schutz gegen Passwort-Raten) nur so lange wie die Sperre (10 Min).
 Vollständiger Datenschutzhinweis (Art. 13 DSGVO, kindgerecht formuliert) in der App unter Regeln → Datenschutz.
-**F12:** Verantwortlicher laut bestätigtem Vorschlag (E-20) die Kinderfreunde OÖ – Name, Anschrift und ZVR aus deren
-Impressum: Österreichische Kinderfreunde, Landesorganisation Oberösterreich, Europaplatz 4, 4020 Linz,
-ZVR 486089761 ([Impressum kinderfreunde-ooe.at](https://kinderfreunde.at/impressum/www-kinderfreunde-ooe-at), abgerufen am 28.10.2026). Kontakt: `info@kinderfreunde-ooe.at` (laut Impressum) oder `mr.x.rf.ooe@gmail.com`. Der Verein bestätigt das
-bei der Abnahme. **F1** bleibt wie vorgeschlagen bei den PNG-Logos; öffentlich gibt es keine passenden Vektor-Dateien.
+**F12:** Verantwortlich ist laut Auftraggeber die Region Linz-Stadt der Kinderfreunde OÖ. Name, Anschrift und Kontakt aus
+deren Kontaktseite ([Region Linz](https://kinderfreunde.at/ueber-uns/kontakt/oberoesterreich/region-linz), abgerufen am 28.10.2026):
+Österreichische Kinderfreunde – Region Linz-Stadt, Zaunmüllerstraße 4, 4020 Linz, `info@kinderfreunde-linz.at`. Die ZVR-Nummer
+486089761 gehört laut [Impressum](https://kinderfreunde.at/impressum/www-kinderfreunde-ooe-at) der Landesorganisation Oberösterreich;
+für die Region steht auf der Kontaktseite keine eigene. Der Verein bestätigt das bei der Abnahme. **F1** bleibt wie vorgeschlagen bei den PNG-Logos; öffentlich gibt es keine passenden Vektor-Dateien.
 
 ### E-44 Android-App von der Startseite
 **Entscheidung:** Liegt `mister-x.apk` am Server (BETRIEB.md Schritt 9), zeigt die Startseite im Android-Browser
