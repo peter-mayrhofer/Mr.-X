@@ -32,6 +32,7 @@
       <circle r={R * 0.76} class="arc" stroke-dasharray={arc(R * 0.76, 36)} />
     </svg>
   </div>
+  <b class="roll r1">X</b><b class="roll r2">X</b>
   <i class="dot d1"></i><i class="dot d2"></i><i class="dot d3"></i>
 </div>
 
@@ -121,6 +122,46 @@
     stroke-width: 10;
     stroke-linecap: round;
     opacity: 0.55;
+  }
+  /* rollende X wie auf der Startseite: laufen durchs Bild und drehen sich dabei wie ein Rad */
+  .roll {
+    position: absolute;
+    left: 0;
+    width: 0.8em;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 3px var(--accent-text);
+    opacity: 0.2;
+    animation: roll linear infinite;
+  }
+  .r1 {
+    font-size: clamp(200px, 38vmin, 460px);
+    bottom: 4vh;
+    animation-duration: 70s;
+  }
+  .r2 {
+    display: none;
+    font-size: clamp(120px, 20vmin, 240px);
+    top: 8vh;
+    opacity: 0.14;
+    animation-duration: 50s;
+    animation-direction: reverse;
+  }
+  @media (min-width: 1000px) {
+    .r2 {
+      display: block;
+    }
+  }
+  @keyframes roll {
+    from {
+      transform: translateX(-35vw) rotate(0deg);
+    }
+    to {
+      transform: translateX(120vw) rotate(720deg);
+    }
   }
   /* wenige, winzige Punkte, die langsam durchs Bild schweben (Teams unterwegs) */
   .dot {
