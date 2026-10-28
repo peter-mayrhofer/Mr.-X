@@ -245,7 +245,13 @@ try {
     check(
       "Durchsage über Googles Push-Dienst als Benachrichtigung der Web-App",
       !!da,
-      da ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s` : `nicht angezeigt (${await gcm()})`,
+      da
+        ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s`
+        : `nicht angezeigt (${await gcm()}; Server: ${
+            readFileSync("push-server.log", "utf8")
+              .match(/Push \d+ [^\n]*/g)
+              ?.join(", ") ?? "kein Versand"
+          })`,
     ) && ok;
 } catch (e) {
   ok = false;

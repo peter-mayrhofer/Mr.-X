@@ -647,6 +647,8 @@ export class GameRoom extends DurableObject<Env> {
       batch.map(async (j) => {
         try {
           const status = await sendPush(j.sub, j.payload, vapid, j.topic);
+          // Antwort des Push-Dienstes ins Protokoll (wrangler tail / Dashboard): 201 = angenommen
+          console.log("Push", status, new URL(j.sub.endpoint).host);
           return status === 404 || status === 410 ? j : null;
         } catch (e) {
           console.warn("Push fehlgeschlagen", String(e));
