@@ -130,6 +130,12 @@
       setTimeout(() => shrinking === c.cut && (shrinking = null), 20_000);
     },
   );
+  let warnCount = 0;
+  $effect(() => {
+    const n = Object.keys(game.state?.warnCuts ?? {}).length;
+    if (n > warnCount) signal("verkleinerung");
+    warnCount = n;
+  });
   let wasPhase: string | undefined;
   $effect(() => {
     if (phase === "beendet" && wasPhase && wasPhase !== "beendet") signal("ende");

@@ -148,6 +148,7 @@ describe("Ein ganzes Spiel", { timeout: 90_000 }, () => {
     }
     await nav(T.admin.nav.steuerung);
     await admin.locator("li", { hasText: "Norden" }).getByRole("button", { name: T.admin.sperren }).click();
+    for (let i = 0; i < 10; i++) await admin.getByRole("dialog").getByRole("button", { name: "weniger" }).click(); // ohne Vorwarnung
     await confirm(admin, T.admin.sperren);
     await expect.poll(() => val(`games/${G}/state/cuts/norden`)).toBeGreaterThan(0);
     await visible(phones.Leonding!.page, T.verkleinerung.titel("Norden"));

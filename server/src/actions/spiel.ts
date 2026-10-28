@@ -12,7 +12,7 @@ import {
   type Lock,
 } from "@mrx/shared";
 import { fail, MIN, newKey, str } from "../util.ts";
-import { finish, writeReport } from "../ablauf.ts";
+import { finish, lockCut, writeReport } from "../ablauf.ts";
 import type { Auth, GameRoom } from "../room.ts";
 
 type D = Record<string, unknown>;
@@ -176,27 +176,49 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
   return {};
 }
 
-/** Regel 10: Bereich sperren oder wieder freigeben */
+/** Regel 10: Bereich sperren (sofort oder mit Vorwarnung von `inMin` Minuten) oder wieder freigeben bzw. Vorwarnung abbrechen */
 export function setCut(room: GameRoom, d: D, a: Auth): ApiResults["setCut"] {
   const who = room.who(a, ["admin"]);
   const id = String(d.cutId ?? "");
   const locked = d.locked === true;
+  const inMin = d.inMin ?? 0;
+  if (typeof inMin !== "number" || !Number.isInteger(inMin) || inMin < 0 || inMin > 60) fail("invalid", "Vorwarnung: 0–60 Min");
   const cut = room.d.field.cuts?.[id];
   if (!cut) fail("invalid", "Bereich unbekannt");
   const cur = room.d.state;
   if (cur.phase === "beendet") fail("wrongPhase", "Das Spiel ist vorbei");
-  if (!!cur.cuts?.[id] === locked) fail("conflict", locked ? "Schon gesperrt" : "Schon frei");
   const now = Date.now();
-  const cuts = { ...cur.cuts };
-  if (locked) cuts[id] = now;
-  else delete cuts[id];
-  room.setState({ ...cur, cuts });
-  const text = locked ? MELDUNG.gesperrt(cut.short) : MELDUNG.freigegeben(cut.short);
-  room.put("cutLog", newKey(), { cut: id, locked, t: now });
-  room.sys(text, now);
-  // vor dem Start sperrt die Spielleitung nur vor – dann ohne Benachrichtigung
-  if (live(room)) room.notify("spielfeld", { all: true }, locked ? PUSH_TITLE.spielfeld : PUSH_TITLE.regeln, text);
-  room.audit(who, locked ? "Bereich gesperrt" : "Bereich freigegeben", cut.short);
+  const pending = cur.warnCuts?.[id] !== undefined;
+  if (locked ? !!cur.cuts?.[id] : !cur.cuts?.[id] && !pending) fail("conflict", locked ? "Schon gesperrt" : "Schon frei");
+  if (locked && inMin > 0) {
+    if (!live(room)) fail("wrongPhase", "Vorwarnung gibt es nur im laufenden Spiel");
+    if (pending) fail("conflict", "Schon angekündigt");
+    room.setState({ ...cur, warnCuts: { ...cur.warnCuts, [id]: now + inMin * MIN } });
+    const text = MELDUNG.sperreAngekuendigt(cut.short, inMin);
+    room.sys(text, now);
+    room.notify("spielfeld", { all: true }, PUSH_TITLE.spielfeld, text);
+    room.audit(who, "Sperre angekündigt", `${cut.short} in ${inMin} Min`);
+  } else if (locked) {
+    lockCut(room, id, now);
+    room.audit(who, "Bereich gesperrt", cut.short);
+  } else if (pending) {
+    // Vorwarnung zurücknehmen
+    const { [id]: _, ...warn } = cur.warnCuts!;
+    room.setState({ ...cur, warnCuts: Object.keys(warn).length ? warn : undefined });
+    const text = MELDUNG.sperreAbgesagt(cut.short);
+    room.sys(text, now);
+    room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, text);
+    room.audit(who, "Sperre abgesagt", cut.short);
+  } else {
+    const cuts = { ...cur.cuts };
+    delete cuts[id];
+    room.setState({ ...cur, cuts });
+    const text = MELDUNG.freigegeben(cut.short);
+    room.put("cutLog", newKey(), { cut: id, locked: false, t: now });
+    room.sys(text, now);
+    if (live(room)) room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, text);
+    room.audit(who, "Bereich freigegeben", cut.short);
+  }
   return {};
 }
 

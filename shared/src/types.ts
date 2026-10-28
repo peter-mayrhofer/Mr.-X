@@ -120,6 +120,8 @@ export interface GameState {
   nextReportAt?: number;
   /** gesperrte Bereiche: id → Zeitpunkt der Sperre (RTDB speichert keine leeren Objekte → optional) */
   cuts?: Record<string, number>;
+  /** angekündigte Sperren: id → Zeitpunkt, zu dem der Bereich wirklich gesperrt wird (Vorwarnung) */
+  warnCuts?: Record<string, number>;
   /** letzte Übergabe (nur sie kann rückgängig gemacht werden) */
   lastHandover?: string;
   /** Archiv-Eintrag des beendeten Laufs */

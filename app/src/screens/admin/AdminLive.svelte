@@ -94,7 +94,15 @@
 
 <div class="live">
   <div class="mapcol">
-    <GameMap bind:this={map} field={view.field} {locked} {trail} {pins} padding={{ top: 40, bottom: 40, left: 40, right: 90 }} />
+    <GameMap
+      bind:this={map}
+      field={view.field}
+      {locked}
+      preview={Object.keys(st.warnCuts ?? {})}
+      {trail}
+      {pins}
+      padding={{ top: 40, bottom: 40, left: 40, right: 90 }}
+    />
     <div class="ctl">
       <MapControls onmrx={mrxPos ? () => map?.flyTo(mrxPos) : undefined} onfield={() => map?.fitField()} />
     </div>

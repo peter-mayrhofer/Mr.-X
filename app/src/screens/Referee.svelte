@@ -114,6 +114,7 @@
       bind:this={map}
       field={view.field}
       locked={Object.keys(view.state.cuts ?? {})}
+      preview={Object.keys(view.state.warnCuts ?? {})}
       {trail}
       {pins}
       padding={{ top: 190, bottom: 200, left: 24, right: 90 }}

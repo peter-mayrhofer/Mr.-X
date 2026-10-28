@@ -46,6 +46,7 @@
   const trail = $derived(v.reports.filter((r) => !r.void && r.teamId === st.mrx && r.t >= (st.mrxSince ?? 0)));
   const last = $derived(trail.at(-1));
   const locked = $derived(Object.keys(st.cuts ?? {}));
+  const warned = $derived(Object.keys(st.warnCuts ?? {}));
   const running = $derived(st.phase === "laeuft" || st.phase === "pause");
 
   const pins = $derived<MapPin[]>([
@@ -132,6 +133,7 @@
     <GameMap
       field={v.field}
       {locked}
+      preview={warned}
       {trail}
       {pins}
       interactive={viewer}

@@ -21,6 +21,9 @@ export const M = {
     `Strafübergabe: Die Fahne geht von ${alt} an ${neu}. ${min} Min Wartezeit in der Nähe.`,
   rueckgaengig: (neu: string, alt: string) => `Die Übergabe an ${neu} wurde rückgängig gemacht. ${alt} ist wieder Mister X.`,
   gesperrt: (bereich: string) => `Das Spielfeld wird verkleinert! Gesperrt: ${bereich}.`,
+  sperreAngekuendigt: (bereich: string, min: number) =>
+    `Achtung: ${bereich} wird in ${min} Min gesperrt! Bitte rechtzeitig aus dem Bereich gehen.`,
+  sperreAbgesagt: (bereich: string) => `Entwarnung: ${bereich} wird doch nicht gesperrt.`,
   freigegeben: (bereich: string) => `Bereich wieder freigegeben: ${bereich}.`,
   intervall: (min: number) => `Regeländerung: Mister X wird jetzt alle ${min} Min gemeldet.`,
   wartezeit: (min: number) => `Regeländerung: Wartezeit nach einer Übergabe jetzt ${min} Min.`,

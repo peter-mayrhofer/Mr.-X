@@ -158,6 +158,9 @@ export const T = {
     titel: (bereich: string) => `${bereich} wird gesperrt!`,
     text: "Der schraffierte Bereich gehört nicht mehr zum Spielfeld.",
     frei: (bereich: string) => `${bereich} ist wieder frei`,
+    warnTitel: (bereich: string, min: number) => `${bereich} wird in ${min} Min gesperrt!`,
+    warnText: "Bitte rechtzeitig aus dem schraffierten Bereich gehen.",
+    abgesagt: (bereich: string) => `Entwarnung: ${bereich} wird doch nicht gesperrt`,
   },
 
   wartezeit: {
@@ -372,6 +375,13 @@ export const T = {
     startDetails: (head: number, a: number, b: number) => ` ${head} Min Vorsprung, Ende zufällig zwischen ${a} und ${b} h.`,
     freigebenFrage: (bereich: string) => `${bereich} wieder freigeben?`,
     gesperrtOk: (bereich: string) => `${bereich} gesperrt – alle wurden informiert`,
+    vorwarnung: "Vorwarnung",
+    vorwarnungHinweis: "0 = sofort sperren, sonst erst warnen und dann sperren",
+    angekuendigtOk: (bereich: string, min: number) => `${bereich}: Warnung gesendet, gesperrt in ${min} Min`,
+    gesperrtIn: (min: number) => `gesperrt in ${min} Min`,
+    absagen: "Absagen",
+    absagenFrage: (bereich: string) => `Sperre von ${bereich} absagen?`,
+    absagenOk: (bereich: string) => `${bereich}: Sperre abgesagt – alle wurden informiert`,
     teams: "Teams",
     schiris: "Schiris",
     zugaenge: "Zugänge",

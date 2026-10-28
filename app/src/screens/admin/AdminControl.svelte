@@ -46,6 +46,7 @@
   let drawing = $state(false);
   let counting = $state(false);
   let busy = $state(false);
+  let warnMin = $state(10);
 
   const st = $derived(view.state);
   const g = $derived(view.gameId);
@@ -53,6 +54,7 @@
   const before = $derived(st.phase === "vorbereitung");
   const running = $derived(st.phase === "laeuft" || st.phase === "pause");
   const locked = $derived(Object.keys(st.cuts ?? {}));
+  const warned = $derived(Object.keys(st.warnCuts ?? {}));
   const RULES: Rule[] = ["intervalMin", "headStartMin", "waitMin", "radiusM"];
   const changed = $derived(RULES.filter((k) => draft[k] !== undefined && draft[k] !== view.config[k]));
   const nextPreview = $derived(st.lastReportAt ? nextReportAfterIntervalChange(st.lastReportAt, val("intervalMin"), clock.now) : null);
@@ -242,7 +244,7 @@
           <GameMap
             field={view.field}
             {locked}
-            preview={previewCut ? [previewCut] : []}
+            preview={previewCut ? [previewCut, ...warned] : warned}
             interactive={false}
             padding={{ top: 12, bottom: 12, left: 12, right: 12 }}
             label={T.admin.vorschauFeld}
@@ -255,13 +257,18 @@
               <span class="dot" style:background={c.color} aria-hidden="true"></span>
               <div class="cn">
                 <strong>{c.short}</strong>
-                {#if isLocked}<Pill tone="danger">{T.karte.gesperrt}</Pill>{:else}<Pill>{T.admin.frei}</Pill>{/if}
+                {#if isLocked}<Pill tone="danger">{T.karte.gesperrt}</Pill>
+                {:else if st.warnCuts?.[id]}<Pill tone="warn"
+                    >{T.admin.gesperrtIn(Math.max(1, Math.ceil((st.warnCuts[id] - clock.now) / 60_000)))}</Pill
+                  >
+                {:else}<Pill>{T.admin.frei}</Pill>{/if}
               </div>
               <Button
                 size="m"
                 variant={isLocked ? "secondary" : "danger"}
                 onfocus={() => (previewCut = id)}
-                onclick={() => (ask = { cut: id, lock: !isLocked })}>{isLocked ? T.admin.freigeben : T.admin.sperren}</Button
+                onclick={() => (ask = { cut: id, lock: !isLocked && !st.warnCuts?.[id] })}
+                >{isLocked ? T.admin.freigeben : st.warnCuts?.[id] ? T.admin.absagen : T.admin.sperren}</Button
               >
             </li>
           {:else}
@@ -305,18 +312,29 @@
   {@const id = ask.cut}
   {@const c = view.field.cuts[id]!}
   {@const lock = ask.lock}
+  {@const absagen = !lock && !!st.warnCuts?.[id]}
+  {@const warn = lock && running && warnMin > 0}
   <Modal
     open
-    title={lock ? T.verkleinerung.titel(c.short) : T.admin.freigebenFrage(c.short)}
-    confirm={lock ? T.admin.sperren : T.admin.freigeben}
+    title={lock ? T.verkleinerung.titel(c.short) : absagen ? T.admin.absagenFrage(c.short) : T.admin.freigebenFrage(c.short)}
+    confirm={absagen ? T.admin.absagen : lock ? T.admin.sperren : T.admin.freigeben}
     danger={lock}
     onconfirm={() =>
       run(
-        () => api({ action: "setCut", gameId: g, cutId: id, locked: lock }),
-        lock ? T.admin.gesperrtOk(c.short) : T.verkleinerung.frei(c.short),
+        () => api({ action: "setCut", gameId: g, cutId: id, locked: lock, ...(warn ? { inMin: warnMin } : {}) }),
+        absagen
+          ? T.admin.absagenOk(c.short)
+          : warn
+            ? T.admin.angekuendigtOk(c.short, warnMin)
+            : lock
+              ? T.admin.gesperrtOk(c.short)
+              : T.verkleinerung.frei(c.short),
       )}
     onclose={() => (ask = null)}
   >
+    {#if lock && running}
+      <Stepper label={T.admin.vorwarnung} bind:value={warnMin} unit="Min" min={0} max={60} hint={T.admin.vorwarnungHinweis} />
+    {/if}
     {T.admin.aenderungMeldung}
   </Modal>
 {/if}

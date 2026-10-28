@@ -241,6 +241,28 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
       { cut: "osten", locked: false },
     ]);
   });
+  it("Sperre mit Vorwarnung: erst Warnung, nach Ablauf die echte Sperre; Absagen möglich", async () => {
+    expect(reason(await run(admin, "setCut", { cutId: "westen", locked: true, inMin: 99 }))).toBe("invalid");
+    await ok(admin, "setCut", { cutId: "westen", locked: true, inMin: 10 });
+    let s = await state();
+    expect(s.cuts.westen).toBeUndefined();
+    expect(s.warnCuts.westen).toBeGreaterThan(Date.now() + 9 * MIN);
+    expect((await lastChat()).text).toBe("Achtung: Westen wird in 10 Min gesperrt! Bitte rechtzeitig aus dem Bereich gehen.");
+    expect(reason(await run(admin, "setCut", { cutId: "westen", locked: true, inMin: 5 }))).toBe("conflict");
+    // Absagen
+    await ok(admin, "setCut", { cutId: "westen", locked: false });
+    expect((await state()).warnCuts).toBeUndefined();
+    expect((await lastChat()).text).toBe("Entwarnung: Westen wird doch nicht gesperrt.");
+    // Ablauf der Vorwarnung → echte Sperre
+    await ok(admin, "setCut", { cutId: "westen", locked: true, inMin: 10 });
+    await set(`games/${G}/state`, { ...(await state()), warnCuts: { westen: Date.now() - 1000 } });
+    await tick(G); // der Alarm kann schon vorher ausgelöst haben – Hauptsache, die Sperre gilt jetzt
+    s = await state();
+    expect(s.cuts.westen).toBeGreaterThan(0);
+    expect(s.warnCuts).toBeUndefined();
+    expect((await lastChat()).text).toBe("Das Spielfeld wird verkleinert! Gesperrt: Westen.");
+    await ok(admin, "setCut", { cutId: "westen", locked: false });
+  });
   it("Wartezeit von Hand geben und aufheben", async () => {
     await ok(admin, "setLock", { teamId: team.a!.id, min: 3 });
     expect(await val(`games/${G}/locks/${team.a!.id}/reason`)).toBe("manuell");

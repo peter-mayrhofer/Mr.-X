@@ -33,7 +33,7 @@ export type ApiRequest =
   | { action: "resume"; gameId: string }
   | { action: "stopGame"; gameId: string }
   | { action: "setConfig"; gameId: string; config: Partial<Config> }
-  | { action: "setCut"; gameId: string; cutId: string; locked: boolean }
+  | { action: "setCut"; gameId: string; cutId: string; locked: boolean; /** Vorwarnung in Minuten (1–60); ohne = sofort */ inMin?: number }
   | { action: "setLock"; gameId: string; teamId: string; min: number }
   | { action: "instantReport"; gameId: string }
   | { action: "announce"; gameId: string; text: string }

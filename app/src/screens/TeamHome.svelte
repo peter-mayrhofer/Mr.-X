@@ -147,6 +147,8 @@
 
   const lockLeft = $derived(view.lock && !isMrx ? view.lock.until - clock.now : 0);
   const cutName = (id: string) => view.field.cuts[id]?.short ?? id;
+  // angekündigte Sperren: Bereich schon schraffiert zeigen, mit Restzeit
+  const warned = $derived(Object.entries(st.warnCuts ?? {}).sort((a, b) => a[1] - b[1]));
 </script>
 
 <main class="screen" class:mrx={isMrx}>
@@ -155,7 +157,7 @@
       bind:this={map}
       field={view.field}
       {locked}
-      preview={shrinking ? [shrinking] : []}
+      preview={[...(shrinking ? [shrinking] : []), ...warned.map(([id]) => id)]}
       {trail}
       {pins}
       accuracy={me ?? undefined}
@@ -171,6 +173,17 @@
           <Banner tone="warn" icon={Shrink} title={T.verkleinerung.titel(cutName(shrinking))} live>{T.verkleinerung.text}</Banner>
         </div>
       {/if}
+      {#each warned as [id, at] (id)}
+        <div class="shrink">
+          <Banner
+            tone="warn"
+            icon={Shrink}
+            title={T.verkleinerung.warnTitel(cutName(id), Math.max(1, Math.ceil((at - clock.now) / 60_000)))}
+          >
+            {T.verkleinerung.warnText}
+          </Banner>
+        </div>
+      {/each}
       {#if zone === "grenze"}
         <Banner tone="warn" live>{T.mrx.grenzeNah(edgeM || 35)}</Banner>
       {:else if zone === "draussen"}

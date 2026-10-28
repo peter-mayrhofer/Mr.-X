@@ -130,7 +130,19 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
     for (let i = 0; i < 5; i++) await interval.getByRole("button", { name: "weniger" }).click();
     await admin.getByRole("button", { name: T.admin.uebernehmen, exact: true }).click();
     await expect.poll(() => val(`games/${G}/config/intervalMin`)).toBe(5);
-    await admin.locator("li", { hasText: "Norden" }).getByRole("button", { name: T.admin.sperren }).click();
+    const norden = admin.locator("li", { hasText: "Norden" });
+    // Vorwarnung (Standard 10 Min): angekündigt, noch nicht gesperrt → absagen
+    await norden.getByRole("button", { name: T.admin.sperren }).click();
+    await confirm(admin, T.admin.sperren);
+    await expect.poll(() => val(`games/${G}/state/warnCuts/norden`)).toBeGreaterThan(Date.now());
+    expect(await val(`games/${G}/state/cuts/norden`)).toBeFalsy();
+    await expect.poll(() => norden.textContent()).toContain(T.admin.gesperrtIn(10));
+    await norden.getByRole("button", { name: T.admin.absagen }).click();
+    await confirm(admin, T.admin.absagen);
+    await expect.poll(() => val(`games/${G}/state/warnCuts`)).toBeFalsy();
+    // Vorwarnung auf 0 stellen = sofort sperren
+    await norden.getByRole("button", { name: T.admin.sperren }).click();
+    for (let i = 0; i < 10; i++) await admin.getByRole("dialog").getByRole("button", { name: "weniger" }).click();
     await confirm(admin, T.admin.sperren);
     await expect.poll(() => val(`games/${G}/state/cuts/norden`)).toBeGreaterThan(0);
     // eigene Regeln (7.11): Vorschau formatiert, gespeichert erst mit „Speichern“

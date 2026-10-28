@@ -57,6 +57,19 @@ export function writeReport(
   return id;
 }
 
+/** Bereich jetzt wirklich sperren (sofort oder wenn die Vorwarnung abgelaufen ist) */
+export function lockCut(room: GameRoom, id: string, now: number) {
+  const cut = room.d.field.cuts[id]!;
+  const { [id]: _, ...warn } = room.d.state.warnCuts ?? {};
+  room.setState({ ...room.d.state, cuts: { ...room.d.state.cuts, [id]: now }, warnCuts: Object.keys(warn).length ? warn : undefined });
+  const text = MELDUNG.gesperrt(cut.short);
+  room.put("cutLog", newKey(), { cut: id, locked: true, t: now });
+  room.sys(text, now);
+  // vor dem Start sperrt die Spielleitung nur vor – dann ohne Benachrichtigung
+  if (room.d.state.phase === "laeuft" || room.d.state.phase === "pause")
+    room.notify("spielfeld", { all: true }, PUSH_TITLE.spielfeld, text);
+}
+
 /** Alles erledigen, was jetzt fällig ist (Alarm). Mehrfach aufrufen ist harmlos. */
 export function advance(room: GameRoom, now: number): string[] {
   const d = room.d;
@@ -73,6 +86,12 @@ export function advance(room: GameRoom, now: number): string[] {
     writeReport(room, { mrx: st.mrx, kind: "auto", now });
     done.push("meldung");
   }
+  // Vorwarnung abgelaufen: Bereich jetzt wirklich sperren
+  for (const [id, at] of Object.entries(d.state.warnCuts ?? {}))
+    if (at <= now && d.field.cuts[id]) {
+      lockCut(room, id, now);
+      done.push("sperre");
+    }
   // abgelaufene Wartezeiten entfernen und dem Team Bescheid geben
   for (const [t, l] of Object.entries(d.locks))
     if (l.until <= now) {
@@ -86,7 +105,12 @@ export function advance(room: GameRoom, now: number): string[] {
 /** Nächster Termin (Meldung, Ende einer Wartezeit, Spielende) für den Alarm */
 export function nextDue(d: Data): number | null {
   if (d.state.phase !== "laeuft") return null;
-  const t = Math.min(d.state.nextReportAt ?? Infinity, d.secrets.endAt ?? Infinity, ...Object.values(d.locks).map((l) => l.until));
+  const t = Math.min(
+    d.state.nextReportAt ?? Infinity,
+    d.secrets.endAt ?? Infinity,
+    ...Object.values(d.locks).map((l) => l.until),
+    ...Object.values(d.state.warnCuts ?? {}),
+  );
   return t === Infinity ? null : t;
 }
 
@@ -99,7 +123,7 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   const was = d.state;
   if (was.phase !== "laeuft" && was.phase !== "pause") return false;
   const run = newKey();
-  const { pausedAt: _, ...rest } = was;
+  const { pausedAt: _, warnCuts: _w, ...rest } = was;
   room.setState({ ...rest, phase: "beendet", endedAt, run });
   // offene Pause (Notstopp während der Pause) schließen
   for (const [k, ps] of Object.entries(d.pauses)) if (ps.to === undefined) room.put("pauses", k, { ...ps, to: endedAt });
