@@ -301,7 +301,8 @@ Cloudflare-Laufzeit nach.
 ## 9. Offene Fragen
 
 Zu jeder Frage steht der **Vorschlag**. Bestätigt am 27.10.2026: F2, F3, F6, F8, F10, F14 ausdrücklich, alle übrigen
-als Standard. **Noch zu liefern:** Vektor-Logos (F1), Kontakt des Verantwortlichen für den Datenschutzhinweis (F12).
+als Standard. F1: PNG-Logos wie vorgeschlagen (Vektor-Dateien optional, öffentlich nicht verfügbar). F12 ist mit den
+Angaben aus dem Impressum der Kinderfreunde OÖ eingetragen (E-43) und wird bei der Abnahme bestätigt.
 
 | # | Frage | Vorschlag |
 |---|---|---|

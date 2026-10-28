@@ -3,12 +3,13 @@ name: Android-APK
 # Baut die Android-App (docs/ANDROID-APK.md).
 # - bei Änderungen an der App: Test-Build (unsigniert) als Artefakt zum Ausprobieren
 # - bei einem Versions-Tag (z. B. v2.0.0) oder von Hand: signierte APK, als Release veröffentlicht
+# - Gerätetest im Android-Emulator: Standort bei ausgeschaltetem Bildschirm, Benachrichtigungen (tests/android-geraet.mjs)
 on:
   push:
     # Branches und Tags getrennt nennen – nur „tags“ allein würde Branch-Pushes ausschließen
     branches: ["**"]
     tags: ["v*"]
-    paths: ["app/**", "shared/**", ".github/workflows/android.yml"]
+    paths: ["app/**", "shared/**", "server/**", "tests/android-geraet.mjs", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 jobs:
@@ -68,3 +69,66 @@ jobs:
         with:
           files: mister-x.apk
           body: "Android-App „Mister X – Rote Falken“. Installation: docs/ANDROID-APK.md"
+
+  # Gerätetest im Android-Emulator (Definition of Done: Standort bei gesperrtem Bildschirm, Benachrichtigungen).
+  # Die Test-APK spricht mit dem Spiel-Server auf diesem Rechner (im Emulator über adb reverse als 127.0.0.1:8787).
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm -w app run build
+        env:
+          VITE_API_URL: http://127.0.0.1:8787
+      - run: npx cap sync android
+        working-directory: app
+      - run: ./gradlew assembleDebug --no-daemon
+        working-directory: app/android
+
+      - name: Spiel-Server (lokal, Testmodus)
+        env:
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          nohup npx wrangler dev -c server/wrangler.jsonc --ip 127.0.0.1 --port 8787 --var TOKEN_SECRET:emulator-test --var SETUP_SECRET:lokal --var TEST_HOOKS:1 > wrangler.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:8787/health && exit 0; sleep 2; done
+          cat wrangler.log; exit 1
+
+      - name: KVM für den Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Gerätetest
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb install -r app/android/app/build/outputs/apk/debug/app-debug.apk
+            node tests/android-geraet.mjs
+
+      - name: Ergebnis
+        if: always()
+        run: cat android-ergebnis.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-geraetetest
+          path: |
+            android-ergebnis.md
+            logcat.txt
+            wrangler.log
+          retention-days: 30

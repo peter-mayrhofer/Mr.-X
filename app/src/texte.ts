@@ -693,7 +693,7 @@ export const T = {
     abschnitte: [
       {
         titel: "Wer ist verantwortlich?",
-        text: "Die Roten Falken / Kinderfreunde Oberösterreich als Veranstalter des Spiels. Kontakt für alle Fragen zum Datenschutz: mr.x.rf.ooe@gmail.com",
+        text: "Österreichische Kinderfreunde, Landesorganisation Oberösterreich (mit den Roten Falken Veranstalter des Spiels), Europaplatz 4, 4020 Linz, ZVR 486089761. Kontakt für alle Fragen zum Datenschutz: info@kinderfreunde-ooe.at oder mr.x.rf.ooe@gmail.com",
       },
       {
         titel: "Welche Daten?",

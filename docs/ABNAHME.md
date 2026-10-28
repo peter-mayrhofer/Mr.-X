@@ -86,11 +86,16 @@ Build) – der letzte Lauf war grün. Lokal zuletzt: **84 Unit-Tests** und **192
 
 **Braucht Angaben des Vereins:**
 
-9. **F1 – Logos als Vektorgrafik:** verwendet werden die freigestellten PNG-Dateien aus `assets/logos/`; mit SVG/PDF
-   werden sie auf Großbild und Flyer schärfer.
-10. **F12 – Datenschutz:** Der Hinweis in der App nennt die Roten Falken / Kinderfreunde OÖ und die Projekt-Adresse
-    `mr.x.rf.ooe@gmail.com`. Bitte den genauen Namen und die Anschrift des Verantwortlichen nennen und den Text von der
-    zuständigen Stelle im Verein prüfen lassen (Text: `app/src/texte.ts`, Abschnitt `datenschutz`).
+9. **F1 – Logos als Vektorgrafik (optional):** umgesetzt wie im bestätigten Vorschlag (E-20): die freigestellten
+   PNG-Dateien aus `assets/logos/`, nur klein verwendet. Öffentlich gibt es keine passenden Vektor-Dateien (geprüft am
+   28.10.2026: kinderfreunde.at hat nur das bundesweite Logo als SVG, rotefalken.at das Logo nur als JPG). Liefert der
+   Verein SVG-Dateien, werden Großbild und Flyer schärfer – Dateien in `app/public/logos/` tauschen, Endung in
+   `app/src/ui/Logo.svelte` anpassen.
+10. **F12 – Datenschutz (eingetragen, bitte bestätigen):** Verantwortlicher ist laut bestätigtem Vorschlag (E-20) die
+    Kinderfreunde OÖ. Name, Anschrift und ZVR stammen aus deren eigenem Impressum: **Österreichische Kinderfreunde,
+    Landesorganisation Oberösterreich, Europaplatz 4, 4020 Linz, ZVR 486089761** (Quelle: [Impressum kinderfreunde-ooe.at](https://kinderfreunde.at/impressum/www-kinderfreunde-ooe-at), abgerufen am 28.10.2026); Kontakt
+    sind `info@kinderfreunde-ooe.at` (laut Impressum) und die Projekt-Adresse `mr.x.rf.ooe@gmail.com`. Bitte bestätigen oder eine andere Datenschutz-Kontaktadresse
+    nennen und den Text von der zuständigen Stelle im Verein prüfen lassen (`app/src/texte.ts`, Abschnitt `datenschutz`).
 
 **Bewusst so gelöst:**
 
@@ -104,5 +109,5 @@ Build) – der letzte Lauf war grün. Lokal zuletzt: **84 Unit-Tests** und **192
 2. Signier-Schlüssel erzeugen und in GitHub hinterlegen, signierte APK bauen, auf den Server legen
    ([`ANDROID-APK.md`](ANDROID-APK.md), [`BETRIEB.md`](BETRIEB.md) Schritt 9).
 3. **Feldtest** mit 3–5 Handys in der Innenstadt ([`FELDTEST.md`](FELDTEST.md)), Protokoll zurückschicken.
-4. Offene Angaben F1 (Logos) und F12 (Datenschutz) nachreichen.
+4. F12 (Datenschutz-Angaben) bestätigen; optional Vektor-Logos (F1) nachreichen.
 5. Erstes echtes Spiel mit der [Spieltag-Checkliste](SPIELTAG-CHECKLISTE.md); danach die Haupt-Adresse umstellen.
