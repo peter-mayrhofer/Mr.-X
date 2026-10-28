@@ -121,12 +121,12 @@ Bei jeder Änderung an App oder Server startet GitHub zusätzlich einen **Androi
 Test-APK und spielt gegen einen Spiel-Server auf demselben Rechner ([`tests/android-geraet.mjs`](../tests/android-geraet.mjs)):
 
 1. App offen im Warteraum → der Standort kommt am Server an,
-2. Bildschirm aus (Handy in der Tasche), **dann** startet die Spielleitung das Spiel,
-3. 150 Sekunden „gehen“ mit ausgeschaltetem Bildschirm → neue Standorte kommen weiter an, die Dauer-Benachrichtigung
-   „Mister X läuft“ bleibt,
+2. App in den Hintergrund (Handy wandert in die Tasche), **dann** startet die Spielleitung das Spiel; 60 Sekunden
+   „gehen“ → neue Standorte kommen weiter an, die Dauer-Benachrichtigung „Mister X läuft“ bleibt,
+3. Bildschirm aus, 150 Sekunden weitergehen → neue Standorte kommen weiter an,
 4. Durchsage der Spielleitung → erscheint als **Android-Benachrichtigung**, während der Bildschirm aus ist.
 
 Ergebnis ansehen: GitHub → **Actions → Android-APK** → Lauf öffnen → **Summary** zeigt die Tabelle „Gerätetest
-Android-App (Emulator)“; Protokolle liegen im Artefakt `android-geraetetest`. Ein Emulator ersetzt den
+Android-App (Emulator)“ mit einem Verlauf alle 5 Sekunden; Geräteprotokolle liegen im Artefakt `android-geraetetest`. Ein Emulator ersetzt den
 [Feldtest](FELDTEST.md) nicht ganz: Akku-Sparfunktionen mancher Hersteller (Samsung, Xiaomi, Huawei) gibt es nur auf
 echten Handys.

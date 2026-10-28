@@ -137,5 +137,6 @@ jobs:
           path: |
             android-ergebnis.md
             logcat.txt
+            geraet.txt
             wrangler.log
           retention-days: 30
