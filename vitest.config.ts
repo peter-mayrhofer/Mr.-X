@@ -12,6 +12,8 @@ export default defineConfig({
           fileParallelism: false,
           testTimeout: 30_000,
           hookTimeout: 120_000,
+          // Klick → Server → Wert: auf ausgelasteten CI-Rechnern dauert das gelegentlich länger als die 1 s Standard
+          expect: { poll: { timeout: 10_000 } },
           globalSetup: ["tests/setup.ts"],
         },
       },
