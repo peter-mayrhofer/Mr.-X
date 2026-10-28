@@ -77,7 +77,16 @@ export async function showLocal(n: Note) {
   const { LocalNotifications } = await import("@capacitor/local-notifications");
   await LocalNotifications.schedule({
     notifications: [
-      { id: (Date.now() % 2_000_000_000) + shown.size, title: n.title, body: n.body, channelId: "spiel", smallIcon: "ic_stat_flag" },
+      {
+        id: (Date.now() % 2_000_000_000) + shown.size,
+        title: n.title,
+        body: n.body,
+        channelId: "spiel",
+        smallIcon: "ic_stat_flag",
+        // sofort anzeigen, kein Wecker: sonst verlangt das Plugin ab Android 12 erst die Erlaubnis für exakte Alarme
+        // und öffnet dafür die Einstellungen – aus dem Hintergrund blockiert Android das, die Benachrichtigung fehlt
+        isExactNotification: false,
+      },
     ],
   });
 }
