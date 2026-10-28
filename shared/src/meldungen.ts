@@ -24,6 +24,7 @@ export const M = {
   freigegeben: (bereich: string) => `Bereich wieder freigegeben: ${bereich}.`,
   intervall: (min: number) => `Regeländerung: Mister X wird jetzt alle ${min} Min gemeldet.`,
   wartezeit: (min: number) => `Regeländerung: Wartezeit nach einer Übergabe jetzt ${min} Min.`,
+  regeltext: "Die Spielleitung hat die Regeln ergänzt – siehe „Regeln“.",
   pause: "Das Spiel ist pausiert. Bitte stehen bleiben – es geht gleich weiter.",
   weiter: "Weiter geht's! Das Spiel läuft wieder.",
   warteEnde: "Die Wartezeit ist vorbei – ihr dürft weiter!",

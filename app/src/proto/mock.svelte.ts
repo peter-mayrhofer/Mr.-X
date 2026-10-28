@@ -26,6 +26,8 @@ export const config: Config = $state({
   endMinH: 3,
   endMaxH: 4,
   spectators: true,
+  rulesText:
+    "**Treffpunkt nach dem Spiel:** Hauptplatz bei der Dreifaltigkeitssäule\n\nBitte beachten:\n- keine Fahrräder und E-Scooter\n- Handy immer laden, Powerbank mitnehmen",
 });
 
 export const field = LINZ_INNENSTADT;

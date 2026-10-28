@@ -17,7 +17,7 @@ echten Cloudflare-Konto nachweisen lässt – dafür gibt es den [Feldtest](FELD
 | **Live-Verbindung** | WebSocket mit Snapshot + Änderungen, **nach Rolle gefiltert** (Teams sehen keine fremden Standorte), automatischer Wiederaufbau, Server-Zeit, doppelte Anfragen werden erkannt |
 | **Teams & Mister X** | Beitritt per QR + Passwort, Ersatzgerät, Onboarding (Standort, Benachrichtigungen, Akku), Warteraum mit Checks, Karte mit Spur und Countdown, Wartezeit-Overlay, Übergabe-Szenen, Durchsagen, Verkleinerung, Spielfeld-Warnung, Chat, Regeln, Auswertung |
 | **Schiri** | Karte aller Teams, Übergabe nach Nähe mit Vorschau der Wartezeit, Rückgängig, „Ich begleite Mister X“ (Standort-Ersatz) |
-| **Spielleitung** | Live-Übersicht mit Warnungen, Steuerung (Start, Pause, Notstopp, Regeln live, Verkleinern, Sofort-Meldung, Durchsage), Teams & Zugänge (Passwörter, QR-Flyer, Großbild-Link, Tracker, Neue Runde), Spielfeld-Editor (GeoJSON, Linz-Vorlage), Protokoll, Postfach |
+| **Spielleitung** | Live-Übersicht mit Warnungen, Steuerung (Start, Pause, Notstopp, Regeln live, eigene Regeln für die Teams, Verkleinern, Sofort-Meldung, Durchsage), Teams & Zugänge (Passwörter, QR-Flyer, Großbild-Link, Tracker, Neue Runde), Spielfeld-Editor (GeoJSON, Linz-Vorlage), Protokoll, Postfach |
 | **Organisator** | Verwaltung mit Passwort (Setup-Geheimnis), Spiele anlegen/öffnen/archivieren/löschen |
 | **Großbild, Zuschauer, Archiv** | Beamer-Ansicht, Zuschauer-Ansicht ohne Jäger-Standorte, Auswertung mit Feier, Archiv mit Wiederholung (Zeitschieberegler), Sichern als Datei, Drucken |
 | **Benachrichtigungen** | Web Push (VAPID, verschlüsselt) für Browser und iPhone-Web-App; Android-App zeigt lokale Benachrichtigungen; Ton/Vibration in der App; Arten pro Gerät wählbar |

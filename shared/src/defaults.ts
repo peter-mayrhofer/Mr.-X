@@ -23,4 +23,5 @@ export const LIMITS = {
   schiriCode: 4,
   adminPw: 8,
   chat: 300,
+  rulesText: 2000,
 } as const;

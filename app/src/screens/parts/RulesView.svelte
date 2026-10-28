@@ -1,9 +1,10 @@
 <!-- Spielregeln & Hilfe (Abschnitt 7.11): Icon pro Regel, durchsuchbar, aktuelle Werte eingesetzt, FAQ. -->
 <script lang="ts">
-  import { Search, ShieldCheck } from "@lucide/svelte";
+  import { Megaphone, Search, ShieldCheck } from "@lucide/svelte";
   import type { Config } from "@mrx/shared";
   import { ICONS } from "../../ui/icons.ts";
   import Card from "../../ui/Card.svelte";
+  import RichText from "../../ui/RichText.svelte";
   import { T } from "../../texte.ts";
 
   let { config }: { config: Config } = $props();
@@ -11,6 +12,7 @@
   const rules = $derived(T.regeln.liste(config));
   const hits = $derived(rules.filter((r) => (r.titel + r.text).toLowerCase().includes(q.trim().toLowerCase())));
   const faq = $derived(T.regeln.faq.filter((f) => (f.f + f.a).toLowerCase().includes(q.trim().toLowerCase())));
+  const own = $derived(config.rulesText && config.rulesText.toLowerCase().includes(q.trim().toLowerCase()) ? config.rulesText : "");
 
   // aktuelle Werte hervorheben („alle 10 Minuten“)
   const mark = (s: string) => s.split(/(\d+ Minuten)/g);
@@ -22,6 +24,12 @@
     <span class="sr-only">{T.regeln.suche}</span>
     <input type="search" bind:value={q} placeholder={T.regeln.suche} />
   </label>
+
+  {#if own}
+    <Card label={T.regeln.eigene} icon={Megaphone} tone="info">
+      <RichText text={own} />
+    </Card>
+  {/if}
 
   <ol class="list">
     {#each hits as r (r.titel)}
@@ -37,7 +45,7 @@
       </li>
     {/each}
   </ol>
-  {#if hits.length === 0 && faq.length === 0}<p class="muted">{T.regeln.keinTreffer}</p>{/if}
+  {#if hits.length === 0 && faq.length === 0 && !own}<p class="muted">{T.regeln.keinTreffer}</p>{/if}
 
   {#if faq.length}
     <h2 class="caps sec">{T.regeln.hilfe}</h2>

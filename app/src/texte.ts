@@ -199,6 +199,7 @@ export const T = {
 
   regeln: {
     titel: "Spielregeln",
+    eigene: "Hinweise der Spielleitung",
     suche: "Regeln durchsuchen",
     keinTreffer: "Nichts gefunden.",
     hilfe: "Hilfe",
@@ -334,6 +335,13 @@ export const T = {
     geheim: "Zeitpunkt geheim am Server",
     aufdecken: "Zeitpunkt aufdecken",
     regelnLive: "Regeln live ändern",
+    regeltext: "Regeln für die Teams",
+    regeltextFeld: "Eigene Regeln und Hinweise",
+    regeltextHinweis:
+      "Erscheint bei allen ganz oben unter „Regeln“. **fett**, Aufzählung mit „- “ am Zeilenanfang, Leerzeile = neuer Absatz.",
+    regeltextZeichen: (n: number, max: number) => `${n} / ${max} Zeichen`,
+    regeltextVorschau: "Vorschau",
+    regeltextGespeichert: "Regeln gespeichert – alle sehen sie unter „Regeln“",
     intervall: "Meldeintervall",
     vorsprung: "Vorsprung am Start",
     wartezeit: "Wartezeit nach Übergabe",

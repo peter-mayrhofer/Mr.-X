@@ -1,13 +1,14 @@
 <!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
 <script lang="ts">
-  import { Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
-  import { nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
+  import { BookOpenText, Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
+  import { LIMITS, nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import Stepper from "../../ui/Stepper.svelte";
   import Pill from "../../ui/Pill.svelte";
+  import RichText from "../../ui/RichText.svelte";
   import Modal from "../../ui/Modal.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
@@ -72,6 +73,13 @@
     } finally {
       busy = false;
     }
+  }
+
+  // eigene Regeln der Spielleitung (Abschnitt 7.11): Entwurf, bis „Speichern“
+  let rulesDraft = $state<string | null>(null);
+  const rulesText = $derived(rulesDraft ?? view.config.rulesText ?? "");
+  async function saveRules() {
+    if (await run(() => api({ action: "setConfig", gameId: g, config: { rulesText } }), T.admin.regeltextGespeichert)) rulesDraft = null;
   }
 
   async function apply() {
@@ -208,6 +216,24 @@
       </div>
       {#if running}<p class="muted small">{T.admin.aenderungMeldung}</p>{/if}
       <Button block disabled={!changed.length || busy} onclick={apply}>{T.admin.uebernehmen}</Button>
+    </Card>
+
+    <Card label={T.admin.regeltext} icon={BookOpenText}>
+      <label class="rules" for="rules-text">{T.admin.regeltextFeld}</label>
+      <textarea
+        id="rules-text"
+        rows="6"
+        maxlength={LIMITS.rulesText}
+        value={rulesText}
+        oninput={(e) => (rulesDraft = e.currentTarget.value)}
+        aria-describedby="rules-hint"></textarea>
+      <p id="rules-hint" class="muted small">
+        {T.admin.regeltextHinweis} · {T.admin.regeltextZeichen(rulesText.length, LIMITS.rulesText)}
+      </p>
+      {#if rulesText.trim()}
+        <div class="preview" role="group" aria-label={T.admin.regeltextVorschau}><RichText text={rulesText} /></div>
+      {/if}
+      <Button block disabled={rulesDraft === null || busy} onclick={saveRules}>{T.allgemein.speichern}</Button>
     </Card>
 
     <Card label={T.admin.bereiche} icon={Shrink}>
@@ -352,6 +378,33 @@
     display: grid;
     gap: var(--sp-2);
     margin: var(--sp-2) 0 var(--sp-3);
+  }
+  .rules {
+    display: block;
+    font-weight: 600;
+    font-size: var(--fs-s);
+    margin-bottom: var(--sp-1);
+  }
+  textarea {
+    width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-m);
+    border: var(--border-strong) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+  }
+  textarea:focus-visible {
+    border-color: var(--focus);
+    outline: none;
+  }
+  .preview {
+    margin: var(--sp-2) 0 var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-m);
+    background: var(--surface-2);
+    border-left: 4px solid var(--info);
   }
   .small {
     font-size: var(--fs-s);

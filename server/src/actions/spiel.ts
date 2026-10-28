@@ -96,7 +96,7 @@ export function stopGame(room: GameRoom, _d: D, a: Auth): ApiResults["stopGame"]
   return {};
 }
 
-const RANGE: Record<Exclude<keyof Config, "spectators">, [number, number, string]> = {
+const RANGE: Record<Exclude<keyof Config, "spectators" | "rulesText">, [number, number, string]> = {
   intervalMin: [1, 60, "Meldeintervall"],
   headStartMin: [0, 60, "Vorsprung"],
   waitMin: [0, 30, "Wartezeit"],
@@ -114,6 +114,14 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
   const cur = { ...DEFAULT_CONFIG, ...room.d.config };
   const next: Config = { ...cur };
   for (const [k, v] of Object.entries(patch)) {
+    // eigene Regeln der Spielleitung (Abschnitt 7.11): Text mit einfacher Formatierung, leer = keine
+    if (k === "rulesText") {
+      if (typeof v !== "string" || v.length > LIMITS.rulesText) fail("invalid", `Regeltext: höchstens ${LIMITS.rulesText} Zeichen`);
+      const text = v.trim();
+      if (text) next.rulesText = text;
+      else delete next.rulesText;
+      continue;
+    }
     if (k === "spectators") {
       if (typeof v !== "boolean") fail("invalid", "Zuschauer: ja oder nein");
       next.spectators = v;
@@ -125,7 +133,10 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
     next[k as keyof typeof RANGE] = v;
   }
   if (next.endMinH > next.endMaxH) fail("invalid", "Spielende: „frühestens“ muss vor „spätestens“ liegen");
-  const changed = (Object.keys(next) as (keyof Config)[]).filter((k) => next[k] !== cur[k]);
+  // auch entfernte Werte zählen (leerer Regeltext)
+  const changed = [...new Set([...Object.keys(cur), ...Object.keys(next)])].filter(
+    (k) => next[k as keyof Config] !== cur[k as keyof Config],
+  ) as (keyof Config)[];
   if (!changed.length) return {};
 
   const now = Date.now();
@@ -152,8 +163,16 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
     room.sys(MELDUNG.wartezeit(next.waitMin), now);
     room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, MELDUNG.wartezeit(next.waitMin));
   }
+  if (isLive && changed.includes("rulesText") && next.rulesText) {
+    room.sys(MELDUNG.regeltext, now);
+    room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, MELDUNG.regeltext);
+  }
   if (endAt !== undefined) room.set("secrets", { ...room.d.secrets, endAt });
-  room.audit(who, "Einstellungen geändert", changed.map((k) => `${k}: ${String(cur[k])} → ${String(next[k])}`).join(", "));
+  room.audit(
+    who,
+    "Einstellungen geändert",
+    changed.map((k) => (k === "rulesText" ? "Regeltext" : `${k}: ${String(cur[k])} → ${String(next[k])}`)).join(", "),
+  );
   return {};
 }
 

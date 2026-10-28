@@ -207,6 +207,18 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
     expect((await lastChat()).text).toContain("alle 5 Min");
     expect(await val(`games/${G}/config/intervalMin`)).toBe(5);
   });
+  it("eigener Regeltext (7.11): höchstens 2000 Zeichen, Hinweis an alle, leer = entfernt", async () => {
+    expect(reason(await run(admin, "setConfig", { config: { rulesText: "x".repeat(2001) } }))).toBe("invalid");
+    expect(reason(await run(admin, "setConfig", { config: { rulesText: 5 } }))).toBe("invalid");
+    expect(reason(await run(schiri, "setConfig", { config: { rulesText: "Treffpunkt" } }))).toBe("forbidden");
+    await ok(admin, "setConfig", { config: { rulesText: "  **Treffpunkt:** Hauptplatz\n- keine Fahrräder  " } });
+    expect(await val(`games/${G}/config/rulesText`)).toBe("**Treffpunkt:** Hauptplatz\n- keine Fahrräder");
+    expect((await lastChat()).text).toBe("Die Spielleitung hat die Regeln ergänzt – siehe „Regeln“.");
+    const chats = (await list("chat")).length;
+    await ok(admin, "setConfig", { config: { rulesText: " " } });
+    expect(await val(`games/${G}/config/rulesText`)).toBeNull();
+    expect((await list("chat")).length).toBe(chats);
+  });
   it("Spielende-Fenster ändern → neuer geheimer Zeitpunkt im neuen Fenster", async () => {
     const s = await state();
     await ok(admin, "setConfig", { config: { endMinH: 1, endMaxH: 2 } });

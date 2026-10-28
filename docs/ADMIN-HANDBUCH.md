@@ -73,6 +73,16 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
 nach Übergabe (**5 Min**), Umkreis für die Wartezeit (**200 m**), Zufallsende (zwischen **3 und 4 Stunden**).
 Alles lässt sich auch während des Spiels ändern; alle bekommen dann automatisch eine Meldung.
 
+**Steuerung → Regeln für die Teams**: eigene Regeln und Hinweise für dieses Spiel, z. B. Treffpunkt nach dem Spiel,
+Notfallnummer, „keine E-Scooter“. Die Teams sehen sie ganz oben im Tab **Regeln**. Einfache Formatierung:
+
+- Leerzeile = neuer Absatz
+- Zeile mit `- ` am Anfang = Aufzählungspunkt
+- `**Wort**` = **fett**
+
+Darunter zeigt eine Vorschau, wie es auf den Handys aussieht. Erst **Speichern** übernimmt den Text; ändert ihr ihn
+während des Spiels, bekommen alle eine Meldung. Feld leeren und speichern = keine eigenen Regeln.
+
 ### 1.6 Tracker (optional)
 
 Ein GPS-Tracker oder ein altes Handy mit der kostenlosen App **Traccar Client** kann in der Fahne stecken (dann kommt

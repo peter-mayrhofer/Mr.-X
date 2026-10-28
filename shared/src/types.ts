@@ -39,6 +39,8 @@ export interface Config {
   endMinH: number;
   endMaxH: number;
   spectators: boolean;
+  /** eigene Regeln/Hinweise der Spielleitung für dieses Spiel (Abschnitt 7.11), einfache Formatierung (regeltext.ts) */
+  rulesText?: string;
 }
 
 export interface Team {

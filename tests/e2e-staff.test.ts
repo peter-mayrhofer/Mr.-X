@@ -133,6 +133,13 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
     await admin.locator("li", { hasText: "Norden" }).getByRole("button", { name: T.admin.sperren }).click();
     await confirm(admin, T.admin.sperren);
     await expect.poll(() => val(`games/${G}/state/cuts/norden`)).toBeGreaterThan(0);
+    // eigene Regeln (7.11): Vorschau formatiert, gespeichert erst mit „Speichern“
+    await admin.getByLabel(T.admin.regeltextFeld).fill("**Treffpunkt:** Hauptplatz\n- keine Fahrräder");
+    const preview = admin.getByRole("group", { name: T.admin.regeltextVorschau });
+    expect(await preview.locator("strong").textContent()).toBe("Treffpunkt:");
+    expect(await preview.getByRole("listitem").textContent()).toContain("keine Fahrräder");
+    await admin.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
+    await expect.poll(() => val(`games/${G}/config/rulesText`)).toBe("**Treffpunkt:** Hauptplatz\n- keine Fahrräder");
   });
 
   it("Durchsage aus der Live-Übersicht", async () => {

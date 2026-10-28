@@ -118,6 +118,16 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     await t.getByRole("button", { name: T.tabs.karte, exact: true }).click();
   });
 
+  it("Regeln: Hinweise der Spielleitung erscheinen formatiert über den Spielregeln", async () => {
+    await api("setConfig", { config: { rulesText: "**Treffpunkt nach dem Spiel:** Dreifaltigkeitssäule\n- keine E-Scooter" } });
+    const l = phones.Leonding!.page;
+    await l.getByRole("button", { name: T.tabs.regeln, exact: true }).click();
+    await visible(l, T.regeln.eigene);
+    expect(await l.locator("strong", { hasText: "Treffpunkt nach dem Spiel:" }).isVisible()).toBe(true);
+    expect(await l.getByRole("listitem").filter({ hasText: "keine E-Scooter" }).isVisible()).toBe(true);
+    await l.getByRole("button", { name: T.tabs.karte, exact: true }).click();
+  });
+
   it("Übergabe: neuer Mister X, Erwischt + Wartezeit, alle anderen sehen „Gefangen!“", async () => {
     const before = (await val(`games/${G}/state/mrx`)) as string;
     expect(before).toBe(phones.Urfahr!.id);

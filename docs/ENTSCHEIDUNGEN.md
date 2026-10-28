@@ -399,3 +399,11 @@ und Sonne (WCAG 2.1 A/AA plus axe-Empfehlungen). Gefundene Mängel wurden behobe
 gedämpfte Schrift, Seitenbereiche, Überschriften). Im Modus „Bewegung reduzieren“ gibt es keine Übergänge mehr.
 **Warum:** Kontraste draußen in der Sonne sind Spielqualität, nicht Kür – und ein Test verhindert Rückschritte.
 
+### E-46 Eigene Regeln der Spielleitung als einfacher Text
+**Entscheidung:** Unter Steuerung → „Regeln für die Teams“ schreibt die Spielleitung bis zu 2000 Zeichen eigene
+Regeln und Hinweise (Abschnitt 7.11). Formatierung ohne HTML: Leerzeile = neuer Absatz, Zeile mit „- “ = Aufzählung,
+`**fett**`. Alle sehen den Text ganz oben im Tab „Regeln“; ändert die Spielleitung ihn während des Spiels, bekommen alle
+eine Meldung. Der Text wird nie als HTML eingesetzt (`shared/src/regeltext.ts` zerlegt ihn nur in Textstücke).
+**Warum:** Treffpunkt, Verbote, Notfallnummer ändern sich von Spiel zu Spiel – das soll ohne Programmierer gehen.
+Eingaben als HTML wären ein Einfallstor für Schadcode auf allen Kinder-Handys.
+**Verworfen:** Markdown-Bibliothek oder Text-Editor mit Knöpfen (zusätzlicher Code für drei Formatierungen).

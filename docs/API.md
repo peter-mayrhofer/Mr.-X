@@ -78,7 +78,7 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 | `screenLink` | Spielleitung | – | `{ key }` (Großbild-Link `#/g/{spiel}?k={key}`) |
 | `startGame` | Spielleitung | `mrx` (Team-Id oder `"random"`) | `{ mrx }` |
 | `pause`, `resume`, `stopGame` | Spielleitung | – | `{}` |
-| `setConfig` | Spielleitung | `config` (Teil von `Config`) | `{}` |
+| `setConfig` | Spielleitung | `config` (Teil von `Config`; `rulesText` ≤ 2000 Zeichen, leer = entfernen) | `{}` |
 | `setCut` | Spielleitung | `cutId`, `locked` | `{}` |
 | `setLock` | Spielleitung | `teamId`, `min` (0 = aufheben) | `{}` |
 | `instantReport` | Spielleitung | – | `{ reportId }` |
