@@ -98,11 +98,13 @@ npm run lint     # ESLint + Prettier
 npm run check    # TypeScript (strict) + Svelte
 npm test         # Unit-Tests (Vitest)
 npm run test:server # Server-, Rechte- und Ende-zu-Ende-Tests in der lokalen Cloudflare-Laufzeit
+node tests/push-dienst.mjs # Web Push über Mozillas echten Push-Dienst (braucht Internet)
 npm run build    # App bauen
 ```
 
 Screenshots aller Screens (dunkel/hell/Sonne) neu erzeugen: `npm run build`, dann in `app/`
 `npx vite preview --port 4173` starten und im Hauptordner `npm run screenshots` ausführen; genauso erzeugt
 `npm run flyer` das Beispiel-PDF [`docs/flyer-beispiel.pdf`](docs/flyer-beispiel.pdf).
-GitHub Actions führt bei jedem Push Lint, Typecheck, alle Tests (auch gegen den lokalen Cloudflare-Server) und den
-Build aus.
+GitHub Actions führt bei jedem Push Lint, Typecheck, alle Tests (auch gegen den lokalen Cloudflare-Server), den
+Push-Test über den echten Push-Dienst und den Build aus; bei Änderungen an App oder Server zusätzlich APK-Build und
+Gerätetest im Android-Emulator ([`docs/ANDROID-APK.md`](docs/ANDROID-APK.md) Abschnitt 5).

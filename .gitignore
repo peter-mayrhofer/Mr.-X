@@ -5,3 +5,9 @@ dist/
 .dev.vars
 server/geheimnisse*.json
 app/public/*.apk
+
+# Ergebnisse der Gerätetests (entstehen in CI bzw. beim lokalen Aufruf)
+push-ergebnis.md
+android-ergebnis.md
+logcat.txt
+geraet.txt

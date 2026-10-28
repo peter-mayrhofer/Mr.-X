@@ -430,3 +430,15 @@ der Entwicklungsumgebung nicht. Der Feldtest bleibt für Hersteller-Eigenheiten 
 **Kosten:** ≈ 20 Min GitHub-Rechenzeit pro Lauf, nur bei Änderungen an App, Server oder `shared/`. Das Repository ist
 privat: die Minuten kommen aus den 2000 Gratis-Minuten im Monat; ohne hinterlegte Zahlungsart entstehen keine Kosten,
 sind sie aufgebraucht, laufen die Jobs erst im nächsten Monat wieder.
+
+### E-48 Web Push über einen echten Push-Dienst geprüft
+**Entscheidung:** `tests/push-dienst.mjs` (CI-Job „push-dienst“) startet den Spiel-Server wie im Betrieb (ohne
+Testmodus, eigener VAPID-Schlüssel), meldet sich wie Firefox per WebSocket bei Mozillas Push-Dienst an, gibt das Abo
+der App und lässt die Spielleitung eine Durchsage schicken. Der Spielraum verschlüsselt sie per Alarm, der Push-Dienst
+stellt sie zu, der Test entschlüsselt sie wie ein Browser. Damit ist auch der Versandweg im Server geprüft, der im
+Testmodus der übrigen Tests nur protokolliert wird.
+**Warum:** Die Definition of Done verlangt, dass Push auf der installierten Web-App ankommt. Mozillas Dienst ist ohne
+Konto nutzbar; Apple und Google brauchen ein echtes iPhone bzw. Chrome mit Google-Konto und bleiben dem Feldtest. Alle
+drei arbeiten nach denselben Standards (RFC 8030, 8291, 8292).
+**Verworfen:** einen Browser im Test den Push-Dienst nutzen lassen – Chromium ohne Google-Schlüssel kann kein Push-Abo
+anlegen, Firefox ist in der Testumgebung nicht installiert.

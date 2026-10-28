@@ -32,3 +32,18 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:server
+
+  # Web Push über einen echten Push-Dienst (Mozilla): Spiel-Server ohne Testmodus → Push-Dienst → Browser-Ersatz,
+  # der die Nachricht entschlüsselt (tests/push-dienst.mjs)
+  push-dienst:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node tests/push-dienst.mjs
+      - if: always()
+        run: cat push-ergebnis.md >> "$GITHUB_STEP_SUMMARY" || true
