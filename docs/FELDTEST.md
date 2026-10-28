@@ -50,8 +50,8 @@ Jeder Prüfpunkt hat eine Nummer (P1 …). Im Protokoll ✔, ✖ oder eine Bemer
 
 | Nr. | Was tun | Erwartet |
 |---|---|---|
-| P9 | Spielleitung: Mister X = **Team A** wählen, **Spiel starten** | Countdown 3-2-1 auf allen Handys; Team A rot; B und C sehen die Wartezeit |
-| P10 | **Team A sperrt den Bildschirm**, steckt das Handy ein und geht 10 Minuten | Spielleitung sieht Team A **weiterlaufen** (Standort höchstens 30 s alt); Meldungen kommen mit aktuellem Standort |
+| P9 | **Team A sperrt schon vorher den Bildschirm** und steckt das Handy ein (wie im echten Spiel). Spielleitung: Mister X = **Team A** wählen, **Spiel starten** | Countdown 3-2-1 auf den offenen Handys; B und C sehen die Wartezeit; bei Team A bleibt die Dauer-Benachrichtigung „Mister X läuft“ |
+| P10 | **Team A geht mit gesperrtem Handy** 10 Minuten | Spielleitung sieht Team A **weiterlaufen** (Standort höchstens 30 s alt); Meldungen kommen mit aktuellem Standort |
 | P11 | Team B und C: Handy gesperrt in der Tasche, wenn eine Meldung fällig ist | **Benachrichtigung** „Mister X gemeldet“ auf dem Sperrbildschirm (B: iPhone-Web-App, C: Browser) |
 | P12 | Team A (App im Hintergrund) bei einer Durchsage der Spielleitung | Benachrichtigung der Android-App |
 | P13 | Team B fängt Team A, der **Schiri** trägt die Übergabe ein | B wird rot („Ihr seid Mister X“), A sieht „Erwischt“ + Wartezeit, C „Gefangen!“ |
