@@ -3,6 +3,7 @@
   import { CircleCheck, Crown, ShieldCheck, Smartphone, Users } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
   import Logo from "../ui/Logo.svelte";
+  import StartBackdrop from "./parts/StartBackdrop.svelte";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
@@ -17,9 +18,8 @@
   let { game, links, apk }: Props = $props();
 </script>
 
+<StartBackdrop />
 <main class="start">
-  <div class="radar" aria-hidden="true"><i></i><i></i><i></i><span class="sweep"></span></div>
-
   <header>
     <Logo height={48} />
   </header>
@@ -67,41 +67,7 @@
     padding: calc(var(--safe-top) + var(--sp-5)) var(--gutter) calc(var(--safe-bottom) + var(--sp-4));
     max-width: 560px;
     margin: 0 auto;
-    overflow: hidden;
-  }
-  .radar {
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    width: 640px;
-    height: 640px;
-    translate: -50% -50%;
-    pointer-events: none;
-    opacity: 0.6;
-  }
-  .radar i {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px solid var(--accent-soft);
-  }
-  .radar i:nth-child(2) {
-    inset: 18%;
-  }
-  .radar i:nth-child(3) {
-    inset: 36%;
-  }
-  .sweep {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, transparent 0deg, var(--accent-soft) 60deg, transparent 61deg);
-    animation: sweep 6s linear infinite;
-  }
-  @keyframes sweep {
-    to {
-      transform: rotate(360deg);
-    }
+    z-index: 1;
   }
   header,
   .hero,
