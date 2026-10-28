@@ -7,3 +7,4 @@ shared/src/vorlagen/linz.ts
 app/public/
 functions/lib/
 app/android/
+**/.wrangler/
