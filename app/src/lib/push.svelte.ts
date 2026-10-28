@@ -7,6 +7,7 @@ import { call } from "./api.ts";
 import { onNote, onView, session } from "./session.svelte.ts";
 import { E2E } from "./server.ts";
 import { enableLocal, NATIVE, seenNote, showLocal } from "./native.ts";
+import { appVisible } from "./sichtbar.ts";
 
 export type PushStatus = "an" | "aus" | "verweigert" | "nichtMoeglich";
 
@@ -59,7 +60,7 @@ export class PushState {
       }),
       // Android: Benachrichtigungen kommen über die Verbindung – im Hintergrund lokal anzeigen
       onNote((n) => {
-        if (NATIVE && document.visibilityState === "hidden" && this.status === "an") void showLocal(n);
+        if (NATIVE && !appVisible() && this.status === "an") void showLocal(n);
         else seenNote(n);
       }),
     ];

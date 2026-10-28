@@ -8,7 +8,7 @@
 //   4. eine Durchsage erscheint als Android-Benachrichtigung, während der Bildschirm aus ist.
 // Ergebnis: android-ergebnis.md (mit Verlauf alle 5 s), logcat.txt, geraet.txt (Artefakt); Exit-Code 1 bei Fehlern.
 import { execFileSync, spawnSync } from "node:child_process";
-import { openSync, writeFileSync } from "node:fs";
+import { openSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const { _android: android } = createRequire(import.meta.url)("playwright");
@@ -173,16 +173,16 @@ try {
   ok = check("Vordergrund-Dienst (Dauer-Benachrichtigung „Mister X läuft“)", fgs, fgs ? "läuft" : "fehlt") && ok;
 
   // 4. App in den Hintergrund (Home-Taste) – das Handy wandert schon im Warteraum in die Tasche –, dann startet die
-  // Spielleitung das Spiel; 60 s gehen: Standorte kommen über natives HTTP
+  // Spielleitung das Spiel; 90 s gehen: Standorte kommen über natives HTTP (im Hintergrund alle 30 s)
   adb("shell", "input", "keyevent", "KEYCODE_HOME");
   await sleep(3000);
   await call(admin.token, { action: "startGame", gameId: G, mrx: other.teamId });
-  const a = await walk("Hintergrund", team.teamId, 1, 12, sys0);
+  const a = await walk("Hintergrund", team.teamId, 1, 18, sys0);
   ok =
     check(
       "Standorte mit App im Hintergrund, Spielstart währenddessen",
       a.seen.length >= 2 && a.moved >= 100,
-      `${a.seen.length} neue Standorte in 60 s (nach ${a.when}), ${a.moved} m weiter südlich`,
+      `${a.seen.length} neue Standorte in 90 s (nach ${a.when}), ${a.moved} m weiter südlich`,
     ) && ok;
   ok = check("Vordergrund-Dienst läuft nach dem Spielstart weiter", service(), service() ? "ja" : "nein") && ok;
 
@@ -190,13 +190,23 @@ try {
   adb("shell", "input", "keyevent", "KEYCODE_SLEEP");
   await sleep(3000);
   ok = check("Bildschirm aus", wake() !== "Awake", `mWakefulness=${wake()}`) && ok;
-  const b = await walk("Bildschirm aus", team.teamId, 13, 30, sys0);
+  const b = await walk("Bildschirm aus", team.teamId, 19, 30, sys0);
   ok =
     check(
       "Standorte bei ausgeschaltetem Bildschirm",
       b.stayedOff && b.seen.length >= 3 && b.moved >= 200,
       `${b.seen.length} neue Standorte in 150 s (nach ${b.when}), ${b.moved} m weiter südlich; Bildschirm blieb aus: ${b.stayedOff ? "ja" : "nein"}`,
     ) && ok;
+
+  // im Hintergrund schickt die App ihren Standort per nativem HTTP (die WebView drosselt Android dort) – wrangler.log
+  // ist das Protokoll des Spiel-Servers aus dem CI-Schritt davor
+  let posts = -1;
+  try {
+    posts = readFileSync("wrangler.log", "utf8").split("POST /api/pos").length - 1;
+  } catch {
+    /* lokal ohne Protokoll */
+  }
+  if (posts >= 0) ok = check("Standorte im Hintergrund per nativem HTTP (/api/pos)", posts >= 3, `${posts} Anfragen`) && ok;
 
   // 6. Durchsage, während der Bildschirm aus ist → Android-Benachrichtigung
   await call(admin.token, { action: "announce", gameId: G, text: DURCHSAGE });

@@ -6,6 +6,7 @@ import { distanceM, type Position } from "@mrx/shared";
 import { clock } from "./clock.svelte.ts";
 import { sendPos } from "./session.svelte.ts";
 import { NATIVE, nativePos, stopNative, watchNative } from "./native.ts";
+import { appVisible, onAppVisibility } from "./sichtbar.ts";
 
 const MOVE_MS = 10_000;
 const KEEP_MS = 30_000;
@@ -106,7 +107,7 @@ export function sendPosition(active: () => boolean) {
     const p = gps.pos;
     // Android-App im Hintergrund: natives HTTP (Android drosselt das Netzwerk der WebView), dafür nur alle 30 s –
     // jede Anfrage zählt im Gratis-Tarif (docs/CLOUDFLARE-LIMITS.md)
-    const background = NATIVE && document.visibilityState === "hidden";
+    const background = NATIVE && !appVisible();
     if (!p || !active() || !shouldSend(last, p, background ? KEEP_MS : MOVE_MS)) return;
     last = p;
     const value = { ...p, ...(gps.battery !== undefined ? { battery: gps.battery } : {}) };
@@ -121,16 +122,16 @@ export function keepAwake(on: () => boolean) {
     if (!on() || !("wakeLock" in navigator)) return;
     let lock: WakeLockSentinel | null = null;
     const get = () => {
-      if (document.visibilityState === "visible")
+      if (appVisible())
         void navigator.wakeLock
           .request("screen")
           .then((l) => (lock = l))
           .catch(() => {});
     };
     get();
-    document.addEventListener("visibilitychange", get);
+    const off = onAppVisibility(get);
     return () => {
-      document.removeEventListener("visibilitychange", get);
+      off();
       void lock?.release();
     };
   });

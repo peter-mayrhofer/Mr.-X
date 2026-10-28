@@ -7,6 +7,7 @@ import { WS_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
 import { call } from "./api.ts";
 import { clock } from "./clock.svelte.ts";
+import { appVisible, onAppVisibility } from "./sichtbar.ts";
 
 interface Saved {
   gameId: string;
@@ -73,8 +74,6 @@ function write(k: string, v: unknown) {
 }
 
 let live: Live | null = null;
-const visible = () => document.visibilityState === "visible";
-
 function connect(s: Saved) {
   live?.close();
   Object.assign(session, { gameId: s.gameId, uid: s.uid, role: s.role, removed: false, view: null, member: null, info: null });
@@ -101,9 +100,9 @@ function connect(s: Saved) {
     onVapid: (k) => (session.vapid = k),
   });
   live = l;
-  l.setVisible(visible());
+  l.setVisible(appVisible());
 }
-document.addEventListener("visibilitychange", () => live?.setVisible(visible()));
+onAppVisibility(() => live?.setVisible(appVisible()));
 
 /** nach erfolgreichem Beitritt: Sitzung merken und verbinden */
 export function startSession(gameId: string, r: JoinResult) {

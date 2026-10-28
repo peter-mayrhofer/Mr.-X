@@ -121,7 +121,7 @@ Bei jeder Änderung an App oder Server startet GitHub zusätzlich einen **Androi
 Test-APK und spielt gegen einen Spiel-Server auf demselben Rechner ([`tests/android-geraet.mjs`](../tests/android-geraet.mjs)):
 
 1. App offen im Warteraum → der Standort kommt am Server an,
-2. App in den Hintergrund (Handy wandert in die Tasche), **dann** startet die Spielleitung das Spiel; 60 Sekunden
+2. App in den Hintergrund (Handy wandert in die Tasche), **dann** startet die Spielleitung das Spiel; 90 Sekunden
    „gehen“ → neue Standorte kommen weiter an, die Dauer-Benachrichtigung „Mister X läuft“ bleibt,
 3. Bildschirm aus, 150 Sekunden weitergehen → neue Standorte kommen weiter an,
 4. Durchsage der Spielleitung → erscheint als **Android-Benachrichtigung**, während der Bildschirm aus ist.
