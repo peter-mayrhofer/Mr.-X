@@ -7,11 +7,25 @@
   let wide = $state<SVGSVGElement>();
   let tall = $state<SVGSVGElement>();
 
+  // Maus bewegt den Hintergrund leicht mit (Tiefe); auf Touch-Geräten passiert nichts
+  let root = $state<HTMLDivElement>();
+  let raf = 0;
+  function look(e: PointerEvent) {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      root?.style.setProperty("--px", String((e.clientX / innerWidth - 0.5) * 2));
+      root?.style.setProperty("--py", String((e.clientY / innerHeight - 0.5) * 2));
+    });
+  }
+
   onMount(() => {
+    addEventListener("pointermove", look, { passive: true });
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       wide?.pauseAnimations();
       tall?.pauseAnimations();
     }
+    return () => removeEventListener("pointermove", look);
   });
 
   /** Strichelung als Skala: `n` Striche rund um einen Kreis */
@@ -27,67 +41,71 @@
 </script>
 
 {#snippet orb(cx: number, cy: number, r: number, dur: number, reverse: boolean)}
-  <g class="spin" style="transform-origin:{cx}px {cy}px;animation-duration:{dur}s;animation-direction:{reverse ? 'reverse' : 'normal'}">
-    <circle {cx} {cy} {r} class="fill" />
-    <circle {cx} {cy} {r} class="ring" />
-    <circle {cx} {cy} r={r * 0.96} class="tick" stroke-width={r * 0.03} stroke-dasharray={ticks(r * 0.96)} />
-    <circle {cx} {cy} r={r * 0.8} class="ring" />
-    <circle {cx} {cy} r={r * 0.85} class="arc red" stroke-width={r * 0.026} stroke-dasharray={arc(r * 0.85, 55)} />
-    <circle {cx} {cy} r={r * 0.62} class="ring" />
-    <circle
-      {cx}
-      {cy}
-      r={r * 0.69}
-      class="arc gold"
-      stroke-width={r * 0.016}
-      stroke-dasharray={arc(r * 0.69, 24)}
-      stroke-dashoffset={-r * 2}
-    />
-    <circle {cx} {cy} r={r * 0.44} class="ring" />
-    <circle
-      {cx}
-      {cy}
-      r={r * 0.52}
-      class="arc white"
-      stroke-width={r * 0.01}
-      stroke-dasharray={arc(r * 0.52, 14)}
-      stroke-dashoffset={-r * 3}
-    />
-    <path d="M{cx} {cy - r}V{cy + r}M{cx - r} {cy}H{cx + r}" class="ring" />
+  <g class="intro" style="transform-origin:{cx}px {cy}px">
+    <g class="spin" style="transform-origin:{cx}px {cy}px;animation-duration:{dur}s;animation-direction:{reverse ? 'reverse' : 'normal'}">
+      <circle {cx} {cy} {r} class="fill" />
+      <circle {cx} {cy} {r} class="ring" />
+      <circle {cx} {cy} r={r * 0.96} class="tick" stroke-width={r * 0.03} stroke-dasharray={ticks(r * 0.96)} />
+      <circle {cx} {cy} r={r * 0.8} class="ring" />
+      <circle {cx} {cy} r={r * 0.85} class="arc red" stroke-width={r * 0.026} stroke-dasharray={arc(r * 0.85, 55)} />
+      <circle {cx} {cy} r={r * 0.62} class="ring" />
+      <circle
+        {cx}
+        {cy}
+        r={r * 0.69}
+        class="arc gold"
+        stroke-width={r * 0.016}
+        stroke-dasharray={arc(r * 0.69, 24)}
+        stroke-dashoffset={-r * 2}
+      />
+      <circle {cx} {cy} r={r * 0.44} class="ring" />
+      <circle
+        {cx}
+        {cy}
+        r={r * 0.52}
+        class="arc white"
+        stroke-width={r * 0.01}
+        stroke-dasharray={arc(r * 0.52, 14)}
+        stroke-dashoffset={-r * 3}
+      />
+      <path d="M{cx} {cy - r}V{cy + r}M{cx - r} {cy}H{cx + r}" class="ring" />
+    </g>
   </g>
 {/snippet}
 
 {#snippet chase(d: string, dur: number)}
-  <path {d} class="route" />
-  {#each [{ c: "info", at: 16 }, { c: "warn", at: 11 }, { c: "ok", at: 6 }] as h (h.c)}
-    <circle r="9" class="hunter {h.c}">
-      <animateMotion dur="{dur}s" begin="-{(h.at * dur) / 48}s" repeatCount="indefinite" path={d} />
-    </circle>
-  {/each}
-  <g>
-    <animateMotion dur="{dur}s" repeatCount="indefinite" path={d} />
-    <circle r="12" class="ping"
-      ><animate attributeName="r" values="12;58" dur="2.4s" repeatCount="indefinite" /><animate
-        attributeName="opacity"
-        values=".7;0"
-        dur="2.4s"
-        repeatCount="indefinite"
-      /></circle
-    >
-    <circle r="12" class="ping"
-      ><animate attributeName="r" values="12;58" dur="2.4s" begin="-1.2s" repeatCount="indefinite" /><animate
-        attributeName="opacity"
-        values=".7;0"
-        dur="2.4s"
-        begin="-1.2s"
-        repeatCount="indefinite"
-      /></circle
-    >
-    <circle r="13" class="mrx" />
+  <g class="chase">
+    <path {d} class="route" />
+    {#each [{ c: "info", at: 16 }, { c: "warn", at: 11 }, { c: "ok", at: 6 }] as h (h.c)}
+      <circle r="9" class="hunter {h.c}">
+        <animateMotion dur="{dur}s" begin="-{(h.at * dur) / 48}s" repeatCount="indefinite" path={d} />
+      </circle>
+    {/each}
+    <g>
+      <animateMotion dur="{dur}s" repeatCount="indefinite" path={d} />
+      <circle r="12" class="ping"
+        ><animate attributeName="r" values="12;58" dur="2.4s" repeatCount="indefinite" /><animate
+          attributeName="opacity"
+          values=".7;0"
+          dur="2.4s"
+          repeatCount="indefinite"
+        /></circle
+      >
+      <circle r="12" class="ping"
+        ><animate attributeName="r" values="12;58" dur="2.4s" begin="-1.2s" repeatCount="indefinite" /><animate
+          attributeName="opacity"
+          values=".7;0"
+          dur="2.4s"
+          begin="-1.2s"
+          repeatCount="indefinite"
+        /></circle
+      >
+      <circle r="13" class="mrx" />
+    </g>
   </g>
 {/snippet}
 
-<div class="bd" aria-hidden="true">
+<div class="bd" aria-hidden="true" bind:this={root}>
   <div class="glow"></div>
 
   <svg bind:this={wide} class="wide" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
@@ -134,9 +152,39 @@
   }
   svg {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    inset: -40px;
+    width: calc(100% + 80px);
+    height: calc(100% + 80px);
+    transform: translate(calc(var(--px, 0) * -22px), calc(var(--py, 0) * -14px));
+    transition: transform 0.5s ease-out;
+  }
+  /* Einflug beim Öffnen: Kreise drehen schnell herein und bremsen ab, dann übernimmt die langsame Drehung */
+  .intro {
+    animation: orb-in 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  }
+  @keyframes orb-in {
+    from {
+      opacity: 0;
+      transform: scale(0.15) rotate(-260deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .chase {
+    animation: fade-in 1.4s ease-out 1s both;
+  }
+  .drift {
+    opacity: 1;
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   .tall {
     display: none;
