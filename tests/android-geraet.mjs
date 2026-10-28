@@ -65,6 +65,34 @@ async function until(what, fn, ms) {
 }
 
 /**
+ * Nach dem Kaltstart arbeiten System und Google Play-Dienste minutenlang. Auf dem kleinen CI-Rechner (2 Kerne) reagieren
+ * sie dann nicht mehr (ANR), Android beendet sie – und der GPS-Teil des Emulators verklemmt sich (Watchdog startet das
+ * System neu). Darum: Apps abschalten, die mit dem Spiel nichts zu tun haben, und warten, bis die CPU zur Ruhe kommt.
+ */
+async function settle(maxMs) {
+  for (const p of [
+    "com.google.android.googlequicksearchbox",
+    "com.google.android.apps.wellbeing",
+    "com.google.android.as",
+    "com.google.android.tts",
+  ]) {
+    try {
+      adb("shell", "pm", "disable-user", "--user", "0", p);
+    } catch {
+      /* gibt es in diesem Image nicht */
+    }
+  }
+  const t0 = Date.now();
+  for (;;) {
+    const m = adb("shell", "cat", "/proc/pressure/cpu").match(/some avg10=([\d.]+) avg60=([\d.]+)/);
+    const [a10, a60] = m ? [Number(m[1]), Number(m[2])] : [0, 0];
+    const s = Math.round((Date.now() - t0) / 1000);
+    if ((a10 < 20 && a60 < 30) || Date.now() - t0 > maxMs) return `nach ${s} s (CPU-Druck ${a10} % / ${a60} % in 10 s / 60 s)`;
+    await sleep(5000);
+  }
+}
+
+/**
  * `steps` Schritte zu 5 s die Landstraße entlang, ab Schritt `from`. Liefert die neuen Standorte am Server, die Strecke
  * seit dem ersten Schritt und ob der Bildschirm aus blieb; schreibt den Verlauf (Bildschirm, Android-System, App) mit.
  */
@@ -101,6 +129,9 @@ try {
   const other = await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" });
 
   // 2. App starten: Server über adb reverse, Berechtigungen wie nach dem Onboarding, Startpunkt Hauptplatz
+  const ruhe = await settle(300_000);
+  verlauf.push(`Emulator bereit ${ruhe}`);
+  console.log(`Emulator bereit ${ruhe}`);
   adb("logcat", "-b", "all", "-c"); // Protokoll nur ab hier
   const sys0 = pidof("system_server");
   adb("reverse", "tcp:8787", "tcp:8787");
