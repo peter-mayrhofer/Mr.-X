@@ -73,6 +73,21 @@ let ok = true;
 let server;
 let ws;
 let chrome;
+
+/** Verbindung von Chrome zu Googles Push-Dienst (chrome://gcm-internals) – zeigt, woran es hängt, wenn nichts ankommt */
+async function gcm() {
+  const p = await chrome.newPage();
+  try {
+    await p.goto("chrome://gcm-internals");
+    await p.waitForTimeout(500);
+    const t = await p.locator("body").innerText();
+    const field = (name) => t.match(new RegExp(`${name}\\t([^\\n]*)`))?.[1] || "–";
+    const rows = (from, to) => (t.split(from)[1] ?? "").split(to)[0].trim().split("\n").length - 1;
+    return `Verbindung ${field("Connection State")}, Check-in ${field("Last Checkin")}, empfangen ${rows("Receive Message Log", "Message Decryption")}`;
+  } finally {
+    await p.close();
+  }
+}
 try {
   // Schlüssel: VAPID für den Server (wie npm run schluessel), P-256 + Auth-Geheimnis für den „Browser“
   const vapid = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign"]);
@@ -203,23 +218,34 @@ try {
   // nachsehen, ohne ein App-Fenster zu öffnen (dann würde der Service Worker die Benachrichtigung auslassen)
   let shown = [];
   // Chrome baut seine Verbindung zu Google nach dem Start erst auf – darum großzügig warten
-  for (const end = Date.now() + 120_000; Date.now() < end && !shown.some((x) => x.includes(TEXT_CHROME)); await sleep(500))
+  for (let i = 0; i < 360 && !shown.some((x) => x.includes(TEXT_CHROME)); i++, await sleep(500)) {
     for (const w of chrome.serviceWorkers())
       shown = await w
         .evaluate(async () => (await self.registration.getNotifications()).map((n) => `${n.title}: ${n.body}`))
         .catch(() => shown);
+    if (i % 20 === 0) console.log(`  … ${Math.round((Date.now() - t1) / 1000)} s: ${await gcm()}`);
+  }
+  // zur Sicherheit am Ende auch über ein App-Fenster nachsehen (jetzt darf eins offen sein)
+  if (!shown.some((x) => x.includes(TEXT_CHROME))) {
+    await page.goto(`${SERVER}/`);
+    shown = await page.evaluate(async () =>
+      (await (await navigator.serviceWorker.ready).getNotifications()).map((n) => `${n.title}: ${n.body}`),
+    );
+  }
   const da = shown.find((x) => x.includes(TEXT_CHROME));
   ok =
     check(
       "Durchsage über Googles Push-Dienst als Benachrichtigung der Web-App",
       !!da,
-      da ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s` : "nicht angezeigt",
+      da ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s` : `nicht angezeigt (${await gcm()})`,
     ) && ok;
 } catch (e) {
   ok = false;
   console.error(e);
   rows.push(`| Abbruch | ✖ | ${String(e).replace(/\|/g, "/")} |`);
 } finally {
+  if (!ok && existsSync("push-server.log"))
+    console.log(`Protokoll des Spiel-Servers (Ende):\n${readFileSync("push-server.log", "utf8").slice(-3000)}`);
   ws?.close();
   await chrome?.close();
   if (server) process.kill(-server.pid);
