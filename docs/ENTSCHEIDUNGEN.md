@@ -436,8 +436,10 @@ sind sie aufgebraucht, laufen die Jobs erst im nächsten Monat wieder.
 Testmodus, eigener VAPID-Schlüssel; er liefert auch die gebaute App aus) und lässt die Spielleitung Durchsagen schicken.
 Der Spielraum verschlüsselt sie per Alarm und schickt sie
 - an **Mozillas** Push-Dienst: das Skript meldet sich wie Firefox per WebSocket an und entschlüsselt die Nachricht,
-- an **Googles** Push-Dienst: echtes Google Chrome öffnet die echte App, die ihr Abo selbst anlegt; bei geschlossener
-  App zeigt ihr Service Worker die Durchsage als Benachrichtigung.
+- an **Googles** Push-Dienst: echtes Google Chrome installiert die echte App (DevTools-Protokoll `PWA.install`, wie
+  „App installieren“) und startet sie; sie legt ihr Abo selbst an, und bei geschlossener App zeigt ihr Service Worker die
+  Durchsage als Benachrichtigung. Ohne Bildschirm öffnet Chrome die installierte App als Tab statt im eigenen Fenster –
+  Abo, Service Worker und Push sind dieselben.
 
 Damit ist auch der Versandweg im Server geprüft, der im Testmodus der übrigen Tests nur protokolliert wird.
 **Warum:** Die Definition of Done verlangt, dass Push auf der installierten Web-App ankommt. Chromium ohne
