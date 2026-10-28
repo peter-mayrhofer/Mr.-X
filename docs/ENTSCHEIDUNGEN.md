@@ -407,3 +407,23 @@ eine Meldung. Der Text wird nie als HTML eingesetzt (`shared/src/regeltext.ts` z
 **Warum:** Treffpunkt, Verbote, Notfallnummer ändern sich von Spiel zu Spiel – das soll ohne Programmierer gehen.
 Eingaben als HTML wären ein Einfallstor für Schadcode auf allen Kinder-Handys.
 **Verworfen:** Markdown-Bibliothek oder Text-Editor mit Knöpfen (zusätzlicher Code für drei Formatierungen).
+
+### E-47 Android-App automatisch im Emulator geprüft
+**Entscheidung:** Ein CI-Job (`.github/workflows/android.yml`, Job „emulator“) installiert die Test-APK in einem
+Android-14-Emulator und spielt gegen den lokalen Spiel-Server: App offen → Hintergrund → Spielstart → Bildschirm aus →
+Durchsage ([`tests/android-geraet.mjs`](../tests/android-geraet.mjs), Ablauf in [`ANDROID-APK.md`](ANDROID-APK.md)
+Abschnitt 5). Der Test fand drei Fehler, die im Browser nicht auftreten – alle behoben:
+1. Jeder Phasenwechsel (Warteraum → Spiel) startete das GPS neu. Liegt das Handy dann schon gesperrt in der Tasche,
+   darf Android den Vordergrund-Dienst nicht wieder starten – es kämen keine Standorte mehr. Jetzt läuft GPS vom
+   Beitritt bis zum Spielende durch (Browser-Test zählt die GPS-Starts).
+2. In der Capacitor-WebView bleibt `document.visibilityState` auch im Hintergrund „visible“. Die App zeigte
+   Benachrichtigungen deshalb nur in der App und nutzte den robusten Hintergrund-Weg (natives HTTP) nie. Jetzt erkennt
+   sie den Hintergrund an den Capacitor-Ereignissen `pause`/`resume` (`app/src/lib/sichtbar.ts`).
+3. Die App hing über EmojiCompat am Schriften-Dienst von Google Play und wurde mitbeendet, wenn Google Play abstürzte.
+   Die Emoji-Initialisierung ist abgeschaltet (die App zeigt alles in der WebView an).
+
+**Warum:** Die Definition of Done verlangt den Nachweis „im Test oder Feldtest-Protokoll“; ein echtes Handy gibt es in
+der Entwicklungsumgebung nicht. Der Feldtest bleibt für Hersteller-Eigenheiten (Akkusparen bei Samsung, Xiaomi, Huawei).
+**Kosten:** ≈ 20 Min GitHub-Rechenzeit pro Lauf, nur bei Änderungen an App, Server oder `shared/`. Das Repository ist
+privat: die Minuten kommen aus den 2000 Gratis-Minuten im Monat; ohne hinterlegte Zahlungsart entstehen keine Kosten,
+sind sie aufgebraucht, laufen die Jobs erst im nächsten Monat wieder.
