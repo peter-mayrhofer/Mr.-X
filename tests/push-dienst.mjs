@@ -7,7 +7,7 @@
 // Aufruf im Hauptordner: node tests/push-dienst.mjs (startet den Server selbst, braucht Internet; hinter einem Proxy
 // mit NODE_USE_ENV_PROXY=1). Ergebnis: push-ergebnis.md und Ausgabe im Log; Exit-Code 1, wenn etwas nicht klappt.
 import { spawn } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -73,7 +73,9 @@ try {
   const uaPub = new Uint8Array(await crypto.subtle.exportKey("raw", ua.publicKey));
   const auth = crypto.getRandomValues(new Uint8Array(16));
 
-  // 1. Spiel-Server wie im Betrieb (kein Testmodus), mit leerem Speicher
+  // 1. Spiel-Server wie im Betrieb (kein Testmodus), mit leerem Speicher; der Worker braucht den App-Ordner
+  mkdirSync("app/dist", { recursive: true });
+  const log = openSync("push-server.log", "w");
   server = spawn(
     "npx",
     [
@@ -96,11 +98,12 @@ try {
       "--var",
       `VAPID_PRIVATE:${VAPID_PRIVATE}`,
     ],
-    { stdio: "ignore", env: { ...process.env, WRANGLER_SEND_METRICS: "false" } },
+    // eigene Prozessgruppe: npx → wrangler → workerd lassen sich am Ende gemeinsam beenden
+    { stdio: ["ignore", log, log], detached: true, env: { ...process.env, WRANGLER_SEND_METRICS: "false" } },
   );
   for (let i = 0; ; i++) {
     if ((await fetch(`${SERVER}/health`).catch(() => null))?.ok) break;
-    if (i > 90) throw new Error("Spiel-Server startet nicht");
+    if (i > 90) throw new Error(`Spiel-Server startet nicht:\n${readFileSync("push-server.log", "utf8").slice(-2000)}`);
     await sleep(1000);
   }
 
@@ -154,7 +157,7 @@ try {
   rows.push(`| Abbruch | ✖ | ${String(e).replace(/\|/g, "/")} |`);
 } finally {
   ws?.close();
-  server?.kill();
+  if (server) process.kill(-server.pid);
 }
 writeFileSync(
   "push-ergebnis.md",
