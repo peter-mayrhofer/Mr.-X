@@ -227,11 +227,16 @@ try {
   );
   ok = check("Abo vor der Durchsage noch dasselbe", jetzt.includes(endpoint), jetzt.map((e) => e.slice(-12) || "keins").join(", ")) && ok;
   const t1 = Date.now();
-  await call(admin.token, { action: "announce", gameId: G, text: TEXT_CHROME });
+  // Google kennt ein eben angelegtes Abo manchmal noch nicht (antwortet 410) – dann wie im Spiel mit der nächsten
+  // Durchsage weiter: nach 60 s und 120 s noch eine
+  let durchsagen = 0;
+  const durchsage = () => (durchsagen++, call(admin.token, { action: "announce", gameId: G, text: `${TEXT_CHROME} (${durchsagen})` }));
+  await durchsage();
   // nachsehen, ohne ein App-Fenster zu öffnen (dann würde der Service Worker die Benachrichtigung auslassen)
   let shown = [];
   // Chrome baut seine Verbindung zu Google nach dem Start erst auf – darum großzügig warten
   for (let i = 0; i < 360 && !shown.some((x) => x.includes(TEXT_CHROME)); i++, await sleep(500)) {
+    if (i === 120 || i === 240) await durchsage();
     for (const w of chrome.serviceWorkers())
       shown = await w
         .evaluate(async () => (await self.registration.getNotifications()).map((n) => `${n.title}: ${n.body}`))
@@ -251,7 +256,12 @@ try {
       "Durchsage über Googles Push-Dienst als Benachrichtigung der Web-App",
       !!da,
       da
-        ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s`
+        ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s (${durchsagen}. Durchsage; Server: ${readFileSync(
+            "push-server.log",
+            "utf8",
+          )
+            .match(/Push \d+ fcm[^\n]*/g)
+            ?.join(", ")})`
         : `nicht angezeigt (${await gcm()}; Server: ${
             readFileSync("push-server.log", "utf8")
               .match(/Push \d+ [^\n]*/g)

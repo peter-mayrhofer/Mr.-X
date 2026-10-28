@@ -121,6 +121,7 @@ const POS_BATCH_MS = 2000;
 const POS_SAVE_MS = 30_000;
 const POS_MIN_GAP_MS = 1000;
 const PUSH_PER_RUN = 40; // Gratis-Tarif: 50 Unteranfragen pro Aufruf
+const FRESH_SUB_MS = 5 * 60_000;
 const CHAT_IN_VIEW = 200;
 const AUDIT_IN_VIEW = 500;
 
@@ -656,9 +657,13 @@ export class GameRoom extends DurableObject<Env> {
         }
       }),
     );
-    // Abo gibt es nicht mehr (App deinstalliert, Erlaubnis entzogen) → vergessen
-    for (const j of dead)
-      if (j && this.d.push[j.uid]?.sub?.endpoint === j.sub.endpoint) this.put("push", j.uid, { ...this.d.push[j.uid], sub: undefined });
+    // Abo gibt es nicht mehr (App deinstalliert, Erlaubnis entzogen) → vergessen. Ein eben angelegtes Abo kennt Google
+    // manchmal noch nicht und antwortet trotzdem 410 (im Push-Test gesehen) – das behalten, die nächste Meldung kommt an
+    for (const j of dead) {
+      const reg = j && this.d.push[j.uid];
+      if (j && reg?.sub?.endpoint === j.sub.endpoint && (reg.t ?? 0) < Date.now() - FRESH_SUB_MS)
+        this.put("push", j.uid, { ...reg, sub: undefined });
+    }
     this.commit();
   }
 
