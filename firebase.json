@@ -9,7 +9,8 @@
       "database.rules.json",
       "**/.*",
       "*.md",
-      "test/**"
+      "test/**",
+      "promo/**"
     ],
     "headers": [
       {
