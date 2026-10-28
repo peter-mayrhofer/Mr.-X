@@ -84,10 +84,17 @@ async function settle(maxMs) {
   }
   const t0 = Date.now();
   for (;;) {
-    const m = adb("shell", "cat", "/proc/pressure/cpu").match(/some avg10=([\d.]+) avg60=([\d.]+)/);
-    const [a10, a60] = m ? [Number(m[1]), Number(m[2])] : [0, 0];
+    let m = null;
+    try {
+      m = adb("shell", "cat", "/proc/pressure/cpu").match(/some avg10=([\d.]+) avg60=([\d.]+)/);
+    } catch {
+      /* nicht lesbar: dann feste Wartezeit */
+    }
     const s = Math.round((Date.now() - t0) / 1000);
-    if ((a10 < 20 && a60 < 30) || Date.now() - t0 > maxMs) return `nach ${s} s (CPU-Druck ${a10} % / ${a60} % in 10 s / 60 s)`;
+    if (!m) {
+      if (s >= 150) return `nach ${s} s (feste Wartezeit, CPU-Druck nicht lesbar)`;
+    } else if ((Number(m[1]) < 20 && Number(m[2]) < 30) || Date.now() - t0 > maxMs)
+      return `nach ${s} s (CPU-Druck ${m[1]} % / ${m[2]} % in 10 s / 60 s)`;
     await sleep(5000);
   }
 }
