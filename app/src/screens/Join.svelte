@@ -8,6 +8,7 @@
   import Banner from "../ui/Banner.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     /** Spielname, wenn über den QR-Link gekommen – dann kein Code-Feld */
@@ -61,6 +62,7 @@
   }
 </script>
 
+<AmbientBackdrop />
 <main class="page">
   <AppBar title={T.beitritt.titel} {onback} />
   <form

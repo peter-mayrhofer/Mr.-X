@@ -8,6 +8,7 @@
   import Logo from "../ui/Logo.svelte";
   import { dauer, km } from "../lib/format.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     results: Results;
@@ -36,6 +37,7 @@
 </script>
 
 <Confetti />
+<AmbientBackdrop />
 <main class="end">
   <header><Logo height={44} /></header>
 

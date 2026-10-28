@@ -4,6 +4,7 @@
   import Button from "../ui/Button.svelte";
   import Banner from "../ui/Banner.svelte";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     variant?: string;
@@ -22,6 +23,7 @@
   const action = $derived(actions[step as 1 | 2 | 3]);
 </script>
 
+<AmbientBackdrop />
 <main class="ob">
   <header>
     <div class="dots" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step + 1} aria-label="Schritt {step + 1} von 4">

@@ -6,6 +6,7 @@
   import TextField from "../ui/TextField.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   type StaffRole = "schiri" | "admin";
   interface Props {
@@ -40,6 +41,7 @@
   }
 </script>
 
+<AmbientBackdrop />
 <main class="page">
   <AppBar title={T.staffLogin.titel} {onback} />
   <form class="form" onsubmit={submit}>

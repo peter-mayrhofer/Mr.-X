@@ -11,6 +11,7 @@
   import Modal from "../ui/Modal.svelte";
   import { ICONS, type Icon } from "../ui/icons.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     gameName: string;
@@ -46,6 +47,7 @@
   const quick = $derived(T.regeln.liste(config).filter((r) => ["Fangen", "Übergabe", "Meldungen"].includes(r.titel)));
 </script>
 
+<AmbientBackdrop />
 <main class="lobby">
   <header>
     <Logo height={36} />
