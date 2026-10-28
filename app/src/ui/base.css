@@ -107,6 +107,11 @@ textarea {
   transform: rotate(-4deg);
 }
 
+/* zu langsames Gerät (siehe lib/ruhig.ts): Hintergrund-Schmuck steht still */
+:root[data-ruhig] :is(.bd, .amb) * {
+  animation: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

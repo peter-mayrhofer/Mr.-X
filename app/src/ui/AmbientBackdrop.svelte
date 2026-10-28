@@ -2,6 +2,10 @@
      ein langsam drehender Viertelkreis, ein wanderndes Raster, ein paar schwebende Punkte. Viel leiser als auf der Startseite,
      liegt hinter dem Inhalt und stört weder Lesen noch Bedienen. Bei „Bewegung reduzieren“ steht alles still. -->
 <script lang="ts">
+  import { onMount } from "svelte";
+  import { pruefeFluessig } from "../lib/ruhig.ts";
+
+  onMount(() => pruefeFluessig());
   const R = 500;
   const tick = `2 ${((2 * Math.PI * R * 0.96) / 120 - 2).toFixed(2)}`;
   const arc = (r: number, deg: number) => {
@@ -59,6 +63,7 @@
     opacity: 0.45;
     background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 64px 64px;
+    will-change: transform;
     animation: drift 24s linear infinite;
   }
   @keyframes drift {
@@ -77,6 +82,7 @@
     width: 100%;
     height: 100%;
     display: block;
+    will-change: transform;
     animation: spin 140s linear infinite;
   }
   .orb.a {
@@ -135,6 +141,7 @@
     color: transparent;
     -webkit-text-stroke: 3px var(--accent-text);
     opacity: 0.2;
+    will-change: transform;
     animation: roll linear infinite;
   }
   .r1 {
@@ -170,6 +177,7 @@
     height: 10px;
     border-radius: 50%;
     opacity: 0.5;
+    will-change: transform;
     animation: float linear infinite;
   }
   .d1 {

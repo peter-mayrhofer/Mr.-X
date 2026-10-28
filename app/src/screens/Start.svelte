@@ -108,9 +108,8 @@
     display: inline-block;
     transform: rotate(-6deg);
     text-shadow: 0 0 40px var(--accent-soft);
-    animation:
-      x-in 1.1s cubic-bezier(0.2, 1.15, 0.3, 1) 1.15s both,
-      x-glow 3.2s ease-in-out 2.4s infinite;
+    will-change: transform;
+    animation: x-in 1.1s cubic-bezier(0.2, 1.15, 0.3, 1) 1.15s both;
   }
   /* Druckwelle, wenn das X einschlägt */
   .x::after {
@@ -128,25 +127,23 @@
   }
   .ch {
     display: inline-block;
+    will-change: transform, opacity;
     animation: slam 0.75s cubic-bezier(0.2, 1.2, 0.3, 1) calc(0.45s + var(--i) * 0.075s) both;
   }
   @keyframes slam {
     from {
       opacity: 0;
       transform: translateY(-140px) scale(2.4) rotate(-9deg);
-      filter: blur(16px);
     }
     to {
       opacity: 1;
       transform: none;
-      filter: blur(0);
     }
   }
   @keyframes x-in {
     from {
       opacity: 0;
       transform: rotate(-6deg) scale(8) rotate(-560deg);
-      filter: blur(12px);
     }
     60% {
       opacity: 1;
@@ -154,12 +151,6 @@
     to {
       opacity: 1;
       transform: rotate(-6deg);
-      filter: blur(0);
-    }
-  }
-  @keyframes x-glow {
-    50% {
-      text-shadow: 0 0 70px var(--accent);
     }
   }
   @keyframes boom {
@@ -339,8 +330,7 @@
       padding: var(--sp-8);
       border-radius: var(--r-l, 24px);
       border: var(--border-w) solid var(--line-strong);
-      background: color-mix(in srgb, var(--surface) 72%, transparent);
-      backdrop-filter: blur(18px);
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
       box-shadow: 0 30px 90px rgb(0 0 0 / 0.35);
     }
     footer {

@@ -1,138 +1,53 @@
 <!-- Lebendiger Hintergrund der Startseite: drehende Viertelkreise, ein Mister X auf der Flucht vor drei Jägern, ein rollendes X.
-     Zwei Fassungen: breit (Laptop) und hoch (Handy). Läuft von allein weiter, nur transform/opacity (flüssig, schont den Akku).
-     Bei „Bewegung reduzieren“ steht alles still. -->
+     Zwei Fassungen: breit (Laptop) und hoch (Handy). Alles bewegt sich nur per transform/opacity auf eigenen Ebenen
+     (Grafikkarte, kein Neuzeichnen) – sonst ruckelt es auf schwächeren Geräten. Bei „Bewegung reduzieren“ steht alles still. -->
 <script lang="ts">
   import { onMount } from "svelte";
+  import Orb from "../../ui/Orb.svelte";
+  import { pruefeFluessig } from "../../lib/ruhig.ts";
 
-  let wide = $state<SVGSVGElement>();
-  let tall = $state<SVGSVGElement>();
-
-  // Maus bewegt den Hintergrund leicht mit (Tiefe); auf Touch-Geräten passiert nichts
-  let root = $state<HTMLDivElement>();
-  let raf = 0;
-  function look(e: PointerEvent) {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      root?.style.setProperty("--px", String((e.clientX / innerWidth - 0.5) * 2));
-      root?.style.setProperty("--py", String((e.clientY / innerHeight - 0.5) * 2));
-    });
-  }
-
-  onMount(() => {
-    addEventListener("pointermove", look, { passive: true });
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      wide?.pauseAnimations();
-      tall?.pauseAnimations();
-    }
-    return () => removeEventListener("pointermove", look);
-  });
-
-  /** Strichelung als Skala: `n` Striche rund um einen Kreis */
-  const ticks = (r: number, n = 150) => `2 ${((2 * Math.PI * r) / n - 2).toFixed(2)}`;
-  const arc = (r: number, deg: number) => {
-    const c = 2 * Math.PI * r;
-    return `${((c * deg) / 360).toFixed(1)} ${(c - (c * deg) / 360).toFixed(1)}`;
-  };
-
-  // geschlossene Straßenrunde, auf der Mister X läuft und die Jäger ihm hinterher
-  const ROUTE_WIDE = "M300 210H700V400H1100V210H1380V580H1000V720H520V540H300Z";
-  const ROUTE_TALL = "M70 130H310V290H130V450H330V600H90Z";
+  onMount(() => pruefeFluessig(3800));
+  const hunters = [
+    { c: "info", at: 0.34 },
+    { c: "warn", at: 0.23 },
+    { c: "ok", at: 0.12 },
+  ];
 </script>
 
-{#snippet orb(cx: number, cy: number, r: number, dur: number, reverse: boolean)}
-  <g class="intro" style="transform-origin:{cx}px {cy}px">
-    <g class="spin" style="transform-origin:{cx}px {cy}px;animation-duration:{dur}s;animation-direction:{reverse ? 'reverse' : 'normal'}">
-      <circle {cx} {cy} {r} class="fill" />
-      <circle {cx} {cy} {r} class="ring" />
-      <circle {cx} {cy} r={r * 0.96} class="tick" stroke-width={r * 0.03} stroke-dasharray={ticks(r * 0.96)} />
-      <circle {cx} {cy} r={r * 0.8} class="ring" />
-      <circle {cx} {cy} r={r * 0.85} class="arc red" stroke-width={r * 0.026} stroke-dasharray={arc(r * 0.85, 55)} />
-      <circle {cx} {cy} r={r * 0.62} class="ring" />
-      <circle
-        {cx}
-        {cy}
-        r={r * 0.69}
-        class="arc gold"
-        stroke-width={r * 0.016}
-        stroke-dasharray={arc(r * 0.69, 24)}
-        stroke-dashoffset={-r * 2}
-      />
-      <circle {cx} {cy} r={r * 0.44} class="ring" />
-      <circle
-        {cx}
-        {cy}
-        r={r * 0.52}
-        class="arc white"
-        stroke-width={r * 0.01}
-        stroke-dasharray={arc(r * 0.52, 14)}
-        stroke-dashoffset={-r * 3}
-      />
-      <path d="M{cx} {cy - r}V{cy + r}M{cx - r} {cy}H{cx + r}" class="ring" />
-    </g>
-  </g>
-{/snippet}
-
-{#snippet chase(d: string, dur: number)}
-  <g class="chase">
-    <path {d} class="route" />
-    {#each [{ c: "info", at: 16 }, { c: "warn", at: 11 }, { c: "ok", at: 6 }] as h (h.c)}
-      <circle r="9" class="hunter {h.c}">
-        <animateMotion dur="{dur}s" begin="-{(h.at * dur) / 48}s" repeatCount="indefinite" path={d} />
-      </circle>
-    {/each}
-    <g>
-      <animateMotion dur="{dur}s" repeatCount="indefinite" path={d} />
-      <circle r="12" class="ping"
-        ><animate attributeName="r" values="12;58" dur="2.4s" repeatCount="indefinite" /><animate
-          attributeName="opacity"
-          values=".7;0"
-          dur="2.4s"
-          repeatCount="indefinite"
-        /></circle
-      >
-      <circle r="12" class="ping"
-        ><animate attributeName="r" values="12;58" dur="2.4s" begin="-1.2s" repeatCount="indefinite" /><animate
-          attributeName="opacity"
-          values=".7;0"
-          dur="2.4s"
-          begin="-1.2s"
-          repeatCount="indefinite"
-        /></circle
-      >
-      <circle r="13" class="mrx" />
-    </g>
-  </g>
-{/snippet}
-
-<div class="bd" aria-hidden="true" bind:this={root}>
+<div class="bd" aria-hidden="true">
   <div class="glow"></div>
+  <div class="grid"></div>
 
-  <svg bind:this={wide} class="wide" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <pattern id="bd-grid" width="80" height="80" patternUnits="userSpaceOnUse">
-        <path d="M80 0H0V80" class="grid" />
-      </pattern>
-    </defs>
-    <rect x="-80" y="-80" width="1760" height="1060" fill="url(#bd-grid)" class="drift" />
-    {@render orb(0, 900, 640, 120, false)}
-    {@render orb(1600, 0, 470, 150, true)}
-    <g class="roll big"><text text-anchor="middle" dominant-baseline="central">X</text></g>
-    <g class="roll small"><text text-anchor="middle" dominant-baseline="central">X</text></g>
-    {@render chase(ROUTE_WIDE, 48)}
-  </svg>
+  <Orb rich intro size="clamp(520px, 96vmin, 1200px)" dur={120} pos="left:calc(var(--s) / -2);bottom:calc(var(--s) / -2)" />
+  <div class="wideonly">
+    <Orb rich intro size="clamp(400px, 62vmin, 800px)" dur={150} reverse pos="right:calc(var(--s) / -2);top:calc(var(--s) / -2)" />
+  </div>
 
-  <svg bind:this={tall} class="tall" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <pattern id="bd-grid-t" width="50" height="50" patternUnits="userSpaceOnUse">
-        <path d="M50 0H0V50" class="grid" />
-      </pattern>
-    </defs>
-    <rect x="-50" y="-50" width="500" height="900" fill="url(#bd-grid-t)" class="drift t" />
-    {@render orb(0, 800, 380, 100, false)}
-    <g class="roll phone"><text text-anchor="middle" dominant-baseline="central">X</text></g>
-    {@render chase(ROUTE_TALL, 40)}
-  </svg>
+  <b class="roll big">X</b>
+  <b class="roll small">X</b>
+
+  <div class="chase wide">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+      ><path
+        class="route"
+        vector-effect="non-scaling-stroke"
+        d="M18.75 23.33L43.75 23.33L43.75 44.44L68.75 44.44L68.75 23.33L86.25 23.33L86.25 64.44L62.50 64.44L62.50 80.00L32.50 80.00L32.50 60.00L18.75 60.00Z"
+      /></svg
+    >
+    {#each hunters as h (h.c)}<i class="runner hunter {h.c}" style="animation-delay:calc(var(--dur) * -{h.at})"></i>{/each}
+    <i class="runner mrx"></i>
+  </div>
+  <div class="chase tall">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none"
+      ><path
+        class="route"
+        vector-effect="non-scaling-stroke"
+        d="M17.50 16.25L77.50 16.25L77.50 36.25L32.50 36.25L32.50 56.25L82.50 56.25L82.50 75.00L22.50 75.00Z"
+      /></svg
+    >
+    {#each hunters as h (h.c)}<i class="runner hunter {h.c}" style="animation-delay:calc(var(--dur) * -{h.at})"></i>{/each}
+    <i class="runner mrx"></i>
+  </div>
 </div>
 
 <style>
@@ -142,6 +57,7 @@
     z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    contain: strict;
   }
   .glow {
     position: absolute;
@@ -150,206 +66,222 @@
       radial-gradient(900px 700px at 0% 100%, var(--accent-soft), transparent 70%),
       radial-gradient(700px 500px at 100% 0%, var(--info-soft), transparent 70%);
   }
-  svg {
-    position: absolute;
-    inset: -40px;
-    width: calc(100% + 80px);
-    height: calc(100% + 80px);
-    transform: translate(calc(var(--px, 0) * -22px), calc(var(--py, 0) * -14px));
-    transition: transform 0.5s ease-out;
-  }
-  /* Einflug beim Öffnen: Kreise drehen schnell herein und bremsen ab, dann übernimmt die langsame Drehung */
-  .intro {
-    animation: orb-in 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-  }
-  @keyframes orb-in {
-    from {
-      opacity: 0;
-      transform: scale(0.15) rotate(-260deg);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  .chase {
-    animation: fade-in 1.4s ease-out 1s both;
-  }
-  .drift {
-    opacity: 1;
-  }
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  .tall {
-    display: none;
-  }
-  @media (max-width: 767px) {
-    .wide {
-      display: none;
-    }
-    .tall {
-      display: block;
-    }
-  }
-
   .grid {
-    fill: none;
-    stroke: var(--line);
-    stroke-width: 1.2;
-    opacity: 0.55;
-  }
-  .drift {
+    position: absolute;
+    inset: -80px;
+    opacity: 0.5;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 80px 80px;
+    will-change: transform;
     animation: drift 14s linear infinite;
-  }
-  .drift.t {
-    animation-duration: 12s;
   }
   @keyframes drift {
     to {
       transform: translate(80px, 80px);
     }
   }
-  .drift.t {
-    animation-name: drift-t;
+  .wideonly {
+    display: none;
   }
-  @keyframes drift-t {
-    to {
-      transform: translate(50px, 50px);
+  @media (min-width: 768px) {
+    .wideonly {
+      display: block;
     }
   }
 
-  .spin {
-    animation: spin linear infinite;
-  }
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  .fill {
-    fill: var(--accent-soft);
-  }
-  .ring {
-    fill: none;
-    stroke: var(--line);
-    stroke-width: 1.6;
-  }
-  .tick {
-    fill: none;
-    stroke: var(--line-strong);
-  }
-  .arc {
-    fill: none;
-    stroke-linecap: round;
-  }
-  .arc.red {
-    stroke: var(--accent-text);
-    opacity: 0.8;
-  }
-  .arc.gold {
-    stroke: var(--warn);
-    opacity: 0.7;
-  }
-  .arc.white {
-    stroke: var(--text-2);
-    opacity: 0.6;
-  }
-
-  /* rollende X: laufen am Rand durchs Bild und drehen sich dabei wie ein Rad */
-  .roll text {
+  /* rollende X: laufen durchs Bild und drehen sich dabei wie ein Rad */
+  .roll {
+    position: absolute;
+    left: 0;
+    width: 0.8em;
+    text-align: center;
     font-family: var(--font-display);
     font-weight: 800;
-    fill: none;
-    stroke: var(--accent-text);
-    stroke-width: 3;
-  }
-  .roll.big text {
-    font-size: 560px;
-  }
-  .roll.small text {
-    font-size: 240px;
-  }
-  .roll.phone text {
-    font-size: 300px;
-  }
-  .roll {
-    opacity: 0.22;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 3px var(--accent-text);
+    will-change: transform;
+    animation: roll linear infinite;
   }
   .roll.big {
-    animation: roll-big 80s linear infinite;
+    font-size: clamp(260px, 52vmin, 560px);
+    bottom: 2vh;
+    opacity: 0.3;
+    animation-duration: 80s;
   }
   .roll.small {
-    opacity: 0.16;
-    animation: roll-small 55s linear infinite;
+    display: none;
+    font-size: clamp(120px, 24vmin, 260px);
+    top: 6vh;
+    opacity: 0.2;
+    animation-duration: 55s;
+    animation-direction: reverse;
   }
-  .roll.phone {
-    animation: roll-phone 55s linear infinite;
+  @media (min-width: 768px) {
+    .roll.small {
+      display: block;
+    }
   }
-  @keyframes roll-big {
+  @keyframes roll {
     from {
-      transform: translate(-380px, 760px) rotate(0deg);
+      transform: translateX(-40vw) rotate(0deg);
     }
     to {
-      transform: translate(1980px, 760px) rotate(720deg);
-    }
-  }
-  @keyframes roll-small {
-    from {
-      transform: translate(1750px, 120px) rotate(0deg);
-    }
-    to {
-      transform: translate(-200px, 120px) rotate(-540deg);
-    }
-  }
-  @keyframes roll-phone {
-    from {
-      transform: translate(-200px, 690px) rotate(0deg);
-    }
-    to {
-      transform: translate(600px, 690px) rotate(360deg);
+      transform: translateX(125vw) rotate(720deg);
     }
   }
 
+  /* Jagd: Mister X (rot) auf einer Straßenrunde, die Jäger hinterher. Alles in vw/vh, damit es zur gestrichelten Route passt. */
+  .chase {
+    position: absolute;
+    inset: 0;
+  }
+  .chase svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
   .route {
     fill: none;
     stroke: var(--line-strong);
     stroke-width: 2;
     stroke-dasharray: 10 14;
     opacity: 0.7;
-    animation: march 3s linear infinite;
   }
-  @keyframes march {
-    to {
-      stroke-dashoffset: -24;
+  .chase.tall {
+    display: none;
+    --dur: 40s;
+  }
+  .chase.wide {
+    --dur: 48s;
+  }
+  @media (max-width: 767px) {
+    .chase.wide {
+      display: none;
+    }
+    .chase.tall {
+      display: block;
     }
   }
+  .runner {
+    position: absolute;
+    left: -7px;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    will-change: transform;
+    animation: run-wide var(--dur) linear infinite;
+  }
+  .chase.tall .runner {
+    animation-name: run-tall;
+  }
   .mrx {
-    fill: var(--accent);
-    stroke: var(--text);
-    stroke-width: 3;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--text);
   }
-  .ping {
-    fill: none;
-    stroke: var(--accent-text);
-    stroke-width: 3;
+  /* Ping-Ringe: wachsen und verblassen */
+  .mrx::before,
+  .mrx::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-text);
+    opacity: 0;
+    animation: ping 2.4s ease-out infinite;
   }
-  .hunter {
-    stroke: var(--surface);
-    stroke-width: 2;
+  .mrx::after {
+    animation-delay: -1.2s;
+  }
+  @keyframes ping {
+    from {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(5);
+    }
   }
   .hunter.info {
-    fill: var(--info);
+    background: var(--info);
   }
   .hunter.warn {
-    fill: var(--warn);
+    background: var(--warn);
   }
   .hunter.ok {
-    fill: var(--ok);
+    background: var(--ok);
+  }
+  @keyframes run-wide {
+    0.00% {
+      transform: translate(18.75vw, 23.33vh);
+    }
+    11.24% {
+      transform: translate(43.75vw, 23.33vh);
+    }
+    16.57% {
+      transform: translate(43.75vw, 44.44vh);
+    }
+    27.81% {
+      transform: translate(68.75vw, 44.44vh);
+    }
+    33.15% {
+      transform: translate(68.75vw, 23.33vh);
+    }
+    41.01% {
+      transform: translate(86.25vw, 23.33vh);
+    }
+    51.40% {
+      transform: translate(86.25vw, 64.44vh);
+    }
+    62.08% {
+      transform: translate(62.5vw, 64.44vh);
+    }
+    66.01% {
+      transform: translate(62.5vw, 80vh);
+    }
+    79.49% {
+      transform: translate(32.5vw, 80vh);
+    }
+    84.55% {
+      transform: translate(32.5vw, 60vh);
+    }
+    90.73% {
+      transform: translate(18.75vw, 60vh);
+    }
+    100.00% {
+      transform: translate(18.75vw, 23.33vh);
+    }
+  }
+  @keyframes run-tall {
+    0.00% {
+      transform: translate(17.5vw, 16.25vh);
+    }
+    13.33% {
+      transform: translate(77.5vw, 16.25vh);
+    }
+    22.22% {
+      transform: translate(77.5vw, 36.25vh);
+    }
+    32.21% {
+      transform: translate(32.5vw, 36.25vh);
+    }
+    41.10% {
+      transform: translate(32.5vw, 56.25vh);
+    }
+    52.21% {
+      transform: translate(82.5vw, 56.25vh);
+    }
+    60.54% {
+      transform: translate(82.5vw, 75vh);
+    }
+    73.87% {
+      transform: translate(22.5vw, 75vh);
+    }
+    100.00% {
+      transform: translate(17.5vw, 16.25vh);
+    }
   }
 </style>
