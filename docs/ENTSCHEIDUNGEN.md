@@ -439,8 +439,12 @@ Der Spielraum verschlüsselt sie per Alarm und schickt sie
 - an **Googles** Push-Dienst: echtes Google Chrome installiert die echte App (DevTools-Protokoll `PWA.install`, wie
   „App installieren“) und öffnet sie; sie legt ihr Abo selbst an, und bei geschlossener App zeigt ihr Service Worker die
   Durchsage als Benachrichtigung. Ohne Bildschirm öffnet Chrome installierte Apps ohnehin als Tab statt im eigenen
-  Fenster, der Test öffnet sie darum gleich im Tab – Abo, Service Worker und Push sind dieselben. (Der Start über
-  `PWA.launch` in einen zweiten Tab kam in CI nicht zuverlässig an und wurde verworfen.)
+  Fenster, der Test öffnet sie darum gleich im Tab – Abo, Service Worker und Push sind dieselben.
+
+Gefunden dabei: Google antwortet auf ein Abo, das erst Sekunden alt ist, gelegentlich mit 410 („Abo ungültig“), obwohl
+Chrome es weiter hat. Der Server vergaß solche Abos sofort – das Team hätte bis zum nächsten App-Start keine
+Benachrichtigung mehr bekommen. Jetzt behält er Abos, die jünger als 5 Minuten sind; der Test schickt dann wie im Spiel
+eine weitere Durchsage (höchstens drei). Jeder Push steht mit der Antwort des Dienstes im Protokoll („Push 201 …“).
 
 Damit ist auch der Versandweg im Server geprüft, der im Testmodus der übrigen Tests nur protokolliert wird.
 **Warum:** Die Definition of Done verlangt, dass Push auf der installierten Web-App ankommt. Chromium ohne
