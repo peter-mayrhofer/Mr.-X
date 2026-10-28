@@ -179,6 +179,16 @@ describe("Ein ganzes Spiel", { timeout: 90_000 }, () => {
     await admin.locator(".now", { hasText: "Urfahr" }).waitFor();
   });
 
+  it("nach dem Spiel: ein Team meldet sich in der Auswertung ab und bleibt auf der Startseite", async () => {
+    const { page } = phones.Leonding!;
+    await page.getByRole("button", { name: T.warten.abmelden, exact: true }).click();
+    await visible(page, T.start.teamBeitreten);
+    await page.reload();
+    await visible(page, T.start.teamBeitreten);
+    expect(await page.evaluate(() => localStorage.getItem("mrx.sitzung"))).toBeNull();
+    delete phones.Leonding; // ist schon draußen – die Neue Runde betrifft nur noch die anderen
+  });
+
   it("Neue Runde: Teams und Schiri werden abgemeldet, Team-Passwort gelöscht, Archiv bleibt", async () => {
     await admin.goto(`${URL}#/spiel?b=teams`);
     await admin.getByRole("tab", { name: T.admin.zugaenge }).click();

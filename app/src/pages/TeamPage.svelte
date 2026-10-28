@@ -211,7 +211,7 @@
       startGps(prefs.background);
     }}
   />
-{:else if !view || !game.config || (phase === "beendet" && !archive.value)}
+{:else if !view || !game.config || (phase === "beendet" && game.state?.run && !archive.loaded)}
   <div class="wait" aria-busy="true" aria-label={T.allgemein.laden}></div>
 {:else if chatOnly && (phase === "vorbereitung" || phase === "beendet")}
   <!-- Chat vor dem Start und nach dem Ende (z. B. Treffpunkt-Durchsage) -->
@@ -238,6 +238,7 @@
     teams={archive.value.teams}
     onarchive={() => go("/archiv")}
     done={{ label: T.tabs.chat, onclick: () => (chatOnly = true) }}
+    onleave={logout}
   />
 {:else}
   <TeamHome {view} bind:tab bind:scene {announcement} {shrinking} {push} onsend={send} onlogout={logout} />

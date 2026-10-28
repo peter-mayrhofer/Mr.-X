@@ -1,6 +1,6 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
-  import { Archive, Footprints, Medal, Repeat, Route, Timer } from "@lucide/svelte";
+  import { Archive, Footprints, LogOut, Medal, Repeat, Route, Timer } from "@lucide/svelte";
   import type { Results, Team } from "@mrx/shared";
   import Confetti from "../ui/Confetti.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
@@ -16,8 +16,10 @@
     onscreen?: () => void;
     /** z. B. „Zur Startseite“ für Teams nach dem Spiel */
     done?: { label: string; onclick: () => void };
+    /** Teams/Schiris: nach dem Spiel abmelden – sonst kommt man nicht mehr zur Startseite */
+    onleave?: () => void;
   }
-  let { results: R, teams, onarchive, onscreen, done }: Props = $props();
+  let { results: R, teams, onarchive, onscreen, done, onleave }: Props = $props();
 
   const team = (id: string | null | undefined): Team => (id && teams[id]) || { name: "–", short: "?", color: "#888" };
   const winner = $derived(team(R.winner));
@@ -79,6 +81,7 @@
     {#if onarchive}<Button size="xl" icon={Archive} onclick={onarchive}>{T.ende.archiv}</Button>{/if}
     {#if onscreen}<Button variant="secondary" icon={Medal} onclick={onscreen}>{T.admin.nav.grossbild}</Button>{/if}
     {#if done}<Button size="xl" variant={onarchive ? "secondary" : "primary"} onclick={done.onclick}>{done.label}</Button>{/if}
+    {#if onleave}<Button variant="ghost" icon={LogOut} onclick={onleave}>{T.warten.abmelden}</Button>{/if}
   </div>
 </main>
 

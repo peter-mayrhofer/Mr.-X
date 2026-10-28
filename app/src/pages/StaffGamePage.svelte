@@ -140,7 +140,7 @@
       onlogout={logout}
     />
   {:else if phase === "beendet" && archive.value}
-    <Results results={archive.value.results} teams={archive.value.teams} onarchive={() => go("/archiv")} />
+    <Results results={archive.value.results} teams={archive.value.teams} onarchive={() => go("/archiv")} onleave={logout} />
   {:else}
     <Referee {view} api={call} {push} onsend={(text) => send(text, "alle")} onlogout={logout} />
   {/if}
