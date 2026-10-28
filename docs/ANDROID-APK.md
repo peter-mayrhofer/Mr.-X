@@ -114,3 +114,19 @@ Die APK liegt unter `app/android/app/build/outputs/apk/debug/app-debug.apk`.
   (Dauer-Benachrichtigung weggewischt), kommen keine Benachrichtigungen – darum im Onboarding den Hinweis beachten.
 - Nach dem Spielende sendet die App keinen Standort mehr; die Dauer-Benachrichtigung verschwindet, wenn die App
   geschlossen bzw. das Team abgemeldet wird.
+
+## 5. Automatischer Gerätetest (Emulator)
+
+Bei jeder Änderung an App oder Server startet GitHub zusätzlich einen **Android-Emulator** (Android 14), installiert die
+Test-APK und spielt gegen einen Spiel-Server auf demselben Rechner ([`tests/android-geraet.mjs`](../tests/android-geraet.mjs)):
+
+1. App offen im Warteraum → der Standort kommt am Server an,
+2. Bildschirm aus (Handy in der Tasche), **dann** startet die Spielleitung das Spiel,
+3. 150 Sekunden „gehen“ mit ausgeschaltetem Bildschirm → neue Standorte kommen weiter an, die Dauer-Benachrichtigung
+   „Mister X läuft“ bleibt,
+4. Durchsage der Spielleitung → erscheint als **Android-Benachrichtigung**, während der Bildschirm aus ist.
+
+Ergebnis ansehen: GitHub → **Actions → Android-APK** → Lauf öffnen → **Summary** zeigt die Tabelle „Gerätetest
+Android-App (Emulator)“; Protokolle liegen im Artefakt `android-geraetetest`. Ein Emulator ersetzt den
+[Feldtest](FELDTEST.md) nicht ganz: Akku-Sparfunktionen mancher Hersteller (Samsung, Xiaomi, Huawei) gibt es nur auf
+echten Handys.
