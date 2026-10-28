@@ -98,7 +98,7 @@ npm run lint     # ESLint + Prettier
 npm run check    # TypeScript (strict) + Svelte
 npm test         # Unit-Tests (Vitest)
 npm run test:server # Server-, Rechte- und Ende-zu-Ende-Tests in der lokalen Cloudflare-Laufzeit
-node tests/push-dienst.mjs # Web Push über Mozillas echten Push-Dienst (braucht Internet)
+node tests/push-dienst.mjs # nach npm run build: Web Push über die echten Dienste von Mozilla und Google (Chrome)
 npm run build    # App bauen
 ```
 

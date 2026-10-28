@@ -2,9 +2,9 @@
 
 Ziel: alles, was sich im Labor nicht prüfen lässt, **einmal draußen mit echten Handys** nachweisen – vor allem, dass
 **Android den Standort bei gesperrtem Bildschirm sendet** und **Benachrichtigungen ankommen**. Im Android-Emulator ist
-beides schon automatisch geprüft, Web Push auch über einen echten Push-Dienst ([`ABNAHME.md`](ABNAHME.md) Abschnitt 2);
-draußen kommen echtes GPS, Mobilfunk, die Push-Dienste von Apple und Google und die Akku-Sparfunktionen der Hersteller
-dazu.
+beides schon automatisch geprüft, Web Push auch über die echten Push-Dienste von Google und Mozilla
+([`ABNAHME.md`](ABNAHME.md) Abschnitt 2); draußen kommen echtes GPS, Mobilfunk, Apples Push-Dienst (iPhone) und die
+Akku-Sparfunktionen der Hersteller dazu.
 Dauer: ca. **2 Stunden** inklusive Vorbereitung. Ergebnisse ins Protokoll unten eintragen und an die Projektleitung
 schicken.
 

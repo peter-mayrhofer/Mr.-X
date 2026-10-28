@@ -431,14 +431,17 @@ der Entwicklungsumgebung nicht. Der Feldtest bleibt für Hersteller-Eigenheiten 
 privat: die Minuten kommen aus den 2000 Gratis-Minuten im Monat; ohne hinterlegte Zahlungsart entstehen keine Kosten,
 sind sie aufgebraucht, laufen die Jobs erst im nächsten Monat wieder.
 
-### E-48 Web Push über einen echten Push-Dienst geprüft
+### E-48 Web Push über echte Push-Dienste geprüft
 **Entscheidung:** `tests/push-dienst.mjs` (CI-Job „push-dienst“) startet den Spiel-Server wie im Betrieb (ohne
-Testmodus, eigener VAPID-Schlüssel), meldet sich wie Firefox per WebSocket bei Mozillas Push-Dienst an, gibt das Abo
-der App und lässt die Spielleitung eine Durchsage schicken. Der Spielraum verschlüsselt sie per Alarm, der Push-Dienst
-stellt sie zu, der Test entschlüsselt sie wie ein Browser. Damit ist auch der Versandweg im Server geprüft, der im
-Testmodus der übrigen Tests nur protokolliert wird.
-**Warum:** Die Definition of Done verlangt, dass Push auf der installierten Web-App ankommt. Mozillas Dienst ist ohne
-Konto nutzbar; Apple und Google brauchen ein echtes iPhone bzw. Chrome mit Google-Konto und bleiben dem Feldtest. Alle
-drei arbeiten nach denselben Standards (RFC 8030, 8291, 8292).
-**Verworfen:** einen Browser im Test den Push-Dienst nutzen lassen – Chromium ohne Google-Schlüssel kann kein Push-Abo
-anlegen, Firefox ist in der Testumgebung nicht installiert.
+Testmodus, eigener VAPID-Schlüssel; er liefert auch die gebaute App aus) und lässt die Spielleitung Durchsagen schicken.
+Der Spielraum verschlüsselt sie per Alarm und schickt sie
+- an **Mozillas** Push-Dienst: das Skript meldet sich wie Firefox per WebSocket an und entschlüsselt die Nachricht,
+- an **Googles** Push-Dienst: echtes Google Chrome öffnet die echte App, die ihr Abo selbst anlegt; bei geschlossener
+  App zeigt ihr Service Worker die Durchsage als Benachrichtigung.
+
+Damit ist auch der Versandweg im Server geprüft, der im Testmodus der übrigen Tests nur protokolliert wird.
+**Warum:** Die Definition of Done verlangt, dass Push auf der installierten Web-App ankommt. Chromium ohne
+Google-Schlüssel (der Testbrowser) kann kein Push-Abo anlegen, Google Chrome schon; die Erlaubnis für Benachrichtigungen
+steht dafür im Chrome-Profil (Chromes Push prüft die Profil-Einstellung, nicht die Test-Vorgabe). Apples Dienst
+(iPhone) braucht ein echtes Gerät und bleibt dem Feldtest – alle drei arbeiten nach denselben Standards
+(RFC 8030, 8291, 8292).

@@ -1,13 +1,17 @@
-// Web Push über einen echten Push-Dienst (Definition of Done: „Push kommt auf der installierten PWA an“), der Weg wie im
-// Betrieb: Spiel-Server (wrangler dev, OHNE Testmodus, eigener VAPID-Schlüssel) → Durchsage der Spielleitung → der
-// Spielraum verschlüsselt per Alarm und schickt → Mozillas Push-Dienst (den nutzt Firefox) → „Browser“.
-// Den Browser spielt dieses Skript: Es meldet sich wie Firefox per WebSocket beim Push-Dienst an, gibt das Abo der App,
-// empfängt die Nachricht und entschlüsselt sie (RFC 8291). Die Anzeige im Service Worker prüft
-// tests/e2e-benachrichtigung.test.ts; die Dienste von Apple und Google (iPhone, Chrome) bleiben dem Feldtest.
-// Aufruf im Hauptordner: node tests/push-dienst.mjs (startet den Server selbst, braucht Internet; hinter einem Proxy
-// mit NODE_USE_ENV_PROXY=1). Ergebnis: push-ergebnis.md und Ausgabe im Log; Exit-Code 1, wenn etwas nicht klappt.
-import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync } from "node:fs";
+// Web Push über echte Push-Dienste (Definition of Done: „Push kommt auf der installierten PWA an“), der Weg wie im
+// Betrieb: Spiel-Server (wrangler dev, OHNE Testmodus, eigener VAPID-Schlüssel, liefert auch die gebaute App aus) →
+// Durchsage der Spielleitung → der Spielraum verschlüsselt per Alarm und schickt →
+//   A. Mozillas Push-Dienst (den nutzt Firefox): dieses Skript meldet sich wie Firefox per WebSocket an, gibt das Abo
+//      der App, empfängt die Nachricht und entschlüsselt sie (RFC 8291),
+//   B. Googles Push-Dienst (FCM, den nutzt Chrome): echtes Google Chrome mit der echten App – die App legt ihr Abo selbst
+//      an, wird geschlossen, und der Service Worker der App zeigt die Durchsage als Benachrichtigung.
+// Nur Apples Dienst (iPhone) braucht ein echtes Gerät und bleibt dem Feldtest.
+// Aufruf im Hauptordner nach `npm run build`: node tests/push-dienst.mjs (startet den Server selbst, braucht Internet;
+// hinter einem Proxy mit NODE_USE_ENV_PROXY=1; Chrome aus CHROME_PATH oder /usr/bin/google-chrome).
+// Ergebnis: push-ergebnis.md und Ausgabe im Log; Exit-Code 1, wenn etwas nicht klappt.
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -16,6 +20,10 @@ const SERVER = `http://127.0.0.1:${PORT}`;
 const PUSH_DIENST = "wss://push.services.mozilla.com/";
 const G = "push-dienst";
 const TEXT = "Push-Test: Treffpunkt Hauptplatz um 17 Uhr";
+const TEXT_CHROME = "Push-Test: Chrome bekommt die Durchsage";
+const CHROME = process.env.CHROME_PATH ?? ["/usr/bin/google-chrome", "/opt/google/chrome/chrome"].find((p) => existsSync(p));
+const { chromium } = createRequire(import.meta.url)("playwright");
+const { T } = await import("../app/src/texte.ts"); // Node entfernt die Typen selbst
 
 const b64u = (b) => Buffer.from(b).toString("base64url");
 const text = (s) => new TextEncoder().encode(s);
@@ -64,6 +72,7 @@ async function decrypt(body, ua, uaPub, auth) {
 let ok = true;
 let server;
 let ws;
+let chrome;
 try {
   // Schlüssel: VAPID für den Server (wie npm run schluessel), P-256 + Auth-Geheimnis für den „Browser“
   const vapid = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign"]);
@@ -151,20 +160,76 @@ try {
       msg.title === "Durchsage" && msg.body === TEXT && msg.kind === "durchsage",
       `„${msg.title}: ${msg.body}“`,
     ) && ok;
+
+  // 5. Web-App in Google Chrome: Benachrichtigungen erlaubt (wie nach „Erlauben“ – Chromes Push prüft die
+  // Profil-Einstellung), Team tritt bei, die App legt ihr Abo bei Googles Push-Dienst selbst an
+  if (!CHROME) throw new Error("Google Chrome nicht gefunden (CHROME_PATH)");
+  const traun = await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" });
+  const profil = mkdtempSync(join(tmpdir(), "mrx-chrome-"));
+  mkdirSync(join(profil, "Default"));
+  const erlaubt = { [`${SERVER},*`]: { last_modified: "13300000000000000", setting: 1 } };
+  writeFileSync(
+    join(profil, "Default", "Preferences"),
+    JSON.stringify({ profile: { content_settings: { exceptions: { notifications: erlaubt } } } }),
+  );
+  chrome = await chromium.launchPersistentContext(profil, { executablePath: CHROME, headless: true, locale: "de-AT" });
+  const page = chrome.pages()[0] ?? (await chrome.newPage());
+  await page.goto(`${SERVER}/`);
+  // angemeldet wie nach dem Beitritt über die Oberfläche (den prüfen die Browser-Tests)
+  await page.evaluate(
+    ([s, p]) => {
+      localStorage.setItem("mrx.sitzung", s);
+      localStorage.setItem("mrx.prefs", p);
+    },
+    [
+      JSON.stringify({ gameId: G, token: traun.token, uid: traun.uid, role: "team" }),
+      JSON.stringify({ sound: false, wake: false, onboarded: true, background: true }),
+    ],
+  );
+  await page.reload();
+  await page.getByText(`${T.lobby.check.push}: ${T.lobby.gut}`).first().waitFor({ timeout: 60_000 });
+  const endpoint = await page.evaluate(
+    async () => (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.endpoint ?? "",
+  );
+  ok =
+    check("Web-App in Chrome: Abo bei Googles Push-Dienst", endpoint.startsWith("https://fcm.googleapis.com/"), new URL(endpoint).host) &&
+    ok;
+
+  // 6. App schließen (kein sichtbares Fenster mehr), Durchsage → Server → Google → Chrome → Service Worker der App
+  await page.goto("about:blank");
+  await sleep(2000);
+  const t1 = Date.now();
+  await call(admin.token, { action: "announce", gameId: G, text: TEXT_CHROME });
+  // nachsehen, ohne ein App-Fenster zu öffnen (dann würde der Service Worker die Benachrichtigung auslassen)
+  let shown = [];
+  // Chrome baut seine Verbindung zu Google nach dem Start erst auf – darum großzügig warten
+  for (const end = Date.now() + 120_000; Date.now() < end && !shown.some((x) => x.includes(TEXT_CHROME)); await sleep(500))
+    for (const w of chrome.serviceWorkers())
+      shown = await w
+        .evaluate(async () => (await self.registration.getNotifications()).map((n) => `${n.title}: ${n.body}`))
+        .catch(() => shown);
+  const da = shown.find((x) => x.includes(TEXT_CHROME));
+  ok =
+    check(
+      "Durchsage über Googles Push-Dienst als Benachrichtigung der Web-App",
+      !!da,
+      da ? `„${da}“ nach ${((Date.now() - t1) / 1000).toFixed(1)} s` : "nicht angezeigt",
+    ) && ok;
 } catch (e) {
   ok = false;
   console.error(e);
   rows.push(`| Abbruch | ✖ | ${String(e).replace(/\|/g, "/")} |`);
 } finally {
   ws?.close();
+  await chrome?.close();
   if (server) process.kill(-server.pid);
 }
 writeFileSync(
   "push-ergebnis.md",
   [
-    "# Web Push über einen echten Push-Dienst",
+    "# Web Push über echte Push-Dienste",
     "",
-    `${new Date().toISOString()} · Spiel-Server (wrangler dev, ohne Testmodus) → Mozilla-Push-Dienst → Browser-Ersatz`,
+    `${new Date().toISOString()} · Spiel-Server (wrangler dev, ohne Testmodus) → Mozilla bzw. Google (${CHROME ? execFileSync(CHROME, ["--version"], { encoding: "utf8" }).trim() : "–"})`,
     "",
     "| Prüfung | Ergebnis | Details |",
     "|---|---|---|",
