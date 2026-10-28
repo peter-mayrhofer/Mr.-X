@@ -33,6 +33,14 @@ async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
     permissions: ["geolocation", "notifications"],
     geolocation: { latitude: HAUPTPLATZ.latitude + dLat, longitude: HAUPTPLATZ.longitude, accuracy: 8 },
   });
+  // GPS-Starts zählen (Spielbeginn darf das GPS nicht neu starten – in der Android-App wäre das der Vordergrund-Dienst)
+  await ctx.addInitScript(() => {
+    const geo = navigator.geolocation;
+    const watch = geo.watchPosition.bind(geo);
+    const w = window as unknown as { gpsStarts: number };
+    w.gpsStarts = 0;
+    geo.watchPosition = (...a) => (w.gpsStarts++, watch(...a));
+  });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => console.error("PAGEERROR", name, e.message));
   await page.goto(`${URL}#/beitreten/${G}`);
@@ -85,7 +93,10 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     await visible(p.page, `${T.lobby.check.push}: ${T.lobby.gut}`);
   }, 90_000);
 
-  it("Start: Mister X sieht den roten Modus, Jäger die Wartezeit mit Countdown", async () => {
+  it("Start: Mister X sieht den roten Modus, Jäger die Wartezeit mit Countdown, GPS läuft ohne Neustart weiter", async () => {
+    const gpsStarts = () => phones.Traun!.page.evaluate(() => (window as unknown as { gpsStarts: number }).gpsStarts);
+    const before = await gpsStarts();
+    expect(before).toBeGreaterThan(0);
     await api("startGame", { mrx: phones.Urfahr!.id });
     await visible(phones.Urfahr!.page, T.status.ihrSeidMrx);
     // „Ihr seid Mister X!“ geht an Urfahr – die App ist offen und sichtbar, also über die Verbindung statt per Web-Push
@@ -94,6 +105,7 @@ describe("Team-Handys im Spiel", { timeout: 60_000 }, () => {
     await lock.waitFor();
     expect(await lock.getByText(T.wartezeit.grundStart).isVisible()).toBe(true);
     await visible(phones.Leonding!.page, "Urfahr");
+    expect(await gpsStarts()).toBe(before);
   });
 
   it("Termin erreicht → der Server meldet per Alarm → Meldung auf der Karte", async () => {

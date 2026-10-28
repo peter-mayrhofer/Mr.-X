@@ -47,9 +47,12 @@
   let chatOnly = $state(false);
 
   // Standort: ab dem Beitritt (Spielleitung sieht im Warteraum, ob GPS klappt), nach dem Ende nie mehr (Datenschutz)
-  // GPS (in der Android-App samt Dauer-Benachrichtigung) nur, solange gespielt wird; beim Verlassen beenden
+  // GPS (in der Android-App samt Dauer-Benachrichtigung) nur, solange gespielt wird; beim Verlassen beenden.
+  // Nur am Spielende neu auswerten, nicht bei jedem Phasenwechsel: Ein Neustart beim Spielbeginn bei gesperrtem
+  // Handy hieße, den Vordergrund-Dienst aus dem Hintergrund neu zu starten – das verbietet Android ab Version 12.
+  const ended = $derived(phase === "beendet");
   $effect(() => {
-    if (!prefs.onboarded || phase === "beendet") return;
+    if (!prefs.onboarded || ended) return;
     startGps(prefs.background);
     return () => stopGps();
   });

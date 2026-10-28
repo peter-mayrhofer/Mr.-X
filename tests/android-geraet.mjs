@@ -2,7 +2,8 @@
 // lokalen Spiel-Server (wrangler dev, über `adb reverse` als 127.0.0.1:8787 erreichbar). Nachweis für die Definition
 // of Done (PROMPT-NEUBAU §13):
 //   1. Standort kommt an, solange die App offen ist (Live-Verbindung),
-//   2. bei AUSGESCHALTETEM Bildschirm kommen neue Standorte weiter an (Vordergrund-Dienst + natives HTTP),
+//   2. Bildschirm schon im Warteraum aus, dann Spielstart: neue Standorte kommen weiter an (Vordergrund-Dienst +
+//      natives HTTP) – auch der Spielbeginn darf den Dienst nicht anhalten,
 //   3. eine Durchsage erscheint als Android-Benachrichtigung, während der Bildschirm aus ist.
 // Ergebnis: android-ergebnis.md (Artefakt) und Ausgabe im Log; Exit-Code 1, wenn etwas nicht klappt.
 import { execFileSync } from "node:child_process";
@@ -87,22 +88,22 @@ try {
   );
   await page.reload();
 
-  // 3. App offen: Standort kommt über die Live-Verbindung
-  const first = await until("Standort bei offener App", () => val(`positions/${team.teamId}`), 120_000);
-  ok = check("Standort bei offener App", true, `${first.lat.toFixed(5)}, ${first.lng.toFixed(5)} am Server`) && ok;
-  await call(admin.token, { action: "startGame", gameId: G, mrx: other.teamId });
-  const service = await until(
-    "Dauer-Benachrichtigung",
-    () => adb("shell", "dumpsys", "notification", "--noredact").includes("Mister X läuft"),
-    30_000,
-  ).catch(() => false);
-  ok = check("Vordergrund-Dienst (Dauer-Benachrichtigung „Mister X läuft“)", !!service, service ? "läuft" : "fehlt") && ok;
+  // 3. App offen (Warteraum): Standort kommt über die Live-Verbindung. `geo fix` wiederholen – der Emulator meldet
+  // einen gesetzten Standort nicht von selbst noch einmal
+  const first = await until("Standort bei offener App", () => (geo(START.lat, START.lng), val(`positions/${team.teamId}`)), 120_000);
+  ok = check("Standort bei offener App (Warteraum)", true, `${first.lat.toFixed(5)}, ${first.lng.toFixed(5)} am Server`) && ok;
+  const service = () => adb("shell", "dumpsys", "notification", "--noredact").includes("Mister X läuft");
+  const fgs = await until("Dauer-Benachrichtigung", service, 30_000).catch(() => false);
+  ok = check("Vordergrund-Dienst (Dauer-Benachrichtigung „Mister X läuft“)", fgs, fgs ? "läuft" : "fehlt") && ok;
 
-  // 4. Bildschirm aus – wie das Handy in der Hosentasche – und 150 s die Landstraße entlang gehen
+  // 4. Bildschirm aus – das Handy kommt schon im Warteraum in die Hosentasche –, dann startet die Spielleitung
   adb("shell", "input", "keyevent", "KEYCODE_SLEEP");
   await sleep(3000);
   const wake = () => adb("shell", "dumpsys", "power").match(/mWakefulness=(\w+)/)?.[1] ?? "?";
   ok = check("Bildschirm aus", wake() !== "Awake", `mWakefulness=${wake()}`) && ok;
+  await call(admin.token, { action: "startGame", gameId: G, mrx: other.teamId });
+
+  // 5. mit ausgeschaltetem Bildschirm 150 s die Landstraße entlang gehen
   const tOff = Date.now();
   const seen = [];
   for (let i = 1; i <= 30; i++) {
@@ -119,8 +120,9 @@ try {
       stillOff && seen.length >= 3 && moved >= 200,
       `${seen.length} neue Standorte in 150 s (nach ${seen.map((x) => `${x.s} s`).join(", ")}), zuletzt ${moved} m südlich vom Start; Bildschirm blieb aus: ${stillOff ? "ja" : "nein"}`,
     ) && ok;
+  ok = check("Vordergrund-Dienst läuft nach dem Spielstart weiter", service(), service() ? "ja" : "nein") && ok;
 
-  // 5. Durchsage, während der Bildschirm aus ist → Android-Benachrichtigung
+  // 6. Durchsage, während der Bildschirm aus ist → Android-Benachrichtigung
   await call(admin.token, { action: "announce", gameId: G, text: DURCHSAGE });
   const shown = await until(
     "Benachrichtigung",

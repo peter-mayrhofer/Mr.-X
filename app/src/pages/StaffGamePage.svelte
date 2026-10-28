@@ -44,9 +44,11 @@
   $effect(() => (isAdmin ? undefined : push.watch(g, uid)));
   const phase = $derived(game.state?.phase);
 
-  // Schiri: Standort mit Namen (Karte der anderen Schiris, Ersatz-Standort für Mister X)
+  // Schiri: Standort mit Namen (Karte der anderen Schiris, Ersatz-Standort für Mister X).
+  // Nur am Spielende neu auswerten (wie TeamPage: kein Neustart des Vordergrund-Dienstes bei gesperrtem Handy)
+  const ended = $derived(phase === "beendet");
   $effect(() => {
-    if (isAdmin || phase === "beendet") return;
+    if (isAdmin || ended) return;
     startGps(prefs.background);
     return () => stopGps();
   });
