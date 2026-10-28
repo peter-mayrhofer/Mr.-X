@@ -24,12 +24,13 @@ echten Cloudflare-Konto nachweisen lässt – dafür gibt es den [Feldtest](FELD
 | **Android-App** | Capacitor-App mit Standort im Hintergrund (Vordergrund-Dienst, natives HTTP alle 30 s), Benachrichtigungen, Akku-Hinweis; APK-Build per GitHub Action; Download-Knopf auf der Startseite |
 | **Tracker** | `/tracker` im OsmAnd-/Traccar-Format, Zuordnung Fahne/Team, Vorrang vor Handys |
 | **Design** | eigenes Design-System „Fahndung in Rot-Weiß“, hell/dunkel/Sonnen-Modus, alle 23 Screens für Handy und Laptop ([Screenshots](screens/)) |
-| **Doku** | [Handbuch Spielleitung](ADMIN-HANDBUCH.md), [Team-Anleitung](TEAM-ANLEITUNG.md) + [Flyer](flyer-beispiel.pdf), [Betrieb (Windows)](BETRIEB.md), [Android-APK](ANDROID-APK.md), [Limits & Kosten](CLOUDFLARE-LIMITS.md), [Konzept](KONZEPT.md), [API](API.md), [Entscheidungen](ENTSCHEIDUNGEN.md) (E-01 bis E-45), [Feldtest](FELDTEST.md), [Spieltag-Checkliste](SPIELTAG-CHECKLISTE.md) |
+| **Doku** | [Handbuch Spielleitung](ADMIN-HANDBUCH.md), [Team-Anleitung](TEAM-ANLEITUNG.md) + [Flyer](flyer-beispiel.pdf), [Betrieb (Windows)](BETRIEB.md), [Android-APK](ANDROID-APK.md), [Limits & Kosten](CLOUDFLARE-LIMITS.md), [Konzept](KONZEPT.md), [API](API.md), [Entscheidungen](ENTSCHEIDUNGEN.md) (E-01 bis E-47), [Feldtest](FELDTEST.md), [Spieltag-Checkliste](SPIELTAG-CHECKLISTE.md) |
 
 ## 2. Wie getestet wurde
 
 Alle Tests laufen bei **jedem Push automatisch in GitHub Actions** (Lint, Typecheck, Unit, Server, Ende-zu-Ende,
-Build) – der letzte Lauf war grün. Lokal zuletzt: **84 Unit-Tests** und **192 Server-/Ende-zu-Ende-Tests** grün.
+Build, APK) – der letzte Lauf war grün. Lokal zuletzt: **87 Unit-Tests** und **196 Server-/Ende-zu-Ende-Tests**
+grün. Bei Änderungen an App oder Server läuft zusätzlich der **Gerätetest im Android-Emulator**.
 
 | Testart | Was genau | Dateien |
 |---|---|---|
@@ -39,22 +40,39 @@ Build) – der letzte Lauf war grün. Lokal zuletzt: **84 Unit-Tests** und **192
 | Ende-zu-Ende | simulierte Handys (Playwright, Fake-GPS, Zeitraffer) über die echte App: Anmeldung aller Rollen, Team-Handys, Schiri & Spielleitung, Verwaltung, Großbild & Archiv, Tracker und ein **ganzes Spiel** von Beitritt bis Neue Runde | `tests/e2e-*` |
 | Last | 49 Geräte (30 Teams), Zeitraffer: 1 Standort = 1 Nachricht, Verzögerung Median 0,4 s / 95 % < 1,1 s, hochgerechnet ≈ 4 % der Gratis-Limits für 4 h | `tests/last` |
 | Barrierefreiheit | axe-core: alle Screens in allen Varianten in dunkel/hell/Sonne, WCAG 2.1 AA + Empfehlungen | `tests/barrierefreiheit` |
+| Benachrichtigung Web-App | Push-Nachricht wie vom Server an den echten Service Worker der App: App zu → Benachrichtigung, App offen → keine doppelte | `tests/e2e-benachrichtigung` |
+| Android-Gerät (Emulator) | Test-APK in Android 14 gegen den Spiel-Server: Standort bei offener App, App im Hintergrund + Spielstart, **Bildschirm aus** 150 s gehen, Durchsage als **Android-Benachrichtigung** – Ergebnis unten | `tests/android-geraet.mjs` |
 | Visuell | Screenshots aller Screens in drei Darstellungen, Handy und Laptop | `docs/screens/` |
 | Performance | Lighthouse mobil (gedrosseltes Mobilfunknetz): Startseite **94–96 / 100 / 100** (Performance / Barrierefreiheit / Best Practices), Beitritt 95 / 100 / 96*, Hilfe 95 / 100 / 100; erste Anzeige ≈ 2,1–2,3 s | – |
 
 \* Abzug nur, weil beim Messen ohne Spiel-Server eine Anfrage fehlschlägt.
 
+**Gerätetest Android-App** (Emulator Android 14, [Lauf vom 28.10.2026](https://github.com/peter-mayrhofer/Mr.-X/actions/runs/40639307548), Stand `f58a36e`):
+
+| Prüfung | Ergebnis |
+|---|---|
+| Standort bei offener App (Warteraum) | ✔ am Server |
+| Dauer-Benachrichtigung „Mister X läuft“ (Vordergrund-Dienst) | ✔ |
+| App im Hintergrund, Spielstart währenddessen: Standorte | ✔ 3 in 90 s, 415 m |
+| Vordergrund-Dienst läuft nach dem Spielstart weiter | ✔ |
+| **Bildschirm aus**: Standorte | ✔ 5 in 150 s, 722 m, Bildschirm blieb aus |
+| Standorte im Hintergrund per nativem HTTP | ✔ 8 Anfragen |
+| **Durchsage als Android-Benachrichtigung bei ausgeschaltetem Bildschirm** | ✔ angezeigt |
+| Android-System ohne Neustart | ✔ |
+
+Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47](ENTSCHEIDUNGEN.md)).
+
 ## 3. Definition of Done
 
 | Anforderung (PROMPT-NEUBAU §13) | Stand |
 |---|---|
-| Komplettes Spiel mit Web (iPhone/Android-Browser) **und** Android-APK gemischt | Web: ✔ automatisch getestet (ganzes Spiel). APK: gebaut in CI, dieselbe App; **Nachweis am echten Handy im Feldtest** (P2, P9–P15) |
+| Komplettes Spiel mit Web (iPhone/Android-Browser) **und** Android-APK gemischt | ✔ Web: ganzes Spiel automatisch getestet. APK: im Emulator mit einem zweiten Team am selben Spiel (Beitritt, Spielstart, Standorte, Durchsage) – dieselbe App wie im Browser. Am echten Handy: Feldtest P2, P9–P15 |
 | Meldungen, Spielende, Wartezeiten zuverlässig am Server, auch ohne Admin-Gerät | ✔ Server-Alarme, getestet (u. a. Ruhezustand, Neustart, Spielleitung offline) |
-| Android sendet den Standort auch bei gesperrtem Bildschirm | gebaut (Vordergrund-Dienst + natives HTTP); **Nachweis im Feldtest-Protokoll** (P10) |
-| Push kommt auf Android-App und installierter PWA an | gebaut und am Server getestet (Verschlüsselung nach RFC, Empfänger, kein Doppel); **Zustellung auf echten Geräten im Feldtest** (P11, P12) |
+| Android sendet den Standort auch bei gesperrtem Bildschirm | ✔ **im Test nachgewiesen**: Gerätetest im Android-Emulator, 5 Standorte in 150 s bei ausgeschaltetem Bildschirm, Handy schon vor dem Spielstart weggesteckt ([Lauf](https://github.com/peter-mayrhofer/Mr.-X/actions/runs/40639307548)). Hersteller-Akkusparen (Samsung, Xiaomi, Huawei) zeigt erst der Feldtest P10 |
+| Push kommt auf Android-App und installierter PWA an | ✔ **im Test nachgewiesen**: Android-App zeigt die Durchsage bei ausgeschaltetem Bildschirm als Benachrichtigung ([Lauf](https://github.com/peter-mayrhofer/Mr.-X/actions/runs/40639307548)); Web-App: Service Worker zeigt die Push-Nachricht, wenn die App zu ist (`tests/e2e-benachrichtigung`); Verschlüsselung gegen den RFC-Testvektor, Empfänger und kein Doppel am Server getestet. Zustellung über die echten Push-Dienste von Google/Apple: Feldtest P11, P12 |
 | Rollenrechte automatisch getestet, niemand Unbefugter sieht Live-Positionen | ✔ `tests/rechte` + Lasttest prüft es unter Last |
 | Alle Screens im abgestimmten Design (hell/dunkel/Sonne), Handy **und** Laptop | ✔ Screenshots, Barrierefreiheits-Test |
-| CI grün (Lint, Typecheck, Unit, Server, E2E), APK automatisch gebaut | ✔ (Server-Tests statt Firebase-Rules, siehe E-36) |
+| CI grün (Lint, Typecheck, Unit, Server, E2E), APK automatisch gebaut | ✔ inkl. Gerätetest im Emulator (Server-Tests statt Firebase-Rules, siehe E-36) |
 | Doku vollständig, Organisator kann ohne Programmierkenntnisse deployen, vorbereiten, durchführen | ✔ BETRIEB, ADMIN-HANDBUCH, TEAM-ANLEITUNG, Flyer, Checkliste |
 | Laufende Kosten ≈ 0 € | ✔ Cloudflare-Gratis-Tarif **ohne Zahlungsart** – eine Abrechnung ist gar nicht möglich, daher braucht es keinen Budget-Alarm; ein Spiel braucht ≈ 4 % (schlimmster Fall ≈ 20 %) der Tageslimits ([Rechnung und Messung](CLOUDFLARE-LIMITS.md)) |
 
@@ -62,11 +80,11 @@ Build) – der letzte Lauf war grün. Lokal zuletzt: **84 Unit-Tests** und **192
 
 **Braucht echte Geräte (Feldtest):**
 
-1. **Die Android-App wurde noch nicht auf einem echten Handy getestet** – in der Entwicklungsumgebung gibt es kein
-   Android-Gerät. Gebaut wird sie bei jedem Push; der Feldtest prüft Installation, Standort mit gesperrtem Bildschirm
-   und Benachrichtigungen. Manche Hersteller (Samsung, Xiaomi, Huawei) brauchen zusätzliche Akku-Einstellungen.
-2. **Push-Zustellung** an echte Push-Dienste (Google, Apple, Mozilla) ist nur im Feldtest prüfbar; die Verschlüsselung
-   ist gegen den offiziellen Testvektor geprüft.
+1. **Die Android-App lief bisher nur im Emulator** (Android 14, automatisch bei jeder Änderung) – Standort bei
+   gesperrtem Bildschirm und Benachrichtigungen sind dort nachgewiesen. Auf echten Handys prüft der Feldtest
+   Installation und Akku-Sparfunktionen mancher Hersteller (Samsung, Xiaomi, Huawei), die es im Emulator nicht gibt.
+2. **Push-Zustellung** über die echten Push-Dienste (Google, Apple, Mozilla) ist nur im Feldtest prüfbar; die
+   Verschlüsselung ist gegen den offiziellen Testvektor geprüft, die Anzeige im Service Worker automatisch getestet.
 3. **iPhone:** Benachrichtigungen nur als Web-App vom Home-Bildschirm (ab iOS 16.4); Standort nur bei offener App und
    eingeschaltetem Bildschirm (Grenze von iOS für Web-Apps – die App hält den Bildschirm wach).
 4. **Karte flüssig auf älteren Android-Handys (≥ 50 fps):** nur am echten Gerät messbar (Feldtest P23). Lighthouse kann
