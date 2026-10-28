@@ -221,6 +221,11 @@ try {
   // 6. App schließen (kein sichtbares Fenster mehr), Durchsage → Server → Google → Chrome → Service Worker der App
   await page.goto("about:blank");
   await sleep(2000);
+  // hat Chrome das Abo inzwischen verworfen? (Google antwortet dann 410) – direkt beim Service Worker nachsehen
+  const jetzt = await Promise.all(
+    chrome.serviceWorkers().map((w) => w.evaluate(async () => (await self.registration.pushManager.getSubscription())?.endpoint ?? "")),
+  );
+  ok = check("Abo vor der Durchsage noch dasselbe", jetzt.includes(endpoint), jetzt.map((e) => e.slice(-12) || "keins").join(", ")) && ok;
   const t1 = Date.now();
   await call(admin.token, { action: "announce", gameId: G, text: TEXT_CHROME });
   // nachsehen, ohne ein App-Fenster zu öffnen (dann würde der Service Worker die Benachrichtigung auslassen)
