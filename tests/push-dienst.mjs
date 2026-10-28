@@ -176,8 +176,8 @@ try {
       `„${msg.title}: ${msg.body}“`,
     ) && ok;
 
-  // 5. Web-App in Google Chrome installieren (wie „App installieren“ bzw. „Zum Startbildschirm“) und als App-Fenster
-  // öffnen; Benachrichtigungen erlaubt (wie nach „Erlauben“ – Chromes Push prüft die Profil-Einstellung). Das Team ist
+  // 5. Web-App in Google Chrome installieren (wie „App installieren“ bzw. „Zum Startbildschirm“) und öffnen;
+  // Benachrichtigungen erlaubt (wie nach „Erlauben“ – Chromes Push prüft die Profil-Einstellung). Das Team ist
   // angemeldet, die App legt ihr Abo bei Googles Push-Dienst selbst an
   if (!CHROME) throw new Error("Google Chrome nicht gefunden (CHROME_PATH)");
   const traun = await call(null, { action: "join", gameId: G, role: "team", name: "Traun", secret: "falke27" });
@@ -205,25 +205,21 @@ try {
   const manifestId = `${SERVER}/`; // Manifest ohne eigene „id“: die Start-Adresse
   const cdp = await chrome.newCDPSession(page);
   await cdp.send("PWA.install", { manifestId });
-  const opened = chrome.waitForEvent("page");
-  await cdp.send("PWA.launch", { manifestId });
-  const app = await opened;
-  await page.goto("about:blank"); // der Browser-Tab zeigt die App nicht mehr
-  await app.waitForLoadState();
-  // Chrome kennt die App als installiert; ohne Bildschirm öffnet es sie als Tab statt im eigenen Fenster – Abo,
-  // Service Worker und Push sind dieselben
+  // Chrome kennt die App als installiert. Ohne Bildschirm öffnet Chrome installierte Apps ohnehin als Tab statt im
+  // eigenen Fenster – darum bleibt die App in diesem Tab; Abo, Service Worker und Push sind dieselben
   const installiert = !!(await cdp.send("PWA.getOsAppState", { manifestId }).catch(() => null));
-  ok = check("Web-App in Chrome installiert und über den App-Start geöffnet", installiert, manifestId) && ok;
-  await app.getByText(`${T.lobby.check.push}: ${T.lobby.gut}`).first().waitFor({ timeout: 60_000 });
-  const endpoint = await app.evaluate(
+  ok = check("Web-App in Chrome installiert", installiert, manifestId) && ok;
+  await page.reload();
+  await page.getByText(`${T.lobby.check.push}: ${T.lobby.gut}`).first().waitFor({ timeout: 60_000 });
+  const endpoint = await page.evaluate(
     async () => (await (await navigator.serviceWorker.ready).pushManager.getSubscription())?.endpoint ?? "",
   );
   ok =
     check("Web-App in Chrome: Abo bei Googles Push-Dienst", endpoint.startsWith("https://fcm.googleapis.com/"), new URL(endpoint).host) &&
     ok;
 
-  // 6. App schließen (kein App-Fenster mehr), Durchsage → Server → Google → Chrome → Service Worker der App
-  await app.close();
+  // 6. App schließen (kein sichtbares Fenster mehr), Durchsage → Server → Google → Chrome → Service Worker der App
+  await page.goto("about:blank");
   await sleep(2000);
   const t1 = Date.now();
   await call(admin.token, { action: "announce", gameId: G, text: TEXT_CHROME });

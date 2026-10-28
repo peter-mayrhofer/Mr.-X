@@ -18,7 +18,9 @@ let admin: Page;
 let schiri: Page;
 const phones: Record<string, { ctx: BrowserContext; page: Page; id: string }> = {};
 
-const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
+// nur sichtbare Treffer: Namen an den Kartenmarkern blendet die Karte unter Zoom 15,5 aus
+const visible = (page: Page, text: string) =>
+  page.getByText(text, { exact: false }).filter({ visible: true }).first().waitFor({ timeout: 15_000 });
 const confirm = (page: Page, label: string = T.allgemein.bestaetigen) =>
   page.getByRole("dialog").getByRole("button", { name: label, exact: true }).click();
 const nav = (label: string) => admin.getByRole("link", { name: label }).click();
