@@ -96,7 +96,10 @@ export function stopGame(room: GameRoom, _d: D, a: Auth): ApiResults["stopGame"]
   return {};
 }
 
-const RANGE: Record<Exclude<keyof Config, "spectators" | "rulesText" | "refereeHunters">, [number, number, string]> = {
+const RANGE: Record<
+  Exclude<keyof Config, "spectators" | "rulesText" | "refereeHunters" | "announceTemplates" | "trial">,
+  [number, number, string]
+> = {
   intervalMin: [1, 60, "Meldeintervall"],
   headStartMin: [0, 60, "Vorsprung"],
   waitMin: [0, 30, "Wartezeit"],
@@ -120,6 +123,24 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
       const text = v.trim();
       if (text) next.rulesText = text;
       else delete next.rulesText;
+      continue;
+    }
+    if (k === "announceTemplates") {
+      if (!Array.isArray(v) || v.length > LIMITS.announceTemplates)
+        fail("invalid", `Höchstens ${LIMITS.announceTemplates} Durchsage-Vorlagen`);
+      const list = [...new Set(v.map((x) => (typeof x === "string" ? x.trim() : "")))];
+      if (list.some((x) => !x || x.length > LIMITS.announceTemplate))
+        fail("invalid", `Durchsage-Vorlage: 1–${LIMITS.announceTemplate} Zeichen`);
+      if (list.length) next.announceTemplates = list;
+      else delete next.announceTemplates;
+      continue;
+    }
+    if (k === "trial") {
+      if (typeof v !== "boolean") fail("invalid", "Probelauf: ja oder nein");
+      if (v !== !!cur.trial && room.d.state.phase !== "vorbereitung")
+        fail("wrongPhase", "Probelauf nur vor dem Start ein- oder ausschalten");
+      if (v) next.trial = true;
+      else delete next.trial;
       continue;
     }
     if (k === "refereeHunters") {
@@ -182,9 +203,13 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
       .map((k) =>
         k === "rulesText"
           ? "Regeltext"
-          : k === "refereeHunters"
-            ? `Schiris sehen Jäger: ${next.refereeHunters === false ? "aus" : "an"}`
-            : `${k}: ${String(cur[k])} → ${String(next[k])}`,
+          : k === "announceTemplates"
+            ? "Durchsage-Vorlagen"
+            : k === "trial"
+              ? `Probelauf: ${next.trial ? "an" : "aus"}`
+              : k === "refereeHunters"
+                ? `Schiris sehen Jäger: ${next.refereeHunters === false ? "aus" : "an"}`
+                : `${k}: ${String(cur[k])} → ${String(next[k])}`,
       )
       .join(", "),
   );

@@ -1,6 +1,8 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
-  import { Archive, Footprints, LogOut, Medal, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
+  import { Archive, Compass, Footprints, LogOut, MapPinCheck, Medal, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
+  import Banner from "../ui/Banner.svelte";
+  import Pill from "../ui/Pill.svelte";
   import type { Results, Team } from "@mrx/shared";
   import Confetti from "../ui/Confetti.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
@@ -19,8 +21,12 @@
     done?: { label: string; onclick: () => void };
     /** Teams/Schiris: nach dem Spiel abmelden – sonst kommt man nicht mehr zur Startseite */
     onleave?: () => void;
+    /** Probelauf: kommt nicht ins Archiv */
+    trial?: boolean;
+    /** Sammelruf nach dem Spiel (Teams): Weg zeigen, „Wir sind da“ */
+    gather?: { name: string; arrived: boolean; onarrived: () => void; oncompass: () => void };
   }
-  let { results: R, teams, onarchive, onscreen, done, onleave }: Props = $props();
+  let { results: R, teams, onarchive, onscreen, done, onleave, trial = false, gather }: Props = $props();
 
   const team = (id: string | null | undefined): Team => (id && teams[id]) || { name: "–", short: "?", color: "#888" };
   const winner = $derived(team(R.winner));
@@ -42,8 +48,22 @@
 <main class="end">
   <header><Logo height={44} /></header>
 
+  {#if gather}
+    <Banner tone="ann" icon={MapPinCheck} title={T.sammelruf.titel(gather.name)} live>
+      <div class="gather">
+        <Button size="m" variant="secondary" icon={Compass} onclick={gather.oncompass}>{T.sammelruf.kompass}</Button>
+        {#if gather.arrived}
+          <span class="here">{T.sammelruf.angekommen}</span>
+        {:else}
+          <Button size="m" icon={MapPinCheck} onclick={gather.onarrived}>{T.sammelruf.daKnopf}</Button>
+        {/if}
+      </div>
+    </Banner>
+  {/if}
+
   <section class="hero">
     <p class="caps kicker">{T.ende.titel}</p>
+    {#if trial}<Pill tone="info">{T.ende.probelauf}</Pill>{/if}
     <div class="badge"><TeamBadge short={winner.short} color={winner.color} mrx size={128} /></div>
     <p class="caps">{T.ende.sieger}</p>
     <h1 class="display">{winner.name}</h1>
@@ -203,5 +223,21 @@
     flex-wrap: wrap;
     gap: var(--sp-3);
     justify-content: center;
+  }
+  .gather {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+  }
+  .here {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 var(--sp-4);
+    border-radius: var(--r-m);
+    background: var(--surface);
+    color: var(--ok-text);
+    font-weight: 700;
   }
 </style>

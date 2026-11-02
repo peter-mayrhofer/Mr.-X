@@ -41,6 +41,18 @@ function distanceToSegmentM(p: Point, a: LngLat, b: LngLat): number {
   return Math.hypot(ax + t * dx, ay + t * dy);
 }
 
+/** Richtung von `a` nach `b` in Grad (0 = Norden, 90 = Osten), für den Kompass */
+export function bearingDeg(a: Point, b: Point): number {
+  const y = Math.sin(rad(b.lng - a.lng)) * Math.cos(rad(b.lat));
+  const x = Math.cos(rad(a.lat)) * Math.sin(rad(b.lat)) - Math.sin(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.cos(rad(b.lng - a.lng));
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+/** In welchem gesperrten Bereich liegt der Punkt? (für die Warnung „Ihr steht im Sperrgebiet“) */
+export function lockedCutAt(p: Point, field: Field, locked: string[]): string | null {
+  return locked.find((id) => field.cuts[id] && inPolygon(p, field.cuts[id].poly)) ?? null;
+}
+
 /** kürzester Abstand zu einer Polygon-Linie in Metern */
 export function distanceToEdgeM(p: Point, poly: Polygon): number {
   let min = Infinity;

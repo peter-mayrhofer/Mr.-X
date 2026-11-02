@@ -39,6 +39,8 @@ export interface Field {
   cuts: Record<string, Cut>;
   /** Essens-Orte für die Auszeichnung „Futter-Profi“ (optional) */
   spots?: Spot[];
+  /** Treffpunkt für den Sammelruf (fehlt = Mitte des Spielfelds) */
+  meet?: MeetPoint;
 }
 
 export interface Config {
@@ -52,6 +54,10 @@ export interface Config {
   spectators: boolean;
   /** Schiris sehen die Standorte der Jäger-Teams live (fehlt = ja). Aus: nur Mister X, andere Schiris und sich selbst. */
   refereeHunters?: boolean;
+  /** eigene Durchsage-Vorlagen der Spielleitung */
+  announceTemplates?: string[];
+  /** Probelauf: kommt nicht ins Archiv */
+  trial?: boolean;
   /** eigene Regeln/Hinweise der Spielleitung für dieses Spiel (Abschnitt 7.11), einfache Formatierung (regeltext.ts) */
   rulesText?: string;
 }
@@ -61,6 +67,33 @@ export interface Team {
   /** zwei Buchstaben für Marker */
   short: string;
   color: string;
+  /** wie viele Personen im Team (beim Beitritt angegeben, änderbar) */
+  size?: number;
+}
+
+/** Treffpunkt für den Sammelruf (im Spielfeld-Editor gesetzt) */
+export interface MeetPoint {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** Sammelruf der Spielleitung: alle zum Treffpunkt; `arrived` = Team-Id → angekommen um */
+export interface Gather extends MeetPoint {
+  at: number;
+  arrived?: Record<string, number>;
+}
+
+/** Notfall eines Teams (nur Spielleitung, Schiris und das Team selbst sehen ihn) */
+export interface Alert {
+  teamId: string;
+  /** Gerät, das ihn ausgelöst hat */
+  uid: string;
+  t: number;
+  lat?: number;
+  lng?: number;
+  acc?: number;
+  done?: { t: number; by: string; fehlalarm?: boolean };
 }
 
 export interface Position extends Point {
@@ -137,6 +170,10 @@ export interface GameState {
   warnCuts?: Record<string, number>;
   /** letzte Übergabe (nur sie kann rückgängig gemacht werden) */
   lastHandover?: string;
+  /** Endphase angekündigt um (Beginn des Spielende-Fensters) */
+  endPhase?: number;
+  /** laufender Sammelruf */
+  gather?: Gather;
   /** Archiv-Eintrag des beendeten Laufs */
   run?: string;
   /** zählt jede Änderung hoch – Aktionen prüfen damit, ob der Zustand noch stimmt */

@@ -2,8 +2,8 @@
 import type { Member, PushSub } from "./api.ts";
 import type { Role } from "./types.ts";
 
-export type PushKind = "meldung" | "uebergabe" | "wartezeit" | "durchsage" | "spielfeld" | "nachricht" | "spiel";
-export const PUSH_KINDS: PushKind[] = ["meldung", "uebergabe", "wartezeit", "durchsage", "spielfeld", "nachricht", "spiel"];
+export type PushKind = "meldung" | "uebergabe" | "wartezeit" | "durchsage" | "spielfeld" | "nachricht" | "spiel" | "notfall";
+export const PUSH_KINDS: PushKind[] = ["meldung", "uebergabe", "wartezeit", "durchsage", "spielfeld", "nachricht", "spiel", "notfall"];
 
 /** Push-Einstellung eines Geräts (Aktion pushSubscribe): Web-Push-Abo (fehlt in der Android-App) + gewünschte Arten */
 export interface PushReg {
@@ -19,7 +19,8 @@ export type PushTarget = { all: true; except?: string[] } | { teams: string[] } 
 export function pushTargets(members: Record<string, Member>, regs: Record<string, PushReg>, target: PushTarget, kind: PushKind): string[] {
   return Object.entries(members)
     .filter(([uid, m]) => {
-      if (regs[uid]?.prefs?.[kind] === false) return false; // abgeschaltet
+      // Notfälle lassen sich nicht abschalten
+      if (kind !== "notfall" && regs[uid]?.prefs?.[kind] === false) return false; // abgeschaltet
       if (m.role === "screen") return false; // Großbild zeigt alles selbst an
       if ("teams" in target) return !!m.teamId && target.teams.includes(m.teamId);
       if ("roles" in target) return target.roles.includes(m.role);
@@ -44,4 +45,7 @@ export const PUSH_TITLE = {
   fortsetzung: "Weiter geht's!",
   rueckgaengig: "Übergabe rückgängig",
   ende: "Spielende!",
+  endphase: "Endphase!",
+  sammelruf: "Sammelruf",
+  notfall: "NOTFALL",
 } as const;

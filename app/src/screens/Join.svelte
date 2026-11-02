@@ -6,6 +6,7 @@
   import Button from "../ui/Button.svelte";
   import TextField from "../ui/TextField.svelte";
   import Banner from "../ui/Banner.svelte";
+  import Stepper from "../ui/Stepper.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
@@ -19,7 +20,7 @@
     /** Prototyp: Zustand gleich anzeigen */
     initialError?: string;
     initialExisting?: string;
-    onsubmit: (v: { code: string; name: string; password: string; secondDevice: boolean }) => Promise<JoinResult>;
+    onsubmit: (v: { code: string; name: string; password: string; secondDevice: boolean; size: number }) => Promise<JoinResult>;
     onjoined: () => void;
     onback: () => void;
   }
@@ -42,6 +43,7 @@
   // svelte-ignore state_referenced_locally
   let pw = $state(pw0);
   let loading = $state(false);
+  let size = $state(6);
   // svelte-ignore state_referenced_locally
   let error = $state<string | undefined>(initialError);
   // svelte-ignore state_referenced_locally
@@ -51,7 +53,7 @@
     loading = true;
     error = undefined;
     try {
-      const r = await onsubmit({ code: code.trim().toLowerCase(), name: name.trim(), password: pw, secondDevice });
+      const r = await onsubmit({ code: code.trim().toLowerCase(), name: name.trim(), password: pw, secondDevice, size });
       if (r.status === "teamExists") existing = r.teamName;
       else onjoined();
     } catch (e) {
@@ -88,6 +90,7 @@
     {/if}
 
     <TextField label={T.beitritt.teamname} hint={T.beitritt.teamnameHinweis} bind:value={name} maxlength={30} autocomplete="organization" />
+    <Stepper label={T.beitritt.groesse} hint={T.beitritt.groesseHinweis} bind:value={size} unit="" min={1} max={99} />
     <TextField label={T.beitritt.passwort} hint={T.beitritt.passwortHinweis} type="password" bind:value={pw} {error} autocomplete="off" />
 
     {#if existing}

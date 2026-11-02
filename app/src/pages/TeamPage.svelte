@@ -10,11 +10,12 @@
   import Onboarding from "../screens/Onboarding.svelte";
   import Results from "../screens/Results.svelte";
   import ChatView from "../screens/parts/ChatView.svelte";
+  import CompassView from "../screens/parts/CompassView.svelte";
   import AppBar from "../ui/AppBar.svelte";
   import { GameData, sendMessage, type Msg } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
   import { remote } from "../lib/remote.svelte.ts";
-  import { call } from "../lib/api.ts";
+  import { ApiError, call } from "../lib/api.ts";
   import { prefs } from "../lib/prefs.svelte.ts";
   import { PushState } from "../lib/push.svelte.ts";
   import { battery, NATIVE } from "../lib/native.ts";
@@ -40,7 +41,8 @@
   $effect(() => push.watch(g, uid));
 
   const phase = $derived(game.state?.phase);
-  let tab = $state<"karte" | "chat" | "regeln" | "mehr">("karte");
+  let tab = $state<"karte" | "kompass" | "chat" | "regeln" | "mehr">("karte");
+  let compassOpen = $state(false);
   let scene = $state<Scene | null>(null);
   let announcement = $state<Msg | null>(null);
   let shrinking = $state<string | null>(null);
@@ -51,8 +53,10 @@
   // Nur am Spielende neu auswerten, nicht bei jedem Phasenwechsel: Ein Neustart beim Spielbeginn bei gesperrtem
   // Handy hieße, den Vordergrund-Dienst aus dem Hintergrund neu zu starten – das verbietet Android ab Version 12.
   const ended = $derived(phase === "beendet");
+  // Sammelruf nach dem Ende: GPS nur fürs eigene Handy (Kompass zum Treffpunkt) – gesendet wird nichts mehr
+  const gatherOn = $derived(!!game.state?.gather);
   $effect(() => {
-    if (!prefs.onboarded || ended) return;
+    if (!prefs.onboarded || (ended && !gatherOn)) return;
     startGps(prefs.background);
     return () => stopGps();
   });
@@ -136,6 +140,13 @@
     if (n > warnCount) signal("verkleinerung");
     warnCount = n;
   });
+  // Sammelruf: Ton + Vibration, wenn er kommt
+  let gatherAt = 0;
+  $effect(() => {
+    const at = game.state?.gather?.at ?? 0;
+    if (at && at !== gatherAt && opened && at > opened) signal("durchsage");
+    gatherAt = at;
+  });
   let wasPhase: string | undefined;
   $effect(() => {
     if (phase === "beendet" && wasPhase && wasPhase !== "beendet") signal("ende");
@@ -173,9 +184,23 @@
           online: game.online,
           lastDataAt: game.lastDataAt,
           distM: game.stats[teamId]?.distM ?? 0,
+          alerts: game.alerts,
         }
       : null,
   );
+
+  async function act(fn: () => Promise<unknown>, okText?: string) {
+    try {
+      await fn();
+      if (okText) toast(okText, "ok");
+    } catch (e) {
+      toast(e instanceof ApiError && e.reason === "invalid" ? e.message : T.apiFehler.network, "warn");
+    }
+  }
+  const sos = () => act(() => call({ action: "sos", gameId: g, ...(gps.pos ? { pos: gps.pos } : {}) }));
+  const sosCancel = (id: string) => act(() => call({ action: "sosDone", gameId: g, id }), T.notfall.zurueckgenommen);
+  const arrived = () => act(() => call({ action: "arrived", gameId: g, teamId, on: true }), T.sammelruf.angekommenOk);
+  const setSize = (size: number) => act(() => call({ action: "setTeamSize", gameId: g, teamId, size }), T.mehr.groesseOk);
 
   const archive = remote(
     () => (phase === "beendet" && game.state?.run ? game.state.run : null),
@@ -245,9 +270,35 @@
     onarchive={() => go("/archiv")}
     done={{ label: T.tabs.chat, onclick: () => (chatOnly = true) }}
     onleave={logout}
+    trial={!!game.config?.trial}
+    gather={game.state?.gather
+      ? { ...game.state.gather, arrived: !!game.state.gather.arrived?.[teamId], onarrived: arrived, oncompass: () => (compassOpen = true) }
+      : undefined}
   />
+  {#if compassOpen && game.state?.gather}
+    <CompassView
+      target={game.state.gather}
+      title={T.kompass.zumTreffpunkt(game.state.gather.name)}
+      me={gps.pos}
+      empty={T.kompass.keinZiel}
+      onclose={() => (compassOpen = false)}
+    />
+  {/if}
 {:else}
-  <TeamHome {view} bind:tab bind:scene {announcement} {shrinking} {push} onsend={send} onlogout={logout} />
+  <TeamHome
+    {view}
+    bind:tab
+    bind:scene
+    {announcement}
+    {shrinking}
+    {push}
+    onsend={send}
+    onlogout={logout}
+    onsos={sos}
+    onsoscancel={sosCancel}
+    onarrived={arrived}
+    onsize={setSize}
+  />
 {/if}
 
 <style>

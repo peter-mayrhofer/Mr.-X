@@ -1,7 +1,8 @@
 <!-- Screen 13: Live-Übersicht der Spielleitung – Karte mit allen Teams, Warnungen, Schnellaktionen. -->
 <script lang="ts">
   import { Flag, Hourglass, MapPin, Megaphone, Pause, Play, TriangleAlert } from "@lucide/svelte";
-  import { distanceToBoundaryM, zoneStatus, type ApiReason } from "@mrx/shared";
+  import { type ApiReason } from "@mrx/shared";
+  import { warnungen } from "../../lib/warnungen.ts";
   import GameMap, { type MapPin as Pin } from "../../map/GameMap.svelte";
   import MapControls from "../parts/MapControls.svelte";
   import HandoverFlow from "../parts/HandoverFlow.svelte";
@@ -37,10 +38,15 @@
   const locked = $derived(Object.keys(st.cuts ?? {}));
   const running = $derived(st.phase === "laeuft" || st.phase === "pause");
   const offline = $derived(teamIds.filter((id) => isOffline(view.positions[id], clock.now)));
-  const mrxZone = $derived(mrxPos ? zoneStatus(mrxPos, view.field, locked) : "drinnen");
+  const warnList = $derived(warnungen(view, clock.now));
+  // Durchsage-Vorlagen: feste Vorschläge (aus dem echten Spiel) + eigene der Spielleitung
+  const custom = $derived(view.config.announceTemplates ?? []);
+  const vorlagen = $derived([...custom, ...T.admin.durchsageVorschlaege.filter((x) => !custom.includes(x))]);
+  async function saveTemplates(list: string[], okText: string) {
+    await run(() => api({ action: "setConfig", gameId: g, config: { announceTemplates: list } }), okText);
+  }
   const waiting = $derived(Object.entries(view.locks).filter(([, l]) => l.until > clock.now));
   const trail = $derived(trailOf(view));
-  const minSince = (t: number) => Math.floor((clock.now - t) / 60_000);
 
   const pins = $derived<Pin[]>([
     ...teamIds.flatMap((id) => {
@@ -136,23 +142,10 @@
 
       <Card label={T.admin.warnungen} icon={TriangleAlert}>
         <div class="stack">
-          {#if st.mrx && !mrxPos}
-            <Banner tone="danger">{T.admin.mrxOhneStandort(0)}</Banner>
-          {:else if st.mrx && isOffline(mrxPos, clock.now)}
-            <Banner tone="danger">{T.admin.mrxOhneStandort(minSince(mrxPos!.t))}</Banner>
-          {/if}
-          {#if mrxPos && mrxZone === "draussen"}
-            <Banner tone="danger">{T.admin.mrxDraussen}</Banner>
-          {:else if mrxPos && mrxZone === "grenze"}
-            <Banner tone="warn">{T.admin.mrxGrenze(Math.round(distanceToBoundaryM(mrxPos, view.field, locked)))}</Banner>
-          {/if}
-          {#each offline.filter((id) => id !== st.mrx) as id (id)}
-            {@const p = view.positions[id]}
-            <Banner tone="warn"
-              >{p ? T.admin.teamOhneStandort(team(id).name, minSince(p.t)) : T.admin.teamNieStandort(team(id).name)}</Banner
-            >
+          {#each warnList as w (w.key)}
+            <Banner tone={w.tone}>{w.text}</Banner>
           {:else}
-            {#if !(st.mrx && isOffline(mrxPos, clock.now)) && mrxZone === "drinnen"}<p class="muted">{T.admin.allesOk}</p>{/if}
+            <p class="muted">{T.admin.allesOk}</p>
           {/each}
         </div>
       </Card>
@@ -179,9 +172,37 @@
           if (text) void run(() => api({ action: "announce", gameId: g, text }), T.admin.durchsageGesendet).then(() => (ann = ""));
         }}
       >
+        <div class="chips" role="group" aria-label={T.admin.vorlagenDurchsage}>
+          {#each vorlagen as v (v)}
+            <span class="chip" class:own={custom.includes(v)}>
+              <button type="button" class="use" onclick={() => (ann = v)} title={v}>{v}</button>
+              {#if custom.includes(v)}
+                <button
+                  type="button"
+                  class="del"
+                  aria-label="{T.admin.vorlageLoeschen}: {v}"
+                  onclick={() =>
+                    saveTemplates(
+                      custom.filter((x) => x !== v),
+                      T.admin.vorlageGeloescht,
+                    )}>×</button
+                >
+              {/if}
+            </span>
+          {/each}
+        </div>
         <label class="sr-only" for="ann">{T.admin.durchsage}</label>
         <textarea id="ann" bind:value={ann} maxlength={300} rows={2} placeholder={T.admin.durchsagePlatzhalter}></textarea>
-        <Button size="m" icon={Megaphone} disabled={!ann.trim() || busy} type="submit">{T.admin.durchsage}</Button>
+        <div class="annrow">
+          <Button size="m" icon={Megaphone} disabled={!ann.trim() || busy} type="submit">{T.admin.durchsage}</Button>
+          <Button
+            size="m"
+            variant="ghost"
+            type="button"
+            disabled={!ann.trim() || busy || vorlagen.includes(ann.trim()) || custom.length >= 20}
+            onclick={() => saveTemplates([...custom, ann.trim()], T.admin.vorlageGemerkt)}>{T.admin.alsVorlage}</Button
+          >
+        </div>
       </form>
     </Card>
 
@@ -308,5 +329,49 @@
     display: grid;
     gap: var(--sp-2);
     justify-items: start;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+    border-radius: var(--r-pill);
+    border: var(--border-w) solid var(--line);
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .chip.own {
+    border-color: var(--accent);
+  }
+  .chip button {
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--fs-s);
+    cursor: pointer;
+    min-height: 36px;
+  }
+  .chip .use {
+    padding: 4px var(--sp-3);
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+  .chip .del {
+    padding: 0 var(--sp-3) 0 var(--sp-1);
+    color: var(--text-2);
+    font-weight: 700;
+  }
+  .annrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
   }
 </style>

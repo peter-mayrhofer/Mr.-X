@@ -110,6 +110,7 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
     else {
       teamId = randomId(9);
       const list = Object.values(room.d.teams);
+      const size = d.size;
       room.put("teams", teamId, {
         name,
         short: teamShort(
@@ -117,6 +118,8 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
           list.map((t) => t.short),
         ),
         color: teamColor(list.map((t) => t.color)),
+        // Teamgröße ist freiwillig – ungültige Angaben einfach weglassen
+        ...(typeof size === "number" && Number.isInteger(size) && size >= LIMITS.teamSize[0] && size <= LIMITS.teamSize[1] ? { size } : {}),
       });
     }
   }

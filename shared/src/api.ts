@@ -1,5 +1,6 @@
 // Vertrag zwischen App und Spiel-Server (POST /api, docs/API.md). Eine Quelle für beide Seiten.
 import type { ChatMessage, Config, CutEvent, Field, Handover, Pause, Report, Role, Team } from "./types.ts";
+import type { PositionIn } from "./protocol.ts";
 import type { Results } from "./spiel.ts";
 import type { PushKind } from "./push.ts";
 
@@ -21,7 +22,7 @@ export type ApiRequest =
   | { action: "createGame"; gameId: string; name: string; template: Template; adminPassword: string }
   // öffentlich: Name/Phase eines Spiels für Startseite und QR-Link
   | { action: "gameInfo"; gameId: string }
-  | { action: "join"; gameId: string; role: JoinRole; name: string; secret?: string; secondDevice?: boolean }
+  | { action: "join"; gameId: string; role: JoinRole; name: string; secret?: string; secondDevice?: boolean; size?: number }
   | { action: "leave"; gameId: string }
   | { action: "setSecret"; gameId: string; kind: SecretKind; value: string | null }
   | { action: "screenLink"; gameId: string }
@@ -43,6 +44,20 @@ export type ApiRequest =
   | { action: "removeMember"; gameId: string; uid: string }
   | { action: "removeTeam"; gameId: string; teamId: string }
   | { action: "renameTeam"; gameId: string; teamId: string; name: string }
+  // Teamgröße (Team selbst oder Spielleitung) und Team aufteilen (Spielleitung): `uids` = Geräte, die ins neue Team wechseln
+  | { action: "setTeamSize"; gameId: string; teamId: string; size: number }
+  | { action: "splitTeam"; gameId: string; teamId: string; name: string; uids: string[]; size?: number }
+  // Notfall: Team meldet (mit eigenem Standort, wenn vorhanden); erledigt/Fehlalarm durch Spielleitung, Schiri oder das Team
+  | { action: "sos"; gameId: string; pos?: PositionIn }
+  | { action: "sosDone"; gameId: string; id: string }
+  // Sammelruf: Spielleitung startet/beendet; Ankunft meldet das Team selbst oder die Spielleitung (auch zurücknehmen)
+  | { action: "gather"; gameId: string; on: boolean }
+  | { action: "arrived"; gameId: string; teamId: string; on: boolean }
+  // Vorlagen (Regeln, Spielfeld, Durchsagen) für alle Spiele des Organisators
+  | { action: "templateList"; gameId: string }
+  | { action: "templateSave"; gameId: string; name: string }
+  | { action: "templateLoad"; gameId: string; id: string }
+  | { action: "templateDelete"; gameId: string; id: string }
   // Chat (Abschnitt 7.5): Gruppenchat bzw. Direktkanal `dm` (Team-Id); Moderation durch die Spielleitung
   | { action: "chat"; gameId: string; text: string; dm?: string }
   | { action: "deleteChat"; gameId: string; id: string; dm?: string }
@@ -79,6 +94,12 @@ export interface GameListEntry {
   archived: boolean;
   phase: GameInfo["phase"];
   teams: number;
+}
+
+export interface TemplateEntry {
+  id: string;
+  name: string;
+  createdAt: number;
 }
 
 export interface ArchiveListEntry {
@@ -137,6 +158,16 @@ export interface ApiResults {
   removeMember: Record<string, never>;
   removeTeam: Record<string, never>;
   renameTeam: Record<string, never>;
+  setTeamSize: Record<string, never>;
+  splitTeam: { teamId: string };
+  sos: { id: string };
+  sosDone: Record<string, never>;
+  gather: Record<string, never>;
+  arrived: Record<string, never>;
+  templateList: { templates: TemplateEntry[] };
+  templateSave: { id: string };
+  templateLoad: Record<string, never>;
+  templateDelete: Record<string, never>;
   setField: Record<string, never>;
   archiveGame: Record<string, never>;
   deleteGame: Record<string, never>;

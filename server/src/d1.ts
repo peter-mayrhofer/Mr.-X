@@ -5,6 +5,8 @@ const SCHEMA = [
      archived INTEGER NOT NULL DEFAULT 0, phase TEXT NOT NULL DEFAULT 'vorbereitung', teams INTEGER NOT NULL DEFAULT 0)`,
   `CREATE TABLE IF NOT EXISTS archive (game TEXT NOT NULL, run TEXT NOT NULL, name TEXT, startedAt INTEGER, endedAt INTEGER NOT NULL,
      winner TEXT, data TEXT NOT NULL, chat TEXT, PRIMARY KEY (game, run))`,
+  // Vorlagen (Regeln + Spielfeld) für alle Spiele des Organisators
+  `CREATE TABLE IF NOT EXISTS templates (id TEXT PRIMARY KEY, name TEXT NOT NULL, createdAt INTEGER NOT NULL, data TEXT NOT NULL)`,
 ];
 
 let ready: Promise<unknown> | null = null;

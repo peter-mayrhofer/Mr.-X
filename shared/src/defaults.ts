@@ -24,4 +24,8 @@ export const LIMITS = {
   adminPw: 8,
   chat: 300,
   rulesText: 2000,
+  teamSize: [1, 99],
+  announceTemplate: 300,
+  announceTemplates: 20,
+  templateName: [2, 60],
 } as const;

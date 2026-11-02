@@ -6,6 +6,7 @@ import {
   teamsToLock,
   type ApiRequest,
   type ApiResults,
+  type Alert,
   type AuditEntry,
   type Config,
   type Device,
@@ -40,6 +41,8 @@ export interface StaffView {
   dm: Record<string, Msg[]>;
   members: Record<string, Member>;
   audit: Keyed<AuditEntry>[];
+  /** Notfälle (Spielleitung, Schiri) */
+  alerts?: Keyed<Alert>[];
   myUid: string;
   myName: string;
   me: Position | null;

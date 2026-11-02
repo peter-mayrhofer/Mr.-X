@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   LINZ_INNENSTADT as F,
   allowedArea,
+  bearingDeg,
   areaM2,
   cutInField,
   distanceM,
   distanceToBoundaryM,
   inField,
+  lockedCutAt,
   selfIntersection,
   zoneStatus,
 } from "../src/index.ts";
@@ -80,5 +82,21 @@ describe("Flächen und Validierung", () => {
         [0, 1],
       ]),
     ).not.toBeNull();
+  });
+});
+
+describe("Kompass: Richtung und Sperrgebiet", () => {
+  const hp = { lat: 48.3059, lng: 14.2862 }; // Hauptplatz
+  it("Richtung in Grad: Norden 0, Osten 90, Süden 180, Westen 270", () => {
+    expect(bearingDeg(hp, { lat: hp.lat + 0.01, lng: hp.lng })).toBeCloseTo(0, 0);
+    expect(bearingDeg(hp, { lat: hp.lat, lng: hp.lng + 0.01 })).toBeCloseTo(90, 0);
+    expect(bearingDeg(hp, { lat: hp.lat - 0.01, lng: hp.lng })).toBeCloseTo(180, 0);
+    expect(bearingDeg(hp, { lat: hp.lat, lng: hp.lng - 0.01 })).toBeCloseTo(270, 0);
+  });
+  it("gesperrter Bereich am Punkt", () => {
+    const north = { lat: 48.31, lng: 14.285 }; // nördlich der Promenade, im Bereich „Norden“
+    expect(lockedCutAt(north, F, ["norden"])).toBe("norden");
+    expect(lockedCutAt(north, F, [])).toBeNull();
+    expect(lockedCutAt(hp, F, ["osten"])).toBeNull();
   });
 });

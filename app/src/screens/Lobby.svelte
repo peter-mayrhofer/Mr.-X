@@ -52,6 +52,7 @@
   <header>
     <Logo height={36} />
     <p class="caps">{gameName}</p>
+    {#if config.trial}<Pill tone="info">{T.status.probelauf}</Pill>{/if}
   </header>
 
   <section class="hero">

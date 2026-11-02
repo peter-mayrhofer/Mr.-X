@@ -1,6 +1,7 @@
 // Live-Daten eines Spiels für die Spiel-Ansichten (Team, Schiri, Spielleitung). Kommen über die eine Live-Verbindung des
 // Geräts (session.svelte.ts); was die Rolle nicht sehen darf, schickt der Server gar nicht erst (Abschnitt 6).
 import type {
+  Alert,
   AuditEntry,
   ChatMessage,
   Config,
@@ -51,6 +52,8 @@ export class GameData {
   staff = $state.raw<Record<string, Position & { name?: string }>>({});
   /** Tracker (Spielleitung, Schiri, Großbild) */
   devices = $state.raw<Record<string, Device>>({});
+  /** Notfälle: Spielleitung/Schiri alle, Team die eigenen */
+  alerts = $state.raw<Keyed<Alert>[]>([]);
   /** nur Spielleitung */
   members = $state.raw<Record<string, Member>>({});
   audit = $state.raw<Keyed<AuditEntry>[]>([]);
@@ -89,6 +92,7 @@ export class GameData {
     if (has("staff")) this.staff = { ...v.staff };
     if (has("devices")) this.devices = { ...v.devices };
     if (has("members")) this.members = { ...v.members };
+    if (has("alerts")) this.alerts = list(v.alerts);
     if (has("audit")) this.audit = list(v.audit);
   }
 }

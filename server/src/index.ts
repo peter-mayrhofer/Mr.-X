@@ -149,7 +149,11 @@ async function test(req: Request, env: Env, path: string): Promise<Response> {
     await ensureSchema(env.DB);
     const games = await env.DB.prepare("SELECT id FROM games").all<{ id: string }>();
     await Promise.all(games.results.map((x) => room(env, x.id).destroy(true)));
-    await env.DB.batch([env.DB.prepare("DELETE FROM games"), env.DB.prepare("DELETE FROM archive")]);
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM games"),
+      env.DB.prepare("DELETE FROM archive"),
+      env.DB.prepare("DELETE FROM templates"),
+    ]);
     await zentrale(env).reset();
     return Response.json({ ok: true });
   }

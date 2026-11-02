@@ -33,8 +33,17 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
     "staff",
     "track",
     "audit",
+    "alerts",
   ] as const)
     room.set(k, {});
+  // Probeläufe dieses Spiels aus dem Archiv löschen
+  room.afterCommit(
+    () =>
+      void room.env.DB.prepare("DELETE FROM archive WHERE game = ?1 AND run LIKE 'probe-%'")
+        .bind(room.d.gid)
+        .run()
+        .catch(() => {}),
+  );
   room.set("purgeAt", null);
   // Tracker bleiben angelegt (Hardware), Zuordnungen zu Teams gibt es nicht mehr; die Fahne bleibt die Fahne
   room.set(

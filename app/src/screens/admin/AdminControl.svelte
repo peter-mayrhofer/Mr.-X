@@ -1,6 +1,25 @@
 <!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
 <script lang="ts">
-  import { BookOpenText, Dices, Eye, OctagonX, Pause, Play, ShieldCheck, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
+  import {
+    BookOpenText,
+    Check,
+    Dices,
+    Eye,
+    LayoutTemplate,
+    MapPinCheck,
+    OctagonX,
+    Pause,
+    Play,
+    Save,
+    ShieldCheck,
+    Shrink,
+    SlidersHorizontal,
+    Timer,
+    Trash,
+    Trophy,
+  } from "@lucide/svelte";
+  import TextField from "../../ui/TextField.svelte";
+  import type { TemplateEntry } from "@mrx/shared";
   import { LIMITS, nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
@@ -11,6 +30,7 @@
   import Pill from "../../ui/Pill.svelte";
   import RichText from "../../ui/RichText.svelte";
   import Modal from "../../ui/Modal.svelte";
+  import IconButton from "../../ui/IconButton.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
@@ -77,6 +97,24 @@
       busy = false;
     }
   }
+
+  // ---- Vorlagen (vor dem Start): Regeln + Spielfeld aus früheren Spielen ----
+  let templates = $state<TemplateEntry[] | null>(null);
+  let tplName = $state("");
+  let loadTpl = $state<TemplateEntry | null>(null);
+  async function loadTemplates() {
+    const r = await run(() => api({ action: "templateList", gameId: g }));
+    if (r) templates = r.templates;
+  }
+  $effect(() => {
+    if (before && templates === null) void loadTemplates();
+  });
+
+  // ---- Sammelruf mit Kopfzählung ----
+  const gather = $derived(st.gather ?? null);
+  const arrivedIds = $derived(Object.keys(gather?.arrived ?? {}));
+  const people = (ids: string[]) => ids.reduce((s, id) => s + (view.teams[id]?.size ?? 0), 0);
+  const ended = $derived(st.phase === "beendet");
 
   // eigene Regeln der Spielleitung (Abschnitt 7.11): Entwurf, bis „Speichern“
   let rulesDraft = $state<string | null>(null);
@@ -145,6 +183,14 @@
           onclick={() => (startMrx = "random")}>{T.admin.auslosen}</Button
         >
       </div>
+      <Switch
+        label={T.admin.probelauf}
+        hint={T.admin.probelaufHinweis}
+        checked={!!view.config.trial}
+        disabled={busy}
+        onchange={(on) =>
+          run(() => api({ action: "setConfig", gameId: g, config: { trial: on } }), on ? T.admin.probelaufAn : T.admin.probelaufAus)}
+      />
       <div class="steppers">
         <Stepper label={T.admin.endeFrueh} bind:value={gEndMin, sEndMin} unit="h" min={0.5} max={val("endMaxH")} step={0.5} />
         <Stepper label={T.admin.endeSpaet} bind:value={gEndMax, sEndMax} unit="h" min={val("endMinH")} max={12} step={0.5} />
@@ -199,6 +245,88 @@
       {#if onstopped}
         <div class="row"><Button variant="secondary" size="m" icon={Trophy} onclick={onstopped}>{T.admin.auswertungZeigen}</Button></div>
       {/if}
+    </Card>
+  {/if}
+
+  {#if running || ended}
+    <Card label={T.admin.sammelruf} icon={MapPinCheck} tone={gather ? "accent" : undefined}>
+      {#if gather}
+        <p class="end">{T.admin.sammelrufLaeuft(gather.name)}</p>
+        <p class="num">
+          <b>{T.admin.angekommenTeams(arrivedIds.length, teamIds.length)}</b>
+          {#if people(teamIds)}· {T.admin.angekommenPersonen(people(arrivedIds), people(teamIds))}{/if}
+        </p>
+        <ul class="arrivals">
+          {#each teamIds as id (id)}
+            {@const t = view.teams[id]!}
+            {@const here = arrivedIds.includes(id)}
+            <li>
+              <TeamBadge short={t.short} color={t.color} size={32} />
+              <span class="tn"
+                >{t.name}{#if t.size}<small class="muted num"> · {t.size}</small>{/if}</span
+              >
+              <button
+                class="tick"
+                class:on={here}
+                aria-pressed={here}
+                aria-label="{t.name}: {here ? T.admin.istDa : T.admin.fehltNoch}"
+                onclick={() => run(() => api({ action: "arrived", gameId: g, teamId: id, on: !here }))}
+                >{#if here}<Check size={18} aria-hidden="true" />{T.admin.istDa}{:else}{T.admin.fehltNoch}{/if}</button
+              >
+            </li>
+          {/each}
+        </ul>
+        <Button variant="secondary" block disabled={busy} onclick={() => run(() => api({ action: "gather", gameId: g, on: false }))}
+          >{T.admin.sammelrufBeenden}</Button
+        >
+      {:else}
+        <p class="muted">{T.admin.sammelrufHinweis(view.field.meet?.name ?? T.admin.spielfeldmitte)}</p>
+        <Button
+          block
+          icon={MapPinCheck}
+          disabled={busy}
+          onclick={() => run(() => api({ action: "gather", gameId: g, on: true }), T.admin.sammelrufGestartet)}
+          >{T.admin.sammelrufStarten}</Button
+        >
+      {/if}
+    </Card>
+  {/if}
+
+  {#if before}
+    <Card label={T.admin.vorlagen} icon={LayoutTemplate}>
+      <p class="muted small">{T.admin.vorlagenHinweis}</p>
+      {#each templates ?? [] as tpl (tpl.id)}
+        <div class="tplrow">
+          <span class="tn">{tpl.name}<small class="muted"> · {new Date(tpl.createdAt).toLocaleDateString("de-AT")}</small></span>
+          <Button size="m" variant="secondary" disabled={busy} onclick={() => (loadTpl = tpl)}>{T.admin.vorlageLaden}</Button>
+          <IconButton
+            icon={Trash}
+            label="{T.admin.vorlageLoeschen}: {tpl.name}"
+            size="m"
+            tone="plain"
+            onclick={async () => {
+              if (await run(() => api({ action: "templateDelete", gameId: g, id: tpl.id }), T.admin.vorlageGeloescht))
+                await loadTemplates();
+            }}
+          />
+        </div>
+      {:else}
+        {#if templates}<p class="muted">{T.admin.keineVorlagen}</p>{/if}
+      {/each}
+      <form
+        class="tplsave"
+        onsubmit={async (e) => {
+          e.preventDefault();
+          const name = tplName.trim();
+          if (await run(() => api({ action: "templateSave", gameId: g, name }), T.admin.vorlageGespeichert)) {
+            tplName = "";
+            await loadTemplates();
+          }
+        }}
+      >
+        <TextField label={T.admin.vorlageName} bind:value={tplName} maxlength={60} />
+        <Button size="m" icon={Save} type="submit" disabled={busy || tplName.trim().length < 2}>{T.admin.vorlageSpeichern}</Button>
+      </form>
     </Card>
   {/if}
 
@@ -353,6 +481,18 @@
     {T.admin.aenderungMeldung}
   </Modal>
 {/if}
+<Modal
+  open={!!loadTpl}
+  title={T.admin.vorlageLadenFrage(loadTpl?.name ?? "")}
+  confirm={T.admin.vorlageLaden}
+  onconfirm={() => {
+    const tpl = loadTpl!;
+    void run(() => api({ action: "templateLoad", gameId: g, id: tpl.id }), T.admin.vorlageGeladen(tpl.name)).then(() => (draft = {}));
+  }}
+  onclose={() => (loadTpl = null)}
+>
+  {T.admin.vorlageLadenText}
+</Modal>
 {#if counting}<StartCountdown
     ondone={() => {
       counting = false;
@@ -504,5 +644,53 @@
     align-items: center;
     gap: var(--sp-2);
     flex-wrap: wrap;
+  }
+  .arrivals {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .arrivals li,
+  .tplrow {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .tn {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tick {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    border: var(--border-w) solid var(--line);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font: inherit;
+    font-size: var(--fs-s);
+    cursor: pointer;
+  }
+  .tick.on {
+    background: var(--ok-soft);
+    border-color: var(--ok);
+    color: var(--ok-text);
+    font-weight: 700;
+  }
+  .tplsave {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .small {
+    font-size: var(--fs-s);
   }
 </style>

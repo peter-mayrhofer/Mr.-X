@@ -37,10 +37,12 @@
     link: (id: Section) => string | null;
     /** Ungelesene Direktnachrichten */
     unread?: number;
+    /** Probelauf: sichtbar markieren */
+    trial?: boolean;
     onlogout?: () => void;
     children: Snippet;
   }
-  let { section, gameName, phase, link, unread = 0, onlogout, children }: Props = $props();
+  let { section, gameName, phase, link, unread = 0, trial = false, onlogout, children }: Props = $props();
   let more = $state(false);
 
   const ALL: { id: Section; label: string; icon: typeof Radar }[] = [
@@ -65,6 +67,7 @@
       <div>
         <strong class="display">{gameName}</strong>
         <Pill tone={TONE[phase]} dot>{T.superadmin.phase[phase]}</Pill>
+        {#if trial}<Pill tone="info">{T.status.probelauf}</Pill>{/if}
       </div>
     </div>
     <nav>

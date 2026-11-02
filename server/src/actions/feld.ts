@@ -1,7 +1,7 @@
 // Spielfeld speichern (Zonen-Editor, Abschnitt 7.8) und Spiele archivieren/löschen (Super-Admin). Spielfeld nur vor dem
 // Start oder nach dem Ende – im laufenden Spiel hängen Sperren und Warnungen daran. Alles wird hier noch einmal geprüft,
 // der Client ist nicht vertrauenswürdig.
-import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type Polygon, type Spot } from "@mrx/shared";
+import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type MeetPoint, type Polygon, type Spot } from "@mrx/shared";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
 
@@ -63,12 +63,20 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
       fail("invalid", "Essens-Ort: Umkreis 15–100 m");
     return { name: str(s.name, [1, 60], "Name des Essens-Orts"), lat, lng, radiusM };
   });
+  let meet: MeetPoint | undefined;
+  if (f.meet !== undefined && f.meet !== null) {
+    const m = f.meet as Record<string, unknown>;
+    if (typeof m.lat !== "number" || typeof m.lng !== "number" || Math.abs(m.lat) > 90 || Math.abs(m.lng) > 180)
+      fail("invalid", "Treffpunkt: ungültiger Punkt");
+    meet = { name: str(m.name, [1, 60], "Name des Treffpunkts"), lat: m.lat, lng: m.lng };
+  }
   const field: Field = {
     name: str(f.name, [1, 60], "Name des Spielfelds"),
     toleranceM: tol,
     base: ring(f.base, "Spielfeld"),
     cuts,
     ...(spots.length ? { spots } : {}),
+    ...(meet ? { meet } : {}),
   };
   const p = fieldProblems(field)[0];
   if (p) fail("invalid", `${p.id === "base" ? "Spielfeld" : cuts[p.id]!.short}: ${TEXT[p.kind]}`);

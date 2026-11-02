@@ -4,6 +4,7 @@
 import type { GameInfo, Member } from "./api.ts";
 import type { PushKind } from "./push.ts";
 import type {
+  Alert,
   AuditEntry,
   ChatMessage,
   Config,
@@ -45,6 +46,8 @@ export interface View {
   staff?: Record<string, Position & { name?: string }>;
   /** Tracker mit Zuordnung und letztem Standort (nur Spielleitung, Schiri, Großbild) */
   devices?: Record<string, Device>;
+  /** Notfälle: Spielleitung und Schiris alle, ein Team nur die eigenen */
+  alerts?: Record<string, Alert>;
   /** nur Spielleitung */
   members?: Record<string, Member>;
   audit?: Record<string, AuditEntry>;

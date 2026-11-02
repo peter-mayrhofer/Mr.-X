@@ -84,7 +84,7 @@ export function pushSubscribe(room: GameRoom, d: D, a: Auth): ApiResults["pushSu
 
 export async function archiveList(room: GameRoom, _d: D, a: Auth): Promise<ApiResults["archiveList"]> {
   room.who(a, ["team", "schiri", "admin", "screen"]);
-  const r = await room.env.DB.prepare("SELECT run, data FROM archive WHERE game = ?1 ORDER BY endedAt DESC")
+  const r = await room.env.DB.prepare("SELECT run, data FROM archive WHERE game = ?1 AND run NOT LIKE 'probe-%' ORDER BY endedAt DESC")
     .bind(room.d.gid)
     .all<{ run: string; data: string }>();
   return {

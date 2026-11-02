@@ -5,7 +5,20 @@
 -->
 <script lang="ts">
   import type { Map as MLMap, MapMouseEvent, MapTouchEvent } from "maplibre-gl";
-  import { CircleCheck, Download, Eye, EyeOff, LayoutTemplate, Plus, Save, Trash, Undo2, Upload, Utensils } from "@lucide/svelte";
+  import {
+    CircleCheck,
+    Download,
+    Eye,
+    EyeOff,
+    LayoutTemplate,
+    Plus,
+    Save,
+    Trash,
+    Undo2,
+    Upload,
+    Utensils,
+    MapPinCheck,
+  } from "@lucide/svelte";
   import { fieldProblems, LINZ_INNENSTADT, type Field, type LngLat, type Polygon } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import Button from "../../ui/Button.svelte";
@@ -38,25 +51,36 @@
   let history: string[] = [];
   let file: HTMLInputElement;
 
-  const COLORS: Record<string, string> = { base: "#ff4636", spots: "#ffc531" };
+  const COLORS: Record<string, string> = { base: "#ff4636", spots: "#ffc531", meet: "#2fbf71" };
   // „spots“ = Essens-Orte: keine Fläche, sondern einzelne Punkte (jeder ein ziehbarer Punkt auf der Karte)
   const spotsMode = $derived(sel === "spots");
-  const poly = $derived(sel === "base" ? field.base : spotsMode ? [] : (field.cuts[sel]?.poly ?? []));
+  // „meet“ = Treffpunkt für den Sammelruf: ein einzelner ziehbarer Punkt
+  const meetMode = $derived(sel === "meet");
+  const pointMode = $derived(spotsMode || meetMode);
+  const poly = $derived(sel === "base" ? field.base : pointMode ? [] : (field.cuts[sel]?.poly ?? []));
   const cut = $derived(sel === "base" ? undefined : field.cuts[sel]);
   const color = $derived(COLORS[sel] ?? field.cuts[sel]?.color ?? "#fff");
   // geschlossene Ringe: letzter Punkt = erster → beim Bearbeiten ignorieren
   const closed = (p: Polygon) => p.length > 1 && p[0]![0] === p.at(-1)![0] && p[0]![1] === p.at(-1)![1];
   const pts = $derived<LngLat[]>(
-    spotsMode ? (field.spots ?? []).map((s): LngLat => [s.lng, s.lat]) : closed(poly) ? poly.slice(0, -1) : poly,
+    spotsMode
+      ? (field.spots ?? []).map((s): LngLat => [s.lng, s.lat])
+      : meetMode
+        ? field.meet
+          ? [[field.meet.lng, field.meet.lat]]
+          : []
+        : closed(poly)
+          ? poly.slice(0, -1)
+          : poly,
   );
 
   const edit = $derived<GeoJSON.FeatureCollection>({
     type: "FeatureCollection",
     features: [
-      ...(pts.length && !spotsMode
+      ...(pts.length && !pointMode
         ? [{ type: "Feature", properties: { color }, geometry: { type: "LineString", coordinates: [...pts, pts[0]!] } } as GeoJSON.Feature]
         : []),
-      ...(spotsMode
+      ...(pointMode
         ? []
         : pts.map((p, i): GeoJSON.Feature => ({
             type: "Feature",
@@ -129,6 +153,10 @@
       field.spots = (field.spots ?? []).map((s, i) => ({ ...s, lng: next[i]![0], lat: next[i]![1] }));
       return;
     }
+    if (meetMode) {
+      if (field.meet && next[0]) field.meet = { ...field.meet, lng: next[0][0], lat: next[0][1] };
+      return;
+    }
     const ring = [...next, next[0]!];
     if (sel === "base") field.base = ring;
     else field.cuts[sel]!.poly = ring;
@@ -146,6 +174,12 @@
     if (spotsMode) {
       snapshot();
       field.spots = (field.spots ?? []).filter((_, i) => i !== vtx);
+      vtx = null;
+      return;
+    }
+    if (meetMode) {
+      snapshot();
+      delete field.meet;
       vtx = null;
       return;
     }
@@ -175,6 +209,13 @@
     const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
     field.spots = [...(field.spots ?? []), { name: T.zonen.neuerOrt, lat: c.lat, lng: c.lng, radiusM: 40 }];
     vtx = field.spots.length - 1;
+  }
+
+  function setMeet(map: MLMap | undefined) {
+    snapshot();
+    const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
+    field.meet = { name: field.meet?.name ?? T.zonen.treffpunktName, lat: c.lat, lng: c.lng };
+    vtx = 0;
   }
 
   function exportGeo() {
@@ -359,6 +400,31 @@
         >
       </li>
     </ul>
+    <ul class="areas">
+      <li class:on={meetMode}>
+        <button class="pick" onclick={() => ((sel = "meet"), (vtx = field.meet ? 0 : null))}
+          ><span class="sw" style:background={COLORS.meet}></span><MapPinCheck size={16} aria-hidden="true" />{T.zonen.treffpunkt}<small
+            class="num">{field.meet?.name ?? ""}</small
+          ></button
+        >
+      </li>
+    </ul>
+    {#if meetMode}
+      <div class="props">
+        <p class="muted">{T.zonen.treffpunktHinweis}</p>
+        {#if field.meet}
+          <TextField label={T.zonen.name} bind:value={field.meet.name} disabled={readonly} />
+        {/if}
+        {#if !readonly}
+          <div class="row">
+            <Button variant="secondary" size="m" icon={MapPinCheck} onclick={() => setMeet(mapRef)}
+              >{field.meet ? T.zonen.treffpunktHierher : T.zonen.treffpunktSetzen}</Button
+            >
+            {#if field.meet}<Button variant="danger" size="m" icon={Trash} onclick={removeVertex}>{T.zonen.treffpunktWeg}</Button>{/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
     {#if spotsMode}
       <div class="props">
         <p class="muted">{T.zonen.essensHinweis}</p>

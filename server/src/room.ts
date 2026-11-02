@@ -6,6 +6,7 @@ import {
   FRESH_MS,
   PROTOCOL_VERSION,
   SEES_POSITIONS,
+  distanceM,
   WS_CLOSE,
   pushTargets,
   stepCheck,
@@ -15,6 +16,7 @@ import {
   type ChatMessage,
   type Config,
   type CutEvent,
+  type Alert,
   type Device,
   type Field,
   type GameInfo,
@@ -64,6 +66,8 @@ export interface Data {
   audit: Record<string, AuditEntry & { uid: string }>;
   positions: Record<string, Position>;
   staff: Record<string, Position & { name?: string }>;
+  /** Notfälle der Teams */
+  alerts: Record<string, Alert>;
   /** Tracker (Meilenstein 11) mit Zuordnung und letztem Standort */
   devices: Record<string, Device>;
   /** letzter angenommener Punkt je Team (nur am Server, für Strecke und Plausibilität – kein Bewegungsprofil) */
@@ -106,6 +110,7 @@ const KEYS: Key[] = [
   "audit",
   "positions",
   "staff",
+  "alerts",
   "devices",
   "track",
   "push",
@@ -122,6 +127,8 @@ const TRACKER_MIN_GAP_MS = 5000;
 const POS_BATCH_MS = 2000;
 const POS_SAVE_MS = 30_000;
 const POS_MIN_GAP_MS = 1000;
+/** Umkreis um den Treffpunkt, in dem ein Team beim Sammelruf als angekommen zählt */
+export const GATHER_M = 60;
 const PUSH_PER_RUN = 40; // Gratis-Tarif: 50 Unteranfragen pro Aufruf
 const FRESH_SUB_MS = 5 * 60_000;
 const CHAT_IN_VIEW = 200;
@@ -165,6 +172,7 @@ const empty = (): Data => ({
   audit: {},
   positions: {},
   staff: {},
+  alerts: {},
   devices: {},
   track: {},
   push: {},
@@ -320,6 +328,7 @@ export class GameRoom extends DurableObject<Env> {
     const patches = this.#patches.splice(0);
     const notes = this.#notesOut.splice(0);
     if (patches.length || notes.length) this.#broadcast(patches, notes);
+    for (const fn of this.#after.splice(0)) fn();
     void this.#schedule();
     this.#syncIndex();
   }
@@ -443,6 +452,9 @@ export class GameRoom extends DurableObject<Env> {
       v.staff = d.staff;
       v.devices = this.#hidesHunters(m) ? this.#devicesWithoutHunters(d.devices) : d.devices;
     }
+    if (m.role === "admin" || m.role === "schiri") v.alerts = d.alerts;
+    else if (m.role === "team" && m.teamId)
+      v.alerts = Object.fromEntries(Object.entries(d.alerts).filter(([, x]) => x.teamId === m.teamId));
     if (m.role === "admin") {
       v.members = d.members;
       v.audit = lastN(d.audit, AUDIT_IN_VIEW);
@@ -466,6 +478,16 @@ export class GameRoom extends DurableObject<Env> {
   }
   #devicesWithoutHunters(devices: Record<string, Device> | null): Record<string, Device> {
     return Object.fromEntries(Object.entries(devices ?? {}).map(([id, dev]) => [id, this.#hunterDevice(dev)!]));
+  }
+
+  #after: (() => void)[] = [];
+  /** nach dem Verteilen der Änderungen ausführen (z. B. frischer Snapshot für umgezogene Geräte) */
+  afterCommit(fn: () => void) {
+    this.#after.push(fn);
+  }
+  /** Gerät bekommt einen frischen Snapshot (alle offenen Verbindungen) */
+  resnap(uid: string) {
+    for (const ws of this.ctx.getWebSockets(uid)) this.#snap(ws);
   }
 
   /** Standorte (und Tracker) noch einmal komplett verteilen – z. B. wenn Schiris die Jäger nicht mehr sehen dürfen */
@@ -503,6 +525,17 @@ export class GameRoom extends DurableObject<Env> {
         return [key, id, this.#hunterDevice(value as Device | null)];
       case "staff":
         return SEES_POSITIONS.includes(m.role) ? [key, id, value] : null;
+      case "alerts":
+        if (m.role === "admin" || m.role === "schiri") return [key, id, value];
+        if (m.role !== "team" || !m.teamId) return null;
+        if (id === null)
+          return [
+            key,
+            null,
+            Object.fromEntries(Object.entries((value ?? {}) as Record<string, Alert>).filter(([, x]) => x.teamId === m.teamId)),
+          ];
+        // gelöschte Einträge (null) kennt das Team nur, wenn es seine waren – null verrät nichts
+        return value === null || (value as Alert).teamId === m.teamId ? [key, id, value] : null;
       case "members":
       case "audit":
         return m.role === "admin" ? [key, id, value] : null;
@@ -603,6 +636,10 @@ export class GameRoom extends DurableObject<Env> {
       }
       foodStep(this, t, p);
     }
+    // Sammelruf: wer im Umkreis des Treffpunkts ist, gilt als angekommen
+    const g = this.d.state.gather;
+    if (g && !g.arrived?.[t] && !p.suspect && p.acc <= 50 && distanceM(p, g) <= GATHER_M)
+      this.setState({ ...this.d.state, gather: { ...g, arrived: { ...g.arrived, [t]: p.t } } });
     this.d.positions[t] = p;
     this.#live("positions", t, p);
   }
@@ -739,7 +776,7 @@ export class GameRoom extends DurableObject<Env> {
 }
 
 /** Standort prüfen: nur erwartete Felder, gültige Bereiche, Messzeit höchstens 15 Min alt und nicht in der Zukunft */
-function validPos(raw: unknown, now: number): Position | null {
+export function validPos(raw: unknown, now: number): Position | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   const num = (v: unknown, min: number, max: number) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;

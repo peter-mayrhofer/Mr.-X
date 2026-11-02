@@ -14,6 +14,8 @@
   import AdminTeams from "../screens/admin/AdminTeams.svelte";
   import AdminLog from "../screens/admin/AdminLog.svelte";
   import ZoneEditor from "../screens/admin/ZoneEditor.svelte";
+  import AlertsBar from "../screens/parts/AlertsBar.svelte";
+  import { warnungen } from "../lib/warnungen.ts";
   import { GameData, sendMessage } from "../lib/game.svelte.ts";
   import { gps, keepAwake, sendPosition, startGps, stopGps } from "../lib/gps.svelte.ts";
   import { remote } from "../lib/remote.svelte.ts";
@@ -70,6 +72,29 @@
     lastUnread = unread;
   });
 
+  // Notfälle: jeder neue einmal laut (Spielleitung und Schiris)
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- reine Buchführung
+  const alarmed = new Set<string>();
+  let alertsReady = false;
+  $effect(() => {
+    const open = game.alerts.filter((a) => !a.done);
+    if (!game.loaded) return;
+    for (const a of open)
+      if (!alarmed.has(a.id)) {
+        alarmed.add(a.id);
+        if (alertsReady) signal("warnung");
+      }
+    alertsReady = true;
+  });
+  const sosDone = async (id: string) => {
+    try {
+      await call({ action: "sosDone", gameId: g, id });
+      toast(T.notfall.erledigtOk, "ok");
+    } catch {
+      toast(T.apiFehler.network, "warn");
+    }
+  };
+
   const view = $derived<StaffView | null>(
     game.loaded
       ? {
@@ -90,6 +115,7 @@
           dm: game.dmAll,
           members: game.members,
           audit: game.audit,
+          alerts: game.alerts,
           myUid: uid,
           myName: member.name,
           me: isAdmin ? null : gps.pos,
@@ -99,6 +125,28 @@
         }
       : null,
   );
+
+  // Spielleitung: neue Warnungen (Funkstille, Akku, Sperrgebiet, Mister X an der Grenze) einmal melden
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- reine Buchführung
+  const warned = new Set<string>();
+  let warnReady = false;
+  $effect(() => {
+    if (!isAdmin || !view) return;
+    const list = warnungen(view, clock.now);
+    let fresh = 0;
+    for (const w of list)
+      if (!warned.has(w.key)) {
+        warned.add(w.key);
+        if (warnReady) {
+          toast(w.text, "warn");
+          fresh++;
+        }
+      }
+    // erledigte Warnungen dürfen später wieder melden
+    for (const k of [...warned]) if (!list.some((w) => w.key === k)) warned.delete(k);
+    if (fresh) signal("warnung");
+    warnReady = true;
+  });
 
   const archive = remote(
     () => (phase === "beendet" && game.state?.run ? game.state.run : null),
@@ -143,9 +191,11 @@
     <Results results={archive.value.results} teams={archive.value.teams} onarchive={() => go("/archiv")} onleave={logout} />
   {:else}
     <Referee {view} api={call} {push} onsend={(text) => send(text, "alle")} onlogout={logout} />
+    <div class="alerts-fixed"><AlertsBar alerts={game.alerts} teams={game.teams} ondone={sosDone} /></div>
   {/if}
 {:else}
-  <AdminShell {section} {gameName} phase={view.state.phase} {link} {unread} onlogout={logout}>
+  <AdminShell {section} {gameName} phase={view.state.phase} trial={!!view.config.trial} {link} {unread} onlogout={logout}>
+    <AlertsBar alerts={game.alerts} teams={game.teams} ondone={sosDone} />
     {#if section === "live" && phase === "beendet" && archive.value}
       <Results
         results={archive.value.results}
@@ -178,5 +228,12 @@
 <style>
   .wait {
     min-height: 100dvh;
+  }
+  .alerts-fixed {
+    position: fixed;
+    top: var(--safe-top);
+    left: 0;
+    right: 0;
+    z-index: calc(var(--z-ui) + 5);
   }
 </style>

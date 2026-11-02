@@ -18,7 +18,15 @@
   code={gameId ?? ""}
   onsubmit={async (v) => {
     const id = (gameId ?? v.code).trim().toLowerCase();
-    const r = await call({ action: "join", gameId: id, role: "team", name: v.name, secret: v.password, secondDevice: v.secondDevice });
+    const r = await call({
+      action: "join",
+      gameId: id,
+      role: "team",
+      name: v.name,
+      secret: v.password,
+      secondDevice: v.secondDevice,
+      size: v.size,
+    });
     startSession(id, r);
     return r;
   }}

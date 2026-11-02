@@ -47,7 +47,8 @@
   {#if push}
     <Card label={T.einstellungen.push} icon={Bell}>
       {#if push.status === "an"}
-        {#each PUSH_KINDS as k (k)}
+        <!-- Notfälle lassen sich nicht abschalten -->
+        {#each PUSH_KINDS.filter((x) => x !== "notfall") as k (k)}
           <Switch label={T.einstellungen.pushArten[k]} checked={push.prefs[k]} onchange={(on) => push.setPref(k, on)} />
         {/each}
       {:else if push.status === "aus"}

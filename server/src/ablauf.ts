@@ -118,6 +118,18 @@ export function foodStep(room: GameRoom, t: string, p: Position) {
   }
 }
 
+/**
+ * Spielende-Fenster (Regel 12) in Server-Zeit: ab Start plus Pausen, frühestens/spätestens laut Einstellung.
+ * `from` = Beginn der Endphase, die automatisch angekündigt wird.
+ */
+export function endWindow(d: Data): { from: number; to: number } | null {
+  const st = d.state;
+  if (!st.startedAt) return null;
+  const paused = Object.values(d.pauses).reduce((s, p) => s + ((p.to ?? p.from) - p.from), 0);
+  const base = st.startedAt + paused;
+  return { from: base + d.config.endMinH * 60 * MIN, to: base + d.config.endMaxH * 60 * MIN };
+}
+
 /** Alles erledigen, was jetzt fällig ist (Alarm). Mehrfach aufrufen ist harmlos. */
 export function advance(room: GameRoom, now: number): string[] {
   const d = room.d;
@@ -125,6 +137,15 @@ export function advance(room: GameRoom, now: number): string[] {
   const endAt = d.secrets.endAt;
   if (endAt && endAt <= now) return finish(room, endAt, "zufall") ? ["ende"] : [];
   const done: string[] = [];
+  // Endphase: einmal ankündigen, dass das Spiel jetzt jederzeit enden kann (ohne den geheimen Zeitpunkt zu verraten)
+  const win = endWindow(d);
+  if (win && !d.state.endPhase && win.from <= now) {
+    room.setState({ ...d.state, endPhase: now });
+    const text = MELDUNG.endphase(uhr(win.to));
+    room.sys(text, now);
+    room.notify("spiel", { all: true }, PUSH_TITLE.endphase, text);
+    done.push("endphase");
+  }
   const st = d.state;
   if (st.nextReportAt && st.nextReportAt <= now && st.mrx) {
     // Regel 5; war der Server länger weg: nicht mehrere Meldungen nachholen
@@ -153,9 +174,11 @@ export function advance(room: GameRoom, now: number): string[] {
 /** Nächster Termin (Meldung, Ende einer Wartezeit, Spielende) für den Alarm */
 export function nextDue(d: Data): number | null {
   if (d.state.phase !== "laeuft") return null;
+  const win = endWindow(d);
   const t = Math.min(
     d.state.nextReportAt ?? Infinity,
     d.secrets.endAt ?? Infinity,
+    win && !d.state.endPhase ? win.from : Infinity,
     ...Object.values(d.locks).map((l) => l.until),
     ...Object.values(d.state.warnCuts ?? {}),
   );
@@ -170,7 +193,8 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   const d = room.d;
   const was = d.state;
   if (was.phase !== "laeuft" && was.phase !== "pause") return false;
-  const run = newKey();
+  // Probelauf: eigene Kennung – taucht im Archiv nicht auf und wird mit der neuen Runde gelöscht
+  const run = d.config.trial ? `probe-${newKey()}` : newKey();
   const { pausedAt: _, warnCuts: _w, ...rest } = was;
   room.setState({ ...rest, phase: "beendet", endedAt, run });
   // offene Pause (Notstopp während der Pause) schließen
@@ -224,6 +248,8 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
 export function purgeChat(room: GameRoom) {
   room.set("chat", {});
   room.set("dm", {});
+  // Notfälle enthalten Standorte – gleiche Frist wie der Chat
+  room.set("alerts", {});
   // das Protokoll nennt Namen von Teams und Schiris – gleiche Frist wie der Chat
   room.set("audit", {});
   room.set("purgeAt", null);

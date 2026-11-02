@@ -35,5 +35,12 @@ export const M = {
   gefangen: (min: number) => `Ihr wurdet gefangen: ${min} Min warten, dann geht die Jagd weiter.`,
   vorsprung: (min: number) => `Die Fahne gehört euch – ${min} Min Vorsprung, lauft!`,
   wartenHand: (min: number) => `Die Spielleitung hat euch ${min} Min Wartezeit gegeben.`,
+  endphase: (spaetestens: string) =>
+    `Endphase! Das Spiel kann ab jetzt jederzeit enden – spätestens um ${spaetestens}. Gebt nochmal alles!`,
+  sammelruf: (ort: string) => `Sammelruf: Alle bitte jetzt zum Treffpunkt ${ort}.`,
+  sammelrufEnde: "Der Sammelruf ist beendet.",
+  geteilt: (alt: string, neu: string) => `${alt} hat sich aufgeteilt: ${alt} und ${neu} spielen jetzt getrennt.`,
+  notfall: (team: string) => `${team} hat einen Notfall gemeldet!`,
+  notfallZurueck: (team: string) => `Entwarnung: ${team} hat den Notfall zurückgenommen (Fehlalarm).`,
   ende: (sieger: string) => `Spielende! ${sieger} ist der letzte Mister X und hat gewonnen!`,
 };

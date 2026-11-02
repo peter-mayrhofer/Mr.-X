@@ -471,3 +471,28 @@ Die Datenschutzhinweise nennen das.
 Tracker von Jäger-Teams ohne Standort. Der Server filtert das – im Snapshot und in jeder Änderung –, beim Umschalten
 und bei jedem neuen Mister X bekommen die Schiris die Liste komplett neu. Beim Schiri steht dann „Jäger ausgeblendet
 (Spielleitung)“ statt der nächsten Jäger. Die Wartezeit nach einem Fang rechnet weiter der Server mit allen Standorten.
+
+### E-51 Ergänzungen nach dem ersten echten Spiel (WhatsApp-Chat ausgewertet)
+**Entscheidung:** Zehn Funktionen, die direkt aus den Problemen im WhatsApp-Chat kommen:
+- **Sperrgebiet-Warnung für alle Teams:** Jäger bekommen „Ihr steht im Sperrgebiet (Norden)! Bitte sofort raus.“
+  bzw. „außerhalb des Spielfelds“ mit Ton/Vibration; Mister X ebenso (bisher nur „außerhalb“). Die Spielleitung sieht
+  es in den Warnungen.
+- **Kompass** (eigener Reiter): Pfeil zur letzten Meldung bzw. beim Sammelruf zum Treffpunkt, dreht sich mit dem
+  Handy (`deviceorientationabsolute`, iPhone `webkitCompassHeading` nach Erlaubnis per Tipp); ohne Kompass
+  Laufrichtung aus dem GPS bzw. Norden oben. Entfernung, Himmelsrichtung, „In Google Maps öffnen“.
+- **Teamgröße** beim Beitritt (1–99, freiwillig), änderbar durch das Team und die Spielleitung; Summe in „Teams“.
+- **Team aufteilen** (Spielleitung): neues Team mit gewählten Handys; Wartezeit und Personen werden mitgenommen,
+  die Handys bekommen sofort einen frischen Stand.
+- **Endphase:** zu Beginn des Spielende-Fensters automatisch Durchsage + Push „spätestens um …“ (einmal).
+- **Notfall-Knopf** (SOS auf der Karte und unter „Mehr“): Spielleitung und Schiris bekommen eine nicht abschaltbare
+  Meldung mit Standort (Google-Maps-Link), „Erledigt“; das Team kann einen Fehlalarm zurücknehmen. Andere Teams sehen
+  nichts. Gelöscht mit dem Chat (Löschfrist).
+- **Sammelruf:** Spielleitung ruft alle zum Treffpunkt (Spielfeld-Editor, sonst Spielfeldmitte) – auch nach dem Ende.
+  Ankunft automatisch im Umkreis von 60 m (solange Standorte gesendet werden), per „Wir sind da“ oder durch die
+  Spielleitung; Kopfzählung nach Teams und Personen.
+- **Warnungen** für die Spielleitung zusätzlich bei Akku unter 15 %; neue Warnungen kommen als Hinweis mit Ton.
+- **Vorlagen:** Regeln, Regeltext, Durchsage-Vorlagen und Spielfeld (mit Essens-Orten und Treffpunkt) als Vorlage
+  speichern (D1-Tabelle `templates`, wird automatisch angelegt) und vor dem Start laden.
+- **Durchsage-Vorlagen:** feste Vorschläge aus dem echten Spiel + eigene (höchstens 20) – antippen füllt den Text.
+- **Probelauf:** vor dem Start einschaltbar; das Spiel läuft normal, die Auswertung gibt es, im Archiv erscheint es
+  nicht (Kennung `probe-…`), mit der neuen Runde wird es gelöscht.
