@@ -145,6 +145,12 @@ describe("Spielleitung und Schiri", { timeout: 60_000 }, () => {
     for (let i = 0; i < 10; i++) await admin.getByRole("dialog").getByRole("button", { name: "weniger" }).click();
     await confirm(admin, T.admin.sperren);
     await expect.poll(() => val(`games/${G}/state/cuts/norden`)).toBeGreaterThan(0);
+    // Schalter: Jäger für Schiris ausblenden – der Schiri sieht den Hinweis statt der nächsten Jäger
+    await admin.getByRole("switch", { name: T.admin.schiriJaeger }).click();
+    await expect.poll(() => val(`games/${G}/config/refereeHunters`)).toBe(false);
+    await schiri.getByText(T.schiri.jaegerAus).waitFor();
+    await admin.getByRole("switch", { name: T.admin.schiriJaeger }).click();
+    await expect.poll(() => val(`games/${G}/config/refereeHunters`)).toBe(true);
     // eigene Regeln (7.11): Vorschau formatiert, gespeichert erst mit „Speichern“
     await admin.getByLabel(T.admin.regeltextFeld).fill("**Treffpunkt:** Hauptplatz\n- keine Fahrräder");
     const preview = admin.getByRole("group", { name: T.admin.regeltextVorschau });

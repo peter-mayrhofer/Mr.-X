@@ -276,6 +276,7 @@ export const T = {
     folgen: "Ich begleite Mister X",
     folgenHinweis: "Wenn das Mister-X-Handy keinen Standort schickt, wird deiner verwendet.",
     naechsteJaeger: "Nächste Jäger",
+    jaegerAus: "Jäger ausgeblendet (Spielleitung)",
     wartezeiten: "Wartezeiten",
     keineWartezeit: "Gerade wartet niemand.",
     schritt1: "Wer hat gefangen?",
@@ -338,6 +339,10 @@ export const T = {
     geheim: "Zeitpunkt geheim am Server",
     aufdecken: "Zeitpunkt aufdecken",
     regelnLive: "Regeln live ändern",
+    schiriJaeger: "Schiris sehen die Jäger live",
+    schiriJaegerHinweis: "Aus: Schiris sehen auf der Karte nur Mister X, sich selbst und andere Schiris.",
+    schiriJaegerAn: "Schiris sehen die Jäger wieder",
+    schiriJaegerAus: "Jäger für Schiris ausgeblendet",
     regeltext: "Regeln für die Teams",
     regeltextFeld: "Eigene Regeln und Hinweise",
     regeltextHinweis:
@@ -731,7 +736,7 @@ export const T = {
       },
       {
         titel: "Wer sieht was?",
-        text: "Die Standorte der Jäger-Teams sehen nur Spielleitung, Schiris und das Großbild in der Zentrale – andere Teams und Zuschauer nicht. Den gemeldeten Standort von Mister X sehen alle Mitspielenden.",
+        text: "Die Standorte der Jäger-Teams sehen nur Spielleitung, Schiris (solange die Spielleitung das nicht ausschaltet) und das Großbild in der Zentrale – andere Teams und Zuschauer nicht. Den gemeldeten Standort von Mister X sehen alle Mitspielenden.",
       },
       {
         titel: "Wie lange?",

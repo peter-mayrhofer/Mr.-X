@@ -96,7 +96,7 @@ export function stopGame(room: GameRoom, _d: D, a: Auth): ApiResults["stopGame"]
   return {};
 }
 
-const RANGE: Record<Exclude<keyof Config, "spectators" | "rulesText">, [number, number, string]> = {
+const RANGE: Record<Exclude<keyof Config, "spectators" | "rulesText" | "refereeHunters">, [number, number, string]> = {
   intervalMin: [1, 60, "Meldeintervall"],
   headStartMin: [0, 60, "Vorsprung"],
   waitMin: [0, 30, "Wartezeit"],
@@ -120,6 +120,11 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
       const text = v.trim();
       if (text) next.rulesText = text;
       else delete next.rulesText;
+      continue;
+    }
+    if (k === "refereeHunters") {
+      if (typeof v !== "boolean") fail("invalid", "Jäger für Schiris: ja oder nein");
+      next.refereeHunters = v;
       continue;
     }
     if (k === "spectators") {
@@ -153,6 +158,8 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
 
   room.set("config", next);
   room.set("info", { ...room.d.info!, spectators: next.spectators });
+  // Schiris bekommen die Standorte neu – ohne bzw. wieder mit den Jägern
+  if (changed.includes("refereeHunters")) room.resendPositions();
   if (isLive && changed.includes("intervalMin")) {
     // Regel 5: nie früher als 1 Min ab jetzt – Mister X hat immer eine Vorwarnung
     if (st.lastReportAt) room.setState({ ...st, nextReportAt: nextReportAfterIntervalChange(st.lastReportAt, next.intervalMin, now) });
@@ -171,7 +178,15 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
   room.audit(
     who,
     "Einstellungen geändert",
-    changed.map((k) => (k === "rulesText" ? "Regeltext" : `${k}: ${String(cur[k])} → ${String(next[k])}`)).join(", "),
+    changed
+      .map((k) =>
+        k === "rulesText"
+          ? "Regeltext"
+          : k === "refereeHunters"
+            ? `Schiris sehen Jäger: ${next.refereeHunters === false ? "aus" : "an"}`
+            : `${k}: ${String(cur[k])} → ${String(next[k])}`,
+      )
+      .join(", "),
   );
   return {};
 }

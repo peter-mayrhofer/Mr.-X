@@ -50,6 +50,8 @@ export interface Config {
   endMinH: number;
   endMaxH: number;
   spectators: boolean;
+  /** Schiris sehen die Standorte der Jäger-Teams live (fehlt = ja). Aus: nur Mister X, andere Schiris und sich selbst. */
+  refereeHunters?: boolean;
   /** eigene Regeln/Hinweise der Spielleitung für dieses Spiel (Abschnitt 7.11), einfache Formatierung (regeltext.ts) */
   rulesText?: string;
 }

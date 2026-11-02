@@ -145,10 +145,14 @@
     <div class="bottom">
       <div class="near" aria-label={T.schiri.naechsteJaeger}>
         <span class="caps">{T.schiri.naechsteJaeger}</span>
-        {#each nearest as n (n.id)}
-          {@const t = team(n.id)}
-          <span class="chip"><TeamBadge short={t.short} color={t.color} size={28} /><b class="num">{meter(n.d)}</b></span>
-        {/each}
+        {#if view.config.refereeHunters === false}
+          <span class="off">{T.schiri.jaegerAus}</span>
+        {:else}
+          {#each nearest as n (n.id)}
+            {@const t = team(n.id)}
+            <span class="chip"><TeamBadge short={t.short} color={t.color} size={28} /><b class="num">{meter(n.d)}</b></span>
+          {/each}
+        {/if}
         <button class="waitbtn" onclick={() => (waitSheet = true)}><Hourglass size={18} aria-hidden="true" />{waiting.length}</button>
       </div>
       <UndoHandover {view} {api} />
@@ -295,5 +299,9 @@
   .big {
     font-family: var(--font-display);
     font-size: var(--fs-xl);
+  }
+  .off {
+    color: var(--text-2);
+    font-size: var(--fs-s);
   }
 </style>

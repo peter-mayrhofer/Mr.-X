@@ -464,3 +464,10 @@ OpenStreetMap, abgerufen am 2.11.2026).
 **Warum so:** Gespeichert werden nur Zählerstände (Besuche, Minuten) im Geheimbereich des Spielraums, nie ein
 Standort; wer gerade wo ist, steht nur im Arbeitsspeicher. Nach der Auswertung werden die Zählerstände gelöscht.
 Die Datenschutzhinweise nennen das.
+
+### E-50 Spielleitung blendet die Jäger für Schiris aus
+**Entscheidung:** Schalter in der Steuerung („Schiris sehen die Jäger live“, Standard an; Einstellung
+`refereeHunters`). Aus: Schiris bekommen nur noch den Standort von Mister X (dazu andere Schiris und sich selbst);
+Tracker von Jäger-Teams ohne Standort. Der Server filtert das – im Snapshot und in jeder Änderung –, beim Umschalten
+und bei jedem neuen Mister X bekommen die Schiris die Liste komplett neu. Beim Schiri steht dann „Jäger ausgeblendet
+(Spielleitung)“ statt der nächsten Jäger. Die Wartezeit nach einem Fang rechnet weiter der Server mit allen Standorten.
