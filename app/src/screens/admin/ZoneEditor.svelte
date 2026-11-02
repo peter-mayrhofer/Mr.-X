@@ -5,7 +5,7 @@
 -->
 <script lang="ts">
   import type { Map as MLMap, MapMouseEvent, MapTouchEvent } from "maplibre-gl";
-  import { CircleCheck, Download, Eye, EyeOff, LayoutTemplate, Plus, Save, Trash, Undo2, Upload } from "@lucide/svelte";
+  import { CircleCheck, Download, Eye, EyeOff, LayoutTemplate, Plus, Save, Trash, Undo2, Upload, Utensils } from "@lucide/svelte";
   import { fieldProblems, LINZ_INNENSTADT, type Field, type LngLat, type Polygon } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import Button from "../../ui/Button.svelte";
@@ -38,25 +38,31 @@
   let history: string[] = [];
   let file: HTMLInputElement;
 
-  const COLORS: Record<string, string> = { base: "#ff4636" };
-  const poly = $derived(sel === "base" ? field.base : (field.cuts[sel]?.poly ?? []));
+  const COLORS: Record<string, string> = { base: "#ff4636", spots: "#ffc531" };
+  // „spots“ = Essens-Orte: keine Fläche, sondern einzelne Punkte (jeder ein ziehbarer Punkt auf der Karte)
+  const spotsMode = $derived(sel === "spots");
+  const poly = $derived(sel === "base" ? field.base : spotsMode ? [] : (field.cuts[sel]?.poly ?? []));
   const cut = $derived(sel === "base" ? undefined : field.cuts[sel]);
   const color = $derived(COLORS[sel] ?? field.cuts[sel]?.color ?? "#fff");
   // geschlossene Ringe: letzter Punkt = erster → beim Bearbeiten ignorieren
   const closed = (p: Polygon) => p.length > 1 && p[0]![0] === p.at(-1)![0] && p[0]![1] === p.at(-1)![1];
-  const pts = $derived(closed(poly) ? poly.slice(0, -1) : poly);
+  const pts = $derived<LngLat[]>(
+    spotsMode ? (field.spots ?? []).map((s): LngLat => [s.lng, s.lat]) : closed(poly) ? poly.slice(0, -1) : poly,
+  );
 
   const edit = $derived<GeoJSON.FeatureCollection>({
     type: "FeatureCollection",
     features: [
-      ...(pts.length
+      ...(pts.length && !spotsMode
         ? [{ type: "Feature", properties: { color }, geometry: { type: "LineString", coordinates: [...pts, pts[0]!] } } as GeoJSON.Feature]
         : []),
-      ...pts.map((p, i): GeoJSON.Feature => ({
-        type: "Feature",
-        properties: { kind: "mid", i, color },
-        geometry: { type: "Point", coordinates: mid(p, pts[(i + 1) % pts.length]!) },
-      })),
+      ...(spotsMode
+        ? []
+        : pts.map((p, i): GeoJSON.Feature => ({
+            type: "Feature",
+            properties: { kind: "mid", i, color },
+            geometry: { type: "Point", coordinates: mid(p, pts[(i + 1) % pts.length]!) },
+          }))),
       ...pts.map((p, i): GeoJSON.Feature => ({
         type: "Feature",
         properties: { kind: "vertex", i, color, sel: vtx === i },
@@ -119,6 +125,10 @@
   }
 
   function setPts(next: LngLat[]) {
+    if (spotsMode) {
+      field.spots = (field.spots ?? []).map((s, i) => ({ ...s, lng: next[i]![0], lat: next[i]![1] }));
+      return;
+    }
     const ring = [...next, next[0]!];
     if (sel === "base") field.base = ring;
     else field.cuts[sel]!.poly = ring;
@@ -132,7 +142,14 @@
   }
 
   function removeVertex() {
-    if (vtx === null || pts.length <= 3) return;
+    if (vtx === null) return;
+    if (spotsMode) {
+      snapshot();
+      field.spots = (field.spots ?? []).filter((_, i) => i !== vtx);
+      vtx = null;
+      return;
+    }
+    if (pts.length <= 3) return;
     snapshot();
     setPts(pts.filter((_, i) => i !== vtx));
     vtx = null;
@@ -151,6 +168,13 @@
       poly: square(map, 0.0015),
     };
     sel = id;
+  }
+
+  function addSpot(map: MLMap | undefined) {
+    snapshot();
+    const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
+    field.spots = [...(field.spots ?? []), { name: T.zonen.neuerOrt, lat: c.lat, lng: c.lng, radiusM: 40 }];
+    vtx = field.spots.length - 1;
   }
 
   function exportGeo() {
@@ -324,6 +348,37 @@
       <Button variant="secondary" size="m" icon={Plus} disabled={!field.base.length} onclick={() => addCut(mapRef)}
         >{T.zonen.neuerBereich}</Button
       >
+    {/if}
+
+    <ul class="areas">
+      <li class:on={spotsMode}>
+        <button class="pick" onclick={() => ((sel = "spots"), (vtx = null))}
+          ><span class="sw" style:background={COLORS.spots}></span><Utensils size={16} aria-hidden="true" />{T.zonen.essensOrte}<small
+            class="num">{field.spots?.length ?? 0}</small
+          ></button
+        >
+      </li>
+    </ul>
+    {#if spotsMode}
+      <div class="props">
+        <p class="muted">{T.zonen.essensHinweis}</p>
+        <ul class="areas">
+          {#each field.spots ?? [] as s, i (i)}
+            <li class:on={vtx === i}><button class="pick" onclick={() => (vtx = i)}>{s.name}</button></li>
+          {/each}
+        </ul>
+        {#if vtx !== null && field.spots?.[vtx]}
+          {@const s = field.spots[vtx]!}
+          <TextField label={T.zonen.name} bind:value={s.name} disabled={readonly} />
+          {#if !readonly}<Stepper label={T.zonen.umkreis} bind:value={s.radiusM} unit="m" min={15} max={100} step={5} />{/if}
+        {/if}
+        {#if !readonly}
+          <div class="row">
+            <Button variant="secondary" size="m" icon={Plus} onclick={() => addSpot(mapRef)}>{T.zonen.ortHinzu}</Button>
+            <Button variant="danger" size="m" icon={Trash} disabled={vtx === null} onclick={removeVertex}>{T.zonen.ortWeg}</Button>
+          </div>
+        {/if}
+      </div>
     {/if}
 
     {#if cut}

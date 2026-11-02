@@ -1,13 +1,14 @@
 // Spielfeld speichern (Zonen-Editor, Abschnitt 7.8) und Spiele archivieren/löschen (Super-Admin). Spielfeld nur vor dem
 // Start oder nach dem Ende – im laufenden Spiel hängen Sperren und Warnungen daran. Alles wird hier noch einmal geprüft,
 // der Client ist nicht vertrauenswürdig.
-import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type Polygon } from "@mrx/shared";
+import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type Polygon, type Spot } from "@mrx/shared";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
 
 type D = Record<string, unknown>;
 const MAX_POINTS = 2000;
 const MAX_CUTS = 12;
+const MAX_SPOTS = 30;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const CUT_ID = /^[a-z0-9-]{1,30}$/;
 
@@ -52,7 +53,23 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
       poly: ring(c.poly, "Sperrbereich"),
     };
   }
-  const field: Field = { name: str(f.name, [1, 60], "Name des Spielfelds"), toleranceM: tol, base: ring(f.base, "Spielfeld"), cuts };
+  const spotsIn = f.spots ?? [];
+  if (!Array.isArray(spotsIn) || spotsIn.length > MAX_SPOTS) fail("invalid", `Höchstens ${MAX_SPOTS} Essens-Orte`);
+  const spots: Spot[] = spotsIn.map((s: Record<string, unknown>) => {
+    const { lat, lng, radiusM } = s ?? {};
+    if (typeof lat !== "number" || typeof lng !== "number" || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+      fail("invalid", "Essens-Ort: ungültiger Punkt");
+    if (typeof radiusM !== "number" || !Number.isInteger(radiusM) || radiusM < 15 || radiusM > 100)
+      fail("invalid", "Essens-Ort: Umkreis 15–100 m");
+    return { name: str(s.name, [1, 60], "Name des Essens-Orts"), lat, lng, radiusM };
+  });
+  const field: Field = {
+    name: str(f.name, [1, 60], "Name des Spielfelds"),
+    toleranceM: tol,
+    base: ring(f.base, "Spielfeld"),
+    cuts,
+    ...(spots.length ? { spots } : {}),
+  };
   const p = fieldProblems(field)[0];
   if (p) fail("invalid", `${p.id === "base" ? "Spielfeld" : cuts[p.id]!.short}: ${TEXT[p.kind]}`);
 

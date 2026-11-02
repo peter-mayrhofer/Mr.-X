@@ -2,6 +2,7 @@
 // Archiv. Alle Zeiten sind Server-Zeit. Läuft im Spielraum – eine Sache nach der anderen, darum ohne Transaktionen.
 import {
   bestPosition,
+  distanceM,
   MELDUNG,
   PUSH_TITLE,
   results,
@@ -70,6 +71,53 @@ export function lockCut(room: GameRoom, id: string, now: number) {
     room.notify("spielfeld", { all: true }, PUSH_TITLE.spielfeld, text);
 }
 
+/** wie lange ein Team an einem Essens-Ort bleiben muss, damit es als Besuch zählt */
+export const FOOD_MIN_MS = 10 * MIN;
+/** größere Lücke zwischen zwei Standorten = Team war zwischendurch weg */
+const FOOD_GAP_MS = 3 * MIN;
+
+export interface Presence {
+  spot: number;
+  since: number;
+  last: number;
+  counted: boolean;
+}
+
+function foodAdd(room: GameRoom, t: string, add: { visits?: number; ms?: number }) {
+  const cur = room.d.secrets.food?.[t] ?? { visits: 0, ms: 0 };
+  room.set("secrets", {
+    ...room.d.secrets,
+    food: { ...room.d.secrets.food, [t]: { visits: cur.visits + (add.visits ?? 0), ms: cur.ms + (add.ms ?? 0) } },
+  });
+}
+
+/** Aufenthalt beenden: war es ein gültiger Besuch, die Zeit dort gutschreiben */
+function foodLeave(room: GameRoom, t: string) {
+  const c = room.food.get(t);
+  room.food.delete(t);
+  if (c?.counted) foodAdd(room, t, { ms: Math.max(0, c.last - c.since) });
+}
+
+/**
+ * „Futter-Profi“: Standort eines Teams gegen die Essens-Orte des Spielfelds prüfen. Ein Besuch zählt, sobald das Team
+ * FOOD_MIN_MS lang am selben Ort war. Gespeichert werden nur Besuche und Zeit, nie der Standort.
+ */
+export function foodStep(room: GameRoom, t: string, p: Position) {
+  const spots = room.d.field.spots;
+  if (!spots?.length || p.acc > 40 || p.suspect) return;
+  const idx = spots.findIndex((s) => distanceM(p, s) <= s.radiusM);
+  const cur = room.food.get(t);
+  if (cur && (cur.spot !== idx || p.t - cur.last > FOOD_GAP_MS)) foodLeave(room, t);
+  if (idx < 0 || p.t < (room.food.get(t)?.last ?? 0)) return;
+  let c = room.food.get(t);
+  if (!c) room.food.set(t, (c = { spot: idx, since: p.t, last: p.t, counted: false }));
+  c.last = p.t;
+  if (!c.counted && p.t - c.since >= FOOD_MIN_MS) {
+    c.counted = true;
+    foodAdd(room, t, { visits: 1 });
+  }
+}
+
 /** Alles erledigen, was jetzt fällig ist (Alarm). Mehrfach aufrufen ist harmlos. */
 export function advance(room: GameRoom, now: number): string[] {
   const d = room.d;
@@ -127,12 +175,14 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   room.setState({ ...rest, phase: "beendet", endedAt, run });
   // offene Pause (Notstopp während der Pause) schließen
   for (const [k, ps] of Object.entries(d.pauses)) if (ps.to === undefined) room.put("pauses", k, { ...ps, to: endedAt });
+  for (const t of [...room.food.keys()]) foodLeave(room, t);
   const res = results({
     handovers: Object.values(d.handovers),
     startedAt: was.startedAt ?? endedAt,
     endedAt,
     pauses: Object.values(d.pauses),
     distM: Object.fromEntries(Object.entries(d.stats).map(([t, v]) => [t, v.distM])),
+    food: room.d.secrets.food ?? {},
   });
   room.sys(MELDUNG.ende(res.winner ? (d.teams[res.winner]?.name ?? "?") : "Niemand"), endedAt);
   room.set("info", { ...d.info!, phase: "beendet" });
@@ -157,7 +207,8 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   room.set("devices", Object.fromEntries(Object.entries(d.devices).map(([id, { pos: _p, ...dev }]) => [id, dev])));
   room.set("track", {});
   room.set("locks", {});
-  room.set("secrets", { ...d.secrets, endAt: undefined });
+  // Zählerstände für „Futter-Profi“ stehen jetzt in der Auswertung, hier nicht mehr nötig
+  room.set("secrets", { ...room.d.secrets, endAt: undefined, food: undefined });
   room.set("purgeAt", endedAt + CHAT_KEEP_MS);
   room.notify("spiel", { all: true }, PUSH_TITLE.ende, MELDUNG.ende(res.winner ? (d.teams[res.winner]?.name ?? "?") : "Niemand"));
   void room.env.DB.prepare(

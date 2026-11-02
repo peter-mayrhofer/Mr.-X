@@ -1,12 +1,13 @@
 <!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
 <script lang="ts">
-  import { BookOpenText, Dices, Eye, OctagonX, Pause, Play, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
+  import { BookOpenText, Dices, Eye, OctagonX, Pause, Play, ShieldCheck, Shrink, SlidersHorizontal, Timer, Trophy } from "@lucide/svelte";
   import { LIMITS, nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import Stepper from "../../ui/Stepper.svelte";
+  import Switch from "../../ui/Switch.svelte";
   import Pill from "../../ui/Pill.svelte";
   import RichText from "../../ui/RichText.svelte";
   import Modal from "../../ui/Modal.svelte";
@@ -202,6 +203,20 @@
   {/if}
 
   {#if before || running}
+    <Card label={T.admin.schiris} icon={ShieldCheck}>
+      <Switch
+        label={T.admin.schiriJaeger}
+        hint={T.admin.schiriJaegerHinweis}
+        checked={view.config.refereeHunters !== false}
+        disabled={busy}
+        onchange={(on) =>
+          run(
+            () => api({ action: "setConfig", gameId: g, config: { refereeHunters: on } }),
+            on ? T.admin.schiriJaegerAn : T.admin.schiriJaegerAus,
+          )}
+      />
+    </Card>
+
     <Card label={T.admin.regelnLive} icon={SlidersHorizontal}>
       <div class="steppers">
         <Stepper

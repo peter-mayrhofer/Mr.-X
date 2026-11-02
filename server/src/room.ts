@@ -42,7 +42,7 @@ import { fail, newKey, reply, type Env } from "./util.ts";
 import { sameText } from "./auth.ts";
 import { sendPush } from "./webpush.ts";
 import { ACTIONS } from "./actions/index.ts";
-import { advance, nextDue, purgeChat } from "./ablauf.ts";
+import { advance, foodStep, nextDue, purgeChat, type Presence } from "./ablauf.ts";
 
 export interface Data {
   gid: string;
@@ -77,6 +77,8 @@ export interface Data {
     endAt?: number;
     /** Schlüssel der Tracker (Teil der Geräte-Kennung) */
     deviceKeys?: Record<string, string>;
+    /** „Futter-Profi“: Besuche (mind. 10 Min) und Zeit an Essens-Orten je Team – nur Zählerstände, keine Standorte */
+    food?: Record<string, { visits: number; ms: number }>;
   };
   /** Fehlversuche beim Beitritt je IP (gehasht) */
   rate: Record<string, { n: number; since: number }>;
@@ -200,6 +202,8 @@ export class GameRoom extends DurableObject<Env> {
   /** zuletzt beantwortete Anfragen (Kennung `rid`) → dieselbe Antwort, ohne nochmal auszuführen */
   #done = new Map<string, ApiReply>();
   #posAt = new Map<string, number>();
+  /** wer gerade an einem Essens-Ort ist (nur im Speicher, wird nicht gespeichert) */
+  readonly food = new Map<string, Presence>();
   #livePatches = new Map<string, Patch>();
   #liveTimer: ReturnType<typeof setTimeout> | undefined;
   #liveSavedAt = 0;
@@ -240,7 +244,10 @@ export class GameRoom extends DurableObject<Env> {
 
   /** Spielzustand ändern (zählt `rev` hoch) */
   setState(next: GameState) {
+    const mrxChanged = next.mrx !== this.d.state.mrx;
     this.set("state", { ...next, rev: (this.d.state.rev ?? 0) + 1 });
+    // neuer Mister X: Schiris ohne Jäger-Sicht brauchen dessen Standort (und der alte verschwindet)
+    if (mrxChanged && this.d.config.refereeHunters === false) this.resendPositions();
   }
 
   /** Protokoll (Abschnitt 7.7): wer hat wann was ausgelöst */
@@ -432,15 +439,38 @@ export class GameRoom extends DurableObject<Env> {
     if (m.role === "admin") v.dm = Object.fromEntries(Object.entries(d.dm).map(([t, c]) => [t, lastN(c, CHAT_IN_VIEW)]));
     else if (m.role === "team" && m.teamId) v.dm = { [m.teamId]: lastN(d.dm[m.teamId] ?? {}, CHAT_IN_VIEW) };
     if (SEES_POSITIONS.includes(m.role)) {
-      v.positions = d.positions;
+      v.positions = this.#hidesHunters(m) ? this.#onlyMrx(d.positions) : d.positions;
       v.staff = d.staff;
-      v.devices = d.devices;
+      v.devices = this.#hidesHunters(m) ? this.#devicesWithoutHunters(d.devices) : d.devices;
     }
     if (m.role === "admin") {
       v.members = d.members;
       v.audit = lastN(d.audit, AUDIT_IN_VIEW);
     }
     return v;
+  }
+
+  /** Spielleitung hat für Schiris die Jäger ausgeblendet (Steuerung → Schalter) */
+  #hidesHunters(m: Member) {
+    return m.role === "schiri" && this.d.config.refereeHunters === false;
+  }
+  #onlyMrx(positions: Record<string, Position> | null): Record<string, Position> {
+    const mrx = this.d.state.mrx;
+    return mrx && positions?.[mrx] ? { [mrx]: positions[mrx] } : {};
+  }
+  /** Tracker der Jäger-Teams ohne Standort; Fahne und Mister-X-Tracker bleiben */
+  #hunterDevice(dev: Device | null): Device | null {
+    if (!dev || !dev.assign || dev.assign === "fahne" || dev.assign === this.d.state.mrx) return dev;
+    const { pos: _p, ...rest } = dev;
+    return rest;
+  }
+  #devicesWithoutHunters(devices: Record<string, Device> | null): Record<string, Device> {
+    return Object.fromEntries(Object.entries(devices ?? {}).map(([id, dev]) => [id, this.#hunterDevice(dev)!]));
+  }
+
+  /** Standorte (und Tracker) noch einmal komplett verteilen – z. B. wenn Schiris die Jäger nicht mehr sehen dürfen */
+  resendPositions() {
+    this.#patches.push(["positions", null, this.d.positions], ["devices", null, this.d.devices]);
   }
 
   #me(uid: string): View["me"] | null {
@@ -462,8 +492,16 @@ export class GameRoom extends DurableObject<Env> {
         if (id === null) return [key, null, { [m.teamId]: (value as Data["dm"] | null)?.[m.teamId] ?? {} }];
         return id.split("/")[0] === m.teamId ? [key, id, value] : null;
       case "positions":
-      case "staff":
+        if (!SEES_POSITIONS.includes(m.role)) return null;
+        if (!this.#hidesHunters(m)) return [key, id, value];
+        if (id === null) return [key, null, this.#onlyMrx(value as Record<string, Position> | null)];
+        return id === this.d.state.mrx ? [key, id, value] : null;
       case "devices":
+        if (!SEES_POSITIONS.includes(m.role)) return null;
+        if (!this.#hidesHunters(m)) return [key, id, value];
+        if (id === null) return [key, null, this.#devicesWithoutHunters(value as Record<string, Device> | null)];
+        return [key, id, this.#hunterDevice(value as Device | null)];
+      case "staff":
         return SEES_POSITIONS.includes(m.role) ? [key, id, value] : null;
       case "members":
       case "audit":
@@ -563,6 +601,7 @@ export class GameRoom extends DurableObject<Env> {
           this.#live("stats", t, s);
         }
       }
+      foodStep(this, t, p);
     }
     this.d.positions[t] = p;
     this.#live("positions", t, p);

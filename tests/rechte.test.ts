@@ -143,6 +143,49 @@ describe("Datenverkehr (Änderungen): nie mehr als erlaubt", () => {
   });
 });
 
+describe("Spielleitung blendet die Jäger für Schiris aus", () => {
+  const fullPositions = (w: ReturnType<typeof raw>) =>
+    w.msgs.flatMap((m) => (m.t === "patch" ? m.p.filter((p) => p[0] === "positions" && p[1] === null).map((p) => p[2] as object) : []));
+  it("Schiri bekommt nur noch Mister X – im Snapshot und im Datenverkehr; die Spielleitung sieht weiter alle", async () => {
+    const w = raw(schiri.token);
+    await sleep(300);
+    await ok(admin, "setConfig", { config: { refereeHunters: false } });
+    expect(Object.keys((await snapOf(schiri.token)).positions!)).toEqual([t1.teamId]); // Urfahr ist Mister X
+    expect(Object.keys((await snapOf(admin.token)).positions!)).toEqual(expect.arrayContaining([t1.teamId, t2.teamId]));
+    // die offene Verbindung bekommt sofort die gekürzte Liste
+    await eventually(
+      async () => fullPositions(w).length,
+      (n) => n > 0,
+    );
+    expect(Object.keys(fullPositions(w).at(-1)!)).toEqual([t1.teamId]);
+    // ein Jäger bewegt sich: beim Schiri kommt nichts davon an
+    const p2 = connect(t2.token);
+    await p2.until(() => true);
+    p2.sendPos(pos(0.03));
+    await sleep(2600);
+    p2.close();
+    expect(w.texts.join("\n")).not.toContain(String(48.3059 + 0.03));
+    // neuer Mister X: der Schiri bekommt dessen Standort, der alte verschwindet
+    await ok(schiri, "handover", { to: t2.teamId, type: "fang", expectedMrx: t1.teamId, requestId: "jaeger-aus-01" });
+    expect(Object.keys((await snapOf(schiri.token)).positions!)).toEqual([t2.teamId]);
+    expect(Object.keys(fullPositions(w).at(-1)!)).toEqual([t2.teamId]);
+    await ok(schiri, "undo", { handoverId: await val(`games/${G}/state/lastHandover`) });
+    expect(Object.keys((await snapOf(schiri.token)).positions!)).toEqual([t1.teamId]);
+    // wieder an: alle Jäger sofort zurück
+    await ok(admin, "setConfig", { config: { refereeHunters: true } });
+    await eventually(
+      async () => Object.keys(fullPositions(w).at(-1)!).length,
+      (n) => n >= 2,
+    );
+    expect(Object.keys((await snapOf(schiri.token)).positions!)).toEqual(expect.arrayContaining([t1.teamId, t2.teamId]));
+    w.ws.close();
+  });
+  it("nur die Spielleitung darf den Schalter umlegen", async () => {
+    for (const d of [t1, schiri])
+      expect(reason(await call(d.token, { action: "setConfig", gameId: G, config: { refereeHunters: false } }))).toBe("forbidden");
+  });
+});
+
 describe("Angriffsversuche", () => {
   it("Team versucht Durchsage, Übergabe, Sperre, Spielende, Einstellungen, Protokoll", async () => {
     const st = await val(`games/${G}/state`);

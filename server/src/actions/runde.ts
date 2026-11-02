@@ -17,7 +17,8 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
   for (const [uid, m] of Object.entries(room.d.members)) if (m.role === "team" || m.role === "schiri") room.removeMember(uid, "removed");
   room.setState({ phase: "vorbereitung", rev: st.rev });
   room.set("info", { ...room.d.info!, phase: "vorbereitung" });
-  room.set("secrets", { ...room.d.secrets, teamPw: undefined });
+  room.set("secrets", { ...room.d.secrets, teamPw: undefined, food: undefined });
+  room.food.clear();
   for (const k of [
     "teams",
     "reports",
