@@ -64,6 +64,27 @@ describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout:
     await page.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
     await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
     expect(Object.keys(await val(`games/${G}/field/cuts`))).toHaveLength(4);
+    expect(await val(`games/${G}/field/spots`)).toHaveLength(6); // Essens-Orte aus der Vorlage
+    // Essens-Orte: einen umbenennen, einen löschen, einen dazu
+    await page.getByRole("button", { name: new RegExp(T.zonen.essensOrte) }).click();
+    await page.getByRole("button", { name: "Dunkin' Stelzhamerstraße", exact: true }).click();
+    await page.getByLabel(T.zonen.name, { exact: true }).fill("Dunkin' Donuts");
+    await page.getByRole("button", { name: "KFC Annagasse", exact: true }).click();
+    await page.getByRole("button", { name: T.zonen.ortWeg, exact: true }).click();
+    await page.getByRole("button", { name: T.zonen.ortHinzu, exact: true }).click();
+    if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
+    await page.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
+    await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
+    const spots = (await val(`games/${G}/field/spots`)) as { name: string; radiusM: number }[];
+    expect(spots.map((x) => x.name)).toEqual([
+      "McDonald's Bahnhofplatz",
+      "McDonald's Landstraße",
+      "McDonald's Taubenmarkt",
+      "Dunkin' Donuts",
+      "Subway Landstraße",
+      T.zonen.neuerOrt,
+    ]);
+    expect(spots.every((x) => x.radiusM === 40)).toBe(true);
     // GeoJSON exportieren …
     const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: T.zonen.exportieren }).click()]);
     const exported = JSON.parse(readFileSync((await dl.path())!, "utf8")) as { features: { properties: { rolle: string } }[] };

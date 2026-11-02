@@ -42,7 +42,7 @@ import { fail, newKey, reply, type Env } from "./util.ts";
 import { sameText } from "./auth.ts";
 import { sendPush } from "./webpush.ts";
 import { ACTIONS } from "./actions/index.ts";
-import { advance, nextDue, purgeChat } from "./ablauf.ts";
+import { advance, foodStep, nextDue, purgeChat, type Presence } from "./ablauf.ts";
 
 export interface Data {
   gid: string;
@@ -77,6 +77,8 @@ export interface Data {
     endAt?: number;
     /** Schlüssel der Tracker (Teil der Geräte-Kennung) */
     deviceKeys?: Record<string, string>;
+    /** „Futter-Profi“: Besuche (mind. 10 Min) und Zeit an Essens-Orten je Team – nur Zählerstände, keine Standorte */
+    food?: Record<string, { visits: number; ms: number }>;
   };
   /** Fehlversuche beim Beitritt je IP (gehasht) */
   rate: Record<string, { n: number; since: number }>;
@@ -200,6 +202,8 @@ export class GameRoom extends DurableObject<Env> {
   /** zuletzt beantwortete Anfragen (Kennung `rid`) → dieselbe Antwort, ohne nochmal auszuführen */
   #done = new Map<string, ApiReply>();
   #posAt = new Map<string, number>();
+  /** wer gerade an einem Essens-Ort ist (nur im Speicher, wird nicht gespeichert) */
+  readonly food = new Map<string, Presence>();
   #livePatches = new Map<string, Patch>();
   #liveTimer: ReturnType<typeof setTimeout> | undefined;
   #liveSavedAt = 0;
@@ -563,6 +567,7 @@ export class GameRoom extends DurableObject<Env> {
           this.#live("stats", t, s);
         }
       }
+      foodStep(this, t, p);
     }
     this.d.positions[t] = p;
     this.#live("positions", t, p);

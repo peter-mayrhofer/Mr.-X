@@ -22,12 +22,23 @@ export interface Cut {
   poly: Polygon;
 }
 
+/** Essens-Ort (z. B. McDonald's): Teams, die dort mindestens 10 Min bleiben, zählen für die Auszeichnung „Futter-Profi“ */
+export interface Spot {
+  name: string;
+  lat: number;
+  lng: number;
+  /** Umkreis in Metern, in dem ein Team als „vor Ort“ gilt */
+  radiusM: number;
+}
+
 export interface Field {
   name: string;
   /** Meter jenseits der Grenzlinie, die noch als „drinnen“ zählen (Regel 9 + GPS-Ungenauigkeit) */
   toleranceM: number;
   base: Polygon;
   cuts: Record<string, Cut>;
+  /** Essens-Orte für die Auszeichnung „Futter-Profi“ (optional) */
+  spots?: Spot[];
 }
 
 export interface Config {

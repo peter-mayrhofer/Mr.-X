@@ -453,3 +453,14 @@ Google-Schlüssel (der Testbrowser) kann kein Push-Abo anlegen, Google Chrome sc
 steht dafür im Chrome-Profil (Chromes Push prüft die Profil-Einstellung, nicht die Test-Vorgabe). Apples Dienst
 (iPhone) braucht ein echtes Gerät und bleibt dem Feldtest – alle drei arbeiten nach denselben Standards
 (RFC 8030, 8291, 8292).
+
+### E-49 Auszeichnung „Futter-Profi“ (Essens-Orte)
+**Entscheidung:** Das Spielfeld kann Essens-Orte haben (Name, Punkt, Umkreis 15–100 m, Standard 40 m; im
+Spielfeld-Editor unter „Essens-Orte“). Bleibt ein Team mindestens 10 Minuten am selben Ort (Standort genauer als 40 m,
+keine Lücke über 3 Minuten), zählt ein Besuch. Bei der Siegerehrung gewinnt, wer die meisten Besuche hat; bei
+Gleichstand die längere Zeit dort. Die Vorlage „Linz Innenstadt“ bringt sechs Orte mit (McDonald's Bahnhofplatz,
+Landstraße, Taubenmarkt; Dunkin' Stelzhamerstraße; KFC Annagasse; Subway Landstraße – Koordinaten aus
+OpenStreetMap, abgerufen am 2.11.2026).
+**Warum so:** Gespeichert werden nur Zählerstände (Besuche, Minuten) im Geheimbereich des Spielraums, nie ein
+Standort; wer gerade wo ist, steht nur im Arbeitsspeicher. Nach der Auswertung werden die Zählerstände gelöscht.
+Die Datenschutzhinweise nennen das.

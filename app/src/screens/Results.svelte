@@ -1,6 +1,6 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
-  import { Archive, Footprints, LogOut, Medal, Repeat, Route, Timer } from "@lucide/svelte";
+  import { Archive, Footprints, LogOut, Medal, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
   import type { Results, Team } from "@mrx/shared";
   import Confetti from "../ui/Confetti.svelte";
   import TeamBadge from "../ui/TeamBadge.svelte";
@@ -32,6 +32,7 @@
       R.longest && { icon: Timer, label: T.ende.laengste, team: R.longest.teamId, value: dauer(R.longest.ms) },
       R.most && { icon: Repeat, label: T.ende.oefteste, team: R.most.teamId, value: `${R.most.count}×` },
       R.farthest && { icon: Footprints, label: T.ende.distanz, team: R.farthest.teamId, value: km(R.farthest.m) },
+      R.food && { icon: Utensils, label: T.ende.futter, team: R.food.teamId, value: `${R.food.visits}×` },
     ].filter((a) => !!a),
   );
 </script>

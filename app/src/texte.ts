@@ -425,6 +425,13 @@ export const T = {
     spielfeld: "Spielfeld",
     sperrbereiche: "Sperrbereiche",
     toleranz: "Toleranz an Grenzstraßen",
+    essensOrte: "Essens-Orte",
+    essensHinweis:
+      "Für die Auszeichnung „Futter-Profi“: Teams, die mindestens 10 Minuten bei einem dieser Orte bleiben, bekommen einen Besuch gutgeschrieben. Orte auf der Karte ziehen.",
+    neuerOrt: "Neuer Essens-Ort",
+    umkreis: "Umkreis",
+    ortHinzu: "Ort in Kartenmitte",
+    ortWeg: "Ort löschen",
     punktHinzu: "Punkt einfügen",
     punktWeg: "Punkt löschen",
     importieren: "GeoJSON importieren",
@@ -482,6 +489,7 @@ export const T = {
     laengste: "Am längsten Mister X",
     oefteste: "Am öftesten Mister X",
     distanz: "Meiste Strecke",
+    futter: "Am öftesten beim Essen",
     uebergaben: "Übergaben",
     gesamtstrecke: "Gesamtstrecke aller Teams",
     dauer: "Spieldauer",
@@ -719,7 +727,7 @@ export const T = {
       },
       {
         titel: "Wofür?",
-        text: "Nur für das Spiel: Mister X melden, Wartezeiten nach einem Fang berechnen, vor der Spielfeldgrenze warnen und eure Sicherheit (die Spielleitung sieht, wo ihr seid). Kein Tracking, keine Werbung, keine Weitergabe an andere.",
+        text: "Nur für das Spiel: Mister X melden, Wartezeiten nach einem Fang berechnen, vor der Spielfeldgrenze warnen und eure Sicherheit (die Spielleitung sieht, wo ihr seid). Kein Tracking, keine Werbung, keine Weitergabe an andere. Für die Auszeichnung „Futter-Profi“ wird gezählt, wie oft ein Team mindestens 10 Minuten bei einem Essens-Ort war – gespeichert wird nur diese Zahl, nicht der Standort.",
       },
       {
         titel: "Wer sieht was?",

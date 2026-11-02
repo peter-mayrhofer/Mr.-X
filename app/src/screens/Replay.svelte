@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { Download, Flag, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users } from "@lucide/svelte";
+  import { Download, Flag, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils } from "@lucide/svelte";
   import { replayAt, replayMarks, type ArchiveData, type Team } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import AppBar from "../ui/AppBar.svelte";
@@ -142,6 +142,7 @@
         {#if R.longest}<Pill icon={Timer}>{T.ende.laengste}: {team(R.longest.teamId).name} ({dauer(R.longest.ms)})</Pill>{/if}
         {#if R.most}<Pill icon={Repeat}>{T.ende.oefteste}: {team(R.most.teamId).name} ({R.most.count}×)</Pill>{/if}
         {#if R.farthest}<Pill icon={Footprints}>{T.ende.distanz}: {team(R.farthest.teamId).name} ({km(R.farthest.m)})</Pill>{/if}
+        {#if R.food}<Pill icon={Utensils}>{T.ende.futter}: {team(R.food.teamId).name} ({R.food.visits}×)</Pill>{/if}
         {#if data.reason === "notstopp"}<Pill tone="warn">{T.archiv.notstopp}</Pill>{/if}
       </div>
     {:else}

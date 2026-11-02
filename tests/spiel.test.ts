@@ -304,6 +304,38 @@ describe("Sofort-Meldung, Durchsage, Spielende aufdecken", () => {
   });
 });
 
+describe("Futter-Profi (Essens-Orte)", () => {
+  it("erst nach 10 Minuten am selben Ort zählt ein Besuch; beim Weggehen wird die Zeit gutgeschrieben", async () => {
+    // Testburger 2 km neben den anderen Teststandorten, damit nichts anderes hineinfällt
+    await set(`games/${G}/field/spots`, [{ name: "Testburger", lat: 48.32, lng: 14.28, radiusM: 40 }]);
+    await set(`games/${G}/track/${team.c!.id}`, null);
+    const phone = connect(team.c!.token);
+    await phone.until(() => true);
+    const t0 = Date.now() - 14.5 * MIN;
+    const send = async (lat: number, t: number) => {
+      phone.sendPos({ lat, lng: 14.28, acc: 8, t });
+      await sleep(1100); // der Server nimmt höchstens einen Punkt pro Sekunde und Gerät
+    };
+    // alle 100 s ein Punkt (wie ein Handy, das zwischendurch kurz still ist), leicht schwankend innerhalb von 40 m
+    for (let k = 0; k <= 5; k++) await send(48.32 + (k % 2) * 0.0001, t0 + k * 100_000);
+    expect(await val(`secrets/${G}/food/${team.c!.id}`)).toBeNull(); // 8 min 20 s: noch kein Besuch
+    await send(48.32, t0 + 600_000); // 10 Minuten
+    expect(await val(`secrets/${G}/food/${team.c!.id}`)).toEqual({ visits: 1, ms: 0 });
+    await send(48.32, t0 + 700_000);
+    await send(48.321, t0 + 800_000); // 111 m weiter: weg vom Essens-Ort
+    expect(await val(`secrets/${G}/food/${team.c!.id}`)).toEqual({ visits: 1, ms: 700_000 });
+    // nur Zählerstände, kein Standort im Geheimbereich
+    expect(Object.keys((await val(`secrets/${G}/food/${team.c!.id}`)) as object)).toEqual(["visits", "ms"]);
+    phone.close();
+  });
+  it("ungültige Essens-Orte lehnt der Server ab (geprüft wird vor allem anderen)", async () => {
+    const field = await val(`games/${G}/field`);
+    expect(reason(await run(admin, "setField", { field: { ...field, spots: [{ name: "X", lat: 48.3, lng: 14.28, radiusM: 5 }] } }))).toBe(
+      "invalid",
+    );
+  });
+});
+
 describe("Pause (F2)", () => {
   it("friert alles ein und verschiebt beim Fortsetzen um die Pausendauer", async () => {
     await ok(admin, "pause");
@@ -411,6 +443,8 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
     expect(arch.handovers[Object.keys(arch.handovers)[0]!].prev).toBeUndefined();
     expect(Object.keys(arch.teams)).toHaveLength(4);
     expect(arch.results.farthest).toEqual({ teamId: team.d!.id, m: 111 });
+    expect(arch.results.food).toEqual({ teamId: team.c!.id, visits: 1, ms: 700_000 }); // Futter-Profi
+    expect(await val(`secrets/${G}/food`)).toBeNull(); // Zählerstände nach der Auswertung gelöscht
     expect(Object.values(arch.chat as Record<string, { text: string }>).at(-1)!.text).toMatch(/^Spielende!/);
     for (const p of ["positions", "staff", "track", "locks"]) expect(await val(`games/${G}/${p}`)).toEqual({});
     expect(await val(`secrets/${G}/endAt`)).toBeNull();

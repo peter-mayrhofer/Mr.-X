@@ -75,6 +75,8 @@ export interface Results {
   longest: { teamId: string; ms: number } | null;
   most: { teamId: string; count: number } | null;
   farthest: { teamId: string; m: number } | null;
+  /** „Futter-Profi“: wer am öftesten mindestens 10 Min an einem Essens-Ort war (Gleichstand: längere Zeit dort) */
+  food?: { teamId: string; visits: number; ms: number } | null;
   handovers: number;
   totalDistM: number;
   /** Zeitstrahl: wer war wie lange Mister X, in Reihenfolge */
@@ -86,6 +88,14 @@ const top = <T extends number>(o: Record<string, T>): [string, T] | null => {
   return e && e[1] > 0 ? e : null;
 };
 
+/** Futter-Profi: meiste Besuche, bei Gleichstand die längste Zeit; ohne einen Besuch gibt es keinen Preis */
+function bestFood(food: Record<string, { visits: number; ms: number }>): Results["food"] {
+  const e = Object.entries(food)
+    .filter(([, v]) => v.visits > 0)
+    .sort((a, b) => b[1].visits - a[1].visits || b[1].ms - a[1].ms)[0];
+  return e ? { teamId: e[0], visits: e[1].visits, ms: e[1].ms } : null;
+}
+
 /** Auswertung (Abschnitt 7.10): Sieger = letzter Mister X, längste Zeit, am öftesten, meiste Strecke, Zeitstrahl */
 export function results(o: {
   handovers: Handover[];
@@ -93,6 +103,7 @@ export function results(o: {
   endedAt: number;
   pauses: Interval[];
   distM: Record<string, number>;
+  food?: Record<string, { visits: number; ms: number }>;
 }): Results {
   const hs = o.handovers.filter((h) => !h.undoneAt).sort((a, b) => a.at - b.at);
   const mrxMs: Record<string, number> = {};
@@ -115,6 +126,7 @@ export function results(o: {
     longest: l && { teamId: l[0], ms: l[1] },
     most: m && { teamId: m[0], count: m[1] },
     farthest: f && { teamId: f[0], m: f[1] },
+    food: bestFood(o.food ?? {}),
     handovers: hs.filter((h) => h.type !== "start").length,
     totalDistM: Object.values(o.distM).reduce((s, d) => s + d, 0),
     timeline,

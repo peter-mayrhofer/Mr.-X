@@ -85,6 +85,13 @@ describe("Auswertung (Abschnitt 7.10)", () => {
   });
   it("Zeitstrahl in Reihenfolge", () => expect(r.timeline.map(([t]) => t)).toEqual(["A", "B", "A", "B"]));
   it("leeres Spiel", () => expect(results({ handovers: [], startedAt: 0, endedAt: 1, pauses: [], distM: {} }).winner).toBeNull());
+  it("Futter-Profi: meiste Besuche, bei Gleichstand längere Zeit; ohne Besuch kein Preis", () => {
+    const base = { handovers: [], startedAt: 0, endedAt: 1, pauses: [], distM: {} };
+    const food = { A: { visits: 2, ms: 25 * MIN }, B: { visits: 2, ms: 31 * MIN }, C: { visits: 1, ms: 60 * MIN } };
+    expect(results({ ...base, food }).food).toEqual({ teamId: "B", visits: 2, ms: 31 * MIN });
+    expect(results({ ...base, food: { A: { visits: 0, ms: 0 } } }).food).toBeNull();
+    expect(results(base).food).toBeNull();
+  });
 });
 
 describe("GPS-Plausibilität (onPosition)", () => {
