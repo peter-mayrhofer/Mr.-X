@@ -109,6 +109,27 @@ describe("Neue Funktionen in der echten App", { timeout: 60_000 }, () => {
     const href = await u.getByRole("link", { name: T.kompass.karten }).getAttribute("href");
     expect(href).toContain("google.com/maps/dir/?api=1&destination=48.3059");
     await shot(u, "kompass");
+    // Handy drehen: der Pfeil dreht sich mit (Kompass-Ereignisse wie vom Lagesensor)
+    // der Test-Browser hat keinen Lagesensor: die Erlaubnis-Abfrage wie am Handy mit „erlaubt“ beantworten
+    await u.evaluate(() => {
+      (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission = async () => "granted";
+    });
+    const tap = u.getByRole("button", { name: T.kompass.aktivieren });
+    if (await tap.count()) await tap.click();
+    const turn = (alpha: number) =>
+      u.evaluate((a) => {
+        window.dispatchEvent(new DeviceOrientationEvent("deviceorientationabsolute", { alpha: a, beta: 0, gamma: 0, absolute: true }));
+      }, alpha);
+    const arrow = async () =>
+      Number((await u.locator(".compass .arrow").evaluate((el) => (el as SVGElement).style.transform)).match(/-?[\d.]+/)![0]);
+    await turn(0); // Handy zeigt nach Norden → Pfeil nach Süden (Mister X wurde südlich gemeldet)
+    const norm = async () => (((await arrow()) % 360) + 360) % 360;
+    await expect.poll(norm).toBeCloseTo(180, 0);
+    await visible(u, T.kompass.flach);
+    await turn(270); // Handy nach Osten gedreht → Pfeil zeigt nach rechts hinten (90°)
+    await expect.poll(norm).toBeCloseTo(90, 0);
+    await turn(90); // Handy nach Westen → 270° bzw. -90° (kurzer Weg)
+    await expect.poll(norm).toBeCloseTo(270, 0);
   });
 
   it("Sperrgebiet-Warnung auch für Jäger; Spielleitung sieht es in den Warnungen", async () => {
@@ -181,6 +202,20 @@ describe("Neue Funktionen in der echten App", { timeout: 60_000 }, () => {
     // Weg zeigen: Kompass zum Treffpunkt
     await t.getByRole("button", { name: T.sammelruf.kompass }).click();
     await visible(t, T.kompass.zumTreffpunkt(T.admin.spielfeldmitte));
+  });
+
+  it("Endphase: zu Beginn des Spielende-Fensters Durchsage an alle und Hinweis am Team-Handy", async () => {
+    await set(`secrets/${G}/endAt`, Date.now() + 60 * 60_000);
+    await set(`games/${G}/state`, { ...(await val(`games/${G}/state`)), startedAt: Date.now() - 31 * 60_000 });
+    await run("setConfig", { config: { endMinH: 0.5, endMaxH: 2 } });
+    await set(`secrets/${G}/endAt`, Date.now() + 60 * 60_000);
+    await expect.poll(() => val(`games/${G}/state/endPhase`), { timeout: 15_000 }).toBeGreaterThan(0);
+    const u = phones.Urfahr!.page;
+    await visible(u, T.status.endphase);
+    await shot(u, "endphase");
+    await u.getByRole("button", { name: new RegExp(`^${T.tabs.chat}`) }).click();
+    await visible(u, "Endphase! Das Spiel kann ab jetzt jederzeit enden");
+    await u.getByRole("button", { name: T.tabs.karte, exact: true }).click();
   });
 
   it("Probelauf-Ende: Auswertung mit Hinweis, Sammelruf bleibt, nichts im Archiv", async () => {
