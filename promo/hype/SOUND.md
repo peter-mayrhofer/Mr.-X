@@ -65,3 +65,7 @@ daher überall „49 ms“. Gegen den Einsatz (Onset <150 Hz) gemessen liegen di
 Mister X werden 5,90 s −3 ms, Endkarte 13,28 s −7 ms; bei FANGEN 4,92 s fand die Messung keinen klaren Kick (nächster Treffer +48 ms).
 Tempo aus der Bassdrum gefittet: 122,02 BPM (Musik ab 13,829 s im Track). Ersetzt: der Whoosh aus dem Standard-Kit (Profil des
 Urhebers nennt CC-BY-Wünsche) und das Mixkit-Tippgeräusch – jetzt nur CC0-Effekte.
+
+## Hochformat (Mister-X-Promo-Hype-Hochformat.mp4)
+Gleiche Animation, gleiche 32 Cues und gleiche Sounds; Ton-Pass separat gemessen: −16,3 LUFS integriert, True Peak −4,7 dBFS
+(Stereo und Mono-Downmix gleich).

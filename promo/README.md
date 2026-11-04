@@ -7,7 +7,8 @@ Aus einem simulierten Spiel mit der echten App aufgenommen.
 | `Mister-X-Rote-Falken.mp4` | Langes Video (1:54, Querformat 1920×1080) – Admin, Mister X, Jäger, Schiri, Fang aus drei Sichten, Zeitraffer, Siegerehrung, Archiv |
 | `Mister-X-Rote-Falken-Kurz-Hochformat.mp4` | Kurzfassung (41 s, Hochformat 1080×1920) für WhatsApp-Status, Instagram-Story/Reel |
 | `Mister-X-Promo-Hype.mp4` | Hype-Clip (16 s, Querformat 1920×1080, 60 fps): Funke → MISTER X → Jagen/Fangen/Mister X werden → Live-Karte → Übergabe in der App → Logo |
-| `hype/mister-x-promo.html` | Quelle des Hype-Clips: im Browser öffnen und durchscrubben (ohne Ton) |
+| `Mister-X-Promo-Hype-Hochformat.mp4` | Derselbe Hype-Clip im Hochformat (1080×1920) für Reels, Stories und WhatsApp-Status |
+| `hype/mister-x-promo.html`, `hype/mister-x-promo-hochformat.html` | Quellen der Hype-Clips: im Browser öffnen und durchscrubben (ohne Ton) |
 | `hype/SOUND.md`, `hype/CREDITS.txt`, `hype/beatgrid.png` | Ton-Protokoll (Lautheit, Beat-Abgleich), Quellen von Musik und Soundeffekten, Beat-Kontrolle (Bassdrum gegen Beat-Linien) |
 | `Mister-X-Screenshots.zip` | 42 Screenshots aller Bildschirme |
 | `Mister-X-Uebersicht.jpg` | Alle Screenshots auf einem Bild |
