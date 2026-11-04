@@ -249,7 +249,7 @@ MK.pick = add(1, PTS.traun, 'hop', 11); mark('ask', 0.5); add(0.5, PTS.traun, 's
 MK.ja = add(1.25, PTS.ja, 'hop', 11); mark('pass', 0.5); add(0.5, PTS.ja, 'stay', 11);
 MK.flagB = add(1.75, PTS.flagB, 'hop', 11); add(2.5, PTS.flagB, 'stay', 11);
 MK.g = add(1.5, PTS.gFlag, 'hop', 12); add(3, PTS.gFlag, 'stay', 12);
-MK.bar = add(1.75, [PTS.barA[0], PTS.barA[1]], 'hop', 13); MK.barEnd = add(3.5, [PTS.barB[0], PTS.barB[1]], 'roll', 13);
+MK.bar = add(1.5, [PTS.barA[0], PTS.barA[1]], 'hop', 13); MK.barEnd = add(3.5, [PTS.barB[0], PTS.barB[1]], 'roll', 13);
 MK.win = add(1.5, PTS.win, 'hop', 13);
 MK.launch = add(2, PTS.win, 'stay', 13);
 const LB = MK.launch;                 // Start nach oben
@@ -448,7 +448,7 @@ function cues() {
   add(MK.caught, 'click', 'Wir wurden gefangen'); add(MK.pick, 'click', 'Traun'); add(MK.ja, 'click', 'Ja, Fahne abgeben');
   add(MK.flagB - 1.75, 'movement', 'Fahne springt zu Traun'); add(MK.flagB, 'success', 'Ihr seid jetzt Mister X');
   add(MK.g, 'appear', 'Großbild');
-  add(MK.bar - 1.75, 'movement', 'Sprung zur Siegerehrung'); add(MK.bar, 'hover_or_small_ui', 'landet auf der Leiste');
+  add(MK.bar - 1.5, 'movement', 'Sprung zur Siegerehrung'); add(MK.bar, 'hover_or_small_ui', 'landet auf der Leiste');
   add(MK.win - 1.5, 'build_up', 'Riser zum Sieger', { dur: +(1.5 * B).toFixed(3) }); add(MK.win, 'reveal', 'Traun gewinnt, Konfetti');
   add(LB, 'movement', 'Start in die Gesamtansicht'); add(NB - 4, 'movement', 'Sturzflug zurück');
   return C.sort((a, b) => a.t - b.t);
