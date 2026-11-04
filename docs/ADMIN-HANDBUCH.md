@@ -53,7 +53,7 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
 
 ![Spielfeld-Editor](screens/hell/16-laptop.jpg)
 
-### 1.4 Zugänge festlegen und Flyer drucken
+### 1.4 Zugänge festlegen und Blätter drucken
 
 **Teams & Zugänge → Zugänge**:
 
@@ -61,8 +61,11 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
 2. **Schiri-Code** festlegen (nur für Schiris) → **Speichern**.
 3. Passwörter werden nur verschlüsselt gespeichert und können **nicht** wieder angezeigt werden – notieren oder bei
    Bedarf neu festlegen. Bereits angemeldete Geräte bleiben angemeldet.
-4. **QR-Code für Teams → Drucken**: druckt einen A4-Flyer mit QR-Code, Spiel-Code und Feld für das Team-Passwort.
-   Ein Beispiel liegt als [`flyer-beispiel.pdf`](flyer-beispiel.pdf) bei.
+4. **Druckblätter:** drei A4-Blätter – für **Teams**, **Schiris** und die **Spielleitung** – mit QR-Code (führt
+   zur richtigen Anmeldung, Spiel-Code schon ausgefüllt), Spiel-Code, Passwort bzw. Code, Notfall-Telefon und einer
+   kurzen Anleitung. Ein Passwort, das du gerade festgelegt hast, wird automatisch mitgedruckt; sonst fragt die App
+   beim Drucken danach und prüft, ob es stimmt. Gespeichert wird es dafür nirgends – nur auf dem Papier.
+   Das Blatt für die Spielleitung ist **vertraulich** (nicht aushängen, nach dem Spiel vernichten).
 5. **Großbild-Link** nur auf dem Laptop für den Beamer öffnen (der Link enthält einen Schlüssel).
 
 ![Teams & Zugänge](screens/hell/15-laptop.jpg)

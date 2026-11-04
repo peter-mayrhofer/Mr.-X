@@ -26,6 +26,8 @@ export type ApiRequest =
   | { action: "leave"; gameId: string }
   | { action: "setSecret"; gameId: string; kind: SecretKind; value: string | null }
   | { action: "screenLink"; gameId: string }
+  // Druckblätter: stimmt das eingetippte Passwort/der Code? (nur Spielleitung; gespeichert sind nur Prüfsummen)
+  | { action: "checkSecret"; gameId: string; kind: SecretKind; value: string }
   // Spielablauf (Meilenstein 4)
   | { action: "startGame"; gameId: string; mrx: string | "random" }
   | { action: "handover"; gameId: string; to: string; type: "fang" | "strafe"; expectedMrx: string; requestId: string }
@@ -141,6 +143,7 @@ export interface ApiResults {
   leave: Record<string, never>;
   setSecret: Record<string, never>;
   screenLink: { key: string };
+  checkSecret: { ok: boolean };
   startGame: { mrx: string };
   handover: { handoverId: string; locked: string[] };
   undo: Record<string, never>;

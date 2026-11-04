@@ -496,3 +496,19 @@ und bei jedem neuen Mister X bekommen die Schiris die Liste komplett neu. Beim S
 - **Durchsage-Vorlagen:** feste Vorschläge aus dem echten Spiel + eigene (höchstens 20) – antippen füllt den Text.
 - **Probelauf:** vor dem Start einschaltbar; das Spiel läuft normal, die Auswertung gibt es, im Archiv erscheint es
   nicht (Kennung `probe-…`), mit der neuen Runde wird es gelöscht.
+
+### E-52 QR-Codes scannen in der App und drei Druckblätter
+**Entscheidung:** Startseite, „Team beitreten“ und die Schiri-/Spielleitungs-Anmeldung haben einen Knopf
+„QR-Code scannen“: Kamera direkt in der App (Web und Android-App, ohne Kamera-App), erkannt mit dem eingebauten
+BarcodeDetector bzw. jsQR (iPhone, Laptop). Mister-X-Links von jeder Adresse und reine Spiel-Codes führen auf die
+passende Seite (`routeFromQr`), fremde Codes werden abgelehnt. Die QR-Codes enthalten **nur den Weg zur Anmeldung mit
+dem Spiel-Code** – Name, Personenzahl und Passwort tippt man selbst (Wunsch der Spielleitung, aus Sicherheit).
+Unter „Zugänge“ gibt es drei A4-Druckblätter (Teams, Schiris, Spielleitung) mit QR-Code, Spiel-Code, Passwort bzw.
+Code, Notfall-Telefon und Anleitung. Das Passwort kommt aufs Blatt, wenn es gerade festgelegt wurde (nur im
+Arbeitsspeicher des Fensters), sonst wird es beim Drucken eingetippt und vom Server geprüft (`checkSecret`: nur
+Spielleitung, nur „stimmt/stimmt nicht“, höchstens 10 Versuche pro Minute).
+**Warum so:** Passwörter liegen nur als Prüfsumme am Server und in keinem QR-Code, Link, Browser-Speicher oder
+Quelltext. Ein zwischenzeitlich gebauter Zugang per Schlüssel im QR-Code (ohne Passwort) wurde wieder entfernt: Ein
+Foto des Spielleitungs-Codes hätte zum Steuern des Spiels gereicht. Die QR-Links nennen immer die öffentliche Adresse
+(in der Android-App `VITE_API_URL`, nicht „localhost“). Die Android-App braucht die Kamera-Berechtigung (fragt beim
+ersten Scannen).

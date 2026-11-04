@@ -4,6 +4,7 @@
   import Button from "../ui/Button.svelte";
   import Logo from "../ui/Logo.svelte";
   import StartBackdrop from "./parts/StartBackdrop.svelte";
+  import QrScanButton from "./parts/QrScanButton.svelte";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
@@ -49,6 +50,7 @@
       <a class="apk" href={apk} download><Smartphone size={22} strokeWidth={2.4} aria-hidden="true" />{T.start.androidApp}</a>
       <p class="hint">{T.start.androidHinweis}</p>
     {/if}
+    <QrScanButton />
     <div class="staff">
       <Button variant="secondary" icon={ShieldCheck} onclick={() => go(links.schiri)}>{T.start.schiri}</Button>
       <Button variant="secondary" icon={Crown} onclick={() => go(links.admin)}>{T.start.admin}</Button>

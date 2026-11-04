@@ -170,3 +170,22 @@ export function screenLink(room: GameRoom, _d: D, a: Auth): ApiResults["screenLi
   if (!room.d.secrets.screenKey) room.set("secrets", { ...room.d.secrets, screenKey: randomId(18) });
   return { key: room.d.secrets.screenKey! };
 }
+
+/**
+ * Druckblätter: stimmt das eingetippte Passwort? Gespeichert sind nur Prüfsummen – so kommt das Passwort aufs Blatt,
+ * ohne irgendwo im Klartext zu liegen. Nur die Spielleitung, höchstens 10 Versuche pro Minute.
+ */
+export async function checkSecret(room: GameRoom, d: D, a: Auth): Promise<ApiResults["checkSecret"]> {
+  room.who(a, ["admin"]);
+  const kind = d.kind as SecretKind;
+  if (!(kind in MIN)) fail("invalid", "Art ungültig");
+  const now = Date.now();
+  const key = `check_${a.uid ?? "super"}`;
+  const r = room.d.rate[key];
+  const cur = !r || now - r.since >= 60_000 ? { n: 0, since: now } : r;
+  if (cur.n >= 10) fail("tooMany", "Zu viele Versuche");
+  room.put("rate", key, { n: cur.n + 1, since: cur.since });
+  const value = typeof d.value === "string" ? d.value.slice(0, 64) : "";
+  const hash = room.d.secrets[kind];
+  return { ok: !!hash && (await verifySecret(value, hash)) };
+}

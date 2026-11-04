@@ -7,6 +7,7 @@
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
+  import QrScanButton from "./parts/QrScanButton.svelte";
 
   type StaffRole = "schiri" | "admin";
   interface Props {
@@ -45,6 +46,7 @@
 <main class="page">
   <AppBar title={T.staffLogin.titel} {onback} />
   <form class="form" onsubmit={submit}>
+    {#if !code0}<QrScanButton />{/if}
     <Segmented
       label={T.staffLogin.titel}
       bind:value={role}

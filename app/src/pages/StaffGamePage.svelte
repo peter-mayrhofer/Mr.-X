@@ -24,6 +24,7 @@
   import { clock } from "../lib/clock.svelte.ts";
   import { signal } from "../lib/signal.ts";
   import { call } from "../lib/api.ts";
+  import { API_URL } from "../lib/server.ts";
   import { leaveGame } from "../lib/session.svelte.ts";
   import { go, query, router } from "../lib/router.svelte.ts";
   import type { StaffView } from "../lib/staff.ts";
@@ -159,7 +160,8 @@
   // Großbild und Archiv sind eigene Seiten (Vollbild bzw. auch für Teams erreichbar)
   const link = (id: Section) =>
     id === "grossbild" ? "/grossbild" : id === "archiv" ? "/archiv" : SECTIONS.includes(id) ? `/spiel?b=${id}` : null;
-  const base = `${location.origin}${location.pathname}`;
+  // Links für QR-Codes: immer die öffentliche Adresse (in der Android-App ist location „localhost“)
+  const base = API_URL ? `${API_URL}/` : `${location.origin}${location.pathname}`;
 
   async function send(text: string, ch: "alle" | "dm", teamId?: string) {
     try {

@@ -7,6 +7,7 @@
   import TextField from "../ui/TextField.svelte";
   import Banner from "../ui/Banner.svelte";
   import Stepper from "../ui/Stepper.svelte";
+  import QrScanButton from "./parts/QrScanButton.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
@@ -74,6 +75,9 @@
       void submit();
     }}
   >
+    {#if !gameName}
+      <QrScanButton />
+    {/if}
     {#if gameName}
       <div class="game">
         <CircleCheck size={24} aria-hidden="true" />

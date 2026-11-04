@@ -1,7 +1,7 @@
 // Alle Aktionen des Spielraums (POST /api mit gameId). Organisator-Login und Spieleliste erledigt der Worker selbst.
 import type { ApiRequest } from "@mrx/shared";
 import type { Auth, GameRoom } from "../room.ts";
-import { createGame, gameInfo, join, leave, screenLink, setSecret } from "./access.ts";
+import { checkSecret, createGame, gameInfo, join, leave, screenLink, setSecret } from "./access.ts";
 import * as spiel from "./spiel.ts";
 import { handover, undo } from "./uebergabe.ts";
 import { removeMember, removeTeam, renameTeam, resetRound } from "./runde.ts";
@@ -19,6 +19,7 @@ export const ACTIONS: Partial<Record<ApiRequest["action"], Action>> = {
   leave,
   setSecret,
   screenLink,
+  checkSecret,
   ...spiel,
   handover,
   undo,

@@ -167,6 +167,7 @@
     <AccessPanel
       gameName={view.gameName}
       {joinUrl}
+      checkSecret={async (kind: SecretKind, value: string) => (await api({ action: "checkSecret", gameId: g, kind, value })).ok}
       loadScreenUrl={async () => screenUrl((await api({ action: "screenLink", gameId: g })).key)}
       onsave={async (kind: SecretKind, value: string | null) => {
         await api({ action: "setSecret", gameId: g, kind, value });

@@ -204,6 +204,113 @@ export const T = {
 
   tabs: { karte: "Karte", kompass: "Kompass", chat: "Chat", regeln: "Regeln", mehr: "Mehr" },
 
+  druck: {
+    karte: "Druckblätter",
+    hinweis:
+      "Drei Blätter zum Ausdrucken – mit QR-Code, Spiel-Code und Passwort. Das Passwort steht nur auf dem Papier: Die App merkt es sich nirgends.",
+    telefon: "Notfall-Telefon der Spielleitung (optional)",
+    telefonHinweis: "steht auf allen drei Blättern; wird nicht gespeichert",
+    blatt: { team: "Blatt für Teams", schiri: "Blatt für Schiris", admin: "Blatt für die Spielleitung" },
+    drucken: "Drucken",
+    bekannt: "Passwort wird mitgedruckt",
+    eingeben: "Passwort beim Drucken eingeben",
+    frage: (wer: string) => `${wer} drucken`,
+    frageText: "Gib das Passwort ein, das aufs Blatt soll. Die App prüft, ob es stimmt – gespeichert wird es nicht.",
+    falsch: "Das stimmt nicht mit dem gespeicherten Passwort überein.",
+    keinTeamPw: "Zuerst ein Team-Passwort festlegen.",
+    rolle: { team: "Team-Zugang", schiri: "Schiri-Zugang", admin: "Spielleitung · vertraulich" },
+    geheim: { team: "Team-Passwort", schiri: "Schiri-Code", admin: "Admin-Passwort" },
+    spielCode: "Spiel-Code",
+    notfall: "Notfall-Telefon Spielleitung",
+    scannen: "Mit der Handy-Kamera oder in der App „QR-Code scannen“",
+    adresse: "Adresse",
+    schritte: {
+      team: [
+        {
+          titel: "App öffnen",
+          text: "Android: App „Mister X“ (Download auf der Startseite). iPhone: Adresse unten in Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“.",
+        },
+        {
+          titel: "QR-Code scannen",
+          text: "Mit der Kamera oder in der App „QR-Code scannen“. Ohne Kamera: „Team beitreten“ und den Spiel-Code eintippen.",
+        },
+        {
+          titel: "Beitreten",
+          text: "Teamnamen, wie viele ihr seid und das Team-Passwort von diesem Blatt eintippen. Zweites Handy: gleicher Teamname → „Als Ersatzgerät“.",
+        },
+        {
+          titel: "Erlauben",
+          text: "Standort und Benachrichtigungen erlauben. Android: Akku-Optimierung ausschalten. iPhone: Bildschirm anlassen.",
+        },
+        {
+          titel: "Spielen",
+          text: "Die Karte zeigt, wo Mister X zuletzt war, „Kompass“ zeigt den Weg. Rot heißt stehen bleiben. Im Notfall: SOS.",
+        },
+      ],
+      schiri: [
+        { titel: "App öffnen", text: "Android: App „Mister X“. iPhone oder Laptop: die Adresse unten im Browser öffnen." },
+        {
+          titel: "QR-Code scannen",
+          text: "Mit der Kamera oder in der App „QR-Code scannen“ – oder „Ich bin Schiri“ und den Spiel-Code eintippen.",
+        },
+        {
+          titel: "Anmelden",
+          text: "Deinen Namen und den Schiri-Code von diesem Blatt eintippen. Standort und Benachrichtigungen erlauben.",
+        },
+        {
+          titel: "Mister X begleiten",
+          text: "Wer bei Mister X mitläuft: „Ich begleite Mister X“ einschalten – dann zählt dein Standort, falls dessen Handy ausfällt.",
+        },
+        {
+          titel: "Fang bestätigen",
+          text: "„Übergabe“ antippen, das fangende Team wählen, bestätigen. Wartezeiten rechnet die App. Irrtum: „Rückgängig“.",
+        },
+        {
+          titel: "Notfall",
+          text: "Roter Balken „NOTFALL“: Ort in Google Maps öffnen, hingehen oder die Spielleitung anrufen, dann „Erledigt“.",
+        },
+      ],
+      admin: [
+        {
+          titel: "Anmelden",
+          text: "Am Laptop die Adresse öffnen (oder QR-Code scannen) → „Spielleitung“ → Namen und Admin-Passwort eintippen.",
+        },
+        {
+          titel: "Vorbereiten",
+          text: "Spielfeld prüfen (Treffpunkt, Essens-Orte), Team-Passwort und Schiri-Code festlegen, Blätter drucken, Großbild-Link am Beamer öffnen.",
+        },
+        { titel: "Üben", text: "Steuerung → „Probelauf“: läuft wie echt, kommt aber nicht ins Archiv." },
+        {
+          titel: "Starten",
+          text: "Steuerung → Mister X wählen oder auslosen → „Spiel starten“. Ab dann meldet der Server Mister X von selbst.",
+        },
+        {
+          titel: "Im Spiel",
+          text: "Live: Karte, Warnungen, Durchsagen. Steuerung: Bereiche sperren (mit Vorwarnung), Pause, Notstopp. Notfälle erscheinen als roter Balken.",
+        },
+        {
+          titel: "Ende",
+          text: "Das Spiel endet zum geheimen Zeitpunkt. „Sammelruf“ holt alle zum Treffpunkt, die Siegerehrung läuft am Großbild.",
+        },
+      ],
+    },
+    fuss: {
+      team: "Mitnehmen: Powerbank und Halstuch (gilt in den Öffis als Fahrschein). Standorte sieht nur die Spielleitung, nach dem Spiel werden sie gelöscht.",
+      schiri: "Du entscheidest bei Fang und Wartezeit vor Ort – die App rechnet nach, was du bestätigst.",
+      admin:
+        "Vertraulich: Mit diesem Passwort kann man das Spiel steuern und beenden. Nicht aushängen, nicht weitergeben, nach dem Spiel vernichten.",
+    },
+  },
+
+  qr: {
+    knopf: "QR-Code scannen",
+    titel: "QR-Code scannen",
+    hinweis: "Den QR-Code der Spielleitung in den Rahmen halten.",
+    fremd: "Das ist kein Mister-X-Code. Bitte den QR-Code der Spielleitung scannen.",
+    nichtErlaubt: "Die Kamera ist nicht erlaubt. In den Einstellungen des Handys erlauben – oder den Code abtippen.",
+    keineKamera: "Keine Kamera gefunden. Bitte den Spiel-Code abtippen.",
+  },
+
   kompass: {
     titel: "Kompass",
     zurMeldung: "Zur letzten Meldung von Mister X",
@@ -508,7 +615,6 @@ export const T = {
     schiriCode: "Schiri-Code",
     adminPasswort: "Admin-Passwort",
     passwortNeu: "Neu festlegen",
-    qrTeams: "QR-Code für Teams",
     drucken: "Drucken",
     grossbildLink: "Großbild-Link",
     neueRunde: "Neue Runde vorbereiten",
@@ -765,31 +871,6 @@ export const T = {
     grossbildHinweis: "Der Link enthält einen Schlüssel – nur auf dem Laptop in der Zentrale öffnen.",
     grossbildZeigen: "Link anzeigen",
     /** A4-Flyer zum Drucken (QR-Code für Teams → Drucken) */
-    flyer: {
-      scannen: "Mit der Handy-Kamera scannen",
-      code: "Spiel-Code",
-      passwort: "Team-Passwort",
-      notfall: "Notfall: Spielleitung",
-      schritte: [
-        {
-          titel: "Android",
-          text: "QR-Code scannen. Erscheint „Android-App installieren“: antippen, Installation erlauben, App öffnen, „Team beitreten“, Spiel-Code eingeben. Sonst einfach im Browser weiter.",
-        },
-        {
-          titel: "iPhone",
-          text: "QR-Code scannen, in Safari unten auf „Teilen“ → „Zum Home-Bildschirm“ und Mister X von dort öffnen.",
-        },
-        {
-          titel: "Beitreten",
-          text: "Teamname und Team-Passwort eingeben. Zweites Handy: gleicher Teamname → „Als Ersatzgerät beitreten“.",
-        },
-        {
-          titel: "Erlauben",
-          text: "Standort und Benachrichtigungen erlauben. Android-App: Akku-Optimierung ausschalten. iPhone: Bildschirm anlassen.",
-        },
-      ],
-      mitnehmen: "Mitnehmen: Powerbank und Halstuch (gilt in den Öffis als Fahrschein).",
-    },
   },
 
   /** Ablehnungen des Spiel-Servers (shared/api.ts ApiReason) */

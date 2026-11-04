@@ -1,36 +1,50 @@
 <!--
   Zugänge eines Spiels (Teil von Screen 15): Team-Passwort, Schiri-Code, Admin-Passwort neu festlegen
-  (gehasht gespeichert → nur neu setzen, nicht auslesen, E-06), QR-Code für Teams mit Druck-Flyer,
-  Großbild-Link. Optional „Neue Runde vorbereiten“.
+  (gehasht gespeichert → nur neu setzen, nicht auslesen, E-06), drei Druckblätter (Teams, Schiris, Spielleitung) mit
+  QR-Code, Spiel-Code und Passwort, Großbild-Link. Optional „Neue Runde vorbereiten“.
+  Das Passwort für ein Blatt kennt die App nur, wenn es gerade hier festgelegt wurde (Arbeitsspeicher) – sonst wird es
+  beim Drucken eingetippt und vom Server geprüft. Gespeichert wird es nirgends.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import { renderSVG } from "uqr";
-  import { Copy, KeyRound, Monitor, Printer, QrCode, RefreshCw, ShieldCheck, Trash, TriangleAlert } from "@lucide/svelte";
+  import { CircleCheck, Copy, KeyRound, Monitor, Printer, RefreshCw, ShieldCheck, Trash, TriangleAlert } from "@lucide/svelte";
   import { LIMITS, type SecretKind } from "@mrx/shared";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import TextField from "../../ui/TextField.svelte";
   import Modal from "../../ui/Modal.svelte";
-  import Logo from "../../ui/Logo.svelte";
+  import PrintSheet from "./PrintSheet.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { ApiError } from "../../lib/api.ts";
+  import { druck, merke } from "../../lib/druck.svelte.ts";
   import { T } from "../../texte.ts";
 
+  type Role = "team" | "schiri" | "admin";
   interface Props {
     gameName: string;
+    /** Spiel-Link …/#/s/<code> – daraus Adresse und Spiel-Code */
     joinUrl: string;
     /** Großbild-Link wird erst auf Anfrage geholt (enthält den Schlüssel) */
     loadScreenUrl: () => Promise<string>;
     onsave: (kind: SecretKind, value: string | null) => Promise<void>;
+    /** stimmt das eingetippte Passwort? (Server, nur Prüfsumme); fehlt im Prototyp → ungeprüft */
+    checkSecret?: (kind: SecretKind, value: string) => Promise<boolean>;
     onreset?: () => void;
   }
 
-  let { gameName, joinUrl, loadScreenUrl, onsave, onreset }: Props = $props();
+  let { gameName, joinUrl, loadScreenUrl, onsave, checkSecret, onreset }: Props = $props();
   const values = $state<Record<SecretKind, string>>({ teamPw: "", schiriCode: "", adminPw: "" });
   let busy = $state<SecretKind | null>(null);
   let screenUrl = $state<string | null>(null);
   let confirmDelete = $state(false);
   let confirmReset = $state(false);
+  // Druck: welches Blatt, Passwort-Abfrage
+  let printing = $state<Role | null>(null);
+  let ask = $state<Role | null>(null);
+  let askValue = $state("");
+  let askError = $state<string | undefined>();
+  let keepOpen = false;
 
   const MIN: Record<SecretKind, number> = { teamPw: LIMITS.teamPw, schiriCode: LIMITS.schiriCode, adminPw: LIMITS.adminPw };
   const LABEL: Record<SecretKind, string> = {
@@ -38,21 +52,61 @@
     schiriCode: T.admin.schiriCode,
     adminPw: T.admin.adminPasswort,
   };
-  const qr = (s: string) => renderSVG(s, { border: 2, whiteColor: "#fff", blackColor: "#000" });
-  const F = T.zugang.flyer;
-  /** Spiel-Code fürs Abtippen (Android-App): letzter Teil des Beitritts-Links …/#/s/<code> */
+  const KIND: Record<Role, SecretKind> = { team: "teamPw", schiri: "schiriCode", admin: "adminPw" };
+  const ROLES: Role[] = ["team", "schiri", "admin"];
+  const D = T.druck;
+
+  /** Spiel-Code: letzter Teil des Spiel-Links …/#/s/<code>; Adresse: alles vor „#“ */
   const code = $derived(joinUrl.split("/").pop() ?? "");
+  const base = $derived(joinUrl.split("#")[0]);
+  // QR-Codes führen nur zur passenden Anmeldung mit Spiel-Code – Name und Passwort tippt man selbst
+  const urls = $derived<Record<Role, string>>({
+    team: `${base}#/beitreten/${code}`,
+    schiri: `${base}#/staff/schiri?g=${code}`,
+    admin: `${base}#/staff/admin?g=${code}`,
+  });
+  const known = $derived(druck.pw[code] ?? {});
+  const qr = (s: string) => renderSVG(s, { border: 2, whiteColor: "#fff", blackColor: "#000" });
 
   async function save(kind: SecretKind, value: string | null) {
     busy = kind;
     try {
       await onsave(kind, value);
+      merke(code, kind, value);
       values[kind] = "";
       toast(value === null ? T.zugang.geloescht(LABEL[kind]) : T.zugang.gespeichert(LABEL[kind]), value === null ? "warn" : "ok");
     } catch (e) {
       toast(e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network, "warn");
     } finally {
       busy = null;
+    }
+  }
+
+  async function doPrint(role: Role) {
+    printing = role;
+    await tick();
+    print();
+  }
+  /** Drucken: Passwort bekannt → gleich; sonst einmal eintippen (der Server prüft, ob es stimmt) */
+  function startPrint(role: Role) {
+    if (known[KIND[role]]) return void doPrint(role);
+    ask = role;
+    askValue = "";
+    askError = undefined;
+  }
+  async function confirmPrint() {
+    const role = ask!;
+    const value = askValue;
+    try {
+      if (checkSecret && !(await checkSecret(KIND[role], value))) {
+        askError = role === "team" && !value ? D.keinTeamPw : D.falsch;
+        return;
+      }
+      merke(code, KIND[role], value);
+      ask = null;
+      await doPrint(role);
+    } catch (e) {
+      askError = e instanceof ApiError ? T.apiFehler[e.reason] : T.apiFehler.network;
     }
   }
 
@@ -88,17 +142,28 @@
     </Card>
   {/each}
 
-  <Card label={T.admin.qrTeams} icon={QrCode}>
-    <div class="qr">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
-      <div class="code">{@html qr(joinUrl)}</div>
-      <div class="qrtext">
-        <code>{joinUrl}</code>
-        <div class="row">
-          <Button size="m" variant="secondary" icon={Copy} onclick={() => copy(joinUrl)}>{T.zugang.kopieren}</Button>
-          <Button size="m" variant="secondary" icon={Printer} onclick={() => print()}>{T.admin.drucken}</Button>
-        </div>
-      </div>
+  <Card label={D.karte} icon={Printer}>
+    <p class="muted small">{D.hinweis}</p>
+    <TextField label={D.telefon} hint={D.telefonHinweis} type="tel" bind:value={druck.tel} autocomplete="off" />
+    <ul class="sheets">
+      {#each ROLES as role (role)}
+        <li>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
+          <div class="mini">{@html qr(urls[role])}</div>
+          <div class="txt">
+            <strong>{D.blatt[role]}</strong>
+            {#if known[KIND[role]]}
+              <span class="ok"><CircleCheck size={16} aria-hidden="true" />{D.bekannt}</span>
+            {:else}
+              <span class="muted">{D.eingeben}</span>
+            {/if}
+          </div>
+          <Button size="m" variant="secondary" icon={Printer} onclick={() => startPrint(role)}>{D.drucken}</Button>
+        </li>
+      {/each}
+    </ul>
+    <div class="row">
+      <Button size="m" variant="ghost" icon={Copy} onclick={() => copy(urls.team)}>{T.zugang.kopieren}</Button>
     </div>
   </Card>
 
@@ -130,37 +195,41 @@
   {/if}
 </div>
 
-<!-- Druckansicht: A4-Flyer für die Teams (QR-Code, Spiel-Code, die wichtigsten Schritte); Beispiel: docs/flyer-beispiel.pdf -->
-<section class="flyer" aria-hidden="true">
-  <header class="fl-head">
-    <Logo height={60} onDark={false} />
-    <Logo which="kinderfreunde-ooe" height={40} onDark={false} />
-  </header>
-  <h1 class="fl-title">Mister <span class="fl-x">X</span></h1>
-  <p class="fl-game">{gameName}</p>
-  <div class="fl-main">
-    <figure class="fl-qr">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
-      {@html qr(joinUrl)}
-      <figcaption>{F.scannen}</figcaption>
-    </figure>
-    <dl class="fl-codes">
-      <dt>{F.code}</dt>
-      <dd class="fl-code">{code}</dd>
-      <dt>{F.passwort}</dt>
-      <dd class="fl-line"></dd>
-      <dt>{F.notfall}</dt>
-      <dd class="fl-line"></dd>
-    </dl>
-  </div>
-  <ol class="fl-steps">
-    {#each F.schritte as s, i (s.titel)}<li><b>{i + 1}. {s.titel}</b> {s.text}</li>{/each}
-  </ol>
-  <p class="fl-small">{F.mitnehmen}</p>
-  <p class="fl-small">{T.datenschutz.kurz}</p>
-  <p class="fl-url">{joinUrl}</p>
-</section>
+<!-- Druckansicht (nur beim Drucken sichtbar); Beispiel: docs/flyer-beispiel.pdf -->
+<PrintSheet
+  role={printing ?? "team"}
+  {gameName}
+  {code}
+  url={urls[printing ?? "team"]}
+  secret={known[KIND[printing ?? "team"]] ?? ""}
+  tel={druck.tel.trim()}
+/>
 
+<Modal
+  open={!!ask}
+  title={ask ? D.frage(D.blatt[ask]) : ""}
+  confirm={D.drucken}
+  onconfirm={() => {
+    // der Dialog schließt nach „Drucken“ von selbst – erst schließen, wenn das Passwort stimmt
+    keepOpen = true;
+    void confirmPrint();
+  }}
+  onclose={() => {
+    if (keepOpen) keepOpen = false;
+    else ask = null;
+  }}
+>
+  <p class="small">{D.frageText}</p>
+  {#if ask}
+    <TextField
+      label={D.geheim[ask]}
+      type={ask === "admin" ? "password" : "text"}
+      bind:value={askValue}
+      error={askError}
+      autocomplete="off"
+    />
+  {/if}
+</Modal>
 <Modal
   open={confirmDelete}
   title="{T.admin.teamPasswort} {T.allgemein.loeschen}?"
@@ -205,6 +274,47 @@
     font-size: var(--fs-s);
     margin-bottom: var(--sp-3);
   }
+  .sheets {
+    list-style: none;
+    margin: var(--sp-3) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .sheets li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .mini {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: var(--r-s);
+    overflow: hidden;
+  }
+  .mini :global(svg),
+  .code :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .txt {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .txt span {
+    font-size: var(--fs-s);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ok {
+    color: var(--ok-text);
+    font-weight: 600;
+  }
   .qr {
     display: flex;
     gap: var(--sp-4);
@@ -218,11 +328,6 @@
     border-radius: var(--r-s);
     overflow: hidden;
   }
-  .code :global(svg) {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
   .qrtext {
     flex: 1;
     min-width: 200px;
@@ -230,111 +335,5 @@
   code {
     word-break: break-all;
     font-size: var(--fs-s);
-  }
-  .flyer {
-    display: none;
-  }
-  @media print {
-    :global(body *) {
-      visibility: hidden;
-    }
-    .flyer,
-    .flyer :global(*) {
-      visibility: visible;
-    }
-    /* nur die erste Seite: der (unsichtbare) Rest der App erzeugt sonst leere Seiten mit demselben Flyer */
-    :global(#app) {
-      height: 280mm;
-      overflow: hidden;
-    }
-    .flyer {
-      display: flex;
-      flex-direction: column;
-      gap: 6mm;
-      position: fixed;
-      inset: 0;
-      padding: 14mm 16mm;
-      background: #fff;
-      color: #000;
-      font-family: var(--font-text);
-      font-size: 12.5pt;
-      line-height: 1.35;
-    }
-    .fl-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .fl-title {
-      font-family: var(--font-display);
-      font-size: 64pt;
-      font-weight: 800;
-      line-height: 0.9;
-      text-transform: uppercase;
-    }
-    .fl-x {
-      color: #b30000;
-    }
-    .fl-game {
-      font-size: 18pt;
-      font-weight: 700;
-      margin-top: -3mm;
-    }
-    .fl-main {
-      display: flex;
-      gap: 10mm;
-      align-items: center;
-    }
-    .fl-qr {
-      margin: 0;
-      width: 80mm;
-      flex: none;
-      text-align: center;
-      font-weight: 700;
-    }
-    .fl-qr :global(svg) {
-      width: 80mm;
-      height: 80mm;
-      display: block;
-    }
-    .fl-codes {
-      flex: 1;
-      display: grid;
-      gap: 2mm;
-      margin: 0;
-    }
-    .fl-codes dt {
-      font-size: 11pt;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .fl-codes dd {
-      margin: 0 0 4mm;
-    }
-    .fl-code {
-      font-family: var(--font-display);
-      font-size: 30pt;
-      font-weight: 800;
-    }
-    .fl-line {
-      height: 12mm;
-      border-bottom: 0.6mm solid #000;
-    }
-    .fl-steps {
-      display: grid;
-      gap: 3mm;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .fl-small {
-      font-size: 10.5pt;
-    }
-    .fl-url {
-      margin-top: auto;
-      font-size: 9pt;
-      word-break: break-all;
-    }
   }
 </style>
