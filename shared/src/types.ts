@@ -69,6 +69,8 @@ export interface Team {
   color: string;
   /** wie viele Personen im Team (beim Beitritt angegeben, änderbar) */
   size?: number;
+  /** von der Spielleitung freigegeben: ist das Team Mister X, bestätigt es seinen Fang selbst (ohne Schiri) */
+  handover?: boolean;
 }
 
 /** Treffpunkt für den Sammelruf (im Spielfeld-Editor gesetzt) */

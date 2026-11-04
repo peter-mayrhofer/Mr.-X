@@ -153,6 +153,9 @@ oben) → Vorschau, wer warten muss → **Fahne an … übergeben** → bestäti
 - Das fangende Team wird Mister X, die alte Mister-X-Gruppe und alle Teams im Umkreis warten (Standard 5 Min).
 - Ein Fehler? **Rückgängig** (2 Minuten lang) stellt alles wieder her – alle bekommen eine Erklärung.
 - Doppelt tippen ist ungefährlich: der Server trägt jede Übergabe nur einmal ein.
+- **Ohne Schiri:** Unter **Steuerung → Übergabe durch Teams** gibst du einzelne Teams frei. Ist so ein Team Mister X
+  und wird gefangen, tippt es selbst **„Wir wurden gefangen“**, wählt das fangende Team und bestätigt. Strafübergaben
+  und **Rückgängig** bleiben bei Schiris und Spielleitung.
 
 ![Schiri-Ansicht](screens/hell/12-handy.jpg)
 

@@ -48,6 +48,8 @@ export type ApiRequest =
   | { action: "renameTeam"; gameId: string; teamId: string; name: string }
   // Teamgröße (Team selbst oder Spielleitung) und Team aufteilen (Spielleitung): `uids` = Geräte, die ins neue Team wechseln
   | { action: "setTeamSize"; gameId: string; teamId: string; size: number }
+  // Übergabe durch Teams freigeben (Spielleitung): diese Teams bestätigen als Mister X ihren Fang selbst
+  | { action: "setTeamHandover"; gameId: string; teamIds: string[]; on: boolean }
   | { action: "splitTeam"; gameId: string; teamId: string; name: string; uids: string[]; size?: number }
   // Notfall: Team meldet (mit eigenem Standort, wenn vorhanden); erledigt/Fehlalarm durch Spielleitung, Schiri oder das Team
   | { action: "sos"; gameId: string; pos?: PositionIn }
@@ -162,6 +164,7 @@ export interface ApiResults {
   removeTeam: Record<string, never>;
   renameTeam: Record<string, never>;
   setTeamSize: Record<string, never>;
+  setTeamHandover: Record<string, never>;
   splitTeam: { teamId: string };
   sos: { id: string };
   sosDone: Record<string, never>;

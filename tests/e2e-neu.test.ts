@@ -204,6 +204,26 @@ describe("Neue Funktionen in der echten App", { timeout: 60_000 }, () => {
     await visible(t, T.kompass.zumTreffpunkt(T.admin.spielfeldmitte));
   });
 
+  it("Übergabe durch Teams: Spielleitung gibt Traun frei, Traun bestätigt als Mister X den Fang selbst", async () => {
+    const t = phones.Traun!.page;
+    await t.getByRole("button", { name: T.tabs.karte, exact: true }).click();
+    expect(await t.getByRole("button", { name: T.gefangen.knopf }).count()).toBe(0); // noch nicht freigegeben
+    await admin.getByRole("switch", { name: "Traun", exact: true }).click();
+    await expect.poll(() => val(`games/${G}/teams/${phones.Traun!.id}/handover`)).toBe(true);
+    await t.getByRole("button", { name: T.gefangen.knopf }).click();
+    await t.getByText(T.gefangen.hinweis).waitFor();
+    await t.getByRole("button", { name: /Urfahr Minis/ }).click();
+    await confirm(t, T.gefangen.bestaetigen);
+    const minis = Object.entries((await val(`games/${G}/teams`)) as Record<string, { name: string }>).find(
+      ([, x]) => x.name === "Urfahr Minis",
+    )![0];
+    await expect.poll(() => val(`games/${G}/state/mrx`)).toBe(minis);
+    // das neue Mister-X-Handy sieht seine Szene
+    await visible(phones.Urfahr!.page, T.uebergabe.ihrSeidMrx);
+    await visible(t, T.uebergabe.erwischt);
+    for (const p of [phones.Urfahr!.page, t]) await p.getByRole("button", { name: T.allgemein.ok, exact: true }).click();
+  });
+
   it("Endphase: zu Beginn des Spielende-Fensters Durchsage an alle und Hinweis am Team-Handy", async () => {
     await set(`secrets/${G}/endAt`, Date.now() + 60 * 60_000);
     await set(`games/${G}/state`, { ...(await val(`games/${G}/state`)), startedAt: Date.now() - 31 * 60_000 });

@@ -4,6 +4,7 @@
     BookOpenText,
     Check,
     Dices,
+    Flag,
     Eye,
     LayoutTemplate,
     MapPinCheck,
@@ -343,6 +344,41 @@
             on ? T.admin.schiriJaegerAn : T.admin.schiriJaegerAus,
           )}
       />
+    </Card>
+
+    <Card label={T.admin.teamUebergabe} icon={Flag}>
+      <p class="muted small">{T.admin.teamUebergabeHinweis}</p>
+      {#each teamIds as id (id)}
+        {@const t = view.teams[id]!}
+        <Switch
+          label={t.name}
+          checked={!!t.handover}
+          disabled={busy}
+          onchange={(on) =>
+            run(
+              () => api({ action: "setTeamHandover", gameId: g, teamIds: [id], on }),
+              on ? T.admin.teamUebergabeAn(t.name) : T.admin.teamUebergabeAus(t.name),
+            )}
+        />
+      {:else}
+        <p class="muted">{T.lobby.nochKeine}</p>
+      {/each}
+      {#if teamIds.length > 1}
+        <div class="row">
+          <Button
+            size="m"
+            variant="secondary"
+            disabled={busy}
+            onclick={() => run(() => api({ action: "setTeamHandover", gameId: g, teamIds, on: true }))}>{T.admin.alleFrei}</Button
+          >
+          <Button
+            size="m"
+            variant="ghost"
+            disabled={busy}
+            onclick={() => run(() => api({ action: "setTeamHandover", gameId: g, teamIds, on: false }))}>{T.admin.alleGesperrt}</Button
+          >
+        </div>
+      {/if}
     </Card>
 
     <Card label={T.admin.regelnLive} icon={SlidersHorizontal}>

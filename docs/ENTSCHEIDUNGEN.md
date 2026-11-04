@@ -512,3 +512,11 @@ Quelltext. Ein zwischenzeitlich gebauter Zugang per Schlüssel im QR-Code (ohne 
 Foto des Spielleitungs-Codes hätte zum Steuern des Spiels gereicht. Die QR-Links nennen immer die öffentliche Adresse
 (in der Android-App `VITE_API_URL`, nicht „localhost“). Die Android-App braucht die Kamera-Berechtigung (fragt beim
 ersten Scannen).
+
+### E-53 Übergabe durch Teams (pro Team freigegeben)
+**Entscheidung:** In der Steuerung gibt die Spielleitung einzelne Teams frei (Schalter pro Team, dazu „Alle
+freigeben/sperren“). Ein freigegebenes Team bestätigt, **wenn es Mister X ist**, seinen eigenen Fang: „Wir wurden
+gefangen“ → fangendes Team wählen → bestätigen. Der Server lässt das nur für das aktuelle Mister-X-Team zu (Prüfung
+`expectedMrx`), nur als Fang (keine Strafübergabe) und nicht für Rückgängig; im Protokoll steht „<Team> (Mister X)“.
+**Warum so:** Nicht überall ist ein Schiri dabei. Dass das gefangene Team bestätigt, ist fair: Niemand kann sich die
+Fahne selbst holen.

@@ -11,7 +11,7 @@ import {
   type ReportSource,
 } from "@mrx/shared";
 import { fail, MIN, newKey } from "../util.ts";
-import type { Auth, GameRoom } from "../room.ts";
+import type { Auth, GameRoom, Who } from "../room.ts";
 import { flagTracker } from "../ablauf.ts";
 
 type D = Record<string, unknown>;
@@ -23,8 +23,19 @@ const fresh = (p: Position | null | undefined, now: number) => (p && !p.suspect 
  * `requestId` vom Handy: dieselbe Anfrage nach Netzabbruch nochmal → keine zweite Übergabe (Abschnitt 9.1).
  */
 export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] {
-  const who = room.who(a, ["schiri", "admin"]);
   const { to, expectedMrx, requestId: rid, type } = d;
+  // Schiri und Spielleitung immer; ein Team nur, wenn die Spielleitung es freigegeben hat – und nur als Mister X für
+  // den eigenen Fang („Wir wurden gefangen“), nie als Strafübergabe und nie für ein anderes Team
+  const m = a.uid ? room.d.members[a.uid] : undefined;
+  let who: Who;
+  if (m?.role === "team" && m.teamId) {
+    const team = room.d.teams[m.teamId];
+    if (!team?.handover) fail("forbidden", "Die Spielleitung hat die Übergabe für euer Team nicht freigegeben");
+    if (type !== "fang") fail("forbidden", "Strafübergaben nur durch Schiri oder Spielleitung");
+    if (room.d.state.lastHandover !== rid && (room.d.state.mrx !== m.teamId || expectedMrx !== m.teamId))
+      fail("conflict", "Ihr seid gerade nicht Mister X");
+    who = { uid: a.uid!, name: `${team.name} (Mister X)`, role: "team" };
+  } else who = room.who(a, ["schiri", "admin"]);
   if (type !== "fang" && type !== "strafe") fail("invalid", "Art der Übergabe fehlt");
   if (typeof rid !== "string" || !REQUEST_ID.test(rid)) fail("invalid", "Anfrage-Kennung fehlt");
   const { teams: ts, config: cfg, positions: pos, state: cur } = room.d;

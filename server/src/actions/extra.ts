@@ -49,6 +49,20 @@ export function setTeamSize(room: GameRoom, d: D, a: Auth): ApiResults["setTeamS
   return {};
 }
 
+/** Spielleitung gibt Teams frei, als Mister X ihren Fang selbst zu bestätigen (wenn kein Schiri dabei ist) */
+export function setTeamHandover(room: GameRoom, d: D, a: Auth): ApiResults["setTeamHandover"] {
+  const who = room.who(a, ["admin"]);
+  const ids = Array.isArray(d.teamIds) ? [...new Set(d.teamIds.map(String))] : [];
+  if (!ids.length || ids.some((t) => !room.d.teams[t])) fail("invalid", "Team unbekannt");
+  const on = d.on === true;
+  for (const t of ids) {
+    const { handover: _h, ...team } = room.d.teams[t]!;
+    room.put("teams", t, on ? { ...team, handover: true } : team);
+  }
+  room.audit(who, on ? "Übergabe für Teams freigegeben" : "Übergabe für Teams gesperrt", ids.map((t) => room.d.teams[t]!.name).join(", "));
+  return {};
+}
+
 /** Eine Gruppe teilt sich: neues Team mit den gewählten Geräten. Wer gerade wartet, wartet auch als neues Team. */
 export function splitTeam(room: GameRoom, d: D, a: Auth): ApiResults["splitTeam"] {
   const who = room.who(a, ["admin"]);

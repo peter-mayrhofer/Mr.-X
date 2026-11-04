@@ -57,6 +57,7 @@
   import { distanceToBoundaryM, lockedCutAt, zoneStatus, type ZoneStatus } from "@mrx/shared";
   import CompassView from "./parts/CompassView.svelte";
   import Modal from "../ui/Modal.svelte";
+  import BottomSheet from "../ui/BottomSheet.svelte";
   import Pill from "../ui/Pill.svelte";
   import Button from "../ui/Button.svelte";
   import Stepper from "../ui/Stepper.svelte";
@@ -101,6 +102,8 @@
     onarrived?: () => Promise<void>;
     /** Teamgröße ändern */
     onsize?: (n: number) => Promise<void>;
+    /** Mister X bestätigt seinen Fang selbst (wenn die Spielleitung das Team freigegeben hat) */
+    oncaught?: (to: string) => Promise<void>;
   }
 
   let {
@@ -117,7 +120,10 @@
     onsoscancel,
     onarrived,
     onsize,
+    oncaught,
   }: Props = $props();
+  let pickCatcher = $state(false);
+  let catcher = $state<string | null>(null);
   let askSos = $state(false);
   let sizeDraft = $state<number | null>(null);
   let sub = $state<"menu" | "einstellungen" | "team">("menu");
@@ -296,6 +302,11 @@
     </div>
 
     <div class="bottom">
+      {#if isMrx && myTeam.handover && st.phase === "laeuft" && oncaught}
+        <div class="caught">
+          <Button size="xl" block icon={Flag} onclick={() => (pickCatcher = true)}>{T.gefangen.knopf}</Button>
+        </div>
+      {/if}
       {#if isMrx && ruleHint}
         <div class="hint">
           <Flag size={24} aria-hidden="true" />
@@ -398,6 +409,35 @@
   <TabBar items={tabs} active={tab} onselect={(id) => ((tab = id as Tab), (sub = "menu"))} />
 </main>
 
+<BottomSheet open={pickCatcher} title={T.gefangen.titel} onclose={() => (pickCatcher = false)}>
+  <p class="muted">{T.gefangen.hinweis}</p>
+  <div class="pick">
+    {#each Object.entries(view.teams).filter(([id]) => id !== view.myTeamId) as [id, t] (id)}
+      <ListItem
+        title={t.name}
+        onclick={() => {
+          catcher = id;
+          pickCatcher = false;
+        }}
+      >
+        {#snippet lead()}<TeamBadge short={t.short} color={t.color} size={40} />{/snippet}
+      </ListItem>
+    {/each}
+  </div>
+</BottomSheet>
+<Modal
+  open={!!catcher}
+  title={T.gefangen.frage(catcher ? (view.teams[catcher]?.name ?? "") : "")}
+  confirm={T.gefangen.bestaetigen}
+  danger
+  onconfirm={() => {
+    const to = catcher!;
+    void oncaught?.(to);
+  }}
+  onclose={() => (catcher = null)}
+>
+  {T.gefangen.frageText}
+</Modal>
 <Modal
   open={askSos}
   title={T.notfall.titel}
@@ -611,5 +651,13 @@
     gap: var(--sp-3);
     justify-items: center;
     width: min(100%, 360px);
+  }
+  .caught {
+    margin-bottom: var(--sp-3);
+  }
+  .pick {
+    display: grid;
+    gap: 2px;
+    margin-top: var(--sp-3);
   }
 </style>

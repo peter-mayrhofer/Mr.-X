@@ -194,12 +194,31 @@
       await fn();
       if (okText) toast(okText, "ok");
     } catch (e) {
-      toast(e instanceof ApiError && e.reason === "invalid" ? e.message : T.apiFehler.network, "warn");
+      toast(
+        e instanceof ApiError
+          ? ["invalid", "forbidden", "conflict"].includes(e.reason)
+            ? e.message
+            : T.apiFehler[e.reason]
+          : T.apiFehler.network,
+        "warn",
+      );
     }
   }
   const sos = () => act(() => call({ action: "sos", gameId: g, ...(gps.pos ? { pos: gps.pos } : {}) }));
   const sosCancel = (id: string) => act(() => call({ action: "sosDone", gameId: g, id }), T.notfall.zurueckgenommen);
   const arrived = () => act(() => call({ action: "arrived", gameId: g, teamId, on: true }), T.sammelruf.angekommenOk);
+  // Mister X bestätigt den eigenen Fang (von der Spielleitung freigegeben); Kennung gegen doppelte Übergaben
+  const caught = (to: string) =>
+    act(() =>
+      call({
+        action: "handover",
+        gameId: g,
+        to,
+        type: "fang",
+        expectedMrx: teamId,
+        requestId: crypto.randomUUID().replaceAll("-", "").slice(0, 24),
+      }),
+    );
   const setSize = (size: number) => act(() => call({ action: "setTeamSize", gameId: g, teamId, size }), T.mehr.groesseOk);
 
   const archive = remote(
@@ -298,6 +317,7 @@
     onsoscancel={sosCancel}
     onarrived={arrived}
     onsize={setSize}
+    oncaught={caught}
   />
 {/if}
 

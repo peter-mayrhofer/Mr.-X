@@ -330,6 +330,15 @@ export const T = {
     entfernung: "Entfernung",
   },
 
+  gefangen: {
+    knopf: "Wir wurden gefangen",
+    titel: "Wer hat euch gefangen?",
+    hinweis: "Das Team antippen, das euch das „Tapperl“ gegeben hat. Danach geht die Fahne an dieses Team.",
+    frage: (team: string) => `${team} hat uns gefangen?`,
+    frageText: "Ihr gebt die Fahne ab und müsst danach warten. Bitte nur bestätigen, wenn es wirklich so war.",
+    bestaetigen: "Ja, Fahne abgeben",
+  },
+
   zone: {
     sperrgebiet: (bereich: string) => `Ihr steht im Sperrgebiet (${bereich})! Bitte sofort raus.`,
     draussen: "Ihr seid außerhalb des Spielfelds! Bitte sofort zurück.",
@@ -563,6 +572,13 @@ export const T = {
     schiriJaeger: "Schiris sehen die Jäger live",
     schiriJaegerHinweis: "Aus: Schiris sehen auf der Karte nur Mister X, sich selbst und andere Schiris.",
     schiriJaegerAn: "Schiris sehen die Jäger wieder",
+    teamUebergabe: "Übergabe durch Teams",
+    teamUebergabeHinweis:
+      "Freigegebene Teams bestätigen ihren Fang selbst, wenn sie Mister X sind („Wir wurden gefangen“ → Fänger wählen) – praktisch, wenn kein Schiri dabei ist. Rückgängig machen können weiter nur Schiris und die Spielleitung.",
+    alleFrei: "Alle freigeben",
+    alleGesperrt: "Alle sperren",
+    teamUebergabeAn: (team: string) => `${team} darf die Übergabe selbst bestätigen`,
+    teamUebergabeAus: (team: string) => `${team}: Übergabe wieder nur durch Schiri/Spielleitung`,
     schiriJaegerAus: "Jäger für Schiris ausgeblendet",
     regeltext: "Regeln für die Teams",
     regeltextFeld: "Eigene Regeln und Hinweise",
