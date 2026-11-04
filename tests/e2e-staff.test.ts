@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, join, resetServer, set, sleep, startApp, superAdminToken, val, type Device } from "./helpers.ts";
+import { call, join, resetServer, set, sleep, startApp, superAdminToken, val, type Device, visible } from "./helpers.ts";
 
 const G = "linz-staff";
 const PORT = 5182;
@@ -19,7 +19,6 @@ let schiri: Page;
 const team: Record<string, string> = {};
 const devices: Record<string, Device> = {};
 
-const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
 const setPos = (id: string, dLat: number) =>
   set(`games/${G}/positions/${id}`, { lat: HAUPTPLATZ.lat + dLat, lng: HAUPTPLATZ.lng, acc: 8, t: Date.now() });
 const nav = (label: string) => admin.getByRole("link", { name: label }).click();

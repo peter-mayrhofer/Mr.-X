@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, resetServer, set, startApp, superAdminToken, val } from "./helpers.ts";
+import { call, resetServer, set, startApp, superAdminToken, val, visible } from "./helpers.ts";
 
 const G = "linz-gesamt";
 const PORT = 5187;
@@ -18,9 +18,6 @@ let admin: Page;
 let schiri: Page;
 const phones: Record<string, { ctx: BrowserContext; page: Page; id: string }> = {};
 
-// nur sichtbare Treffer: Namen an den Kartenmarkern blendet die Karte unter Zoom 15,5 aus
-const visible = (page: Page, text: string) =>
-  page.getByText(text, { exact: false }).filter({ visible: true }).first().waitFor({ timeout: 15_000 });
 const confirm = (page: Page, label: string = T.allgemein.bestaetigen) =>
   page.getByRole("dialog").getByRole("button", { name: label, exact: true }).click();
 const nav = (label: string) => admin.getByRole("link", { name: label }).click();

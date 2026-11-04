@@ -3,7 +3,12 @@
 import { inject } from "vitest";
 import { Live } from "@mrx/shared/client";
 import type { Note, PositionIn, View } from "@mrx/shared";
+import type { Page } from "playwright";
 import { TEST_SECRETS } from "./setup.ts";
+
+/** warten, bis der Text sichtbar ist – nur sichtbare Treffer: Namen an Kartenmarkern blendet die Karte unter Zoom 15,5 aus */
+export const visible = (page: Page, text: string) =>
+  page.getByText(text, { exact: false }).filter({ visible: true }).first().waitFor({ timeout: 15_000 });
 
 export const SERVER = inject("server");
 export const SUPER_PW = "organisator-test-123";

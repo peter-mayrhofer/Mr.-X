@@ -55,6 +55,9 @@
 
   let el: HTMLDivElement;
   let map: MLMap | undefined = $state();
+  // Marker brauchen nur die Karte, nicht die geladenen Kacheln: „load“ kommt erst, wenn alle Kacheln da sind – bei
+  // langsamem Netz oder hängendem Kartendienst wären die Teams sonst unsichtbar
+  let markerMap: MLMap | undefined = $state();
   let ML: typeof import("maplibre-gl") | undefined;
   let raster = false;
 
@@ -105,6 +108,7 @@
         maxZoom: 19,
       }));
       m.touchZoomRotate.disableRotation();
+      markerMap = m;
       m.setMissingStyleImageResolver((id) => {
         if (id.startsWith("hatch-") && !m.hasImage(id)) m.addImage(id, hatchImage(id.slice(6) as typeof theme.active), { pixelRatio: 2 });
       });
@@ -158,6 +162,7 @@
   const markers = new Map<string, { m: Marker; props: MarkerProps; inst: ReturnType<typeof mount> }>();
 
   $effect(() => {
+    const map = markerMap;
     if (!map || !ML) return;
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- lokal im Effekt
     const seen = new Set<string>();

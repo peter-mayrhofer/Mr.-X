@@ -7,7 +7,7 @@ import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { PUSH_TITLE } from "@mrx/shared";
 import { T } from "../app/src/texte.ts";
-import { call, join, outbox, resetServer, set, startApp, superAdminToken, val, type Device } from "./helpers.ts";
+import { call, join, outbox, resetServer, set, startApp, superAdminToken, val, type Device, visible } from "./helpers.ts";
 
 const G = "linz-team";
 const PORT = 5181;
@@ -23,7 +23,6 @@ const api = async (action: string, extra: Record<string, unknown> = {}) => {
   if (r.error) throw new Error(`${action}: ${r.error.message}`);
   return r.result!;
 };
-const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
 
 async function joinTeam(name: string, dLat: number, viaOnboarding = false) {
   const ctx = await browser.newContext({

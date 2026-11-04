@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, join, resetServer, set, startApp, superAdminToken, val, type Device } from "./helpers.ts";
+import { call, join, resetServer, set, startApp, superAdminToken, val, type Device, visible } from "./helpers.ts";
 
 const G = "linz-gross";
 const PORT = 5184;
@@ -23,7 +23,6 @@ const api = async (action: string, extra: Record<string, unknown> = {}) => {
   if (r.error) throw new Error(`${action}: ${r.error.message}`);
   return r.result!;
 };
-const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
 const at = (dLat: number) => ({ lat: 48.3059 + dLat, lng: 14.2862, acc: 8, t: Date.now() });
 
 /** Gerät mit gespeicherter Sitzung öffnen (wie nach einem Beitritt) */
@@ -65,6 +64,8 @@ describe("Großbild und Zuschauer", { timeout: 60_000 }, () => {
   it("vor dem Start: beide zeigen „Gleich geht's los“ mit Anzahl Teams", async () => {
     const key = (await api("screenLink")).key as string;
     const sctx = await browser.newContext({ viewport: { width: 1600, height: 900 }, locale: "de-AT", reducedMotion: "reduce" });
+    // Kartendienst hängt (antwortet nie): Team-Marker müssen trotzdem erscheinen – sie warten nicht auf die Kacheln
+    await sctx.route("https://tiles.openfreemap.org/**", () => {});
     screen = await sctx.newPage();
     screen.on("pageerror", (e) => console.error("PAGEERROR screen", e.message));
     await screen.goto(`${URL}#/g/${G}?k=${key}`);

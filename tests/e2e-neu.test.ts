@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { call, join, resetServer, set, startApp, superAdminToken, val, type Device } from "./helpers.ts";
+import { call, join, resetServer, set, startApp, superAdminToken, val, type Device, visible } from "./helpers.ts";
 
 const G = "linz-neu";
 const PORT = 5189;
@@ -22,7 +22,6 @@ const run = async (action: string, extra: Record<string, unknown> = {}) => {
   if (r.error) throw new Error(`${action}: ${r.error.message}`);
   return r.result!;
 };
-const visible = (page: Page, text: string) => page.getByText(text, { exact: false }).first().waitFor({ timeout: 15_000 });
 const nav = (label: string) => admin.getByRole("link", { name: label }).click();
 const shot = async (page: Page, name: string) => {
   if (process.env.SHOTS) await page.screenshot({ path: `${process.env.SHOTS}/${name}.png` });
