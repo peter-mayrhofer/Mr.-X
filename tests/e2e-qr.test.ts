@@ -114,6 +114,14 @@ describe("QR-Codes und Druckblätter", { timeout: 60_000 }, () => {
     await p.getByRole("heading", { name: T.lobby.angemeldet }).waitFor();
   });
 
+  it("Scanner füllt den ganzen Bildschirm, auch über der animierten Startseite", async () => {
+    const p = await phone(browser); // ohne Kamera: der Scanner bleibt mit Hinweis offen
+    await p.goto(URL);
+    await p.getByRole("button", { name: T.qr.knopf }).click();
+    const box = await p.getByRole("dialog", { name: T.qr.titel }).boundingBox();
+    expect(box).toMatchObject({ x: 0, y: 0, width: 390, height: 844 });
+  });
+
   it("Spielleitung druckt die drei Blätter: Passwort drauf, aber nirgends gespeichert", async () => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, locale: "de-AT", reducedMotion: "reduce" });
     const a = await ctx.newPage();

@@ -22,6 +22,12 @@
   let error = $state<string | null>(null);
   let hint = $state<string | null>(null);
 
+  /** ans Ende von <body> hängen: sonst sperrt ein animiertes Eltern-Element (transform) das Vollbild in seine Box */
+  function vollbild(node: HTMLElement) {
+    document.body.appendChild(node);
+    return { destroy: () => node.remove() };
+  }
+
   type Detector = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> };
   type DetectorCtor = new (o: { formats: string[] }) => Detector;
 
@@ -100,7 +106,7 @@
   });
 </script>
 
-<div class="scan" role="dialog" aria-modal="true" aria-label={T.qr.titel}>
+<div class="scan" role="dialog" aria-modal="true" aria-label={T.qr.titel} use:vollbild>
   <video bind:this={video} playsinline muted></video>
   <div class="frame" aria-hidden="true"></div>
   <header>
