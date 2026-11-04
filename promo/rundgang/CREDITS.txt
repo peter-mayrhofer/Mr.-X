@@ -1,0 +1,22 @@
+Sound effects
+"Interface click 001" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Ui rollover1" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/ui-audio
+"Interface confirmation 001" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Quick woosh" by florianreichelt (Freesound), CC0 1.0 - https://freesound.org/people/florianreichelt/sounds/683101/
+"Interface select 001" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface select 002" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface select 003" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface confirmation 002" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Ui rollover2" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/ui-audio
+"Interface toggle 001" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Ui rollover3" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/ui-audio
+"Ui rollover4" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/ui-audio
+"Interface confirmation 003" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface drop 001" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface drop 002" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Interface drop 003" by Kenney (kenney.nl), CC0 1.0 - https://kenney.nl/assets/interface-sounds
+"Cinematic Riser #3 subtle" by BeaconStudio (Freesound), CC0 1.0 - https://freesound.org/people/BeaconStudio/sounds/859482/
+"soft_impact3" by peoplearehappy (Freesound), CC0 1.0 - https://freesound.org/people/peoplearehappy/sounds/841274/
+
+Music
+"Tech House vibes" by Alejandro Magaña (A. M.), Mixkit #130, https://mixkit.co/free-stock-music/, Mixkit Stock Music Free License
