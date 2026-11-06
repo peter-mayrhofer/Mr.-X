@@ -43,13 +43,13 @@
 <section class="status" class:mrx={isMrx} aria-label="Spielstatus">
   <div class="main">
     {#if isMrx}
-      <p class="etikett kicker">{T.status.ihrSeidMrx}</p>
+      <p class="caps kicker">{T.status.ihrSeidMrx}</p>
       <p class="sub">{T.status.eureMeldung}</p>
     {:else}
       <div class="who">
         <TeamBadge short={mrxTeam.short} color={mrxTeam.color} mrx size={44} />
         <div>
-          <p class="etikett kicker">{role === "schiri" ? `${T.status.misterX} · ${T.status.schiri}` : T.status.misterX}</p>
+          <p class="caps kicker">{role === "schiri" ? `${T.status.misterX} · ${T.status.schiri}` : T.status.misterX}</p>
           <p class="team display">{mrxTeam.name}</p>
         </div>
       </div>
@@ -77,7 +77,7 @@
         label={T.status.naechsteMeldung}
         tone={isMrx ? "light" : "accent"}
       />
-      {#if !isMrx}<p class="etikett lbl">{T.status.naechsteMeldung}</p>{/if}
+      {#if !isMrx}<p class="caps lbl">{T.status.naechsteMeldung}</p>{/if}
     {/if}
   </div>
 </section>
@@ -119,13 +119,7 @@
   .pills {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--sp-1) var(--sp-4);
-  }
-  .pills :global(.pill) {
-    min-height: 0;
-    padding: 0;
-    border: 0;
-    background: none;
+    gap: 6px;
   }
   .count {
     display: grid;
@@ -133,7 +127,9 @@
     gap: 2px;
   }
   .lbl {
+    font-size: 14px;
     color: var(--text-2);
+    letter-spacing: 0.04em;
   }
   .paused {
     font-size: var(--fs-2xl);
@@ -149,13 +145,13 @@
     color: #fff;
     font-size: var(--fs-xl);
     line-height: 1;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
   .mrx .sub {
     font-weight: 600;
   }
   .mrx :global(.pill) {
+    background: rgb(255 255 255 / 0.18);
     color: #fff;
+    border-color: transparent;
   }
 </style>

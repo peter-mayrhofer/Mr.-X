@@ -85,7 +85,7 @@
       padding={{ top: 30, bottom: 30, left: 30, right: 30 }}
       label={T.archiv.replay}
     />
-    <div class="now"><span class="etikett">{T.status.misterX}</span> <b>{team(frame.mrx).name}</b></div>
+    <div class="now"><span class="caps">{T.status.misterX}</span> <b>{team(frame.mrx).name}</b></div>
   </div>
   <div class="controls">
     <IconButton icon={playing ? Pause : Play} label={playing ? T.archiv.anhalten : T.archiv.abspielen} tone="accent" onclick={toggle} />

@@ -12,7 +12,6 @@ Aus einem simulierten Spiel mit der echten App aufgenommen.
 | `hype/SOUND.md`, `hype/CREDITS.txt`, `hype/beatgrid.png` | Ton-Protokoll (Lautheit, Beat-Abgleich), Quellen von Musik und Soundeffekten, Beat-Kontrolle (Bassdrum gegen Beat-Linien) |
 | `Mister-X-Rundgang.mp4` | Rundgang-Video (53 s, Querformat 1920×1080, 60 fps): Start im Hype-Stil (Funke → rote Flut → MISTER X), dann läuft der rote Mister-X-Punkt ohne Schnitt durch 13 echte App-Stationen – QR-Scan, Beitritt, Onboarding, Spielstart, Vorsprung, Benachrichtigungen, Live-Karte, Kompass, Sperrgebiet/Durchsage, Chat, Übergabe, Großbild, Siegerehrung – Gesamtansicht und Endkarte, auf der der Punkt zum Schlusspunkt von „MISTER X.“ wird |
 | `Mister-X-Rundgang-Hochformat.mp4` | Derselbe Rundgang im Hochformat (1080×1920) für Reels, Stories und WhatsApp-Status |
-| `Mister-X-Unslop.mp4` | Vorher-Nachher (9 s, quadratisch 1080×1080, 60 fps): die Siegerehrung am Beamer räumt sich auf – Deko weg, Etiketten normal geschrieben, ruhige Kennzahlen, zweispaltig und groß. Erstellt mit dem Skill „unslop“ von Damir Sokolovsky (CC BY 4.0), daher der Hinweis „unslop by @heydamir“ im Bild |
 | `rundgang/mister-x-rundgang.html`, `rundgang/mister-x-rundgang-hochformat.html` | Quellen der Rundgang-Videos (im Browser durchscrubben, ohne Ton); `rundgang/SOUND.md`, `rundgang/CREDITS.txt` Ton-Protokoll und Quellen |
 | `Mister-X-Screenshots.zip` | 42 Screenshots aller Bildschirme |
 | `Mister-X-Uebersicht.jpg` | Alle Screenshots auf einem Bild |

@@ -80,7 +80,7 @@ export const T = {
 
   onboarding: {
     ueberspringen: "Überspringen",
-    los: "Los geht's",
+    los: "Los geht's!",
     schritte: [
       {
         titel: "So läuft's",
@@ -115,7 +115,7 @@ export const T = {
 
   lobby: {
     titel: "Warteraum",
-    angemeldet: "Ihr seid dabei",
+    angemeldet: "Ihr seid dabei!",
     warten: "Warten auf den Start",
     startGeplant: (uhr: string) => `Start geplant um ${uhr}`,
     check: { standort: "Standort", push: "Benachrichtigungen", akku: "Akku" },
@@ -141,7 +141,7 @@ export const T = {
     gpsSchwach: "GPS schwach",
     gpsAus: "Kein GPS",
     pause: "Pause",
-    ihrSeidMrx: "Ihr seid Mister X",
+    ihrSeidMrx: "Ihr seid Mister X!",
     schiri: "Schiri",
     endphase: "Endphase",
     probelauf: "Probelauf",
@@ -162,15 +162,15 @@ export const T = {
     regelnTitel: "Mister-X-Regeln",
     regeln: ["Fahne sichtbar", "Keine Gebäude", "Zusammenbleiben"],
     grenzeNah: (m: number) => `Achtung: nur noch ${m} m bis zur Spielfeldgrenze`,
-    draussen: "Ihr seid außerhalb des Spielfelds – sofort zurück",
+    draussen: "Ihr seid außerhalb des Spielfelds! Sofort zurück!",
     keinGps: "Euer Handy findet kein GPS – gemeldet wird dann der Standort eures Schiris.",
   },
 
   verkleinerung: {
-    titel: (bereich: string) => `${bereich} wird gesperrt`,
+    titel: (bereich: string) => `${bereich} wird gesperrt!`,
     text: "Der schraffierte Bereich gehört nicht mehr zum Spielfeld.",
     frei: (bereich: string) => `${bereich} ist wieder frei`,
-    warnTitel: (bereich: string, min: number) => `${bereich} wird in ${min} Min gesperrt`,
+    warnTitel: (bereich: string, min: number) => `${bereich} wird in ${min} Min gesperrt!`,
     warnText: "Bitte rechtzeitig aus dem schraffierten Bereich gehen.",
     abgesagt: (bereich: string) => `Entwarnung: ${bereich} wird doch nicht gesperrt`,
   },
@@ -186,12 +186,12 @@ export const T = {
   },
 
   uebergabe: {
-    gefangen: "Gefangen",
+    gefangen: "Gefangen!",
     strafe: "Strafübergabe",
     fahneAn: (team: string) => `Die Fahne geht an ${team}`,
-    ihrSeidMrx: "Ihr seid jetzt Mister X",
-    vorsprung: (min: number) => `${min} Min Vorsprung – lauft`,
-    erwischt: "Erwischt",
+    ihrSeidMrx: "Ihr seid jetzt Mister X!",
+    vorsprung: (min: number) => `${min} Min Vorsprung – lauft!`,
+    erwischt: "Erwischt!",
     erwischtText: (min: number) => `Ihr wurdet gefangen. Jetzt ${min} Min warten.`,
     zurueck: "Die Übergabe wurde rückgängig gemacht.",
   },
@@ -333,7 +333,7 @@ export const T = {
     gpsRichtung: "Kein Kompass – der Pfeil richtet sich nach eurer Laufrichtung.",
     flach: "Handy flach halten",
     karten: "In Google Maps öffnen",
-    da: "Ihr seid da",
+    da: "Ihr seid da!",
     richtung: ["Norden", "Nordosten", "Osten", "Südosten", "Süden", "Südwesten", "Westen", "Nordwesten"],
     entfernung: "Entfernung",
   },
@@ -348,8 +348,8 @@ export const T = {
   },
 
   zone: {
-    sperrgebiet: (bereich: string) => `Ihr steht im Sperrgebiet (${bereich}). Bitte sofort raus.`,
-    draussen: "Ihr seid außerhalb des Spielfelds. Bitte sofort zurück.",
+    sperrgebiet: (bereich: string) => `Ihr steht im Sperrgebiet (${bereich})! Bitte sofort raus.`,
+    draussen: "Ihr seid außerhalb des Spielfelds! Bitte sofort zurück.",
   },
 
   notfall: {
@@ -373,7 +373,7 @@ export const T = {
     text: "Bitte jetzt direkt zum Treffpunkt kommen.",
     kompass: "Weg zeigen",
     daKnopf: "Wir sind da",
-    angekommen: "Angekommen – danke",
+    angekommen: "Angekommen – danke!",
     angekommenOk: "Danke, die Spielleitung sieht, dass ihr da seid",
   },
 
@@ -402,7 +402,7 @@ export const T = {
       {
         icon: "tram",
         titel: "Öffis",
-        text: "Pro Fahrt höchstens drei Stationen (die Einstiegshaltestelle zählt nicht). Halstuch = Fahrschein, gut sichtbar tragen. Rücksicht auf andere Fahrgäste.",
+        text: "Pro Fahrt höchstens drei Stationen (die Einstiegshaltestelle zählt nicht). Halstuch = Fahrschein, gut sichtbar tragen. Rücksicht auf andere Fahrgäste!",
       },
       {
         icon: "map",
@@ -494,12 +494,12 @@ export const T = {
     mrxOhneStandort: (min: number) => `Mister X ohne Standort seit ${min} Min`,
     teamOhneStandort: (team: string, min: number) => `${team} ohne Standort seit ${min} Min`,
     mrxGrenze: (m: number) => `Mister X ${m} m vor der Spielfeldgrenze`,
-    mrxDraussen: "Mister X ist außerhalb des Spielfelds",
+    mrxDraussen: "Mister X ist außerhalb des Spielfelds!",
     teamNieStandort: (team: string) => `${team} hat noch keinen Standort geschickt`,
     akkuLeer: (team: string, prozent: number) => `${team}: Akku nur noch ${prozent} %`,
     teamImSperrgebiet: (team: string, bereich: string) => `${team} steht im Sperrgebiet (${bereich})`,
     teamDraussen: (team: string) => `${team} ist außerhalb des Spielfelds`,
-    mrxImSperrgebiet: (bereich: string) => `Mister X steht im Sperrgebiet (${bereich})`,
+    mrxImSperrgebiet: (bereich: string) => `Mister X steht im Sperrgebiet (${bereich})!`,
     uebergabePruefen: (alt: string, neu: string, distM?: number) =>
       `Übergabe prüfen: ${alt} → ${neu} – ${distM === undefined ? "ohne aktuelle Standorte" : `${distM} m auseinander`}`,
     neueWarnung: "Neue Warnung",
@@ -551,9 +551,9 @@ export const T = {
     durchsageVorschlaege: [
       "Bitte tragt eure Gruppennamen in den Chat ein, falls noch nicht geschehen.",
       "Achtung: Nach jedem Fang müssen die alte Mister-X-Gruppe und alle Gruppen in der Nähe 5 Minuten warten.",
-      "Das Sperrgebiet muss sofort verlassen werden.",
+      "Das Sperrgebiet muss sofort verlassen werden!",
       "Bitte bei Fragen an die Spielleitung im Chat schreiben – nicht anrufen.",
-      "Gebt nochmal alles – ihr seid spitze.",
+      "Gebt nochmal alles – ihr seid spitze!",
     ],
     allesOk: "Alles in Ordnung.",
     seit: (uhr: string, dauer: string) => `seit ${uhr} · ${dauer}`,
@@ -725,7 +725,7 @@ export const T = {
     faenge: "Fänge",
     ereignisse: "Ereignisse",
     karte: "Spielfeld Großbild",
-    gleich: "Gleich geht's los",
+    gleich: "Gleich geht's los!",
     teamsAngemeldet: (n: number) => `${n} ${n === 1 ? "Team" : "Teams"} angemeldet`,
     pause: "Pause",
     nochNichts: "Noch keine Ereignisse",
@@ -741,7 +741,7 @@ export const T = {
   },
 
   ende: {
-    titel: "Spielende",
+    titel: "Spielende!",
     sieger: "Sieger",
     letzterMrx: "der letzte Mister X",
     laengste: "Am längsten Mister X",

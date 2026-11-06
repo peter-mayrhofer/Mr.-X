@@ -97,7 +97,7 @@
   />
   {#if pick}
     <div class="preview">
-      <p class="etikett">{T.schiri.vorschau(view.config.waitMin)}</p>
+      <p class="caps">{T.schiri.vorschau(view.config.waitMin)}</p>
       <div class="chips">
         {#each preview as id (id)}
           {@const t = team(id)}
@@ -166,7 +166,7 @@
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--sp-2);
+    gap: 6px;
     flex: none;
     font-weight: 600;
   }
