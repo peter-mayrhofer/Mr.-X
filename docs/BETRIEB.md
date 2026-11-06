@@ -142,7 +142,8 @@ den QR-Code vom Flyer zur App.
 
 ### Automatisch (empfohlen)
 
-Ist das einmal eingerichtet, veröffentlicht GitHub jede Änderung auf `main` selbst (Workflow „Deploy“): Android-App
+Ist das einmal eingerichtet, veröffentlicht GitHub jede Änderung auf dem Standard-Branch des Repositorys selbst
+(derzeit `claude/vibrant-darwin-2gk2cj`, siehe GitHub → Settings → Branches; Workflow „Deploy“): Android-App
 bauen, als `mister-x.apk` in die Web-App legen, alles auf Cloudflare hochladen. Web-App und APK sind dann immer vom
 selben Stand – und die Android-App zeigt den Teams **„Neue Version der App – Jetzt installieren“**, sobald es eine
 neuere gibt. Auf deinem Computer brauchst du dafür nichts mehr.

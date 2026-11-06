@@ -532,7 +532,7 @@ auffallen, entscheiden und rückgängig machen kann die Spielleitung.
 ### E-55 Update-Hinweis und automatisches Deploy
 **Entscheidung:** Web-App und APK tragen die Build-Kennung (Commit) und legen `version.json` ab. Die Android-App fragt
 beim Start (natives HTTP) nach dem Stand am Server und zeigt bei einem anderen Stand „Neue Version – Jetzt
-installieren“ (Link auf `/mister-x.apk`). Der Workflow „Deploy“ baut bei jedem Push auf `main` APK und Web-App aus
+installieren“ (Link auf `/mister-x.apk`). Der Workflow „Deploy“ baut bei jedem Push auf den Standard-Branch APK und Web-App aus
 demselben Stand und veröffentlicht mit wrangler; Zugang über die Secrets `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`,
 die D1-ID wird über den Namen nachgeschlagen (steht nicht im Repository). APK-Versionsnummer = Minuten seit 1970.
 **Warum so:** Bisher musste jede Änderung von Hand gebaut, kopiert und veröffentlicht werden, und Teams spielten mit

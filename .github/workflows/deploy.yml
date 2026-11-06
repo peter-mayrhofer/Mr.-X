@@ -1,12 +1,12 @@
 name: Deploy
 
-# Automatisch veröffentlichen (docs/BETRIEB.md, Abschnitt 10): bei jedem Push auf main – oder von Hand – wird die
+# Automatisch veröffentlichen (docs/BETRIEB.md, Abschnitt 10): bei jedem Push auf den Standard-Branch des Repositorys
+# (Settings → Branches, derzeit claude/vibrant-darwin-2gk2cj) – oder von Hand – wird die
 # Android-App gebaut, als mister-x.apk in die Web-App gelegt und alles auf Cloudflare veröffentlicht. Web-App und APK
 # kommen aus demselben Stand (gleiche Build-Kennung), so erkennt die App auf den Handys, wenn es eine neue Version gibt.
 # Ohne die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID wird nichts veröffentlicht (Hinweis statt Fehler).
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 # nie zwei Veröffentlichungen gleichzeitig; eine laufende wird nicht abgebrochen
@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   deploy:
+    # nur der Standard-Branch wird veröffentlicht (andere Branches: Job übersprungen, kostet keine Minuten)
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     permissions:
       contents: read
