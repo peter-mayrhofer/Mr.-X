@@ -4,7 +4,6 @@
   import Button from "../ui/Button.svelte";
   import Banner from "../ui/Banner.svelte";
   import { T } from "../texte.ts";
-  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     variant?: string;
@@ -23,7 +22,6 @@
   const action = $derived(actions[step as 1 | 2 | 3]);
 </script>
 
-<AmbientBackdrop />
 <main class="ob">
   <header>
     <div class="dots" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step + 1} aria-label="Schritt {step + 1} von 4">
@@ -35,7 +33,6 @@
   {#key step}
     <section class="body">
       <div class="art" aria-hidden="true">
-        <span class="ring r1"></span><span class="ring r2"></span>
         <span class="ic"><IconC size={72} strokeWidth={2} /></span>
       </div>
       <h1>{s.titel}</h1>
@@ -114,23 +111,9 @@
     }
   }
   .art {
-    position: relative;
-    width: 180px;
-    height: 180px;
-    margin: 0 auto var(--sp-4);
     display: grid;
     place-items: center;
-  }
-  .ring {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 2px solid var(--accent-soft);
-  }
-  .r2 {
-    inset: 22px;
-    border-color: var(--accent);
-    opacity: 0.4;
+    margin: var(--sp-4) auto var(--sp-6);
   }
   .ic {
     width: 116px;
@@ -140,7 +123,6 @@
     place-items: center;
     background: var(--accent);
     color: var(--on-accent);
-    box-shadow: var(--shadow-2);
   }
   h1 {
     font-size: var(--fs-3xl);

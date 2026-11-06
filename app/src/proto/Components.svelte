@@ -85,8 +85,8 @@
         <p class="display" style:font-size="var({s})">Mister X <code class="tok">{s}</code></p>
       {/each}
       <p>Fließtext Inter 17 px – gut lesbar auch in der Sonne. <span class="num">Ziffern 0123456789</span></p>
-      <p class="caps">Akten-Etikett / Großbuchstaben</p>
-      <p class="stamp" style:color="var(--accent-text)" style:font-size="40px">Gefangen!</p>
+      <p class="etikett">Etikett (schmal, normal geschrieben)</p>
+      <p class="stamp" style:color="var(--accent-text)" style:font-size="40px">Gefangen</p>
     </section>
 
     <section>
@@ -121,7 +121,7 @@
         <Banner tone="danger" title="Gefahr">Ihr seid außerhalb des Spielfelds!</Banner>
         <Banner tone="ok">Gespeichert.</Banner>
         <Banner tone="ann" title="Durchsage">Treffpunkt Hauptplatz.</Banner>
-        <Banner tone="mrx" title="Mister X">Ihr seid Mister X!</Banner>
+        <Banner tone="mrx" title="Mister X">Ihr seid Mister X</Banner>
       </div>
       <div class="row">
         <Pill>Neutral</Pill><Pill tone="ok" dot>online</Pill><Pill tone="warn">wartet</Pill><Pill tone="danger" dot>offline</Pill><Pill

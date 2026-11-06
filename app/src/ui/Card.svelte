@@ -19,7 +19,7 @@
   {#if label}
     <header>
       {#if IconC}<IconC size={20} strokeWidth={2.4} aria-hidden="true" />{/if}
-      <h2 class="caps">{label}</h2>
+      <h2 class="etikett">{label}</h2>
       {#if action}<div class="action">{@render action()}</div>{/if}
     </header>
   {/if}

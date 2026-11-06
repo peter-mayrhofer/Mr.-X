@@ -138,7 +138,9 @@
       {#each list as m (m.id)}
         {#if m.kind === "ann"}
           <article class="ann">
-            <header><Megaphone size={22} aria-hidden="true" /><span class="caps">{T.chat.durchsage}</span><time>{uhr(m.t)}</time></header>
+            <header>
+              <Megaphone size={22} aria-hidden="true" /><span class="etikett">{T.chat.durchsage}</span><time>{uhr(m.t)}</time>
+            </header>
             <p>{m.text}</p>
           </article>
         {:else if m.kind === "sys"}

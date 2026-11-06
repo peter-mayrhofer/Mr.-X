@@ -153,7 +153,7 @@
   }
   .brand div {
     display: grid;
-    gap: 6px;
+    gap: var(--sp-2);
     justify-items: start;
   }
   .brand strong {

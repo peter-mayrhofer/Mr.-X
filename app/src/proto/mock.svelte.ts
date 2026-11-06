@@ -136,7 +136,7 @@ export const chat: (ChatMessage & { id: string })[] = $state([
     name: "System",
     kind: "sys",
     t: at(-83),
-    text: "Spiel gestartet! Neue Heimat ist Mister X und hat 10 Min Vorsprung.",
+    text: "Spiel gestartet. Neue Heimat ist Mister X und hat 10 Min Vorsprung.",
   },
   {
     id: "c2",
@@ -154,7 +154,7 @@ export const chat: (ChatMessage & { id: string })[] = $state([
     name: "System",
     kind: "sys",
     t: at(-38.2),
-    text: "Kleinmünchen hat Spallerhof gefangen und ist jetzt Mister X! 5 Min Wartezeit in der Nähe.",
+    text: "Kleinmünchen hat Spallerhof gefangen und ist jetzt Mister X. 5 Min Wartezeit in der Nähe.",
     reportId: "r1",
   },
   {
@@ -174,7 +174,7 @@ export const chat: (ChatMessage & { id: string })[] = $state([
     text: "Standort von Mister X (Kleinmünchen) gemeldet.",
     reportId: "r2",
   },
-  { id: "c7", uid: "sys", name: "System", kind: "sys", t: at(-20), text: "Das Spielfeld wird verkleinert! Gesperrt: Westen." },
+  { id: "c7", uid: "sys", name: "System", kind: "sys", t: at(-20), text: "Das Spielfeld wird verkleinert. Gesperrt: Westen." },
   {
     id: "c8",
     uid: "sys",

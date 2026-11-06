@@ -21,8 +21,6 @@
 </script>
 
 <StartBackdrop />
-<div class="flash" aria-hidden="true"></div>
-<div class="scan" aria-hidden="true"></div>
 <main class="start">
   <header>
     <Logo height={48} />
@@ -35,14 +33,14 @@
       >
       <span class="x" aria-hidden="true">X</span>
     </h1>
-    <p class="caps claim">{T.app.org} · {T.app.claim}</p>
+    <p class="etikett claim">{T.app.org} · {T.app.claim}</p>
   </section>
 
   <section class="actions">
     {#if game}
       <div class="found" role="status">
         <CircleCheck size={26} aria-hidden="true" />
-        <div><span class="caps">{T.start.spielGefunden}</span><strong>{game}</strong></div>
+        <div><span class="etikett">{T.start.spielGefunden}</span><strong>{game}</strong></div>
       </div>
     {/if}
     <Button size="xl" block icon={Users} onclick={() => go(links.join)}>{T.start.teamBeitreten}</Button>
@@ -107,125 +105,42 @@
     display: inline-block;
   }
   .x {
-    position: relative;
     color: var(--accent-text);
     display: inline-block;
     transform: rotate(-6deg);
-    text-shadow: 0 0 40px var(--accent-soft);
-    will-change: transform;
-    animation: x-in 1.1s cubic-bezier(0.2, 1.15, 0.3, 1) 1.15s both;
+    animation: x-in var(--dur-3) var(--ease-out) 0.45s both;
   }
-  /* Druckwelle, wenn das X einschlägt */
-  .x::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0.9em;
-    height: 0.9em;
-    margin: -0.45em 0 0 -0.45em;
-    border-radius: 50%;
-    border: 0.05em solid var(--accent-text);
-    opacity: 0;
-    animation: boom 1.3s cubic-bezier(0.1, 0.6, 0.3, 1) 1.75s both;
-  }
+  /* Einstieg: die Buchstaben werden kurz nacheinander aufgestempelt, das X zuletzt, danach blendet der Rest ein */
   .ch {
     display: inline-block;
-    will-change: transform, opacity;
-    animation: slam 0.75s cubic-bezier(0.2, 1.2, 0.3, 1) calc(0.45s + var(--i) * 0.075s) both;
+    animation: stamp var(--dur-2) var(--ease-out) calc(0.1s + var(--i) * 0.04s) both;
   }
-  @keyframes slam {
+  @keyframes stamp {
     from {
       opacity: 0;
-      transform: translateY(-140px) scale(2.4) rotate(-9deg);
-    }
-    to {
-      opacity: 1;
-      transform: none;
+      transform: scale(1.25);
     }
   }
   @keyframes x-in {
     from {
       opacity: 0;
-      transform: rotate(-6deg) scale(8) rotate(-560deg);
-    }
-    60% {
-      opacity: 1;
-    }
-    to {
-      opacity: 1;
-      transform: rotate(-6deg);
-    }
-  }
-  @keyframes boom {
-    from {
-      opacity: 0.95;
-      transform: scale(0.3);
-    }
-    to {
-      opacity: 0;
-      transform: scale(16);
-    }
-  }
-  /* Blitz beim Einschlag und ein Lichtstrahl, der einmal über die Seite fegt */
-  .flash {
-    position: fixed;
-    inset: 0;
-    z-index: 4;
-    pointer-events: none;
-    background: radial-gradient(circle at 50% 40%, rgb(255 255 255 / 0.55), transparent 65%);
-    animation: flash 0.7s ease-out 1.75s both;
-  }
-  @keyframes flash {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-  .scan {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 3px;
-    z-index: 4;
-    pointer-events: none;
-    background: var(--accent-text);
-    box-shadow: 0 0 40px 12px var(--accent);
-    animation: scan 1.3s cubic-bezier(0.6, 0, 0.3, 1) 0.15s both;
-  }
-  @keyframes scan {
-    from {
-      transform: translateX(-10px);
-      opacity: 1;
-    }
-    to {
-      transform: translateX(100vw);
-      opacity: 0;
+      transform: rotate(-6deg) scale(1.6);
     }
   }
   header,
-  footer {
-    animation: rise 0.9s ease-out 2.2s both;
-  }
-  .actions {
-    animation: rise 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) 1.9s both;
+  footer,
+  .actions,
+  .claim {
+    animation: rise var(--dur-3) var(--ease-out) 0.7s both;
   }
   @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(44px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
+      transform: translateY(12px);
     }
   }
   .claim {
     color: var(--text-2);
-    animation: rise 0.9s ease-out 1.6s both;
   }
   .actions {
     display: grid;
@@ -245,8 +160,7 @@
     font-family: var(--font-display);
     font-weight: 700;
     font-size: var(--fs-l);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
     text-decoration: none;
   }
   .found {
@@ -300,7 +214,7 @@
     color: var(--text-2);
   }
 
-  /* Laptop und größer: zwei Spalten, Titel riesig links, die Wege als Glaskarte rechts */
+  /* Laptop und größer: zwei Spalten, Titel riesig links, die Wege als Karte rechts */
   @media (min-width: 1000px) {
     .start {
       max-width: 1720px;
@@ -337,9 +251,8 @@
       align-self: center;
       padding: var(--sp-8);
       border-radius: var(--r-l, 24px);
-      border: var(--border-w) solid var(--line-strong);
-      background: color-mix(in srgb, var(--surface) 88%, transparent);
-      box-shadow: 0 30px 90px rgb(0 0 0 / 0.35);
+      border: var(--border-w) solid var(--line);
+      background: var(--surface);
     }
     footer {
       grid-area: foot;

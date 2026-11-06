@@ -311,7 +311,7 @@
         <div class="hint">
           <Flag size={24} aria-hidden="true" />
           <div>
-            <strong class="caps">{T.mrx.regelnTitel}</strong>
+            <strong class="etikett">{T.mrx.regelnTitel}</strong>
             <ul>
               {#each T.mrx.regeln as r (r)}<li>{r}</li>{/each}
             </ul>
@@ -320,7 +320,7 @@
         </div>
       {:else if last && !isMrx}
         <button class="lastchip" onclick={() => map?.flyTo(last)}>
-          <span class="caps">{T.karte.letzteMeldung}</span>
+          <span class="etikett">{T.karte.letzteMeldung}</span>
           <span><strong class="num">{uhr(last.t)}</strong> · {vor(last.t, clock.now)}</span>
         </button>
       {/if}
@@ -531,7 +531,7 @@
     cursor: pointer;
     font-size: var(--fs-m);
   }
-  .lastchip .caps {
+  .lastchip .etikett {
     color: var(--accent-text);
     font-size: 15px;
   }

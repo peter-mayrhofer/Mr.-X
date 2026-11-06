@@ -9,7 +9,6 @@
   import UndoHandover from "../parts/UndoHandover.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
-  import Banner from "../../ui/Banner.svelte";
   import CountdownRing from "../../ui/CountdownRing.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import ListItem from "../../ui/ListItem.svelte";
@@ -141,13 +140,14 @@
       </Card>
 
       <Card label={T.admin.warnungen} icon={TriangleAlert}>
-        <div class="stack">
+        <!-- ruhige Liste statt gelber Vollflächen: nur die Markierung trägt die Farbe -->
+        <ul class="warns">
           {#each warnList as w (w.key)}
-            <Banner tone={w.tone}>{w.text}</Banner>
+            <li class={w.tone}><TriangleAlert size={20} aria-hidden="true" />{w.text}</li>
           {:else}
-            <p class="muted">{T.admin.allesOk}</p>
+            <li class="muted">{T.admin.allesOk}</li>
           {/each}
-        </div>
+        </ul>
       </Card>
 
       <Card label={T.schiri.wartezeiten} icon={Hourglass}>
@@ -257,6 +257,32 @@
 </Modal>
 
 <style>
+  .warns {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .warns li {
+    display: flex;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-s);
+    border-left: 4px solid var(--c, var(--line));
+    background: var(--surface-2);
+  }
+  .warns :global(svg) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--c);
+  }
+  .warns .warn {
+    --c: var(--warn);
+  }
+  .warns .danger {
+    --c: var(--accent);
+  }
   .live {
     display: grid;
     grid-template-rows: 55vh auto;
@@ -333,7 +359,7 @@
   .chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--sp-2);
   }
   .chip {
     display: inline-flex;

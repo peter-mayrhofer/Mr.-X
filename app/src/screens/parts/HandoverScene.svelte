@@ -67,11 +67,11 @@
     gap: var(--sp-6);
     padding: var(--sp-6);
     text-align: center;
-    background: radial-gradient(circle at 50% 40%, var(--nacht-700), var(--nacht-950) 70%);
+    background: var(--nacht-900);
     color: #fff;
   }
   .neuMrx {
-    background: radial-gradient(circle at 50% 35%, #e0302a, var(--rf-rot) 45%, var(--rot-700));
+    background: var(--rf-rot);
   }
   h1 {
     font-size: var(--fs-3xl);

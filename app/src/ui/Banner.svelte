@@ -49,8 +49,7 @@
     display: block;
     font-family: var(--font-display);
     font-size: var(--fs-l);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.01em;
     line-height: 1.1;
   }
   .text {

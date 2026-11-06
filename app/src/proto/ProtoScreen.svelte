@@ -166,14 +166,14 @@
     <h2>{def.title}</h2>
     <p class="muted">{def.who} – {def.desc}</p>
     {#if def.variants}
-      <p class="caps lbl">Zustand</p>
+      <p class="etikett lbl">Zustand</p>
       <div class="vars">
         {#each def.variants as x (x.id)}
           <button class:on={x.id === v} onclick={() => to(n, x.id)}>{x.label}</button>
         {/each}
       </div>
     {/if}
-    <p class="caps lbl">Darstellung</p>
+    <p class="etikett lbl">Darstellung</p>
     <Segmented
       label="Darstellung"
       bind:value={choice}
