@@ -5,6 +5,7 @@
 <script lang="ts">
   import { router, match } from "./lib/router.svelte.ts";
   import Toaster from "./ui/Toaster.svelte";
+  import UpdateBanner from "./screens/parts/UpdateBanner.svelte";
   import StartPage from "./pages/StartPage.svelte";
   import JoinPage from "./pages/JoinPage.svelte";
   import StaffPage from "./pages/StaffPage.svelte";
@@ -56,3 +57,4 @@
   {/if}
 {/key}
 <Toaster />
+<UpdateBanner />

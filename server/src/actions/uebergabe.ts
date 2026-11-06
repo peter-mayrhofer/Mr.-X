@@ -1,5 +1,6 @@
 // Übergabe, Strafübergabe und Rückgängig (Regel 3, 4, 11, 13; KONZEPT Abschnitt 6.2).
 import {
+  distanceM,
   FRESH_MS,
   MELDUNG,
   PUSH_TITLE,
@@ -17,6 +18,15 @@ import { flagTracker } from "../ablauf.ts";
 type D = Record<string, unknown>;
 const REQUEST_ID = /^[A-Za-z0-9_-]{8,40}$/;
 const fresh = (p: Position | null | undefined, now: number) => (p && !p.suspect && now - p.t <= FRESH_MS ? p : null);
+/** so weit dürfen Mister X und Fänger bei einer selbst gemeldeten Übergabe auseinander sein (plus GPS-Genauigkeit beider) */
+export const PRUEF_M = 150;
+
+/** Selbst gemeldeter Fang: passen die Standorte von Mister X und Fänger zusammen? Sonst `pruefen` für die Spielleitung. */
+function pruefe(from: Position | null, to: Position | null): { distM?: number } | undefined {
+  if (!from || !to) return {};
+  const dm = distanceM(from, to);
+  return dm > PRUEF_M + Math.min(from.acc, 100) + Math.min(to.acc, 100) ? { distM: Math.round(dm) } : undefined;
+}
 
 /**
  * Fahne geht an ein anderes Team. Nur wenn Mister X noch `expectedMrx` ist (zwei Schiris gleichzeitig → nur einer zählt).
@@ -69,6 +79,7 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
     for (const t of locked) if ((locks[t]?.until ?? 0) < until) room.put("locks", t, { until, reason: "uebergabe" } satisfies Lock);
   if (locks[to]) room.put("locks", to, null);
 
+  const pruefen = who.role === "team" ? pruefe(fresh(pos[from], now), fresh(pos[to], now)) : undefined;
   const reportId = place ? newKey() : undefined;
   if (place && reportId)
     room.put("reports", reportId, { teamId: to, lat: place.lat, lng: place.lng, t: now, posAt: place.t, src, kind: "uebergabe" });
@@ -83,6 +94,7 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
     ...(place ? { lat: place.lat, lng: place.lng, reportId } : {}),
     prev: { mrx: cur.mrx, mrxSince: cur.mrxSince, lastReportAt: cur.lastReportAt, nextReportAt: cur.nextReportAt },
     prevLocks,
+    ...(pruefen ? { pruefen } : {}),
   };
   room.put("handovers", rid, rec);
   const text = (type === "fang" ? MELDUNG.fang : MELDUNG.strafe)(ts[to]!.name, ts[from]?.name ?? "?", cfg.waitMin);
@@ -92,10 +104,18 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
   if (locked.includes(from)) room.notify("wartezeit", { teams: [from] }, PUSH_TITLE.warten, MELDUNG.gefangen(cfg.waitMin));
   if (others.length) room.notify("wartezeit", { teams: others }, PUSH_TITLE.warten, MELDUNG.warten(cfg.waitMin));
   room.notify("uebergabe", { all: true, except: [to, ...locked] }, PUSH_TITLE.uebergabe, text);
+  if (pruefen)
+    room.notify(
+      "uebergabe",
+      { roles: ["admin", "schiri"] },
+      PUSH_TITLE.pruefen,
+      MELDUNG.pruefen(ts[from]?.name ?? "?", ts[to]!.name, pruefen.distM),
+    );
   room.audit(
     who,
     type === "fang" ? "Übergabe" : "Strafübergabe",
-    `${ts[from]?.name ?? "?"} → ${ts[to]!.name}; Wartezeit: ${locked.map((t) => ts[t]?.name ?? t).join(", ") || "niemand"}`,
+    `${ts[from]?.name ?? "?"} → ${ts[to]!.name}; Wartezeit: ${locked.map((t) => ts[t]?.name ?? t).join(", ") || "niemand"}` +
+      (pruefen ? `; bitte prüfen: ${pruefen.distM === undefined ? "keine aktuellen Standorte" : `${pruefen.distM} m auseinander`}` : ""),
   );
   return { handoverId: rid, locked };
 }

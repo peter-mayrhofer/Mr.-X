@@ -36,6 +36,10 @@ export function warnungen(v: StaffView, now: number): Warnung[] {
     } else if (z === "grenze")
       out.push({ key: "mrx-grenze", tone: "warn", text: T.admin.mrxGrenze(Math.round(distanceToBoundaryM(mrxPos, v.field, locked))) });
   }
+  // selbst gemeldeter Fang mit unpassenden Standorten (30 Min lang, bis rückgängig gemacht)
+  for (const h of v.handovers)
+    if (h.pruefen && !h.undoneAt && now - h.at < 30 * 60_000)
+      out.push({ key: `pruefen-${h.id}`, tone: "danger", text: T.admin.uebergabePruefen(name(h.from ?? ""), name(h.to), h.pruefen.distM) });
   for (const id of Object.keys(v.teams)) {
     const p = v.positions[id];
     if (id !== st.mrx && isOffline(p, now))

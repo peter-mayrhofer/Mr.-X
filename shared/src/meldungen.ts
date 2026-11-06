@@ -41,6 +41,10 @@ export const M = {
   sammelrufEnde: "Der Sammelruf ist beendet.",
   geteilt: (alt: string, neu: string) => `${alt} hat sich aufgeteilt: ${alt} und ${neu} spielen jetzt getrennt.`,
   notfall: (team: string) => `${team} hat einen Notfall gemeldet!`,
+  pruefen: (alt: string, neu: string, distM?: number) =>
+    distM === undefined
+      ? `${alt} hat den Fang durch ${neu} gemeldet – ohne aktuelle Standorte. Bitte prüfen und notfalls rückgängig machen.`
+      : `${alt} hat den Fang durch ${neu} gemeldet, die Handys waren aber ${distM} m auseinander. Bitte prüfen und notfalls rückgängig machen.`,
   notfallZurueck: (team: string) => `Entwarnung: ${team} hat den Notfall zurückgenommen (Fehlalarm).`,
   ende: (sieger: string) => `Spielende! ${sieger} ist der letzte Mister X und hat gewonnen!`,
 };

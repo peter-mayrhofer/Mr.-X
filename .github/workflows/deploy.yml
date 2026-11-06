@@ -1,0 +1,88 @@
+name: Deploy
+
+# Automatisch veröffentlichen (docs/BETRIEB.md, Abschnitt 10): bei jedem Push auf main – oder von Hand – wird die
+# Android-App gebaut, als mister-x.apk in die Web-App gelegt und alles auf Cloudflare veröffentlicht. Web-App und APK
+# kommen aus demselben Stand (gleiche Build-Kennung), so erkennt die App auf den Handys, wenn es eine neue Version gibt.
+# Ohne die Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID wird nichts veröffentlicht (Hinweis statt Fehler).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# nie zwei Veröffentlichungen gleichzeitig; eine laufende wird nicht abgebrochen
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - name: Zugang zu Cloudflare vorhanden?
+        id: zugang
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Nicht veröffentlicht: Secrets CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID fehlen (docs/BETRIEB.md, Abschnitt 10)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.zugang.outputs.ok == 'true'
+        uses: actions/checkout@v4
+      - if: steps.zugang.outputs.ok == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.zugang.outputs.ok == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - if: steps.zugang.outputs.ok == 'true'
+        run: npm ci
+
+      # 1) Android-App: mit dem Signier-Schlüssel (falls hinterlegt), damit Updates über die alte Version gehen
+      - name: Android-App bauen
+        if: steps.zugang.outputs.ok == 'true'
+        env:
+          VITE_API_URL: ${{ vars.MRX_API_URL || 'https://mister-x.mr-x-ooe.workers.dev' }}
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          MRX_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MRX_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MRX_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Versionsnummer = Minuten seit 1970: steigt immer, egal aus welchem Workflow die APK kommt
+          export MRX_VERSION_CODE=$(( $(date +%s) / 60 ))
+          npm -w app run build
+          (cd app && npx cap sync android)
+          if [ -n "$KEYSTORE" ]; then
+            echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/mrx.jks"
+            export MRX_KEYSTORE_FILE="$RUNNER_TEMP/mrx.jks"
+            (cd app/android && ./gradlew assembleRelease --no-daemon)
+            cp app/android/app/build/outputs/apk/release/app-release.apk app/public/mister-x.apk
+          else
+            echo "::warning::Kein Signier-Schlüssel (ANDROID_KEYSTORE_BASE64): Test-APK – ein Update geht dann nur nach dem Deinstallieren der alten App (docs/ANDROID-APK.md, 2.1)."
+            (cd app/android && ./gradlew assembleDebug --no-daemon)
+            cp app/android/app/build/outputs/apk/debug/app-debug.apk app/public/mister-x.apk
+          fi
+
+      # 2) Web-App (ohne feste Server-Adresse) samt APK bauen und veröffentlichen
+      - name: Veröffentlichen
+        if: steps.zugang.outputs.ok == 'true'
+        run: |
+          npm run build
+          # die Datenbank-ID steht nicht im Repository: über den Namen nachschlagen
+          ID=$(npx wrangler d1 list --json | node -e 'const l=JSON.parse(require("fs").readFileSync(0,"utf8"));const d=l.find(x=>x.name==="mister-x");process.stdout.write(d?d.uuid:"")')
+          if [ -z "$ID" ]; then echo "::error::D1-Datenbank „mister-x“ nicht gefunden – einmal von Hand veröffentlichen (docs/BETRIEB.md, Abschnitt 5)."; exit 1; fi
+          sed -i "s|\"database_name\": \"mister-x\" }|\"database_name\": \"mister-x\", \"database_id\": \"$ID\" }|" server/wrangler.jsonc
+          grep -q "\"database_id\": \"$ID\"" server/wrangler.jsonc
+          npx wrangler deploy -c server/wrangler.jsonc
+          echo "Veröffentlicht: Stand $(cat app/dist/version.json)" >> "$GITHUB_STEP_SUMMARY"

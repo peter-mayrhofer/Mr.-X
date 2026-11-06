@@ -150,6 +150,8 @@ export interface Handover {
   /** Teams, die dadurch Wartezeit bekamen */
   locked?: string[];
   reportId?: string;
+  /** Fang von Mister X selbst gemeldet, aber die Standorte passen nicht (zu weit auseinander oder keiner da): bitte prüfen */
+  pruefen?: { distM?: number };
 }
 
 export interface Lock {

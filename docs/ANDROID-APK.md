@@ -29,7 +29,10 @@ iPhones nutzen die Web-App (Safari → Teilen → „Zum Home-Bildschirm“) –
 Unter **Mehr → Einstellungen → Standort** lässt sich „Im Hintergrund senden“ ausschalten (dann nur, solange die App
 offen ist).
 
-**Updates:** einfach die neue `mister-x.apk` installieren – Anmeldung und Einstellungen bleiben erhalten.
+**Updates:** einfach die neue `mister-x.apk` installieren – Anmeldung und Einstellungen bleiben erhalten. Gibt es auf
+dem Server eine neuere Version als in der App, zeigt die App selbst **„Neue Version der App – Jetzt installieren“**
+(lädt die neue APK im Browser des Handys herunter). Damit das Update über die alte App geht, müssen alle APKs mit
+demselben Signier-Schlüssel gebaut sein (2.1).
 
 ---
 

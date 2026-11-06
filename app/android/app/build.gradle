@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 import groovy.json.JsonSlurper
 
-// Version aus app/package.json; fortlaufende Nummer aus GitHub Actions (run_number), lokal 1
+// Version aus app/package.json; fortlaufende Nummer aus GitHub Actions (Minuten seit 1970, steigt immer), lokal 1
 def appVersion = new JsonSlurper().parse(file('../../package.json')).version
 def versionNumber = (System.getenv('MRX_VERSION_CODE') ?: '1') as Integer
 // Signier-Schlüssel kommt nur aus GitHub-Secrets (docs/ANDROID-APK.md) – nie im Repository

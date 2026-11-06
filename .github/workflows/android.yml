@@ -49,11 +49,12 @@ jobs:
       - name: APK bauen
         working-directory: app/android
         env:
-          MRX_VERSION_CODE: ${{ github.run_number }}
           MRX_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           MRX_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MRX_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          # Versionsnummer = Minuten seit 1970: steigt immer, auch zwischen diesem Workflow und „Deploy“
+          export MRX_VERSION_CODE=$(( $(date +%s) / 60 ))
           if [ "$SIGNED" = "true" ]; then ./gradlew assembleRelease --no-daemon; cp app/build/outputs/apk/release/app-release.apk ../../mister-x.apk
           else ./gradlew assembleDebug --no-daemon; cp app/build/outputs/apk/debug/app-debug.apk ../../mister-x-test.apk; fi
 

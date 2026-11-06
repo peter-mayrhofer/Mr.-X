@@ -79,7 +79,7 @@
       <Logo height={40} />
       <Logo which="kinderfreunde-ooe" height={30} />
     </div>
-    <p class="muted">{T.einstellungen.version} {__APP_VERSION__} · {T.app.voll}</p>
+    <p class="muted">{T.einstellungen.version} {__APP_VERSION__} ({__BUILD__}) · {T.app.voll}</p>
     <p class="muted">{T.datenschutz.kurz}</p>
   </Card>
 

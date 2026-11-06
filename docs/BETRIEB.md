@@ -140,6 +140,33 @@ den QR-Code vom Flyer zur App.
 
 ## 10. Neue Version veröffentlichen
 
+### Automatisch (empfohlen)
+
+Ist das einmal eingerichtet, veröffentlicht GitHub jede Änderung auf `main` selbst (Workflow „Deploy“): Android-App
+bauen, als `mister-x.apk` in die Web-App legen, alles auf Cloudflare hochladen. Web-App und APK sind dann immer vom
+selben Stand – und die Android-App zeigt den Teams **„Neue Version der App – Jetzt installieren“**, sobald es eine
+neuere gibt. Auf deinem Computer brauchst du dafür nichts mehr.
+
+**Einmalig einrichten:**
+
+1. **Cloudflare-Schlüssel erstellen:** im Cloudflare-Dashboard rechts oben auf das Profil → **Profil** → **API-Token**
+   → **Token erstellen** → bei „Cloudflare Workers bearbeiten“ auf **Vorlage verwenden**. Unter *Berechtigungen* mit
+   **+ Mehr hinzufügen** ergänzen: *Konto* → *D1* → *Bearbeiten*. Bei *Kontoressourcen* dein Konto wählen, bei
+   *Zonenressourcen* „Alle Zonen“ lassen → **Weiter zur Zusammenfassung** → **Token erstellen**. Den Token **sofort
+   kopieren** (er wird nur einmal angezeigt) – nie in einen Chat oder eine Datei im Projekt schreiben.
+2. **Konto-ID:** im Dashboard unter **Workers & Pages** → rechts „Konto-ID“ (steht auch in der Adresse nach
+   `dash.cloudflare.com/`).
+3. **In GitHub hinterlegen:** Repository → **Settings → Secrets and variables → Actions → New repository secret**:
+   `CLOUDFLARE_API_TOKEN` = der Token aus 1, `CLOUDFLARE_ACCOUNT_ID` = die Konto-ID aus 2.
+4. **Signier-Schlüssel für die Android-App** hinterlegen ([`ANDROID-APK.md`](ANDROID-APK.md), 2.1 und 2.2). Ohne ihn
+   baut GitHub nur eine Test-APK mit wechselndem Schlüssel – ein Update geht dann nur nach dem Deinstallieren der alten
+   App.
+
+Danach: GitHub → **Actions → Deploy → Run workflow** startet eine Veröffentlichung auch von Hand. Ohne die beiden
+Secrets veröffentlicht der Workflow nichts und meldet nur einen Hinweis.
+
+### Von Hand
+
 ```bat
 cd %USERPROFILE%\Documents\Mr.-X
 git pull

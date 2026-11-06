@@ -1,14 +1,34 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 
 const { version } = JSON.parse(readFileSync(new URL("package.json", import.meta.url), "utf8")) as { version: string };
+// Build-Kennung = Commit: Web-App und APK aus demselben Stand haben dieselbe → die Android-App erkennt, ob sie veraltet ist
+const build = (() => {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+  try {
+    return execSync("git rev-parse --short=7 HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "dev";
+  }
+})();
 // Entwicklung: Spiel-Server lokal mit `npm run dev:server` (wrangler dev, Port 8787); Tests setzen MRX_SERVER
 const server = process.env.MRX_SERVER ?? "http://127.0.0.1:8787";
 
 export default defineConfig({
-  plugins: [svelte()],
-  define: { __APP_VERSION__: JSON.stringify(version) },
+  plugins: [
+    svelte(),
+    {
+      name: "mrx-version",
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, build }) });
+      },
+    },
+  ],
+  define: { __APP_VERSION__: JSON.stringify(version), __BUILD__: JSON.stringify(build) },
   build: {
     target: "es2022",
     chunkSizeWarningLimit: 1200,

@@ -104,6 +104,17 @@ export async function nativePos(p: PositionIn): Promise<void> {
   for (const n of j.result.notes) await showLocal(n);
 }
 
+/** Build-Kennung der Web-App auf dem Server (version.json); null, wenn nicht erreichbar */
+export async function serverBuild(): Promise<string | null> {
+  try {
+    const r = await CapacitorHttp.get({ url: `${API_URL}/version.json?t=${Date.now()}`, headers: { "Cache-Control": "no-cache" } });
+    const j = (typeof r.data === "string" ? JSON.parse(r.data) : r.data) as { build?: unknown };
+    return r.status < 300 && typeof j.build === "string" ? j.build : null;
+  } catch {
+    return null;
+  }
+}
+
 export const battery = {
   async optimized(): Promise<boolean> {
     return NATIVE ? !(await Akku.status()).ignoring : false;

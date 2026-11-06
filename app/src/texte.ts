@@ -2,6 +2,13 @@
 // Österreichisches Deutsch ist gewollt („Tapperl“).
 
 export const T = {
+  update: {
+    titel: "Neue Version der App",
+    text: "Bitte installiert die neue App – sonst fehlen euch neue Funktionen.",
+    installieren: "Jetzt installieren",
+    spaeter: "Später",
+  },
+
   app: {
     name: "Mister X",
     org: "Rote Falken",
@@ -492,6 +499,8 @@ export const T = {
     teamImSperrgebiet: (team: string, bereich: string) => `${team} steht im Sperrgebiet (${bereich})`,
     teamDraussen: (team: string) => `${team} ist außerhalb des Spielfelds`,
     mrxImSperrgebiet: (bereich: string) => `Mister X steht im Sperrgebiet (${bereich})!`,
+    uebergabePruefen: (alt: string, neu: string, distM?: number) =>
+      `Übergabe prüfen: ${alt} → ${neu} – ${distM === undefined ? "ohne aktuelle Standorte" : `${distM} m auseinander`}`,
     neueWarnung: "Neue Warnung",
     vorlagenDurchsage: "Durchsage-Vorlagen",
     personenGesamt: (n: number, teams: number) => `${n} Personen in ${teams} Teams`,

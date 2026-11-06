@@ -48,4 +48,5 @@ export const PUSH_TITLE = {
   endphase: "Endphase!",
   sammelruf: "Sammelruf",
   notfall: "NOTFALL",
+  pruefen: "Übergabe prüfen",
 } as const;
