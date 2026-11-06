@@ -11,70 +11,88 @@ Music: "Tech House vibes" by Alejandro Magaña (A. M.), Mixkit #130, https://mix
 
 ## Log
 - Grid from given tempo 122.02 BPM, phase +50 ms vs kicks. librosa tempo 122.3 BPM, beat period 0.492s. Kicks (<120 Hz) vs librosa grid: median offset +50 ms -> SHIFTED whole grid.
-- Music starts 0.000s into the track. Cut-to-beat error: 38.35s=51ms
-- pass 1: gain +0.0 dB, limiter off -> -18.7 LUFS, true peak 0.5 dBFS
-- pass 2: gain +2.7 dB, limiter 0.54 -> -17.2 LUFS, true peak -4.8 dBFS
-- pass 3: gain +3.9 dB, limiter 0.54 -> -16.2 LUFS, true peak -4.8 dBFS
-- FINAL after.mp4: -16.2 LUFS integrated, true peak -4.8 dBFS. Mono downmix: -16.2 LUFS, peak -4.8 dBFS.
+- Music starts 0.000s into the track. Cut-to-beat error: 1.97s=50ms, 44.26s=50ms, 49.17s=50ms
+- pass 1: gain +0.0 dB, limiter off -> -18.3 LUFS, true peak 0.1 dBFS
+- pass 2: gain +2.3 dB, limiter 0.54 -> -17.1 LUFS, true peak -4.8 dBFS
+- pass 3: gain +3.4 dB, limiter 0.54 -> -16.3 LUFS, true peak -4.7 dBFS
+- FINAL after.mp4: -16.3 LUFS integrated, true peak -4.7 dBFS. Mono downmix: -16.3 LUFS, peak -4.7 dBFS.
 
 ## Cues
-- 0.00s click -> click/kenney-interface-click-001.ogg (start 0.0s, -6 dB)
-- 0.25s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 0.246s, -6 dB)
-- 1.23s success -> ding/kenney-interface-confirmation-001.ogg (start 1.229s, 0.0 dB)
-- 2.21s movement -> whoosh/fs-683101-quick-woosh.ogg (start 2.18s, -4 dB)
-- 2.95s click -> click/kenney-interface-select-001.ogg (start 2.95s, -6 dB)
-- 3.20s click -> click/kenney-interface-select-002.ogg (start 3.196s, -6 dB)
-- 3.44s click -> click/kenney-interface-select-003.ogg (start 3.442s, -6 dB)
-- 3.69s click -> click/kenney-interface-click-001.ogg (start 3.688s, -6 dB)
-- 3.93s click -> click/kenney-interface-select-001.ogg (start 3.934s, -6 dB)
-- 4.18s click -> click/kenney-interface-select-002.ogg (start 4.18s, -6 dB)
-- 4.67s click -> click/kenney-interface-select-003.ogg (start 4.671s, -6 dB)
-- 5.41s success -> ding/kenney-interface-confirmation-002.ogg (start 5.409s, 0.0 dB)
-- 7.13s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 7.13s, -6 dB)
-- 7.62s click -> click/kenney-interface-toggle-001.ogg (start 7.622s, -6 dB)
-- 8.61s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 8.605s, -6 dB)
-- 9.10s click -> click/kenney-interface-toggle-001.ogg (start 9.097s, -6 dB)
-- 9.71s movement -> whoosh/fs-683101-quick-woosh.ogg (start 9.679s, -4 dB)
-- 10.70s click -> click/kenney-interface-select-002.ogg (start 10.695s, -6 dB)
-- 11.19s click -> click/kenney-interface-select-003.ogg (start 11.187s, -6 dB)
-- 12.91s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 12.908s, -6 dB)
-- 15.86s success -> ding/kenney-interface-confirmation-003.ogg (start 15.858s, 0.0 dB)
-- 16.60s appear -> pop/kenney-interface-drop-001.ogg (start 16.596s, -6 dB)
-- 17.33s appear -> pop/kenney-interface-drop-002.ogg (start 17.333s, -6 dB)
-- 18.07s appear -> pop/kenney-interface-drop-003.ogg (start 18.071s, -6 dB)
-- 18.81s appear -> pop/kenney-interface-drop-001.ogg (start 18.808s, -6 dB)
-- 19.55s appear -> pop/kenney-interface-drop-002.ogg (start 19.546s, -6 dB)
-- 20.04s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 20.038s, -6 dB)
-- 20.53s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 20.529s, -6 dB)
-- 22.00s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 22.005s, -6 dB)
-- 23.73s movement -> whoosh/fs-683101-quick-woosh.ogg (start 23.693s, -4 dB)
-- 24.46s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 24.463s, -6 dB)
-- 25.20s appear -> pop/kenney-interface-drop-003.ogg (start 25.201s, -6 dB)
-- 25.45s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 25.447s, -6 dB)
-- 26.92s click -> click/kenney-interface-click-001.ogg (start 26.922s, -6 dB)
-- 28.77s click -> click/kenney-interface-select-001.ogg (start 28.766s, -6 dB)
-- 29.75s click -> click/kenney-interface-select-002.ogg (start 29.749s, -6 dB)
-- 30.61s click -> click/kenney-interface-select-003.ogg (start 30.61s, -6 dB)
-- 30.86s movement -> whoosh/fs-683101-quick-woosh.ogg (start 30.823s, -4 dB)
-- 31.72s success -> ding/kenney-interface-confirmation-001.ogg (start 31.716s, 0.0 dB)
-- 33.68s appear -> pop/kenney-interface-drop-001.ogg (start 33.683s, -6 dB)
-- 35.16s movement -> whoosh/fs-683101-quick-woosh.ogg (start 35.125s, -4 dB)
-- 35.90s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 35.896s, -6 dB)
-- 37.62s build_up -> kit/riser.ogg (start 37.617s, -6 dB)
-- 38.35s reveal -> kit/impact.ogg (start 38.354s, 0.0 dB)
-- 39.34s movement -> whoosh/fs-683101-quick-woosh.ogg (start 39.305s, -4 dB)
-- 43.27s movement -> whoosh/fs-683101-quick-woosh.ogg (start 43.239s, -4 dB)
+- 0.10s appear -> pop/kenney-interface-drop-001.ogg (start 0.1s, -6 dB)
+- 0.49s movement -> whoosh/fs-683101-quick-woosh.ogg (start 0.459s, -4 dB)
+- 0.61s typing -> typing/fs-416777-digital-typing-wav.ogg (start 0.615s, -8 dB)
+- 0.98s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 0.983s, -6 dB)
+- 1.28s build_up -> kit/riser.ogg (start 1.278s, -6 dB)
+- 1.97s reveal -> kit/impact.ogg (start 1.967s, 0.0 dB)
+- 2.21s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 2.213s, -6 dB)
+- 2.34s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 2.336s, -6 dB)
+- 2.46s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 2.459s, -6 dB)
+- 2.58s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 2.582s, -6 dB)
+- 2.70s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 2.704s, -6 dB)
+- 2.83s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 2.827s, -6 dB)
+- 3.07s appear -> pop/kenney-interface-drop-002.ogg (start 3.073s, -6 dB)
+- 4.92s movement -> whoosh/fs-683101-quick-woosh.ogg (start 4.884s, -4 dB)
+- 5.90s click -> click/kenney-interface-click-001.ogg (start 5.901s, -6 dB)
+- 6.15s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 6.147s, -6 dB)
+- 7.13s success -> ding/kenney-interface-confirmation-001.ogg (start 7.13s, 0.0 dB)
+- 8.11s movement -> whoosh/fs-683101-quick-woosh.ogg (start 8.08s, -4 dB)
+- 8.85s click -> click/kenney-interface-select-001.ogg (start 8.851s, -6 dB)
+- 9.10s click -> click/kenney-interface-select-002.ogg (start 9.097s, -6 dB)
+- 9.34s click -> click/kenney-interface-select-003.ogg (start 9.343s, -6 dB)
+- 9.59s click -> click/kenney-interface-click-001.ogg (start 9.589s, -6 dB)
+- 9.83s click -> click/kenney-interface-select-001.ogg (start 9.834s, -6 dB)
+- 10.08s click -> click/kenney-interface-select-002.ogg (start 10.08s, -6 dB)
+- 10.57s click -> click/kenney-interface-select-003.ogg (start 10.572s, -6 dB)
+- 11.31s success -> ding/kenney-interface-confirmation-002.ogg (start 11.31s, 0.0 dB)
+- 13.03s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 13.031s, -6 dB)
+- 13.52s click -> click/kenney-interface-toggle-001.ogg (start 13.522s, -6 dB)
+- 14.51s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 14.506s, -6 dB)
+- 15.00s click -> click/kenney-interface-toggle-001.ogg (start 14.998s, -6 dB)
+- 15.61s movement -> whoosh/fs-683101-quick-woosh.ogg (start 15.579s, -4 dB)
+- 16.60s click -> click/kenney-interface-select-002.ogg (start 16.596s, -6 dB)
+- 17.09s click -> click/kenney-interface-select-003.ogg (start 17.087s, -6 dB)
+- 18.81s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 18.808s, -6 dB)
+- 21.76s success -> ding/kenney-interface-confirmation-003.ogg (start 21.759s, 0.0 dB)
+- 22.50s appear -> pop/kenney-interface-drop-003.ogg (start 22.496s, -6 dB)
+- 23.23s appear -> pop/kenney-interface-drop-001.ogg (start 23.234s, -6 dB)
+- 23.97s appear -> pop/kenney-interface-drop-002.ogg (start 23.971s, -6 dB)
+- 24.71s appear -> pop/kenney-interface-drop-003.ogg (start 24.709s, -6 dB)
+- 25.45s appear -> pop/kenney-interface-drop-001.ogg (start 25.447s, -6 dB)
+- 25.94s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 25.938s, -6 dB)
+- 26.43s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 26.43s, -6 dB)
+- 27.91s hover_or_small_ui -> ui-blip/kenney-ui-rollover2.ogg (start 27.905s, -6 dB)
+- 29.63s movement -> whoosh/fs-683101-quick-woosh.ogg (start 29.593s, -4 dB)
+- 30.36s hover_or_small_ui -> ui-blip/kenney-ui-rollover3.ogg (start 30.364s, -6 dB)
+- 31.10s appear -> pop/kenney-interface-drop-002.ogg (start 31.101s, -6 dB)
+- 31.35s hover_or_small_ui -> ui-blip/kenney-ui-rollover4.ogg (start 31.347s, -6 dB)
+- 32.82s click -> click/kenney-interface-click-001.ogg (start 32.822s, -6 dB)
+- 34.67s click -> click/kenney-interface-select-001.ogg (start 34.666s, -6 dB)
+- 35.65s click -> click/kenney-interface-select-002.ogg (start 35.65s, -6 dB)
+- 36.51s click -> click/kenney-interface-select-003.ogg (start 36.51s, -6 dB)
+- 36.76s movement -> whoosh/fs-683101-quick-woosh.ogg (start 36.723s, -4 dB)
+- 37.62s success -> ding/kenney-interface-confirmation-001.ogg (start 37.617s, 0.0 dB)
+- 39.58s appear -> pop/kenney-interface-drop-003.ogg (start 39.584s, -6 dB)
+- 41.06s movement -> whoosh/fs-683101-quick-woosh.ogg (start 41.026s, -4 dB)
+- 41.80s hover_or_small_ui -> ui-blip/kenney-ui-rollover1.ogg (start 41.796s, -6 dB)
+- 43.52s build_up -> kit/riser.ogg (start 43.517s, -6 dB)
+- 44.26s reveal -> kit/impact.ogg (start 44.255s, 0.0 dB)
+- 45.24s movement -> whoosh/fs-683101-quick-woosh.ogg (start 45.205s, -4 dB)
+- 47.20s movement -> whoosh/fs-683101-quick-woosh.ogg (start 47.172s, -4 dB)
+- 49.17s reveal -> kit/impact.ogg (start 49.172s, 0.0 dB)
+- 49.91s typing -> typing/fs-416777-digital-typing-wav.ogg (start 49.91s, -8 dB)
+- 51.02s appear -> pop/kenney-interface-drop-001.ogg (start 51.016s, -6 dB)
 
 ## Check these 5 with headphones
-- 0.00s (click: Punkt drückt „QR-Code scannen“) - check level/feel
-- 0.25s (hover_or_small_ui: Scanner geht auf) - check level/feel
-- 1.23s (success: Spiel gefunden) - check level/feel
-- 37.62s (build_up: Riser zum Sieger) - check level/feel
-- 38.35s (reveal: Traun gewinnt, Konfetti) - check beat sync
+- 0.61s (typing: Label tippt) - check level/feel
+- 1.97s (reveal: Rote Flut, Drop) - check beat sync
+- 44.26s (reveal: Traun gewinnt, Konfetti) - check beat sync
+- 49.17s (reveal: Punkt landet als Schlusspunkt) - check beat sync
+- 49.91s (typing: Absender tippt) - check level/feel
 
 Not claiming it sounds good: listen to these.
 ## Hinweise
-- Musik ab dem Drop (15,796 s im Track), Raster 122,02 BPM aus der Bassdrum gefittet. Das Skript misst gegen die Spitze der
-  Bass-Hüllkurve (~50 ms nach dem Einsatz); gegen den Einsatz gemessen liegt der Start in die Gesamtansicht (39,34 s) bei +2 ms.
-- Die Kontakte des Punkts (Tasten, Karten, Knöpfe) liegen absichtlich auch auf Achteln/Sechzehnteln – sie sind das „Instrument“.
-- Effekte nur CC0 (Freesound, Kenney); Whoosh von florianreichelt, Klicks/Pops/Bestätigungen von Kenney – heute geprüft.
+- Musik ab 13,829 s im Track: der Drop fällt auf die rote Flut im Start (1,97 s), der Phrasen-Crash auf die Landung des
+  Punkts als Schlusspunkt (49,17 s); am Ende 1,9 s ausgeblendet. Raster 122,02 BPM aus der Bassdrum gefittet.
+- Das Skript misst gegen die Spitze der Bass-Hüllkurve (~50 ms nach dem Einsatz), daher überall „50 ms“; gegen den
+  Einsatz gemessen liegt der Drop bei ±0 ms.
+- Effekte nur CC0 (Freesound, Kenney), heute auf den Quellseiten geprüft.
