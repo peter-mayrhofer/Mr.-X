@@ -24,6 +24,7 @@
   import { toast } from "../ui/toast.svelte.ts";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     allowed: boolean;
@@ -148,6 +149,7 @@
   }
 </script>
 
+<AmbientBackdrop />
 <main class="page">
   <AppBar title={T.superadmin.titel} {onback}>
     {#snippet actions()}

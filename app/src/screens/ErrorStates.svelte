@@ -4,6 +4,7 @@
   import Button from "../ui/Button.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   let { variant = "offline", onaction }: { variant?: string; onaction: () => void } = $props();
   const F = T.fehler;
@@ -19,6 +20,7 @@
   const IconC = $derived(v.icon);
 </script>
 
+<AmbientBackdrop />
 <main class="err {v.tone}">
   <div class="art" aria-hidden="true"><IconC size={72} strokeWidth={2} /></div>
   <h1>{v.titel}</h1>

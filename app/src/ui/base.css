@@ -68,12 +68,13 @@ textarea {
   display: none !important;
 }
 
-/* Etikett über Werten und Abschnitten: schmale Schrift, normal geschrieben – Großbuchstaben nur für große Überschriften */
-.etikett {
+/* Akten-Etikett: schmale Großbuchstaben */
+.caps {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--fs-s);
-  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
 }
 
 .num {
@@ -107,7 +108,7 @@ textarea {
 }
 
 /* zu langsames Gerät (siehe lib/ruhig.ts): Hintergrund-Schmuck steht still */
-:root[data-ruhig] .bd * {
+:root[data-ruhig] :is(.bd, .amb) * {
   animation: none !important;
 }
 

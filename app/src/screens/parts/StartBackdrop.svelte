@@ -1,8 +1,9 @@
-<!-- Hintergrund der Startseite: Mister X auf der Flucht vor drei Jägern – erzählt das Spiel in einem Bild.
+<!-- Lebendiger Hintergrund der Startseite: drehende Viertelkreise, ein Mister X auf der Flucht vor drei Jägern, ein rollendes X.
      Zwei Fassungen: breit (Laptop) und hoch (Handy). Alles bewegt sich nur per transform/opacity auf eigenen Ebenen
      (Grafikkarte, kein Neuzeichnen) – sonst ruckelt es auf schwächeren Geräten. Bei „Bewegung reduzieren“ steht alles still. -->
 <script lang="ts">
   import { onMount } from "svelte";
+  import Orb from "../../ui/Orb.svelte";
   import { pruefeFluessig } from "../../lib/ruhig.ts";
 
   onMount(() => pruefeFluessig(3800));
@@ -14,6 +15,17 @@
 </script>
 
 <div class="bd" aria-hidden="true">
+  <div class="glow"></div>
+  <div class="grid"></div>
+
+  <Orb rich intro size="clamp(520px, 96vmin, 1200px)" dur={120} pos="left:calc(var(--s) / -2);bottom:calc(var(--s) / -2)" />
+  <div class="wideonly">
+    <Orb rich intro size="clamp(400px, 62vmin, 800px)" dur={150} reverse pos="right:calc(var(--s) / -2);top:calc(var(--s) / -2)" />
+  </div>
+
+  <b class="roll big">X</b>
+  <b class="roll small">X</b>
+
   <div class="chase wide">
     <svg viewBox="0 0 100 100" preserveAspectRatio="none"
       ><path
@@ -47,6 +59,78 @@
     overflow: hidden;
     contain: strict;
   }
+  .glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(900px 700px at 0% 100%, var(--accent-soft), transparent 70%),
+      radial-gradient(700px 500px at 100% 0%, var(--info-soft), transparent 70%);
+  }
+  .grid {
+    position: absolute;
+    inset: -80px;
+    opacity: 0.5;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 80px 80px;
+    will-change: transform;
+    animation: drift 14s linear infinite;
+  }
+  @keyframes drift {
+    to {
+      transform: translate(80px, 80px);
+    }
+  }
+  .wideonly {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .wideonly {
+      display: block;
+    }
+  }
+
+  /* rollende X: laufen durchs Bild und drehen sich dabei wie ein Rad */
+  .roll {
+    position: absolute;
+    left: 0;
+    width: 0.8em;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 3px var(--accent-text);
+    will-change: transform;
+    animation: roll linear infinite;
+  }
+  .roll.big {
+    font-size: clamp(260px, 52vmin, 560px);
+    bottom: 2vh;
+    opacity: 0.3;
+    animation-duration: 80s;
+  }
+  .roll.small {
+    display: none;
+    font-size: clamp(120px, 24vmin, 260px);
+    top: 6vh;
+    opacity: 0.2;
+    animation-duration: 55s;
+    animation-direction: reverse;
+  }
+  @media (min-width: 768px) {
+    .roll.small {
+      display: block;
+    }
+  }
+  @keyframes roll {
+    from {
+      transform: translateX(-40vw) rotate(0deg);
+    }
+    to {
+      transform: translateX(125vw) rotate(720deg);
+    }
+  }
+
   /* Jagd: Mister X (rot) auf einer Straßenrunde, die Jäger hinterher. Alles in vw/vh, damit es zur gestrichelten Route passt. */
   .chase {
     position: absolute;

@@ -1,7 +1,6 @@
 <!--
   Knopf mit Varianten und Zuständen (normal, gedrückt, deaktiviert, Laden).
   primary = Rot (Hauptaktion), secondary = Fläche, ghost = nur Text, danger = gefährlich (rot umrandet), ok = grün.
-  Großbuchstaben (Plakat) nur bei großen Hauptknöpfen; zweitrangige und kleine Knöpfe sind normal geschrieben.
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -42,7 +41,8 @@
     font-family: var(--font-display);
     font-weight: 700;
     font-size: var(--fs-l);
-    letter-spacing: 0.01em;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
     cursor: pointer;
     user-select: none;
     transition:
@@ -59,10 +59,6 @@
   }
   .l {
     min-height: var(--touch-l);
-  }
-  .btn:is(.l, .xl):not(.secondary, .ghost) {
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
   }
   .xl {
     min-height: var(--touch-xl);
@@ -94,6 +90,7 @@
   .ghost {
     background: transparent;
     color: var(--text);
+    text-transform: none;
     font-family: var(--font-text);
     font-weight: 600;
     font-size: var(--fs-m);

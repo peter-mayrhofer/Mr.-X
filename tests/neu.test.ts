@@ -122,7 +122,7 @@ describe("Im Spiel", () => {
     expect((await ok(a, "sos")).id).toBe(id); // nochmal drücken: kein zweiter Alarm
     const sent = (await outbox(G)).slice(before);
     expect(sent).toHaveLength(1);
-    expect(sent[0]).toMatchObject({ kind: "notfall", title: "NOTFALL", body: "OG Bulgariplatz hat einen Notfall gemeldet." });
+    expect(sent[0]).toMatchObject({ kind: "notfall", title: "NOTFALL", body: "OG Bulgariplatz hat einen Notfall gemeldet!" });
     expect(sent[0]!.to.sort()).toEqual([admin.uid, schiri.uid].sort());
     expect(await val(`games/${G}/alerts/${id}`)).toMatchObject({ teamId: a.teamId, uid: a.uid, lat: 48.3069 });
     // Sicht: Spielleitung/Schiri alles, das eigene Team seins, andere Teams nichts
@@ -157,11 +157,11 @@ describe("Im Spiel", () => {
     const s = await eventually(state, (x) => !!x.endPhase);
     expect(s.endPhase).toBeGreaterThan(0);
     const chat = Object.values((await val(`games/${G}/chat`)) as Record<string, { text: string }>).map((m) => m.text);
-    expect(chat.filter((t) => t.startsWith("Endphase:"))).toHaveLength(1);
-    expect(chat.find((t) => t.startsWith("Endphase:"))).toMatch(/spätestens um \d\d:\d\d/);
+    expect(chat.filter((t) => t.startsWith("Endphase!"))).toHaveLength(1);
+    expect(chat.find((t) => t.startsWith("Endphase!"))).toMatch(/spätestens um \d\d:\d\d/);
     await sleep(500);
     expect(
-      Object.values((await val(`games/${G}/chat`)) as Record<string, { text: string }>).filter((m) => m.text.startsWith("Endphase:")),
+      Object.values((await val(`games/${G}/chat`)) as Record<string, { text: string }>).filter((m) => m.text.startsWith("Endphase!")),
     ).toHaveLength(1);
   });
 

@@ -278,7 +278,7 @@
     <TextField label={T.admin.neuesTeam} bind:value={s.name} maxlength={30} />
     <Stepper label={T.admin.neuesTeamGroesse} bind:value={s.size} unit="" min={1} max={99} />
     <fieldset class="devs">
-      <legend class="etikett">{T.admin.welcheGeraete}</legend>
+      <legend class="caps">{T.admin.welcheGeraete}</legend>
       {#each teamDevices(s.id) as [uid, m], i (uid)}
         <label>
           <input
@@ -344,7 +344,7 @@
   }
   .pills {
     display: none;
-    gap: var(--sp-2);
+    gap: 6px;
   }
   @media (min-width: 760px) {
     .pills {

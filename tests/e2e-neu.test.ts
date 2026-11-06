@@ -233,7 +233,7 @@ describe("Neue Funktionen in der echten App", { timeout: 60_000 }, () => {
     await visible(u, T.status.endphase);
     await shot(u, "endphase");
     await u.getByRole("button", { name: new RegExp(`^${T.tabs.chat}`) }).click();
-    await visible(u, "Endphase: Das Spiel kann ab jetzt jederzeit enden");
+    await visible(u, "Endphase! Das Spiel kann ab jetzt jederzeit enden");
     await u.getByRole("button", { name: T.tabs.karte, exact: true }).click();
   });
 

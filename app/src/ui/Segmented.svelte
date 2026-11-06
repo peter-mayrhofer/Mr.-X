@@ -50,7 +50,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--sp-2);
+    gap: 6px;
     transition: background var(--dur-1);
   }
   .on {

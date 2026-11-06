@@ -44,7 +44,7 @@
 <style>
   .field {
     display: grid;
-    gap: var(--sp-2);
+    gap: 6px;
   }
   label {
     font-weight: 600;

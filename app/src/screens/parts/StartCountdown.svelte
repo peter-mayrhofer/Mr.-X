@@ -33,7 +33,7 @@
     z-index: var(--z-overlay);
     display: grid;
     place-items: center;
-    background: var(--nacht-950);
+    background: radial-gradient(circle, var(--nacht-700), var(--nacht-950) 70%);
     color: #fff;
   }
   .n {

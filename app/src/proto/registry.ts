@@ -90,7 +90,7 @@ export const SCREENS: ScreenDef[] = [
     group: "Im Spiel – Teams",
     title: "Übergabe",
     who: "Alle",
-    desc: "Gefangen / Ihr seid jetzt Mister X / Erwischt",
+    desc: "Gefangen! / Ihr seid jetzt Mister X! / Erwischt!",
     variants: [
       { id: "alle", label: "Alle" },
       { id: "neu", label: "Neuer Mister X" },

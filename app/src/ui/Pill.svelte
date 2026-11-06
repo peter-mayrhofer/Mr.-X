@@ -22,7 +22,7 @@
   .pill {
     display: inline-flex;
     align-items: center;
-    gap: var(--sp-2);
+    gap: 6px;
     min-height: 28px;
     padding: 2px 10px;
     border-radius: var(--r-pill);

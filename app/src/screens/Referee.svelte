@@ -144,7 +144,7 @@
 
     <div class="bottom">
       <div class="near" aria-label={T.schiri.naechsteJaeger}>
-        <span class="etikett">{T.schiri.naechsteJaeger}</span>
+        <span class="caps">{T.schiri.naechsteJaeger}</span>
         {#if view.config.refereeHunters === false}
           <span class="off">{T.schiri.jaegerAus}</span>
         {:else}
@@ -257,7 +257,7 @@
     box-shadow: var(--shadow-1);
     overflow-x: auto;
   }
-  .near .etikett {
+  .near .caps {
     font-size: 14px;
     color: var(--text-2);
     flex: none;
@@ -265,7 +265,7 @@
   .chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--sp-2);
+    gap: 6px;
     flex: none;
     font-weight: 600;
   }

@@ -128,7 +128,7 @@ describe("Übergabe (Regel 3, 4) und Rückgängig", () => {
     expect(Object.keys(locks).sort()).toEqual([team.a!.id, team.c!.id].sort());
     expect(locks[team.a!.id].until - Date.now()).toBeGreaterThan(4 * MIN);
     expect((await reports()).at(-1)![1]).toMatchObject({ teamId: team.b!.id, kind: "uebergabe", src: "handy" });
-    expect((await lastChat()).text).toBe("Traun hat Urfahr gefangen und ist jetzt Mister X. 5 Min Wartezeit in der Nähe.");
+    expect((await lastChat()).text).toBe("Traun hat Urfahr gefangen und ist jetzt Mister X! 5 Min Wartezeit in der Nähe.");
   });
   it("dieselbe Anfrage nach Netzabbruch nochmal → nichts doppelt", async () => {
     const r = await ok(schiri, "handover", { to: team.b!.id, type: "fang", expectedMrx: team.a!.id, requestId: "fang-0001" });
@@ -229,7 +229,7 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
   it("Bereich sperren und freigeben", async () => {
     await ok(admin, "setCut", { cutId: "norden", locked: true });
     expect((await state()).cuts.norden).toBeGreaterThan(0);
-    expect((await lastChat()).text).toBe("Das Spielfeld wird verkleinert. Gesperrt: Norden.");
+    expect((await lastChat()).text).toBe("Das Spielfeld wird verkleinert! Gesperrt: Norden.");
     expect(reason(await run(admin, "setCut", { cutId: "norden", locked: true }))).toBe("conflict");
     expect(reason(await run(admin, "setCut", { cutId: "gibts-nicht", locked: true }))).toBe("invalid");
     await ok(admin, "setCut", { cutId: "osten", locked: true });
@@ -247,7 +247,7 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
     let s = await state();
     expect(s.cuts.westen).toBeUndefined();
     expect(s.warnCuts.westen).toBeGreaterThan(Date.now() + 9 * MIN);
-    expect((await lastChat()).text).toBe("Achtung: Westen wird in 10 Min gesperrt. Bitte rechtzeitig aus dem Bereich gehen.");
+    expect((await lastChat()).text).toBe("Achtung: Westen wird in 10 Min gesperrt! Bitte rechtzeitig aus dem Bereich gehen.");
     expect(reason(await run(admin, "setCut", { cutId: "westen", locked: true, inMin: 5 }))).toBe("conflict");
     // Absagen
     await ok(admin, "setCut", { cutId: "westen", locked: false });
@@ -260,7 +260,7 @@ describe("Regeln live ändern, Verkleinerung, Wartezeit von Hand", () => {
     s = await state();
     expect(s.cuts.westen).toBeGreaterThan(0);
     expect(s.warnCuts).toBeUndefined();
-    expect((await lastChat()).text).toBe("Das Spielfeld wird verkleinert. Gesperrt: Westen.");
+    expect((await lastChat()).text).toBe("Das Spielfeld wird verkleinert! Gesperrt: Westen.");
     await ok(admin, "setCut", { cutId: "westen", locked: false });
   });
   it("Wartezeit von Hand geben und aufheben", async () => {
@@ -445,11 +445,11 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
     expect(arch.results.farthest).toEqual({ teamId: team.d!.id, m: 111 });
     expect(arch.results.food).toEqual({ teamId: team.c!.id, visits: 1, ms: 700_000 }); // Futter-Profi
     expect(await val(`secrets/${G}/food`)).toBeNull(); // Zählerstände nach der Auswertung gelöscht
-    expect(Object.values(arch.chat as Record<string, { text: string }>).at(-1)!.text).toMatch(/^Spielende:/);
+    expect(Object.values(arch.chat as Record<string, { text: string }>).at(-1)!.text).toMatch(/^Spielende!/);
     for (const p of ["positions", "staff", "track", "locks"]) expect(await val(`games/${G}/${p}`)).toEqual({});
     expect(await val(`secrets/${G}/endAt`)).toBeNull();
     expect(await val(`games/${G}/info/phase`)).toBe("beendet");
-    expect((await lastChat()).text).toMatch(/^Spielende: .* hat gewonnen\.$/);
+    expect((await lastChat()).text).toMatch(/^Spielende! .* hat gewonnen!$/);
     expect(await val(`games/${G}/purgeAt`)).toBe(endAt + 30 * 24 * 60 * MIN); // Chat-Löschfrist (F3)
     expect(await tick(G)).toEqual([]);
   });

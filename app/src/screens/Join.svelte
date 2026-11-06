@@ -10,6 +10,7 @@
   import QrScanButton from "./parts/QrScanButton.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
+  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     /** Spielname, wenn über den QR-Link gekommen – dann kein Code-Feld */
@@ -64,6 +65,7 @@
   }
 </script>
 
+<AmbientBackdrop />
 <main class="page">
   <AppBar title={T.beitritt.titel} {onback} />
   <form
@@ -79,7 +81,7 @@
     {#if gameName}
       <div class="game">
         <CircleCheck size={24} aria-hidden="true" />
-        <div><span class="etikett">{T.beitritt.spiel}</span><strong>{gameName}</strong></div>
+        <div><span class="caps">{T.beitritt.spiel}</span><strong>{gameName}</strong></div>
       </div>
     {:else}
       <TextField
