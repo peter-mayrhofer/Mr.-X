@@ -10,7 +10,6 @@
   import Logo from "../ui/Logo.svelte";
   import { dauer, km } from "../lib/format.ts";
   import { T } from "../texte.ts";
-  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     results: Results;
@@ -44,7 +43,6 @@
 </script>
 
 <Confetti />
-<AmbientBackdrop />
 <main class="end">
   <header><Logo height={44} /></header>
 
@@ -62,10 +60,10 @@
   {/if}
 
   <section class="hero">
-    <p class="caps kicker">{T.ende.titel}</p>
+    <p class="etikett kicker">{T.ende.titel}</p>
     {#if trial}<Pill tone="info">{T.ende.probelauf}</Pill>{/if}
     <div class="badge"><TeamBadge short={winner.short} color={winner.color} mrx size={128} /></div>
-    <p class="caps">{T.ende.sieger}</p>
+    <p class="etikett">{T.ende.sieger}</p>
     <h1 class="display">{winner.name}</h1>
     <p class="muted">{T.ende.letzterMrx}</p>
   </section>
@@ -76,7 +74,7 @@
       {@const t = team(a.team)}
       <article>
         <IconC size={30} aria-hidden="true" />
-        <p class="caps">{a.label}</p>
+        <p class="etikett">{a.label}</p>
         <div class="row"><TeamBadge short={t.short} color={t.color} size={36} /><strong>{t.name}</strong></div>
         <p class="val display num">{a.value}</p>
       </article>
@@ -90,7 +88,7 @@
   </section>
 
   <section class="timeline">
-    <h2 class="caps">{T.ende.zeitstrahl}</h2>
+    <h2 class="etikett">{T.ende.zeitstrahl}</h2>
     <div class="bar" role="img" aria-label={timeline.map(([id, ms]) => `${team(id).name} ${dauer(ms)}`).join(", ")}>
       {#each timeline as [id, ms], i (i)}
         {@const t = team(id)}
@@ -156,7 +154,7 @@
   article > :global(svg) {
     color: var(--accent-text);
   }
-  article .caps {
+  article .etikett {
     color: var(--text-2);
   }
   .row {
@@ -172,14 +170,17 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-3);
   }
+  /* Kennzahlen als ruhige Zeile mit Haarlinien statt drei gleicher Kästchen */
   .stats div {
     display: grid;
+    align-content: start;
     justify-items: center;
     text-align: center;
-    gap: 2px;
-    padding: var(--sp-3);
-    border-radius: var(--r-m);
-    background: var(--surface-2);
+    gap: var(--sp-1);
+    padding: var(--sp-2);
+  }
+  .stats div + div {
+    border-left: var(--border-w) solid var(--line);
   }
   .stats b {
     font-family: var(--font-display);
@@ -216,7 +217,7 @@
     justify-content: space-between;
     color: var(--text-3);
     font-size: var(--fs-s);
-    margin-top: 4px;
+    margin-top: var(--sp-1);
   }
   .actions {
     display: flex;
@@ -239,5 +240,76 @@
     background: var(--surface);
     color: var(--ok-text);
     font-weight: 700;
+  }
+  @media (min-width: 1200px) {
+    .end {
+      max-width: 1680px;
+      min-height: 100dvh;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-content: center;
+      column-gap: clamp(48px, 5vw, 112px);
+      row-gap: var(--sp-8);
+      padding: var(--sp-8) clamp(32px, 4vw, 80px);
+    }
+    header,
+    .end > :global(.banner) {
+      grid-column: 1 / -1;
+    }
+    .hero {
+      grid-column: 1;
+      grid-row: span 4;
+      align-content: center;
+    }
+    .awards,
+    .stats,
+    .timeline,
+    .actions {
+      grid-column: 2;
+    }
+    .kicker {
+      font-size: var(--fs-3xl);
+    }
+    .badge {
+      zoom: 1.5;
+    }
+    .hero .etikett:not(.kicker) {
+      font-size: var(--fs-xl);
+    }
+    h1 {
+      font-size: clamp(96px, 8vw, 168px);
+    }
+    .hero .muted {
+      font-size: var(--fs-l);
+    }
+    article {
+      padding: var(--sp-6);
+      gap: var(--sp-3);
+    }
+    article .etikett {
+      font-size: var(--fs-l);
+    }
+    article strong {
+      font-size: var(--fs-l);
+    }
+    .val {
+      font-size: var(--fs-4xl);
+    }
+    .stats b {
+      font-size: var(--fs-3xl);
+    }
+    .stats span,
+    .timeline h2 {
+      font-size: var(--fs-l);
+    }
+    .bar {
+      height: 64px;
+      font-size: var(--fs-l);
+    }
+    .axis {
+      font-size: var(--fs-m);
+    }
+    .actions {
+      justify-content: flex-start;
+    }
   }
 </style>

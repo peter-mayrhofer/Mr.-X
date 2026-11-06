@@ -11,7 +11,6 @@
   import Modal from "../ui/Modal.svelte";
   import { ICONS, type Icon } from "../ui/icons.ts";
   import { T } from "../texte.ts";
-  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   interface Props {
     gameName: string;
@@ -47,11 +46,10 @@
   const quick = $derived(T.regeln.liste(config).filter((r) => ["Fangen", "Übergabe", "Meldungen"].includes(r.titel)));
 </script>
 
-<AmbientBackdrop />
 <main class="lobby">
   <header>
     <Logo height={36} />
-    <p class="caps">{gameName}</p>
+    <p class="etikett">{gameName}</p>
     {#if config.trial}<Pill tone="info">{T.status.probelauf}</Pill>{/if}
   </header>
 
@@ -64,7 +62,7 @@
     {#if !myTeam}<p class="muted">{T.warten.angemeldetAls(roleLabel, name)}</p>{/if}
     <div class="wait" role="status">
       <span class="dotpulse" aria-hidden="true"></span>
-      <span class="caps">{T.lobby.warten}</span>
+      <span class="etikett">{T.lobby.warten}</span>
       {#if startPlanned}<span class="muted">· {T.lobby.startGeplant(startPlanned)}</span>{/if}
     </div>
   </section>

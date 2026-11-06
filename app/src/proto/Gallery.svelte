@@ -15,7 +15,7 @@
   <header>
     <Logo height={48} />
     <div>
-      <p class="caps kicker">Meilenstein 2 · Design</p>
+      <p class="etikett kicker">Meilenstein 2 · Design</p>
       <h1>Klick-Prototyp</h1>
     </div>
   </header>
@@ -25,7 +25,7 @@
     > jedes Screens öffnet der lila Griff das Prototyp-Menü (Zustände, Darstellung, vor/zurück).
   </p>
   <div class="theme">
-    <span class="caps">Darstellung</span>
+    <span class="etikett">Darstellung</span>
     <Segmented
       label="Darstellung"
       bind:value={choice}
@@ -36,7 +36,7 @@
 
   {#each groups as g (g)}
     <section>
-      <h2 class="caps">{g}</h2>
+      <h2 class="etikett">{g}</h2>
       <ul>
         {#each SCREENS.filter((s) => s.group === g) as s (s.n)}
           <li>
@@ -95,7 +95,7 @@
     gap: var(--sp-2);
     max-width: 520px;
   }
-  .theme .caps,
+  .theme .etikett,
   h2 {
     color: var(--text-2);
     font-size: var(--fs-s);

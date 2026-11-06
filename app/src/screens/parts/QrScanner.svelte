@@ -110,7 +110,7 @@
   <video bind:this={video} playsinline muted></video>
   <div class="frame" aria-hidden="true"></div>
   <header>
-    <strong class="caps">{T.qr.titel}</strong>
+    <strong class="etikett">{T.qr.titel}</strong>
     <IconButton icon={X} label={T.allgemein.schliessen} onclick={onclose} />
   </header>
   <p class="msg" role="status">{error ?? hint ?? T.qr.hinweis}</p>

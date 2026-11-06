@@ -6,7 +6,6 @@
   import TextField from "../ui/TextField.svelte";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
-  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
 
   type StaffRole = "schiri" | "admin";
@@ -42,7 +41,6 @@
   }
 </script>
 
-<AmbientBackdrop />
 <main class="page">
   <AppBar title={T.staffLogin.titel} {onback} />
   <form class="form" onsubmit={submit}>

@@ -48,7 +48,7 @@
   {#if hits.length === 0 && faq.length === 0 && !own}<p class="muted">{T.regeln.keinTreffer}</p>{/if}
 
   {#if faq.length}
-    <h2 class="caps sec">{T.regeln.hilfe}</h2>
+    <h2 class="etikett sec">{T.regeln.hilfe}</h2>
     <div class="faq">
       {#each faq as f (f.f)}
         <details>

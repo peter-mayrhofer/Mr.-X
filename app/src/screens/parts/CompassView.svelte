@@ -67,7 +67,7 @@
 <section class="compass" class:overlay={!!onclose} aria-label={T.kompass.titel}>
   <header>
     <div>
-      <h2 class="caps">{title}</h2>
+      <h2 class="etikett">{title}</h2>
       {#if sub}<p class="muted">{sub}</p>{/if}
     </div>
     {#if onclose}<IconButton icon={X} label={T.allgemein.schliessen} tone="plain" onclick={onclose} />{/if}
@@ -106,7 +106,7 @@
         <strong class="display big">{T.kompass.da}</strong>
       {:else}
         <strong class="display big num">{meter(dist ?? 0)}</strong>
-        <span class="caps">Richtung {dirWord}</span>
+        <span class="etikett">Richtung {dirWord}</span>
       {/if}
     </div>
 
@@ -245,8 +245,7 @@
     color: var(--text);
     font-family: var(--font-display);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.01em;
     text-decoration: none;
   }
   @media (prefers-reduced-motion: reduce) {

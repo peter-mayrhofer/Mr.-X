@@ -156,11 +156,11 @@
       <section class="wait">
         <Hourglass size={56} aria-hidden="true" />
         <p class="display">{T.grossbild.gleich}</p>
-        <p class="caps"><Users size={26} aria-hidden="true" /> {T.grossbild.teamsAngemeldet(Object.keys(v.teams).length)}</p>
+        <p class="etikett"><Users size={26} aria-hidden="true" /> {T.grossbild.teamsAngemeldet(Object.keys(v.teams).length)}</p>
       </section>
     {:else}
       <section class="mrx">
-        <p class="caps">{T.status.misterX}</p>
+        <p class="etikett">{T.status.misterX}</p>
         <div class="who">
           <TeamBadge short={mrx.short} color={mrx.color} mrx size={88} />
           <strong class="display">{mrx.name}</strong>
@@ -174,13 +174,13 @@
           <CountdownRing until={st.nextReportAt} total={v.intervalMin * 60_000} size={200} label={T.status.naechsteMeldung} />
         {/if}
         <div>
-          <p class="caps">{T.status.spielzeit}</p>
+          <p class="etikett">{T.status.spielzeit}</p>
           <p class="clock num">{dauer(playMs)}</p>
         </div>
       </section>
 
       <section class="rank">
-        <p class="caps"><Trophy size={26} aria-hidden="true" /> {T.grossbild.rangliste} · {T.grossbild.zeitAlsMrx}</p>
+        <p class="etikett"><Trophy size={26} aria-hidden="true" /> {T.grossbild.rangliste} · {T.grossbild.zeitAlsMrx}</p>
         <ol>
           {#each ranking as r, i (r.id)}
             {@const t = team(r.id)}
@@ -196,7 +196,7 @@
       </section>
 
       <section class="ticker" aria-live="polite">
-        <p class="caps">{T.grossbild.ereignisse}</p>
+        <p class="etikett">{T.grossbild.ereignisse}</p>
         {#each ticker as e (e.id)}
           <p class="ev"><time class="num">{uhr(e.t)}</time> {e.text}</p>
         {:else}
@@ -209,7 +209,7 @@
   {#if announcement}
     <div class="ann" role="alert">
       <Megaphone size={96} aria-hidden="true" />
-      <p class="caps">{T.chat.durchsage}</p>
+      <p class="etikett">{T.chat.durchsage}</p>
       <p class="text display">{announcement.text}</p>
       <button class="hide" onclick={() => (hidden = announcement.id)}>{T.grossbild.ausblenden}</button>
     </div>
@@ -243,7 +243,7 @@
     justify-content: space-between;
     align-items: center;
   }
-  .caps {
+  .etikett {
     font-size: 24px;
     color: #a8bbcc;
     display: flex;
@@ -277,12 +277,12 @@
     margin: 12px 0 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: var(--sp-2);
   }
   .rank li {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: var(--sp-4);
     font-size: 26px;
     font-weight: 700;
   }
@@ -319,7 +319,7 @@
   }
   .wait {
     display: grid;
-    gap: 16px;
+    gap: var(--sp-4);
     justify-items: start;
     margin-top: 24px;
   }
@@ -342,7 +342,7 @@
     margin: -16px -8px -16px 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
     min-height: 44px;
     padding: 0 12px;
     border: 0;
@@ -355,7 +355,7 @@
   }
   .ev {
     font-size: 22px;
-    padding: 6px 0;
+    padding: var(--sp-2) 0;
     border-top: 1px solid var(--nacht-700);
   }
   .ev time {
@@ -376,7 +376,7 @@
     z-index: var(--z-overlay);
     animation: in var(--dur-3) var(--ease-out);
   }
-  .ann .caps {
+  .ann .etikett {
     color: #fff;
     font-size: 40px;
   }
@@ -409,7 +409,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    padding: 10px 18px;
+    padding: var(--sp-2) var(--sp-5);
     border-radius: var(--r-pill);
     background: var(--glass);
     font-size: 22px;
@@ -425,13 +425,13 @@
       grid-template-rows: 55dvh auto;
     }
     aside {
-      padding: 16px;
-      gap: 18px;
+      padding: var(--sp-4);
+      gap: var(--sp-5);
       border-left: 0;
       border-top: 2px solid var(--nacht-700);
       overflow: visible;
     }
-    .caps,
+    .etikett,
     .game {
       font-size: 16px;
     }
@@ -453,7 +453,7 @@
     .ann {
       padding: 24px;
     }
-    .ann .caps {
+    .ann .etikett {
       font-size: 24px;
     }
     .ann .hide {

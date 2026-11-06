@@ -547,3 +547,15 @@ Meldungen vom Server (Chat, Text der Benachrichtigungen) ebenso – nur die Bena
 übersetzt.
 **Warum so:** Kinder und Eltern, die besser in einer anderen Sprache lesen, verstehen Beitritt, Regeln und Bedienung.
 Die Übersetzungen sollte vor dem ersten Einsatz jemand mit der jeweiligen Muttersprache durchsehen.
+
+### E-57 Feinschliff des Designs („unslop“)
+**Entscheidung:** Das Design „Fahndung in Rot-Weiß“ bleibt (Farben, Barlow Condensed, Raster, Warnband, Sucher-Ecken),
+entfernt wird, was nur schmückt: Farbwolken, Raster, Radar-Ringe und rollende X im Hintergrund (nur die Jagd auf der
+Startseite bleibt – sie erzählt das Spiel), Lichtringe im Onboarding, Blitz, Lichtstrahl und Druckwelle beim Start
+(jetzt ein kurzes Aufstempeln), Farbverläufe hinter den großen Momenten. Großbuchstaben (Plakat) nur noch für große
+Überschriften und große Hauptknöpfe; kleine Etiketten (`.etikett`), Banner-Titel und zweitrangige Knöpfe sind normal
+geschrieben. Keine Ausrufezeichen in Oberflächentexten, Benachrichtigungen und Server-Meldungen (alle Sprachen).
+Warnungen der Spielleitung als ruhige Liste statt gelber Vollflächen, Status im Mister-X-Kasten als Text statt Pillen.
+Die Siegerehrung zeigt sich auf breiten Bildschirmen (Beamer, Laptop) zweispaltig und groß.
+**Warum so:** Die Schrift und die Farbe tragen die Momente – Deko, Großbuchstaben und Ausrufezeichen überall machten
+alles gleich laut. Am Beamer war die Siegerehrung zu klein, um sie im Saal zu lesen.

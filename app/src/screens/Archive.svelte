@@ -7,12 +7,10 @@
   import Skeleton from "../ui/Skeleton.svelte";
   import { datum, dauer } from "../lib/format.ts";
   import { T } from "../texte.ts";
-  import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
   let { runs, onopen, onback }: { runs: ArchiveListEntry[] | null; onopen: (run: string) => void; onback: () => void } = $props();
 </script>
 
-<AmbientBackdrop />
 <main class="list">
   <AppBar title={T.archiv.titel} {onback} />
   <div class="items">

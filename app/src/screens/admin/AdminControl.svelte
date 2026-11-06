@@ -166,7 +166,7 @@
     <Card label={T.admin.spielStarten} icon={Play} tone="accent">
       {#if !fieldReady}<p class="warnline">{T.admin.feldFehlt}</p>{/if}
       {#if teamIds.length < 2}<p class="warnline">{T.admin.zuWenigTeams}</p>{/if}
-      <p class="caps sub">{T.admin.startMrx}</p>
+      <p class="etikett sub">{T.admin.startMrx}</p>
       <div class="pick" role="radiogroup" aria-label={T.admin.startMrx}>
         {#each teamIds as id (id)}
           {@const t = view.teams[id]!}

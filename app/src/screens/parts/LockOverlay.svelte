@@ -41,7 +41,7 @@
     <div class="lock" role="alertdialog" aria-modal="true" aria-label={T.wartezeit.titel} transition:fade={{ duration: 200 }}>
       <div class="inner">
         <span class="icon"><Hand size={64} strokeWidth={2.2} aria-hidden="true" /></span>
-        <h1 class="caps title">{T.wartezeit.titel}</h1>
+        <h1 class="etikett title">{T.wartezeit.titel}</h1>
         <p class="time num" role="timer">{mmss(left)}</p>
         <div class="bar" aria-hidden="true"><i style:width="{(1 - left / total) * 100}%"></i></div>
         <p class="why">{text}</p>
@@ -59,7 +59,7 @@
     z-index: var(--z-overlay);
     display: grid;
     place-items: center;
-    padding: 14px;
+    padding: var(--sp-4);
     background: repeating-linear-gradient(-45deg, #ffc531 0 28px, #111 28px 56px);
   }
   .inner {
@@ -87,6 +87,8 @@
   .title {
     font-size: var(--fs-3xl);
     line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .time {
     font-family: var(--font-display);
