@@ -1,0 +1,8 @@
+{
+  "extends": ["@tsconfig/svelte/tsconfig.json", "../tsconfig.base.json"],
+  "compilerOptions": {
+    "types": ["svelte", "vite/client", "geojson"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
+}

@@ -1,0 +1,145 @@
+name: Android-APK
+
+# Baut die Android-App (docs/ANDROID-APK.md).
+# - bei Änderungen an der App: Test-Build (unsigniert) als Artefakt zum Ausprobieren
+# - bei einem Versions-Tag (z. B. v2.0.0) oder von Hand: signierte APK, als Release veröffentlicht
+# - Gerätetest im Android-Emulator: Standort bei ausgeschaltetem Bildschirm, Benachrichtigungen (tests/android-geraet.mjs)
+on:
+  push:
+    # Branches und Tags getrennt nennen – nur „tags“ allein würde Branch-Pushes ausschließen
+    branches: ["**"]
+    tags: ["v*"]
+    paths: ["app/**", "shared/**", "server/**", "tests/android-geraet.mjs", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SIGNED: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      # Adresse des Spiel-Servers fest in die App (Repository-Variable MRX_API_URL, docs/ANDROID-APK.md)
+      - run: npm -w app run build
+        env:
+          VITE_API_URL: ${{ vars.MRX_API_URL || 'https://mister-x.mr-x-ooe.workers.dev' }}
+      - run: npx cap sync android
+        working-directory: app
+
+      - name: Signier-Schlüssel
+        if: env.SIGNED == 'true'
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then echo "::error::Secret ANDROID_KEYSTORE_BASE64 fehlt – siehe docs/ANDROID-APK.md"; exit 1; fi
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/mrx.jks"
+          echo "MRX_KEYSTORE_FILE=$RUNNER_TEMP/mrx.jks" >> "$GITHUB_ENV"
+
+      - name: APK bauen
+        working-directory: app/android
+        env:
+          MRX_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MRX_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MRX_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Versionsnummer = Minuten seit 1970: steigt immer, auch zwischen diesem Workflow und „Deploy“
+          export MRX_VERSION_CODE=$(( $(date +%s) / 60 ))
+          if [ "$SIGNED" = "true" ]; then ./gradlew assembleRelease --no-daemon; cp app/build/outputs/apk/release/app-release.apk ../../mister-x.apk
+          else ./gradlew assembleDebug --no-daemon; cp app/build/outputs/apk/debug/app-debug.apk ../../mister-x-test.apk; fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mister-x-apk
+          path: mister-x*.apk
+          retention-days: 30
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mister-x.apk
+          body: "Android-App „Mister X – Rote Falken“. Installation: docs/ANDROID-APK.md"
+
+  # Gerätetest im Android-Emulator (Definition of Done: Standort bei gesperrtem Bildschirm, Benachrichtigungen).
+  # Die Test-APK spricht mit dem Spiel-Server auf diesem Rechner (im Emulator über adb reverse als 127.0.0.1:8787).
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm -w app run build
+        env:
+          VITE_API_URL: http://127.0.0.1:8787
+      - run: npx cap sync android
+        working-directory: app
+      - run: ./gradlew assembleDebug --no-daemon
+        working-directory: app/android
+
+      - name: Spiel-Server (lokal, Testmodus)
+        env:
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          nohup npx wrangler dev -c server/wrangler.jsonc --ip 127.0.0.1 --port 8787 --var TOKEN_SECRET:emulator-test --var SETUP_SECRET:lokal --var TEST_HOOKS:1 > wrangler.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:8787/health && exit 0; sleep 2; done
+          cat wrangler.log; exit 1
+
+      - name: KVM für den Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Der Emulator braucht ≈ 7,4 GB für seine Datenpartition, nach dem App-Build sind nur ≈ 5,8 GB frei:
+      # vorinstallierte Werkzeuge entfernen, die hier niemand braucht (.NET, Haskell, Boost, CodeQL, Android-NDK)
+      - name: Platz für den Emulator
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/lib/android/sdk/ndk
+          df -h /
+
+      - name: Gerätetest
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          # mehr Arbeitsspeicher: mit den Standard-2,5 GB lagert das System unter Last aus
+          ram-size: 4096M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb install -r app/android/app/build/outputs/apk/debug/app-debug.apk
+            node tests/android-geraet.mjs
+
+      - name: Ergebnis
+        if: always()
+        run: cat android-ergebnis.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-geraetetest
+          path: |
+            android-ergebnis.md
+            logcat.txt
+            geraet.txt
+            wrangler.log
+          retention-days: 30

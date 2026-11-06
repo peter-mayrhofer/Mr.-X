@@ -1,0 +1,732 @@
+<!-- Screen 14: Spielsteuerung & Regeln – Start/Auslosen, Zufallsende, Pause, Notstopp, Regeln live, Verkleinerung. -->
+<script lang="ts">
+  import {
+    BookOpenText,
+    Check,
+    Dices,
+    Flag,
+    Eye,
+    LayoutTemplate,
+    MapPinCheck,
+    OctagonX,
+    Pause,
+    Play,
+    Save,
+    ShieldCheck,
+    Shrink,
+    SlidersHorizontal,
+    Timer,
+    Trash,
+    Trophy,
+  } from "@lucide/svelte";
+  import TextField from "../../ui/TextField.svelte";
+  import type { TemplateEntry } from "@mrx/shared";
+  import { LIMITS, nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
+  import GameMap from "../../map/GameMap.svelte";
+  import StartCountdown from "../parts/StartCountdown.svelte";
+  import Card from "../../ui/Card.svelte";
+  import Button from "../../ui/Button.svelte";
+  import Stepper from "../../ui/Stepper.svelte";
+  import Switch from "../../ui/Switch.svelte";
+  import Pill from "../../ui/Pill.svelte";
+  import RichText from "../../ui/RichText.svelte";
+  import Modal from "../../ui/Modal.svelte";
+  import IconButton from "../../ui/IconButton.svelte";
+  import TeamBadge from "../../ui/TeamBadge.svelte";
+  import { toast } from "../../ui/toast.svelte.ts";
+  import { clock } from "../../lib/clock.svelte.ts";
+  import { dauer, uhr } from "../../lib/format.ts";
+  import { ApiError } from "../../lib/api.ts";
+  import type { Api, StaffView } from "../../lib/staff.ts";
+  import { T } from "../../texte.ts";
+
+  interface Props {
+    view: StaffView;
+    api: Api;
+    /** nach dem Start (Countdown fertig) bzw. nach dem Notstopp */
+    onstarted?: () => void;
+    onstopped?: () => void;
+  }
+  let { view, api, onstarted, onstopped }: Props = $props();
+
+  type Rule = "intervalMin" | "headStartMin" | "waitMin" | "radiusM" | "endMinH" | "endMaxH";
+  // Entwurf: nur geänderte Werte, angezeigt wird sonst der aktuelle Wert vom Server
+  let draft = $state<Partial<Pick<Config, Rule>>>({});
+  const val = (k: Rule) => draft[k] ?? view.config[k];
+  const bind = (k: Rule) => [() => val(k), (v: number) => (draft[k] = v)] as const;
+  const [gInterval, sInterval] = bind("intervalMin");
+  const [gHead, sHead] = bind("headStartMin");
+  const [gWait, sWait] = bind("waitMin");
+  const [gRadius, sRadius] = bind("radiusM");
+  const [gEndMin, sEndMin] = bind("endMinH");
+  const [gEndMax, sEndMax] = bind("endMaxH");
+
+  let previewCut = $state<string | null>(null);
+  let ask = $state<null | "stop" | "reveal" | "start" | { cut: string; lock: boolean }>(null);
+  let revealed = $state<number | null>(null);
+  let startMrx = $state<string | null>(null);
+  let drawing = $state(false);
+  let counting = $state(false);
+  let busy = $state(false);
+  let warnMin = $state(10);
+
+  const st = $derived(view.state);
+  const g = $derived(view.gameId);
+  const teamIds = $derived(Object.keys(view.teams));
+  const before = $derived(st.phase === "vorbereitung");
+  const running = $derived(st.phase === "laeuft" || st.phase === "pause");
+  const locked = $derived(Object.keys(st.cuts ?? {}));
+  const warned = $derived(Object.keys(st.warnCuts ?? {}));
+  const RULES: Rule[] = ["intervalMin", "headStartMin", "waitMin", "radiusM"];
+  const changed = $derived(RULES.filter((k) => draft[k] !== undefined && draft[k] !== view.config[k]));
+  const nextPreview = $derived(st.lastReportAt ? nextReportAfterIntervalChange(st.lastReportAt, val("intervalMin"), clock.now) : null);
+  const cuts = $derived(Object.entries(view.field.cuts).sort((a, b) => a[1].order - b[1].order));
+  const fieldReady = $derived(view.field.base.length >= 3);
+
+  const errText = (e: unknown) =>
+    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  async function run<R>(fn: () => Promise<R>, okText?: string): Promise<R | undefined> {
+    busy = true;
+    try {
+      const r = await fn();
+      if (okText) toast(okText, "ok");
+      return r;
+    } catch (e) {
+      toast(errText(e), "warn");
+      return undefined;
+    } finally {
+      busy = false;
+    }
+  }
+
+  // ---- Vorlagen (vor dem Start): Regeln + Spielfeld aus früheren Spielen ----
+  let templates = $state<TemplateEntry[] | null>(null);
+  let tplName = $state("");
+  let loadTpl = $state<TemplateEntry | null>(null);
+  async function loadTemplates() {
+    const r = await run(() => api({ action: "templateList", gameId: g }));
+    if (r) templates = r.templates;
+  }
+  $effect(() => {
+    if (before && templates === null) void loadTemplates();
+  });
+
+  // ---- Sammelruf mit Kopfzählung ----
+  const gather = $derived(st.gather ?? null);
+  const arrivedIds = $derived(Object.keys(gather?.arrived ?? {}));
+  const people = (ids: string[]) => ids.reduce((s, id) => s + (view.teams[id]?.size ?? 0), 0);
+  const ended = $derived(st.phase === "beendet");
+
+  // eigene Regeln der Spielleitung (Abschnitt 7.11): Entwurf, bis „Speichern“
+  let rulesDraft = $state<string | null>(null);
+  const rulesText = $derived(rulesDraft ?? view.config.rulesText ?? "");
+  async function saveRules() {
+    if (await run(() => api({ action: "setConfig", gameId: g, config: { rulesText } }), T.admin.regeltextGespeichert)) rulesDraft = null;
+  }
+
+  async function apply() {
+    const patch = Object.fromEntries(changed.map((k) => [k, draft[k]]));
+    if (await run(() => api({ action: "setConfig", gameId: g, config: patch }), T.admin.regelnGeaendert)) draft = {};
+  }
+
+  /** Hervorhebung läuft über die Teams und bleibt beim Ergebnis stehen (Auslosen macht der Server, Abschnitt 7.7) */
+  function animateTo(result: string): Promise<void> {
+    drawing = true;
+    return new Promise((done) => {
+      let n = 0;
+      const target = teamIds.indexOf(result);
+      const steps = teamIds.length * 2 + (target < 0 ? 0 : target) + 1;
+      const t = setInterval(() => {
+        startMrx = teamIds[n++ % teamIds.length]!;
+        if (n >= steps) {
+          clearInterval(t);
+          startMrx = result;
+          drawing = false;
+          done();
+        }
+      }, 90);
+    });
+  }
+
+  async function start() {
+    const endPatch = Object.fromEntries(
+      (["endMinH", "endMaxH", "headStartMin"] as const).filter((k) => draft[k] !== undefined).map((k) => [k, draft[k]]),
+    );
+    if (Object.keys(endPatch).length && !(await run(() => api({ action: "setConfig", gameId: g, config: endPatch })))) return;
+    const r = await run(() => api({ action: "startGame", gameId: g, mrx: startMrx ?? "random" }));
+    if (!r) return;
+    draft = {};
+    if (startMrx === "random" || !startMrx) await animateTo(r.mrx);
+    counting = true;
+  }
+</script>
+
+<div class="grid">
+  {#if before}
+    <Card label={T.admin.spielStarten} icon={Play} tone="accent">
+      {#if !fieldReady}<p class="warnline">{T.admin.feldFehlt}</p>{/if}
+      {#if teamIds.length < 2}<p class="warnline">{T.admin.zuWenigTeams}</p>{/if}
+      <p class="caps sub">{T.admin.startMrx}</p>
+      <div class="pick" role="radiogroup" aria-label={T.admin.startMrx}>
+        {#each teamIds as id (id)}
+          {@const t = view.teams[id]!}
+          <button role="radio" aria-checked={startMrx === id} class:on={startMrx === id} disabled={drawing} onclick={() => (startMrx = id)}>
+            <TeamBadge short={t.short} color={t.color} size={40} mrx={startMrx === id} />
+            <span>{t.name}</span>
+          </button>
+        {/each}
+      </div>
+      <div class="row">
+        <Button
+          variant={startMrx === "random" ? "primary" : "secondary"}
+          icon={Dices}
+          loading={drawing}
+          onclick={() => (startMrx = "random")}>{T.admin.auslosen}</Button
+        >
+      </div>
+      <Switch
+        label={T.admin.probelauf}
+        hint={T.admin.probelaufHinweis}
+        checked={!!view.config.trial}
+        disabled={busy}
+        onchange={(on) =>
+          run(() => api({ action: "setConfig", gameId: g, config: { trial: on } }), on ? T.admin.probelaufAn : T.admin.probelaufAus)}
+      />
+      <div class="steppers">
+        <Stepper label={T.admin.endeFrueh} bind:value={gEndMin, sEndMin} unit="h" min={0.5} max={val("endMaxH")} step={0.5} />
+        <Stepper label={T.admin.endeSpaet} bind:value={gEndMax, sEndMax} unit="h" min={val("endMinH")} max={12} step={0.5} />
+      </div>
+      <Button
+        size="xl"
+        block
+        icon={Play}
+        disabled={!startMrx || drawing || busy || !fieldReady || teamIds.length < 2}
+        onclick={() => (ask = "start")}>{T.admin.spielStarten}</Button
+      >
+    </Card>
+  {:else if running}
+    <Card label={T.admin.spielstatus} icon={Timer}>
+      <div class="status">
+        {#if st.phase === "pause"}<Pill tone="warn" dot>{T.status.pause}</Pill>{:else}<Pill tone="ok" dot
+            >{T.admin.laeuftSeit(uhr(st.startedAt ?? clock.now))}</Pill
+          >{/if}
+        <span class="num big">{dauer(clock.now - (st.startedAt ?? clock.now))}</span>
+      </div>
+      <div class="row">
+        {#if st.phase === "pause"}
+          <Button variant="secondary" icon={Play} disabled={busy} onclick={() => run(() => api({ action: "resume", gameId: g }))}
+            >{T.admin.fortsetzen}</Button
+          >
+        {:else}
+          <Button variant="secondary" icon={Pause} disabled={busy} onclick={() => run(() => api({ action: "pause", gameId: g }))}
+            >{T.admin.pause}</Button
+          >
+        {/if}
+        <Button variant="danger" icon={OctagonX} onclick={() => (ask = "stop")}>{T.admin.notstopp}</Button>
+      </div>
+    </Card>
+
+    <Card label={T.admin.zufallsende} icon={Eye}>
+      {#if st.startedAt}
+        <p class="end">
+          {T.admin.endeZwischen(uhr(st.startedAt + view.config.endMinH * 3_600_000), uhr(st.startedAt + view.config.endMaxH * 3_600_000))}
+        </p>
+      {/if}
+      {#if revealed}
+        <p class="reveal">{T.admin.geplantesEnde} <b class="num">{uhr(revealed)}</b> <Pill tone="warn">{T.admin.imProtokoll}</Pill></p>
+      {:else}
+        <Pill tone="info">{T.admin.geheim}</Pill>
+        <div class="row"><Button variant="secondary" size="m" icon={Eye} onclick={() => (ask = "reveal")}>{T.admin.aufdecken}</Button></div>
+      {/if}
+    </Card>
+  {:else}
+    <Card label={T.admin.spielstatus} icon={Timer}>
+      <Pill dot>{T.superadmin.phase.beendet}</Pill>
+      <p class="muted">{T.admin.beendetHinweis}</p>
+      {#if onstopped}
+        <div class="row"><Button variant="secondary" size="m" icon={Trophy} onclick={onstopped}>{T.admin.auswertungZeigen}</Button></div>
+      {/if}
+    </Card>
+  {/if}
+
+  {#if running || ended}
+    <Card label={T.admin.sammelruf} icon={MapPinCheck} tone={gather ? "accent" : undefined}>
+      {#if gather}
+        <p class="end">{T.admin.sammelrufLaeuft(gather.name)}</p>
+        <p class="num">
+          <b>{T.admin.angekommenTeams(arrivedIds.length, teamIds.length)}</b>
+          {#if people(teamIds)}· {T.admin.angekommenPersonen(people(arrivedIds), people(teamIds))}{/if}
+        </p>
+        <ul class="arrivals">
+          {#each teamIds as id (id)}
+            {@const t = view.teams[id]!}
+            {@const here = arrivedIds.includes(id)}
+            <li>
+              <TeamBadge short={t.short} color={t.color} size={32} />
+              <span class="tn"
+                >{t.name}{#if t.size}<small class="muted num"> · {t.size}</small>{/if}</span
+              >
+              <button
+                class="tick"
+                class:on={here}
+                aria-pressed={here}
+                aria-label="{t.name}: {here ? T.admin.istDa : T.admin.fehltNoch}"
+                onclick={() => run(() => api({ action: "arrived", gameId: g, teamId: id, on: !here }))}
+                >{#if here}<Check size={18} aria-hidden="true" />{T.admin.istDa}{:else}{T.admin.fehltNoch}{/if}</button
+              >
+            </li>
+          {/each}
+        </ul>
+        <Button variant="secondary" block disabled={busy} onclick={() => run(() => api({ action: "gather", gameId: g, on: false }))}
+          >{T.admin.sammelrufBeenden}</Button
+        >
+      {:else}
+        <p class="muted">{T.admin.sammelrufHinweis(view.field.meet?.name ?? T.admin.spielfeldmitte)}</p>
+        <Button
+          block
+          icon={MapPinCheck}
+          disabled={busy}
+          onclick={() => run(() => api({ action: "gather", gameId: g, on: true }), T.admin.sammelrufGestartet)}
+          >{T.admin.sammelrufStarten}</Button
+        >
+      {/if}
+    </Card>
+  {/if}
+
+  {#if before}
+    <Card label={T.admin.vorlagen} icon={LayoutTemplate}>
+      <p class="muted small">{T.admin.vorlagenHinweis}</p>
+      {#each templates ?? [] as tpl (tpl.id)}
+        <div class="tplrow">
+          <span class="tn">{tpl.name}<small class="muted"> · {new Date(tpl.createdAt).toLocaleDateString("de-AT")}</small></span>
+          <Button size="m" variant="secondary" disabled={busy} onclick={() => (loadTpl = tpl)}>{T.admin.vorlageLaden}</Button>
+          <IconButton
+            icon={Trash}
+            label="{T.admin.vorlageLoeschen}: {tpl.name}"
+            size="m"
+            tone="plain"
+            onclick={async () => {
+              if (await run(() => api({ action: "templateDelete", gameId: g, id: tpl.id }), T.admin.vorlageGeloescht))
+                await loadTemplates();
+            }}
+          />
+        </div>
+      {:else}
+        {#if templates}<p class="muted">{T.admin.keineVorlagen}</p>{/if}
+      {/each}
+      <form
+        class="tplsave"
+        onsubmit={async (e) => {
+          e.preventDefault();
+          const name = tplName.trim();
+          if (await run(() => api({ action: "templateSave", gameId: g, name }), T.admin.vorlageGespeichert)) {
+            tplName = "";
+            await loadTemplates();
+          }
+        }}
+      >
+        <TextField label={T.admin.vorlageName} bind:value={tplName} maxlength={60} />
+        <Button size="m" icon={Save} type="submit" disabled={busy || tplName.trim().length < 2}>{T.admin.vorlageSpeichern}</Button>
+      </form>
+    </Card>
+  {/if}
+
+  {#if before || running}
+    <Card label={T.admin.schiris} icon={ShieldCheck}>
+      <Switch
+        label={T.admin.schiriJaeger}
+        hint={T.admin.schiriJaegerHinweis}
+        checked={view.config.refereeHunters !== false}
+        disabled={busy}
+        onchange={(on) =>
+          run(
+            () => api({ action: "setConfig", gameId: g, config: { refereeHunters: on } }),
+            on ? T.admin.schiriJaegerAn : T.admin.schiriJaegerAus,
+          )}
+      />
+    </Card>
+
+    <Card label={T.admin.teamUebergabe} icon={Flag}>
+      <p class="muted small">{T.admin.teamUebergabeHinweis}</p>
+      {#each teamIds as id (id)}
+        {@const t = view.teams[id]!}
+        <Switch
+          label={t.name}
+          checked={!!t.handover}
+          disabled={busy}
+          onchange={(on) =>
+            run(
+              () => api({ action: "setTeamHandover", gameId: g, teamIds: [id], on }),
+              on ? T.admin.teamUebergabeAn(t.name) : T.admin.teamUebergabeAus(t.name),
+            )}
+        />
+      {:else}
+        <p class="muted">{T.lobby.nochKeine}</p>
+      {/each}
+      {#if teamIds.length > 1}
+        <div class="row">
+          <Button
+            size="m"
+            variant="secondary"
+            disabled={busy}
+            onclick={() => run(() => api({ action: "setTeamHandover", gameId: g, teamIds, on: true }))}>{T.admin.alleFrei}</Button
+          >
+          <Button
+            size="m"
+            variant="ghost"
+            disabled={busy}
+            onclick={() => run(() => api({ action: "setTeamHandover", gameId: g, teamIds, on: false }))}>{T.admin.alleGesperrt}</Button
+          >
+        </div>
+      {/if}
+    </Card>
+
+    <Card label={T.admin.regelnLive} icon={SlidersHorizontal}>
+      <div class="steppers">
+        <Stepper
+          label={T.admin.intervall}
+          bind:value={gInterval, sInterval}
+          unit={T.allgemein.min}
+          min={1}
+          max={30}
+          hint={running && nextPreview ? T.admin.vorschauMeldung(uhr(nextPreview)) : undefined}
+        />
+        {#if before}<Stepper label={T.admin.vorsprung} bind:value={gHead, sHead} unit={T.allgemein.min} min={0} max={30} />{/if}
+        <Stepper label={T.admin.wartezeit} bind:value={gWait, sWait} unit={T.allgemein.min} min={0} max={20} />
+        <Stepper label={T.admin.umkreis} bind:value={gRadius, sRadius} unit="m" min={25} max={1000} step={25} />
+      </div>
+      {#if running}<p class="muted small">{T.admin.aenderungMeldung}</p>{/if}
+      <Button block disabled={!changed.length || busy} onclick={apply}>{T.admin.uebernehmen}</Button>
+    </Card>
+
+    <Card label={T.admin.regeltext} icon={BookOpenText}>
+      <label class="rules" for="rules-text">{T.admin.regeltextFeld}</label>
+      <textarea
+        id="rules-text"
+        rows="6"
+        maxlength={LIMITS.rulesText}
+        value={rulesText}
+        oninput={(e) => (rulesDraft = e.currentTarget.value)}
+        aria-describedby="rules-hint"></textarea>
+      <p id="rules-hint" class="muted small">
+        {T.admin.regeltextHinweis} · {T.admin.regeltextZeichen(rulesText.length, LIMITS.rulesText)}
+      </p>
+      {#if rulesText.trim()}
+        <div class="preview" role="group" aria-label={T.admin.regeltextVorschau}><RichText text={rulesText} /></div>
+      {/if}
+      <Button block disabled={rulesDraft === null || busy} onclick={saveRules}>{T.allgemein.speichern}</Button>
+    </Card>
+
+    <Card label={T.admin.bereiche} icon={Shrink}>
+      <div class="cuts">
+        <div class="mini">
+          <GameMap
+            field={view.field}
+            {locked}
+            preview={previewCut ? [previewCut, ...warned] : warned}
+            interactive={false}
+            padding={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            label={T.admin.vorschauFeld}
+          />
+        </div>
+        <ul>
+          {#each cuts as [id, c] (id)}
+            {@const isLocked = locked.includes(id)}
+            <li onmouseenter={() => (previewCut = id)} onmouseleave={() => (previewCut = null)}>
+              <span class="dot" style:background={c.color} aria-hidden="true"></span>
+              <div class="cn">
+                <strong>{c.short}</strong>
+                {#if isLocked}<Pill tone="danger">{T.karte.gesperrt}</Pill>
+                {:else if st.warnCuts?.[id]}<Pill tone="warn"
+                    >{T.admin.gesperrtIn(Math.max(1, Math.ceil((st.warnCuts[id] - clock.now) / 60_000)))}</Pill
+                  >
+                {:else}<Pill>{T.admin.frei}</Pill>{/if}
+              </div>
+              <Button
+                size="m"
+                variant={isLocked ? "secondary" : "danger"}
+                onfocus={() => (previewCut = id)}
+                onclick={() => (ask = { cut: id, lock: !isLocked && !st.warnCuts?.[id] })}
+                >{isLocked ? T.admin.freigeben : st.warnCuts?.[id] ? T.admin.absagen : T.admin.sperren}</Button
+              >
+            </li>
+          {:else}
+            <li class="muted">{T.admin.keineBereiche}</li>
+          {/each}
+        </ul>
+      </div>
+    </Card>
+  {/if}
+</div>
+
+<Modal
+  open={ask === "stop"}
+  title={T.admin.notstopp}
+  confirm={T.admin.notstopp}
+  danger
+  onconfirm={async () => {
+    if (await run(() => api({ action: "stopGame", gameId: g }))) onstopped?.();
+  }}
+  onclose={() => (ask = null)}
+>
+  {T.admin.notstoppFrage}
+</Modal>
+<Modal
+  open={ask === "reveal"}
+  title={T.admin.aufdecken}
+  confirm={T.admin.aufdecken}
+  onconfirm={async () => {
+    const r = await run(() => api({ action: "revealEnd", gameId: g }));
+    if (r) revealed = r.endAt;
+  }}
+  onclose={() => (ask = null)}
+>
+  {T.admin.aufdeckenText}
+</Modal>
+<Modal open={ask === "start"} title="{T.admin.spielStarten}?" confirm={T.admin.spielStarten} onconfirm={start} onclose={() => (ask = null)}>
+  {startMrx === "random" ? T.admin.startAusgelost : T.admin.startMit(view.teams[startMrx ?? ""]?.name ?? "")}
+  {T.admin.startDetails(val("headStartMin"), val("endMinH"), val("endMaxH"))}
+</Modal>
+{#if ask && typeof ask === "object"}
+  {@const id = ask.cut}
+  {@const c = view.field.cuts[id]!}
+  {@const lock = ask.lock}
+  {@const absagen = !lock && !!st.warnCuts?.[id]}
+  {@const warn = lock && running && warnMin > 0}
+  <Modal
+    open
+    title={lock ? T.verkleinerung.titel(c.short) : absagen ? T.admin.absagenFrage(c.short) : T.admin.freigebenFrage(c.short)}
+    confirm={absagen ? T.admin.absagen : lock ? T.admin.sperren : T.admin.freigeben}
+    danger={lock}
+    onconfirm={() =>
+      run(
+        () => api({ action: "setCut", gameId: g, cutId: id, locked: lock, ...(warn ? { inMin: warnMin } : {}) }),
+        absagen
+          ? T.admin.absagenOk(c.short)
+          : warn
+            ? T.admin.angekuendigtOk(c.short, warnMin)
+            : lock
+              ? T.admin.gesperrtOk(c.short)
+              : T.verkleinerung.frei(c.short),
+      )}
+    onclose={() => (ask = null)}
+  >
+    {#if lock && running}
+      <Stepper label={T.admin.vorwarnung} bind:value={warnMin} unit="Min" min={0} max={60} hint={T.admin.vorwarnungHinweis} />
+    {/if}
+    {T.admin.aenderungMeldung}
+  </Modal>
+{/if}
+<Modal
+  open={!!loadTpl}
+  title={T.admin.vorlageLadenFrage(loadTpl?.name ?? "")}
+  confirm={T.admin.vorlageLaden}
+  onconfirm={() => {
+    const tpl = loadTpl!;
+    void run(() => api({ action: "templateLoad", gameId: g, id: tpl.id }), T.admin.vorlageGeladen(tpl.name)).then(() => (draft = {}));
+  }}
+  onclose={() => (loadTpl = null)}
+>
+  {T.admin.vorlageLadenText}
+</Modal>
+{#if counting}<StartCountdown
+    ondone={() => {
+      counting = false;
+      onstarted?.();
+    }}
+  />{/if}
+
+<style>
+  .grid {
+    display: grid;
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--gutter) var(--sp-8);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (min-width: 1000px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+      padding: var(--sp-6);
+    }
+  }
+  .warnline {
+    color: var(--warn-text);
+    font-weight: 700;
+    margin-bottom: var(--sp-2);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .big {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-3xl);
+  }
+  .end {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    margin-bottom: var(--sp-2);
+  }
+  .reveal {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .steppers {
+    display: grid;
+    gap: var(--sp-2);
+    margin: var(--sp-2) 0 var(--sp-3);
+  }
+  .rules {
+    display: block;
+    font-weight: 600;
+    font-size: var(--fs-s);
+    margin-bottom: var(--sp-1);
+  }
+  textarea {
+    width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-m);
+    border: var(--border-strong) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+  }
+  textarea:focus-visible {
+    border-color: var(--focus);
+    outline: none;
+  }
+  .preview {
+    margin: var(--sp-2) 0 var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-m);
+    background: var(--surface-2);
+    border-left: 4px solid var(--info);
+  }
+  .small {
+    font-size: var(--fs-s);
+    margin-bottom: var(--sp-3);
+  }
+  .sub {
+    color: var(--text-2);
+    margin-bottom: var(--sp-2);
+  }
+  .pick {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: var(--sp-2);
+  }
+  .pick button {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    min-height: 84px;
+    padding: var(--sp-2);
+    border-radius: var(--r-m);
+    border: 2px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pick button.on {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .cuts {
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .mini {
+    position: relative;
+    height: 220px;
+    border-radius: var(--r-m);
+    overflow: hidden;
+    border: var(--border-w) solid var(--line);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-2);
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    flex: none;
+  }
+  .cn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .arrivals {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+  .arrivals li,
+  .tplrow {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .tn {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tick {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    border: var(--border-w) solid var(--line);
+    background: var(--surface-2);
+    color: var(--text-2);
+    font: inherit;
+    font-size: var(--fs-s);
+    cursor: pointer;
+  }
+  .tick.on {
+    background: var(--ok-soft);
+    border-color: var(--ok);
+    color: var(--ok-text);
+    font-weight: 700;
+  }
+  .tplsave {
+    display: grid;
+    gap: var(--sp-2);
+  }
+  .small {
+    font-size: var(--fs-s);
+  }
+</style>

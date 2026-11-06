@@ -1,0 +1,42 @@
+{
+  "name": "mister-x",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "app",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm -w app run dev",
+    "dev:server": "node -e \"require('fs').mkdirSync('app/dist',{recursive:true})\" && wrangler dev -c server/wrangler.jsonc --var TOKEN_SECRET:nur-fuer-lokale-entwicklung --var SETUP_SECRET:lokal",
+    "build": "npm -w app run build",
+    "check": "tsc -p shared && tsc -p server && npm -w app run check",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run --project unit",
+    "test:server": "vitest run --project server",
+    "screenshots": "node tests/screenshots.mjs",
+    "flyer": "node tests/flyer.mjs",
+    "schluessel": "node server/schluessel.mjs",
+    "deploy": "npm run build && wrangler deploy -c server/wrangler.jsonc",
+    "deploy:vorschau": "npm run build && wrangler deploy -c server/wrangler.jsonc --env vorschau"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "axe-core": "^4.10.3",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.23.1",
+    "globals": "^17.0.0",
+    "playwright": "^1.63.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-svelte": "^4.1.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

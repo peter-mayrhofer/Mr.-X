@@ -1,0 +1,12 @@
+{
+  "name": "@mrx/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "dependencies": {
+    "polygon-clipping": "^0.15.7"
+  }
+}

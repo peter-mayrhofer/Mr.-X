@@ -1,0 +1,125 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 var(--fs-m) / var(--lh) var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--fs-3xl);
+}
+
+h2 {
+  font-size: var(--fs-2xl);
+}
+
+h3 {
+  font-size: var(--fs-xl);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--info-text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Akten-Etikett: schmale Großbuchstaben */
+.caps {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-s);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--text-2);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Stempel („GEFANGEN!“, „GEHEIM“) */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 3px solid currentColor;
+  border-radius: var(--r-s);
+  padding: 0.05em 0.35em;
+  transform: rotate(-4deg);
+}
+
+/* zu langsames Gerät (siehe lib/ruhig.ts): Hintergrund-Schmuck steht still */
+:root[data-ruhig] :is(.bd, .amb) * {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

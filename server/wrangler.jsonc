@@ -1,0 +1,44 @@
+// Cloudflare-Konfiguration (docs/BETRIEB.md). Ein Worker liefert die App aus und ist der Spiel-Server:
+// /api, /api/pos, /ws, /tracker und /health laufen durch den Worker, alles andere sind die Dateien der App (app/dist).
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "mister-x",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../app/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api", "/api/*", "/ws", "/tracker", "/health", "/__test/*"],
+  },
+  // ein Spielraum pro Spiel (SQLite-Speicher, im Gratis-Tarif die einzige Art) + die Zentrale für den Organisator-Login
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROOM", "class_name": "GameRoom" },
+      { "name": "ZENTRALE", "class_name": "Zentrale" },
+    ],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom", "Zentrale"] }],
+  // spielübergreifend: Spieleliste und Archiv. Ohne database_id legt `wrangler deploy` die Datenbank selbst an.
+  "d1_databases": [{ "binding": "DB", "database_name": "mister-x" }],
+  // einmal täglich: Löschfristen (Chat im Archiv 30 Tage, Archiv 1 Jahr)
+  "triggers": { "crons": ["17 3 * * *"] },
+  "vars": { "VAPID_SUBJECT": "mailto:mr.x.rf.ooe@gmail.com" },
+  "observability": { "enabled": true },
+  "env": {
+    // Vorschau zum Ausprobieren: eigener Worker, eigene Spielräume, eigene Datenbank – stört nie echte Spiele
+    "vorschau": {
+      "name": "mister-x-vorschau",
+      "durable_objects": {
+        "bindings": [
+          { "name": "ROOM", "class_name": "GameRoom" },
+          { "name": "ZENTRALE", "class_name": "Zentrale" },
+        ],
+      },
+      "d1_databases": [{ "binding": "DB", "database_name": "mister-x-vorschau" }],
+      "triggers": { "crons": ["17 3 * * *"] },
+      "vars": { "VAPID_SUBJECT": "mailto:mr.x.rf.ooe@gmail.com" },
+    },
+  },
+}

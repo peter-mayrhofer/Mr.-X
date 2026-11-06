@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nur die Test-APK (Debug-Build): darf den Spiel-Server auch unverschlüsselt erreichen – für den Gerätetest im
+  Android-Emulator (CI), wo der Server auf dem Rechner läuft (http://127.0.0.1:8787 über adb reverse).
+  Die signierte APK für die Teams (Release-Build) bleibt bei „nur https“.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+
+  # Spiel-Server (Worker, Spielräume, D1, Alarme) in der lokalen Cloudflare-Laufzeit, Rechte/Angriffe und
+  # Ende-zu-Ende-Tests mit der echten App im Browser
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:server
+
+  # Web Push über echte Push-Dienste (tests/push-dienst.mjs): Spiel-Server ohne Testmodus → Mozilla (Browser-Ersatz
+  # entschlüsselt) und Google (echtes Google Chrome mit der gebauten App, Benachrichtigung im Service Worker)
+  push-dienst:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node tests/push-dienst.mjs
+      - if: always()
+        run: cat push-ergebnis.md >> "$GITHUB_STEP_SUMMARY" || true
