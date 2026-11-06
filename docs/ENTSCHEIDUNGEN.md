@@ -520,3 +520,30 @@ gefangen“ → fangendes Team wählen → bestätigen. Der Server lässt das nu
 `expectedMrx`), nur als Fang (keine Strafübergabe) und nicht für Rückgängig; im Protokoll steht „<Team> (Mister X)“.
 **Warum so:** Nicht überall ist ein Schiri dabei. Dass das gefangene Team bestätigt, ist fair: Niemand kann sich die
 Fahne selbst holen.
+
+### E-54 Prüfung selbst gemeldeter Übergaben
+**Entscheidung:** Meldet Mister X den eigenen Fang (E-53), vergleicht der Server die letzten Standorte von Mister X und
+Fänger. Sind sie über 150 m (plus GPS-Genauigkeit beider, je höchstens 100 m) auseinander oder fehlt ein aktueller
+Standort, gilt die Übergabe trotzdem, wird aber mit `pruefen` markiert: Spielleitung und Schiris bekommen „Übergabe
+prüfen“ (Push), die Spielleitung eine Warnung; das Protokoll nennt den Abstand.
+**Warum so:** GPS in Häuserschluchten ist ungenau – ein hartes Ablehnen würde echte Fänge verhindern. Missbrauch soll
+auffallen, entscheiden und rückgängig machen kann die Spielleitung.
+
+### E-55 Update-Hinweis und automatisches Deploy
+**Entscheidung:** Web-App und APK tragen die Build-Kennung (Commit) und legen `version.json` ab. Die Android-App fragt
+beim Start (natives HTTP) nach dem Stand am Server und zeigt bei einem anderen Stand „Neue Version – Jetzt
+installieren“ (Link auf `/mister-x.apk`). Der Workflow „Deploy“ baut bei jedem Push auf `main` APK und Web-App aus
+demselben Stand und veröffentlicht mit wrangler; Zugang über die Secrets `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`,
+die D1-ID wird über den Namen nachgeschlagen (steht nicht im Repository). APK-Versionsnummer = Minuten seit 1970.
+**Warum so:** Bisher musste jede Änderung von Hand gebaut, kopiert und veröffentlicht werden, und Teams spielten mit
+alten APKs. Ohne Secrets veröffentlicht der Workflow nichts (nur Hinweis).
+
+### E-56 Sprachen der Team-Oberfläche
+**Entscheidung:** Deutsch bleibt die Grundlage (`texte.ts`). Englisch, Türkisch und Bosnisch/Kroatisch/Serbisch
+(Latein, ijekavisch) überschreiben die Texte, die Teams sehen (`texte/*.ts`, typgeprüft gegen `texte.ts`), geladen
+vor allen Seiten (`lib/sprache.ts`, nur die gewählte Sprache wird nachgeladen). Wahl auf der Startseite und in den
+Einstellungen, gespeichert im Gerät. Spielleitung, Schiris, Großbild und der Datenschutz-Hinweis bleiben deutsch;
+Meldungen vom Server (Chat, Text der Benachrichtigungen) ebenso – nur die Benachrichtigungs-Titel der Android-App sind
+übersetzt.
+**Warum so:** Kinder und Eltern, die besser in einer anderen Sprache lesen, verstehen Beitritt, Regeln und Bedienung.
+Die Übersetzungen sollte vor dem ersten Einsatz jemand mit der jeweiligen Muttersprache durchsehen.

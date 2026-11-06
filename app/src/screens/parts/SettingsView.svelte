@@ -1,6 +1,7 @@
 <!-- Einstellungen (Screen 22): Darstellung, Ton/Vibration, Push-Arten, Standort, Bildschirm, Abmelden. -->
 <script lang="ts">
-  import { Bell, LogOut, MapPin, Palette, Volume2, Info } from "@lucide/svelte";
+  import { Bell, Languages, LogOut, MapPin, Palette, Volume2, Info } from "@lucide/svelte";
+  import LanguagePicker from "./LanguagePicker.svelte";
   import Card from "../../ui/Card.svelte";
   import Segmented from "../../ui/Segmented.svelte";
   import Switch from "../../ui/Switch.svelte";
@@ -29,6 +30,10 @@
 </script>
 
 <div class="settings">
+  <Card label={T.einstellungen.sprache} icon={Languages}>
+    <LanguagePicker />
+  </Card>
+
   <Card label={T.einstellungen.darstellung} icon={Palette}>
     <Segmented
       label={T.einstellungen.darstellung}

@@ -9,6 +9,7 @@ import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community
 import type { ApiReply, Note, PositionIn } from "@mrx/shared";
 import { API_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
+import { pushTitel } from "./sprache.ts";
 
 export const NATIVE = Capacitor.isNativePlatform();
 
@@ -79,7 +80,7 @@ export async function showLocal(n: Note) {
     notifications: [
       {
         id: (Date.now() % 2_000_000_000) + shown.size,
-        title: n.title,
+        title: pushTitel[n.title] ?? n.title,
         body: n.body,
         channelId: "spiel",
         smallIcon: "ic_stat_flag",

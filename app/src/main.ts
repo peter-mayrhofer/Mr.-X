@@ -1,3 +1,4 @@
+import "./lib/sprache.ts"; // zuerst: Übersetzung in T, bevor eine Seite Texte liest
 import "@fontsource-variable/inter/index.css";
 import "@fontsource/barlow-condensed/600.css";
 import "@fontsource/barlow-condensed/700.css";

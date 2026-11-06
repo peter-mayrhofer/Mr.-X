@@ -1,4 +1,5 @@
-// Alle Texte der App an einem Ort (Abschnitt 7.12: nur Deutsch, aber zentral).
+// Alle Texte der App an einem Ort. Deutsch ist die Grundlage; was Teams sehen, gibt es auch auf Englisch, Türkisch und
+// Bosnisch/Kroatisch/Serbisch (texte/*.ts, lib/sprache.ts) – Spielleitung, Schiris und Datenschutz bleiben deutsch.
 // Österreichisches Deutsch ist gewollt („Tapperl“).
 
 export const T = {
@@ -821,6 +822,7 @@ export const T = {
 
   einstellungen: {
     titel: "Einstellungen",
+    sprache: "Sprache",
     darstellung: "Darstellung",
     themes: { auto: "Automatisch", hell: "Hell", dunkel: "Dunkel", sonne: "Sonne" },
     sonneHinweis: "Sonne = extra Kontrast für draußen",

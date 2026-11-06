@@ -32,6 +32,13 @@ Ohne Installation geht es auch im Browser – dann wie beim iPhone den Bildschir
 4. **Wichtig:** Am iPhone wird der Standort nur gesendet, solange die App offen und der Bildschirm an ist. Die App hält
    den Bildschirm von selbst wach – nicht sperren, Powerbank anstecken.
 
+**Sprache:** Unten auf der Startseite (und später unter **Mehr → Einstellungen**) könnt ihr die Sprache wählen:
+Deutsch, English, Türkçe oder Bosanski/Hrvatski/Srpski. Durchsagen und Chat-Nachrichten kommen so, wie sie geschrieben
+wurden.
+
+**Updates (Android-App):** Gibt es eine neue Version, zeigt die App **„Neue Version der App – Jetzt installieren“**.
+Antippen, die Datei herunterladen und installieren – ihr bleibt angemeldet.
+
 ## 2. Beitreten
 
 1. **Teamname** eingeben (z. B. „Ortsgruppe Urfahr“ – so sehen euch die anderen) und das **Team-Passwort** vom Flyer.

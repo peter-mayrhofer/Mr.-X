@@ -5,6 +5,7 @@
   import Logo from "../ui/Logo.svelte";
   import StartBackdrop from "./parts/StartBackdrop.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
+  import LanguagePicker from "./parts/LanguagePicker.svelte";
   import { go } from "../lib/router.svelte.ts";
   import { T } from "../texte.ts";
 
@@ -58,6 +59,7 @@
   </section>
 
   <footer>
+    <div class="sprache"><LanguagePicker kurz /></div>
     <Logo which="kinderfreunde-ooe" height={28} />
     <nav>
       <a href="#{links.help}">{T.start.hilfe}</a>
@@ -277,6 +279,7 @@
   }
   footer {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-4);
@@ -286,6 +289,9 @@
   nav {
     display: flex;
     gap: var(--sp-4);
+  }
+  .sprache {
+    flex-basis: 100%;
   }
   nav a {
     min-height: var(--touch);

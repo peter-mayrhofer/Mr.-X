@@ -156,6 +156,10 @@ oben) → Vorschau, wer warten muss → **Fahne an … übergeben** → bestäti
 - **Ohne Schiri:** Unter **Steuerung → Übergabe durch Teams** gibst du einzelne Teams frei. Ist so ein Team Mister X
   und wird gefangen, tippt es selbst **„Wir wurden gefangen“**, wählt das fangende Team und bestätigt. Strafübergaben
   und **Rückgängig** bleiben bei Schiris und Spielleitung.
+- **Übergabe prüfen:** Waren die Handys der beiden Teams bei so einer selbst gemeldeten Übergabe mehr als ca. 150 m
+  auseinander (plus GPS-Ungenauigkeit) oder fehlte ein aktueller Standort, gilt die Übergabe trotzdem – aber du und die
+  Schiris bekommen „Übergabe prüfen“ (Benachrichtigung und rote Warnung in der Live-Übersicht, 30 Minuten lang). Kurz
+  bei den Teams nachfragen und notfalls **Rückgängig** machen.
 
 ![Schiri-Ansicht](screens/hell/12-handy.jpg)
 
