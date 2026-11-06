@@ -96,3 +96,7 @@ Not claiming it sounds good: listen to these.
 - Das Skript misst gegen die Spitze der Bass-Hüllkurve (~50 ms nach dem Einsatz), daher überall „50 ms“; gegen den
   Einsatz gemessen liegt der Drop bei ±0 ms.
 - Effekte nur CC0 (Freesound, Kenney), heute auf den Quellseiten geprüft.
+
+## Hochformat (Mister-X-Rundgang-Hochformat.mp4)
+Gleicher Zeitplan, gleiche 63 Cues, gleiche Musik und Sounds; separat gemessen: −16,3 LUFS integriert, True Peak −4,7 dBFS
+(Stereo und Mono-Downmix gleich).
