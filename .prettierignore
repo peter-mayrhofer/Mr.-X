@@ -1,11 +1,9 @@
-legacy/
 **/dist/
 docs/
 *.md
 package-lock.json
 shared/src/vorlagen/linz.ts
 app/public/
-functions/lib/
 app/android/
 **/.wrangler/
 promo/
