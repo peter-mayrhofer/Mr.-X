@@ -1,6 +1,6 @@
 // Gerätetest im Android-Emulator (CI: .github/workflows/android.yml, Job „emulator“). Die Test-APK spielt gegen den
 // lokalen Spiel-Server (wrangler dev, über `adb reverse` als 127.0.0.1:8787 erreichbar). Nachweis für die Definition
-// of Done (PROMPT-NEUBAU §13):
+// of Done (docs/archiv/PROMPT-NEUBAU.md §13):
 //   1. Standort kommt an, solange die App offen ist (Live-Verbindung),
 //   2. App im Hintergrund (Home-Taste), dann Spielstart: neue Standorte kommen weiter an (Vordergrund-Dienst +
 //      natives HTTP) – auch der Spielbeginn darf den Dienst nicht anhalten,

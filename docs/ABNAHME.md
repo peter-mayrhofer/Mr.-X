@@ -1,9 +1,9 @@
-# Abnahmebericht: Neubau Mister X – Rote Falken
+# Abnahmebericht: Mister X – Rote Falken
 
 **Stand: 27.10.2026**, Branch `claude/elegant-volta-i3dbpr`, Pull Request
 [peter-mayrhofer/Mr.-X#1](https://github.com/peter-mayrhofer/Mr.-X/pull/1).
-Grundlage: [`PROMPT-NEUBAU.md`](../PROMPT-NEUBAU.md) (Meilensteine 1–13, Definition of Done) und
-[`NACHRICHT-AN-FRONTEND.md`](../NACHRICHT-AN-FRONTEND.md) (Umzug auf Cloudflare, Meilenstein 9b).
+Grundlage: [`PROMPT-NEUBAU.md`](archiv/PROMPT-NEUBAU.md) (Meilensteine 1–13, Definition of Done) und
+[`NACHRICHT-AN-FRONTEND.md`](archiv/NACHRICHT-AN-FRONTEND.md) (Umzug auf Cloudflare, Meilenstein 9b).
 
 Kurz: **Alle Meilensteine sind gebaut, getestet und dokumentiert.** Offen ist, was sich nur mit echten Handys und dem
 echten Cloudflare-Konto nachweisen lässt – dafür gibt es den [Feldtest](FELDTEST.md) – sowie zwei Angaben des Vereins
@@ -118,7 +118,7 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 
 **Bewusst so gelöst:**
 
-11. Die alte App (`https://mr-x-ooe.web.app`) und ihr Code (`legacy/`) sind unverändert; umgeschaltet wird nach der
+11. Die alte App (`https://mr-x-ooe.web.app`) und ihr Code (früher `legacy/`, heute nur noch im Git-Verlauf) sind unverändert; umgeschaltet wird nach der
     Abnahme.
 12. Einen Play-Store-Eintrag gibt es nicht (Verteilung als APK, E-38); eine iOS-App ist nicht Teil des Projekts.
 

@@ -1,4 +1,4 @@
-// Die 23 Screens aus PROMPT-NEUBAU.md Abschnitt 8.7 mit ihren Zuständen (Varianten).
+// Die 23 Screens aus docs/archiv/PROMPT-NEUBAU.md Abschnitt 8.7 mit ihren Zuständen (Varianten).
 export interface ScreenDef {
   n: number;
   title: string;

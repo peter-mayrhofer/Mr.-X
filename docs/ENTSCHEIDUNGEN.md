@@ -6,7 +6,7 @@ wird eine Entscheidung geändert, bekommt sie einen neuen Eintrag mit Verweis.
 ---
 
 ### E-01 Realtime Database statt Firestore
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Firebase Realtime Database (bestehende Instanz `europe-west1`).
 **Warum:** Der Großteil des Verkehrs sind kleine, häufige Standort-Updates, die an wenige Empfänger (Admin, Schiris,
 Großbild) verteilt werden. Die Realtime Database rechnet nach **Datenmenge** ab (10 GB Download gratis), Firestore nach
@@ -25,7 +25,7 @@ ohne Sonderkonfiguration.
 **Verworfen:** React (größer, Neurendern muss manuell gezügelt werden), Vue (gleichwertig, aber größer), SvelteKit (unnötig).
 
 ### E-03 Server-Autorität mit Cloud Functions 2nd gen, ein Aktions-Endpunkt
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle spielentscheidenden Aktionen laufen über **eine** aufrufbare Function `api` (Feld `action`),
 dazu `tick` (Scheduler, jede Minute), `onPosition` (Datenbank-Trigger), `tracker` (HTTP), `cleanup` (täglich).
 Region `europe-west1` (wie die Datenbank), Node 22.
@@ -36,7 +36,7 @@ sauber getrennte Module mit eigener Prüfung.
 beheben, kosten aber ≈ 5–10 €/Monat → nicht verwendet; der `tick` hält die Region während des Spiels ohnehin aktiv.
 
 ### E-04 Zeitgesteuerte Ereignisse: Minuten-Takt + „Warten bis zur Sekunde“
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Cloud Scheduler ruft `tick` jede Minute auf. `tick` sucht alle Ereignisse, die in den nächsten 60 s
 fällig sind (Meldung, Spielende, Ablauf von Wartezeiten), wartet bis zum exakten Zeitpunkt und führt sie als Transaktion aus.
 **Warum:** Sekundengenau, funktioniert ohne jedes Handy, kein zusätzliches Produkt. Doppelte Ausführung durch
@@ -46,7 +46,7 @@ Intervalländerung/Übergabe aufwendig); Spiel-Logik auf Handys (Kernproblem des
 **Grenze:** Ein Lauf kostet bis zu 60 s Instanzzeit – bei vielen gleichzeitigen Spielen später auf Cloud Tasks umstellen.
 
 ### E-05 Login: anonym + serverseitig geprüftes Passwort; Super-Admin per Google + Custom Claim
-> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Teams, Schiris, Spiel-Admins melden sich mit einem **anonymen** Firebase-Konto an und treten einem
 Spiel über `api: join` mit Passwort/Code bei. Der Server speichert die Rolle in `games/{g}/members/{uid}`
 (nur vom Server schreibbar). Der Super-Admin meldet sich mit **Google** an; eine Function prüft die E-Mail gegen die
@@ -57,7 +57,7 @@ aktualisiert werden (Token-Erneuerung). Google-Login für den Organisator ist be
 **Verworfen:** E-Mail/Passwort-Konten pro Admin (Verwaltungsaufwand), Admin-Konto „wer zuerst kommt“ (Prototyp – unsicher).
 
 ### E-06 Passwörter gehasht (scrypt) in `/secrets`, niemand liest sie
-> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-33** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Team-Passwort, Schiri-Code, Admin-Passwort und Großbild-Schlüssel werden mit `scrypt` + Salt gehasht in
 `secrets/{g}` gespeichert; Rules: `.read: false, .write: false`. Der Admin sieht das Team-Passwort nach dem Festlegen
 **einmal** und kann jederzeit ein neues setzen (statt es später auszulesen).
@@ -89,13 +89,13 @@ Distanz, wenn der Schritt plausibel ist (Genauigkeit ≤ 50 m, ≥ 10 m, ≤ 25 
 **Warum:** Datenschutz für Minderjährige (keine Bewegungsprofile), manipulationssichere Statistik, keine zusätzlichen Lesezugriffe.
 
 ### E-10 Ein Spiel = Mandant unter `games/{spielcode}`
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle Daten eines Spiels liegen unter `games/{g}` (+ `secrets/{g}`); Spiel-Code ist ein lesbarer
 Kurzname (`linz-2027`), der auch im QR-Link steckt und notfalls eingetippt werden kann.
 **Warum:** Mehrere Spiele/Orte ohne Vermischung, einfache Löschung, einfache Rules.
 
 ### E-11 Push über FCM mit Token-Liste statt Topics
-> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Jedes Gerät speichert sein FCM-Token + gewählte Push-Arten unter `games/{g}/push/{uid}`; der Server
 sendet gezielt (alle / ein Team / Staff) per `sendEachForMulticast`.
 **Warum:** Topics können nicht nach Geräte-Einstellungen filtern. Bei < 100 Geräten pro Spiel ist die Token-Liste trivial.
@@ -124,13 +124,13 @@ gebündelt (so funktioniert `firebase deploy` mit Code aus `shared/` ohne Tricks
 **Warum:** Eine Wahrheit für Spielregeln: Countdown in der App und Meldung am Server rechnen mit derselben Funktion.
 
 ### E-16 Tests: Vitest, Rules-Unit-Testing, Playwright; CI auf GitHub Actions
-> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Vitest (Logik, Functions mit Emulator), `@firebase/rules-unit-testing` (Rechte inkl. Angriffsversuche),
 Playwright (E2E mit simulierten Handys, Fake-GPS, Zeitraffer über verkürzte Intervalle wie im Prototyp), Lasttest als
 Node-Skript gegen den Emulator. GitHub Actions: Lint, Typecheck, Tests bei jedem Push; APK-Build; Preview-Deploy.
 
 ### E-17 APK-Verteilung über Firebase Hosting
-> **Abgelöst durch E-38** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-38** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Die signierte APK wird von GitHub Actions gebaut und beim Deploy unter `https://mr-x-ooe.web.app/app.apk`
 abgelegt (+ QR-Code im Admin und auf dem Flyer).
 **Warum:** Das Repository ist privat – Downloads aus GitHub-Releases bräuchten ein GitHub-Konto.
@@ -142,6 +142,8 @@ Testdaten unter `/#/prototyp`. Die Komponenten-Bibliothek ist unter `/#/komponen
 schwere Abhängigkeit für eine Handvoll Komponenten.
 
 ### E-19 Alter Prototyp nach `legacy/`
+> **Abgelöst durch E-57** (`legacy/` entfernt, alter Code nur noch im Git-Verlauf).
+
 **Entscheidung:** Auf dem Neubau-Branch liegen die alten Dateien unter `legacy/` (nur Referenz). Die Live-Version
 `https://mr-x-ooe.web.app` wird weiter vom bisherigen Branch deployt, bis der Neubau abgenommen ist.
 
@@ -152,7 +154,7 @@ Sofort-Meldung bei Übergabe (F10), Ersatzgerät pro Team (F14); die übrigen Fr
 **Offen:** Vektor-Logos (F1) und Datenschutz-Kontakt (F12) – werden spätestens für Meilenstein 12 gebraucht.
 
 ### E-21 Eigene Datenbank-Instanz und Hosting-Site für den Neubau
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Der Neubau verwendet die Realtime-Database-Instanz `mr-x-ooe-neu` (europe-west1) und die Hosting-Site
 `mr-x-ooe-neu` im selben Firebase-Projekt. Der Organisator legt beide einmal in der Konsole an (Blaze erlaubt mehrere
 Instanzen kostenlos; Kosten zählen gemeinsam).
@@ -164,13 +166,13 @@ Abnahme = neue App auf die Standard-Site deployen (Anleitung folgt in Meilenstei
 zweiter Budget-Alarm, Logins doppelt).
 
 ### E-22 Emulator-Projekt `demo-mrx` für Tests
-> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-36** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Alle automatisierten Tests laufen gegen die Firebase-Emulatoren mit der Projekt-ID `demo-mrx`.
 **Warum:** `demo-`-Projekte haben garantiert keinen Zugriff auf echte Firebase-Dienste – ein Test kann nie versehentlich
 Produktionsdaten verändern, und CI braucht keine Zugangsdaten.
 
 ### E-23 Anstoßen durch die Handys (`poke`) zusätzlich zum Minuten-Takt
-> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-32** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Jedes Mitglied darf `api: poke` aufrufen – z. B. wenn sein Countdown abgelaufen ist. Der Server
 erledigt dann nur, was wirklich fällig ist (Meldung, Spielende); alles läuft als Transaktion auf `state`, darum meldet
 er auch bei 30 gleichzeitigen Aufrufen genau einmal. Der Takt (`tick`, jede Minute, wartet bis zur Sekunde) bleibt die
@@ -218,7 +220,7 @@ Passwörtern und Index endgültig; angemeldete Geräte bekommen den freundlichen
 jedes Spiel ohne Admin-Passwort als Spielleitung öffnen.
 
 ### E-30 Push: eigener schlanker Service Worker, Versand nur am Server
-> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Benachrichtigungen verschickt ausschließlich der Spiel-Server (`functions/src/push.ts`) mit dem
 Firebase Admin SDK; die Geräte legen nur ihren Token und die gewünschten Arten unter `games/{g}/push/{uid}` ab.
 Im Web sind es reine Daten-Nachrichten, die ein eigener kleiner Service Worker (`app/public/sw.js`) anzeigt – nicht
@@ -229,7 +231,7 @@ Benachrichtigung im Postausgang `pushOutbox/{g}`, so prüfen die Tests die Empf�
 verhindert veraltete App-Versionen, und die Empfängerauswahl ist als reine Funktion (`shared/push.ts`) getestet.
 
 ### E-31 Android-App mit Capacitor, Web-Inhalte in der APK
-> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `NACHRICHT-AN-FRONTEND.md`).
+> **Abgelöst durch E-34** (Meilenstein 9b: Umzug auf Cloudflare, siehe `archiv/NACHRICHT-AN-FRONTEND.md`).
 **Entscheidung:** Die Android-App packt die gebaute Web-App in die APK (keine Fernladung von der Website). Nativ
 ergänzt werden nur: Standort über `@capacitor-community/background-geolocation` (Vordergrund-Dienst mit
 Dauer-Benachrichtigung), Senden per nativem HTTP an die REST-Schnittstelle der Datenbank (gleiche Rules, ID-Token),
@@ -245,7 +247,7 @@ kostenpflichtig.
 ## Meilenstein 9b: Umzug auf Cloudflare
 
 ### E-32 Cloudflare statt Firebase: ein Worker, ein Spielraum (Durable Object) pro Spiel, D1
-**Entscheidung:** Auf Wunsch des Organisators (`NACHRICHT-AN-FRONTEND.md`) läuft der Neubau komplett bei Cloudflare im
+**Entscheidung:** Auf Wunsch des Organisators (`archiv/NACHRICHT-AN-FRONTEND.md`) läuft der Neubau komplett bei Cloudflare im
 **Gratis-Tarif ohne Zahlungsart**. Ein **Worker** liefert die App (Static Assets) und die API unter derselben Adresse aus
 und leitet weiter. **Ein Durable Object pro Spiel** („Spielraum“, `server/src/room.ts`, SQLite-Speicher) hält den ganzen
 Spielzustand im Speicher, ist die einzige Stelle, die ihn ändert, verteilt Änderungen über WebSockets (Hibernation) und
@@ -254,7 +256,7 @@ weckt sich per **Alarm** für Meldungen, Wartezeiten, Spielende und Löschfriste
 (`Zentrale`) verwaltet das Organisator-Passwort. Ein täglicher Cron löscht nach Frist (Chat im Archiv 30 Tage, Archiv 1 Jahr).
 **Warum:** Ein Anbieter für alles, keine Kreditkarte; Durable Objects verarbeiten alles eines Spiels nacheinander – die
 Transaktionen und der Minuten-Takt aus E-03/E-04/E-23 entfallen, Meldungen kommen sekundengenau per Alarm.
-**Abweichungen von `PROMPT-BACKEND.md`, begründet:**
+**Abweichungen von `archiv/PROMPT-BACKEND.md`, begründet:**
 - **Befehle per HTTP (`POST /api`), Live-Daten per WebSocket.** Befehle brauchen eine Antwort und sichere Wiederholung
   (Kennung `rid`) – das ist mit HTTP einfacher und robuster als eigene Antwort-Zuordnung im WebSocket; Standorte gehen über
   die ohnehin offene Verbindung.
@@ -355,13 +357,13 @@ laut Auftrag) – ein Bildschirmfoto der Wiederholung erfüllt denselben Zweck.
 JSON des neuen Traccar Client) – das sprechen die kostenlose App „Traccar Client“ und viele 4G-Tracker, ohne eigenen
 Traccar-Server. Die **Geräte-Kennung** ist `{spiel-code}.{schlüssel}`: der Worker findet daran den Spielraum ohne
 Datenbank-Abfrage, der Spielraum prüft den Schlüssel in konstanter Zeit. Zuordnung durch die Spielleitung: **Fahne**
-(erste Quelle für Meldungen und Übergabeort, IDEEN.md) oder **Team** (ersetzt das Handy, solange der Tracker frisch
+(erste Quelle für Meldungen und Übergabeort, archiv/IDEEN.md) oder **Team** (ersetzt das Handy, solange der Tracker frisch
 sendet) oder frei (nur zum Testen sichtbar). Höchstens ein Punkt alle 5 s pro Gerät, höchstens 20 Geräte pro Spiel.
 Datenschutz wie bei Handys: Tracker-Standorte sehen nur Spielleitung, Schiri und Großbild; bei Spielende gelöscht;
 „Neue Runde“ hebt Team-Zuordnungen auf (die Teams gibt es nicht mehr), die Fahne bleibt.
 **Warum:** Kein Hardware-Kauf nötig, um es auszuprobieren (altes Handy + Traccar Client), keine zusätzlichen Kosten,
 dieselbe Plausibilitätsprüfung und Strecke wie für Handys.
-**Verworfen:** eigener Traccar-Server (≈ 5 €/Monat, IDEEN.md), Tracker-Token als eigene Sitzung (ein Geräteschlüssel
+**Verworfen:** eigener Traccar-Server (≈ 5 €/Monat, archiv/IDEEN.md), Tracker-Token als eigene Sitzung (ein Geräteschlüssel
 in der Kennung ist alles, was Traccar Client übertragen kann).
 
 ---
@@ -547,3 +549,11 @@ Meldungen vom Server (Chat, Text der Benachrichtigungen) ebenso – nur die Bena
 übersetzt.
 **Warum so:** Kinder und Eltern, die besser in einer anderen Sprache lesen, verstehen Beitritt, Regeln und Bedienung.
 Die Übersetzungen sollte vor dem ersten Einsatz jemand mit der jeweiligen Muttersprache durchsehen.
+
+### E-57 Aufräumen: kein „Neubau“ mehr
+**Entscheidung:** Die App ist nicht mehr der Neubau neben einer alten Version, sondern Mister X selbst. Der alte
+Firebase-Prototyp (`legacy/`, `.firebaserc`) ist entfernt und nur noch im Git-Verlauf. Auftrag und Planung von damals
+(`PROMPT-NEUBAU.md`, `PROMPT-BACKEND.md`, `NACHRICHT-AN-FRONTEND.md`, `SPEC.md`, `IDEEN.md`) liegen in `docs/archiv/`.
+Promo-Material ist in `videos/`, `bilder/` und `quellen/` sortiert; die README beschreibt die App statt des Umbaus.
+Sicherung des Stands davor: Branch `sicherung-vor-aufraeumen`.
+**Warum so:** Im Hauptordner lag Planungsmaterial zwischen dem Code, und die README erklärte einen Umbau, der fertig ist.

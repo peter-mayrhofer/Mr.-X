@@ -1,4 +1,4 @@
-// Prüfpunkte aus dem Prototyp (legacy/test/zones.test.mjs) + Toleranz, Abstand, Validierung.
+// Prüfpunkte aus dem ersten Prototyp (zones.test.mjs, im Git-Verlauf) + Toleranz, Abstand, Validierung.
 import { describe, expect, it } from "vitest";
 import {
   LINZ_INNENSTADT as F,

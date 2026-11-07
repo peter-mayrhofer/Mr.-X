@@ -1,4 +1,4 @@
-# Konzept: Neubau „Mister X – Rote Falken“
+# Konzept: „Mister X – Rote Falken“
 
 Stand: Meilenstein 1 (Analyse & Konzept) + Design-Prototyp – **vom Organisator bestätigt am 27.10.2026**
 (alle Vorschläge aus Abschnitt 9 angenommen, siehe E-20). **Aktualisiert in Meilenstein 9b:** Der Server läuft jetzt bei
@@ -89,7 +89,7 @@ app/         Svelte-App (Web + Android via Capacitor, Ordner app/android/)
 server/      Cloudflare Worker + Spielraum + Zentrale (wrangler.jsonc)
 tests/       Server-, Rechte-, Ruhezustand- und E2E-Tests gegen die lokale Cloudflare-Laufzeit (Playwright)
 docs/        Konzept, Entscheidungen, API, Betrieb, Limits, Handbücher, Screenshots
-legacy/      alter Prototyp (nur Referenz; die Live-Version bleibt bis zur Abnahme auf dem Haupt-Branch)
+promo/       Videos, Screenshots und ihre Quellen
 ```
 
 ---
@@ -178,7 +178,7 @@ alle gesehen haben) kommen ins Archiv. Bei Spielende werden alle Live-Standorte 
 
 ## 5. Spielregeln → Umsetzung (Server)
 
-Die Nummern verweisen auf das Original-Regelblatt (`PROMPT-NEUBAU.md`, Abschnitt 1). Alle Zeiten sind **Server-Zeit**;
+Die Nummern verweisen auf das Original-Regelblatt (`archiv/PROMPT-NEUBAU.md`, Abschnitt 1). Alle Zeiten sind **Server-Zeit**;
 die Handys rechnen ihren Countdown mit der Server-Zeit, die in jeder Nachricht der Live-Verbindung steht.
 
 | # | Regel | Umsetzung |
@@ -315,7 +315,7 @@ Angaben aus dem Impressum der Kinderfreunde OÖ eingetragen (E-43) und wird bei 
 | F7 | Wer ist **Super-Admin**? Wie viele Spiel-Admins? | Super-Admin: der Organisator (Konto `mr.x.rf.ooe@gmail.com` bei Cloudflare; in der App eigenes Organisator-Passwort, E-33). Beliebig viele Spiel-Admins über das Admin-Passwort, jeder mit Namen |
 | F8 | Soll der Start-Mister-X **ausgelost** werden können? | **Ja**, mit Los-Animation; alternativ direkt wählen |
 | F9 | **Vorsprung am Start** = Meldeintervall oder eigener Wert? | eigener Wert `headStartMin`, Standard 10 Min |
-| F10 | Nach einer Übergabe **sofort** den Standort des neuen Mister X melden? (`SPEC.md`: ja) | **Ja**, Übergabe-Meldung am Übergabeort |
+| F10 | Nach einer Übergabe **sofort** den Standort des neuen Mister X melden? (`archiv/SPEC.md`: ja) | **Ja**, Übergabe-Meldung am Übergabeort |
 | F11 | **Umkreis** für die Wartezeit nach Übergabe? | 200 m (wie Prototyp), live änderbar |
 | F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Die Kinderfreunde OÖ – bitte Adresse/E-Mail nennen |
 | F13 | **APK-Verteilung:** Das Repository ist privat → GitHub-Downloads brauchen ein Konto. | APK über die eigene Adresse ausliefern (`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk`, E-38) + QR-Code |
@@ -350,5 +350,5 @@ echten Technik-Stack gebaut – die Komponenten werden später direkt weiterverw
 
 ## 11. Weiterer Plan
 
-Nach Bestätigung von Konzept + Prototyp geht es in der Reihenfolge der Meilensteine 3–13 aus `PROMPT-NEUBAU.md` weiter.
+Nach Bestätigung von Konzept + Prototyp geht es in der Reihenfolge der Meilensteine 3–13 aus `archiv/PROMPT-NEUBAU.md` weiter.
 Jeder Meilenstein endet lauffähig, getestet, committet und mit kurzem Bericht im Pull Request.

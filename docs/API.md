@@ -166,7 +166,7 @@ im Direktkanal ist die Kennung `"teamId/nachrichtId"`. `applyPatch()` in `shared
 | `{"t":"resync"}` | Lücke bemerkt → neuer Snapshot |
 | `ping` (Text) | Herzschlag alle 25 s; Antwort `pong` kommt direkt von Cloudflare (weckt den Spielraum nicht) |
 
-### 3.3 Wer sieht was (Abschnitt 6 des Neubau-Auftrags)
+### 3.3 Wer sieht was (Abschnitt 6 des ursprünglichen Auftrags, `docs/archiv/PROMPT-NEUBAU.md`)
 
 | Teil | Team | Schiri | Spielleitung | Großbild | Zuschauer |
 |---|---|---|---|---|---|

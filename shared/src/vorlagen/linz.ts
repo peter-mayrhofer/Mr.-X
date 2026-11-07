@@ -1,4 +1,4 @@
-// Vorlage „Linz Innenstadt“ – 1:1 übernommen aus dem Prototyp (legacy/zones.js), mit dem Organisator abgestimmt.
+// Vorlage „Linz Innenstadt“ – 1:1 übernommen aus dem ersten Prototyp (zones.js, im Git-Verlauf), mit dem Organisator abgestimmt.
 // Koordinaten in GeoJSON-Reihenfolge [Länge, Breite], Linien auf der Straßenmitte.
 // Spielfeld: Kapuzinerstraße – Römerbergtunnel – Obere/Untere Donaulände – Gruberstraße – Khevenhüllerstraße –
 // Blumauerstraße – Bahnhofstraße – Kärntnerstraße – Waldeggstraße – Kellergasse – Sandgasse – Hopfengasse.
