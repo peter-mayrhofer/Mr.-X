@@ -31,6 +31,23 @@ window.addEventListener("keydown", function (e) {
 }, true);
 "#;
 
+/// Linksklick auf externe Links mit target="_blank" (Kartenhinweis, Maps-Links) im Standardbrowser öffnen.
+/// on_new_window greift unter Windows/WebView2 nur beim Rechtsklick „In neuem Tab öffnen“, nicht beim normalen Klick.
+/// Erlaubt in capabilities/server.json: opener:allow-open-url mit opener:allow-default-urls (nur http(s), mailto, tel).
+const LINK_SKRIPT: &str = r#"
+document.addEventListener("click", function (e) {
+  if (e.button !== 0) return;
+  var a = e.target instanceof Element ? e.target.closest("a[href]") : null;
+  if (!a || a.target !== "_blank") return;
+  var url = new URL(a.href, location.href);
+  if (url.origin === location.origin) return;
+  var t = window.__TAURI_INTERNALS__;
+  if (!t) return;
+  e.preventDefault();
+  t.invoke("plugin:opener|open_url", { url: url.href }).catch(function () {});
+}, true);
+"#;
+
 /// Nur http(s), mailto und tel gehen an den Standardbrowser bzw. das Standardprogramm.
 fn extern_oeffnen(app: &AppHandle, url: &Url) {
     if matches!(url.scheme(), "http" | "https" | "mailto" | "tel") {
@@ -89,6 +106,7 @@ pub fn run() {
                 .maximized(erster_start)
                 .initialization_script(script)
                 .initialization_script(VOLLBILD_SKRIPT)
+                .initialization_script(LINK_SKRIPT)
                 // Navigation nur auf die lokale Startseite und den Server; alles andere in den Browser
                 .on_navigation(move |url| {
                     let lokal = matches!(
