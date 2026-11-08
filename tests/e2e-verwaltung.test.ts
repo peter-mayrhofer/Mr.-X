@@ -60,7 +60,7 @@ describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout:
     await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
     expect(await val(`games/${G}/field/base`)).toHaveLength(5);
 
-    await page.getByRole("button", { name: T.zonen.vorlageLaden, exact: true }).click();
+    await page.getByRole("button", { name: T.zonen.vorlageLaden("Linz Innenstadt"), exact: true }).click();
     await page.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
     await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
     expect(Object.keys(await val(`games/${G}/field/cuts`))).toHaveLength(4);
@@ -98,7 +98,7 @@ describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout:
     await page.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
     await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
     expect(Object.keys(await val(`games/${G}/field/cuts`))).toHaveLength(1);
-    await page.getByRole("button", { name: T.zonen.vorlageLaden, exact: true }).click();
+    await page.getByRole("button", { name: T.zonen.vorlageLaden("Linz Innenstadt"), exact: true }).click();
     await page.getByRole("button", { name: T.allgemein.speichern, exact: true }).click();
     await page.getByRole("button", { name: T.zonen.allesGespeichert, exact: true }).waitFor();
     // Steuerung zeigt die Bereiche zum Sperren
