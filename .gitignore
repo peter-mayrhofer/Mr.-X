@@ -5,6 +5,7 @@ dist/
 .dev.vars
 server/geheimnisse*.json
 app/public/*.apk
+app/public/download/
 
 # Ergebnisse der Gerätetests (entstehen in CI bzw. beim lokalen Aufruf)
 push-ergebnis.md
