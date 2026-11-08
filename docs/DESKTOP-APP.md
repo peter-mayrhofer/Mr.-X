@@ -36,7 +36,8 @@ Startseite im Browser
 
 ## Desktop-Funktionen
 
-**Erste Version:** eigenes Fenster und Taskleistensymbol, nur eine Instanz, Fenster merkt sich Größe/Position;
+**Erste Version:** eigenes Fenster und Taskleistensymbol, nur eine Instanz, Fenster merkt sich Größe/Position, beim
+ersten Start maximiert, F11 = Vollbild (WebView2 kann das nicht selbst);
 Benachrichtigungen für die Spielleitung über die Live-Verbindung (wie Android, E-34 – Web Push geht in Desktop-WebViews
 nicht) mit Zähler am Symbol; Hinweis „Neue Desktop-Version“ (Version der Hülle gegen `downloads.json`).
 

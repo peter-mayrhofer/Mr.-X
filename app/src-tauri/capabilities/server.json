@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/remote-schema.json",
   "identifier": "server",
-  "description": "Live-Web-App vom Server: vorerst keine Rechte (Benachrichtigungen kommen in Phase 4). Adresse muss zu MRX_SERVER_URL passen.",
+  "description": "Live-Web-App vom Server: nur Vollbild an/aus (F11). Adresse muss zu MRX_SERVER_URL passen.",
   "windows": ["main"],
   "remote": { "urls": ["https://mister-x.mr-x-ooe.workers.dev/*"] },
-  "permissions": []
+  "permissions": ["core:window:allow-is-fullscreen", "core:window:allow-set-fullscreen"]
 }

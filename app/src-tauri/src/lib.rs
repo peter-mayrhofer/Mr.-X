@@ -17,6 +17,20 @@ const STANDARD_SERVER: &str = "http://localhost:5173";
 #[cfg(not(debug_assertions))]
 const STANDARD_SERVER: &str = "https://mister-x.mr-x-ooe.workers.dev";
 
+/// F11 = Vollbild an/aus. WebView2 hat kein F11 wie der Browser, darum über die Fenster-Befehle von Tauri
+/// (erlaubt in capabilities/*.json: core:window:allow-is-fullscreen, core:window:allow-set-fullscreen).
+const VOLLBILD_SKRIPT: &str = r#"
+window.addEventListener("keydown", function (e) {
+  if (e.key !== "F11" || e.repeat) return;
+  e.preventDefault();
+  var t = window.__TAURI_INTERNALS__;
+  if (!t) return;
+  t.invoke("plugin:window|is_fullscreen", { label: "main" })
+    .then(function (an) { return t.invoke("plugin:window|set_fullscreen", { label: "main", value: !an }); })
+    .catch(function () {});
+}, true);
+"#;
+
 /// Nur http(s), mailto und tel gehen an den Standardbrowser bzw. das Standardprogramm.
 fn extern_oeffnen(app: &AppHandle, url: &Url) {
     if matches!(url.scheme(), "http" | "https" | "mailto" | "tel") {
@@ -55,6 +69,14 @@ pub fn run() {
                 version = serde_json::to_string(&version)?,
             );
 
+            // Erster Start (noch kein gespeicherter Fensterzustand von window-state): maximiert öffnen.
+            // Danach stellt window-state den letzten Zustand wieder her.
+            let erster_start = app
+                .path()
+                .app_config_dir()
+                .map(|d| !d.join(".window-state.json").exists())
+                .unwrap_or(true);
+
             let handle_nav = app.handle().clone();
             let handle_neu = app.handle().clone();
             let server_nav = server.clone();
@@ -64,7 +86,9 @@ pub fn run() {
                 .inner_size(1280.0, 800.0)
                 .min_inner_size(900.0, 600.0)
                 .center()
+                .maximized(erster_start)
                 .initialization_script(script)
+                .initialization_script(VOLLBILD_SKRIPT)
                 // Navigation nur auf die lokale Startseite und den Server; alles andere in den Browser
                 .on_navigation(move |url| {
                     let lokal = matches!(
