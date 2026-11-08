@@ -154,7 +154,10 @@ Abschnitt 9).
    zuletzt veröffentlichten Dateien; eine neue Desktop-Version erscheint erst mit dem Deploy nach dem Tag.
 3. **`/downloads.json`** entsteht beim Bauen aus den Dateien, die am Server liegen; die Startseite zeigt den Knopf nur
    für Systeme, deren Datei vorhanden ist. Datei zu groß (über 25 MiB) → Warnung im Workflow, der Server liefert sie nicht
-   aus ([`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md)).
+   aus ([`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md)). Der Deploy schreibt außerdem den Release-Tag ohne „v“ als
+   `desktopVersion` hinein; ist sie neuer als die Version der Desktop-App, zeigt die App einen Update-Hinweis. Darum
+   die Versionsnummer in `app/package.json` **vor** dem Tag erhöhen und den Tag als `v<Version>` setzen – sonst meldet
+   die App dauernd „neue Version“.
 4. **Warnhinweise beim ersten Start** (die Apps sind nicht signiert): Windows-SmartScreen → **Weitere Informationen →
    Trotzdem ausführen**; macOS → Systemeinstellungen › Datenschutz & Sicherheit › **Dennoch öffnen**.
 5. **Kosten:** das Repository ist privat, Actions-Minuten sind begrenzt (Windows zählt 2-fach, macOS 10-fach, Linux

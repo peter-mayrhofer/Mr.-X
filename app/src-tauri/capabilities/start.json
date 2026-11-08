@@ -2,6 +2,6 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "start",
   "description": "Lokale Startseite (eingebaut): nur Vollbild an/aus (F11)",
-  "windows": ["main"],
+  "windows": ["main", "grossbild"],
   "permissions": ["core:window:allow-is-fullscreen", "core:window:allow-set-fullscreen"]
 }

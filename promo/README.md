@@ -6,6 +6,7 @@ Aus einem simulierten Spiel mit der echten App aufgenommen.
 promo/
 ├── videos/    fertige Videos (MP4) zum Teilen
 ├── bilder/    Screenshots aller Bildschirme
+├── praesentation/  Präsentation zum Vorstellen der App (HTML, im Browser öffnen)
 └── quellen/   Quellen der animierten Videos (HTML) mit Ton-Protokoll und Quellenangaben
 ```
 
@@ -19,6 +20,12 @@ promo/
 | `Mister-X-Promo-Hype-Hochformat.mp4` | Derselbe Hype-Clip im Hochformat (1080×1920) für Reels, Stories und WhatsApp-Status |
 | `Mister-X-Rundgang.mp4` | Rundgang-Video (53 s, Querformat 1920×1080, 60 fps): der rote Mister-X-Punkt läuft ohne Schnitt durch 13 echte App-Stationen – QR-Scan, Beitritt, Onboarding, Spielstart, Vorsprung, Benachrichtigungen, Live-Karte, Kompass, Sperrgebiet/Durchsage, Chat, Übergabe, Großbild, Siegerehrung |
 | `Mister-X-Rundgang-Hochformat.mp4` | Derselbe Rundgang im Hochformat (1080×1920) für Reels, Stories und WhatsApp-Status |
+
+## Präsentation (`praesentation/`)
+
+| Datei | Inhalt |
+|---|---|
+| `Mister-X-Praesentation.html` | Präsentation von Mister X zum Vorstellen bei Gruppen und Eltern – im Browser öffnen |
 
 ## Bilder (`bilder/`)
 

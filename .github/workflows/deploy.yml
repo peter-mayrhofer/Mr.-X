@@ -87,6 +87,11 @@ jobs:
           gh release download --repo "$GITHUB_REPOSITORY" --dir app/public/download \
             --pattern Mister-X-Setup.exe --pattern Mister-X.dmg --pattern mister-x.deb \
             || echo "::notice::Keine Desktop-Dateien im letzten Release – der Download-Knopf für Laptops bleibt aus (docs/BETRIEB.md, Abschnitt 9b)."
+          # Version der Installer = Tag des (neuesten) Releases, nur wenn wirklich Desktop-Dateien geladen wurden
+          if ls app/public/download/Mister-X-Setup.exe app/public/download/Mister-X.dmg app/public/download/mister-x.deb >/dev/null 2>&1; then
+            gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName > app/public/download/VERSION \
+              || { rm -f app/public/download/VERSION; echo "::notice::Release-Tag nicht lesbar – die Desktop-App meldet keine neue Version."; }
+          fi
           ls -l app/public/download
 
       # 2) Web-App (ohne feste Server-Adresse) samt APK bauen und veröffentlichen

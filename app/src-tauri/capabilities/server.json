@@ -1,13 +1,15 @@
 {
   "$schema": "../gen/schemas/remote-schema.json",
   "identifier": "server",
-  "description": "Live-Web-App vom Server: nur Vollbild an/aus (F11) und externe Links im Standardbrowser öffnen (nur http(s), mailto, tel). Adresse muss zu MRX_SERVER_URL passen.",
-  "windows": ["main"],
+  "description": "Live-Web-App vom Server: nur Vollbild an/aus (F11), Großbild-Fenster öffnen, Benachrichtigung melden und externe Links im Standardbrowser öffnen (nur http(s), mailto, tel). Adresse muss zu MRX_SERVER_URL passen.",
+  "windows": ["main", "grossbild"],
   "remote": { "urls": ["https://mister-x.mr-x-ooe.workers.dev/*"] },
   "permissions": [
     "core:window:allow-is-fullscreen",
     "core:window:allow-set-fullscreen",
     "opener:allow-open-url",
-    "opener:allow-default-urls"
+    "opener:allow-default-urls",
+    "allow-grossbild-oeffnen",
+    "allow-melden"
   ]
 }
