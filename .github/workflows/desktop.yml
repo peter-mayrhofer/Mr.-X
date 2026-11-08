@@ -1,0 +1,117 @@
+name: Desktop-App
+
+# Baut die Desktop-App (Tauri 2, docs/DESKTOP-APP.md) für Windows, macOS und Linux.
+# - Versions-Tag (z. B. v2.0.0) oder Handstart: alle drei Systeme, die Dateien hängen am Release
+# - Push auf Branches mit Änderungen an der Hülle: nur Windows als Prüf-Build (Artefakt).
+#   Grund: im privaten Repository zählen Windows-Minuten 2-fach, macOS 10-fach.
+# - Der „Deploy“-Workflow holt die Dateien des letzten Releases an den Server (docs/BETRIEB.md, Abschnitt 9b).
+# Hinweis: „Run workflow“ (workflow_dispatch) erscheint in GitHub erst, wenn diese Datei auf dem Standard-Branch liegt.
+on:
+  push:
+    # Branches und Tags getrennt nennen (wie android.yml); der Pfadfilter gilt nur für Branches, Tags bauen immer
+    branches: ["**"]
+    tags: ["v*"]
+    paths: ["app/src-tauri/**", "app/package.json", ".github/workflows/desktop.yml"]
+  workflow_dispatch:
+
+# neuer Push auf demselben Branch ersetzt den laufenden Prüf-Build; Release-Builds (Tags) nie abbrechen
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix: >-
+        ${{ fromJSON(
+          github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/v')
+          && '{"include":[{"name":"Windows","os":"windows-latest","bundle":"nsis","glob":"app/src-tauri/target/release/bundle/nsis/*.exe","ziel":"Mister-X-Setup.exe","args":""}]}'
+          || '{"include":[{"name":"Windows","os":"windows-latest","bundle":"nsis","glob":"app/src-tauri/target/release/bundle/nsis/*.exe","ziel":"Mister-X-Setup.exe","args":""},{"name":"macOS","os":"macos-latest","bundle":"dmg","glob":"app/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg","ziel":"Mister-X.dmg","args":"--target universal-apple-darwin"},{"name":"Linux","os":"ubuntu-22.04","bundle":"deb","glob":"app/src-tauri/target/release/bundle/deb/*.deb","ziel":"mister-x.deb","args":""}]}'
+        ) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Adresse des Spiel-Servers fest in die Hülle (Repository-Variable MRX_API_URL, docs/BETRIEB.md, Abschnitt 9)
+      MRX_SERVER_URL: ${{ vars.MRX_API_URL || 'https://mister-x.mr-x-ooe.workers.dev' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # macOS baut eine Universal-App aus beiden Prozessor-Architekturen
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+
+      # Systempakete für Tauri 2 (WebKitGTK 4.1), siehe v2.tauri.app/start/prerequisites
+      - name: Linux-Pakete
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      # Die Hülle lädt die Live-Web-App – die Web-App muss hier nicht gebaut werden
+      - name: Bauen
+        run: npm -w app run desktop:build -- --bundles ${{ matrix.bundle }} ${{ matrix.args }}
+
+      - name: Datei mit festem Namen ablegen
+        run: |
+          shopt -s nullglob
+          dateien=(${{ matrix.glob }})
+          if [ ${#dateien[@]} -ne 1 ]; then echo "::error::Erwartet genau eine Datei (${{ matrix.glob }}), gefunden: ${#dateien[@]}"; exit 1; fi
+          mkdir -p dist-desktop
+          cp "${dateien[0]}" "dist-desktop/${{ matrix.ziel }}"
+          bytes=$(wc -c < "dist-desktop/${{ matrix.ziel }}")
+          mib=$(( bytes / 1048576 ))
+          echo "${{ matrix.name }}: ${{ matrix.ziel }} = $mib MiB ($bytes Bytes)" >> "$GITHUB_STEP_SUMMARY"
+          # Cloudflare liefert pro Datei höchstens 25 MiB aus (docs/CLOUDFLARE-LIMITS.md)
+          if [ "$bytes" -gt $(( 25 * 1048576 )) ]; then
+            echo "::warning::${{ matrix.ziel }} ist $mib MiB groß – über der Cloudflare-Grenze von 25 MiB, der Server kann sie nicht ausliefern."
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mister-x-desktop-${{ matrix.name }}
+          path: dist-desktop/*
+          retention-days: 30
+
+      # Cargo.lock entsteht beim ersten Bauen: aus dem Artefakt holen und ins Repository legen
+      - name: Cargo.lock sichern
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-lock
+          path: app/src-tauri/Cargo.lock
+          if-no-files-found: warn
+          retention-days: 30
+
+  # Anhängen ans Release: eigener Job, nur hier Schreibrecht
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: desktop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mister-x-desktop-*
+          path: dist-desktop
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist-desktop/*

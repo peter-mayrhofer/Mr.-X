@@ -13,3 +13,7 @@ android-ergebnis.md
 logcat.txt
 geraet.txt
 push-server.log
+
+# Desktop-App (Tauri): Rust-Build; gen/ (Schemas, Rechte-Manifeste) wird bei jedem Build neu erzeugt
+app/src-tauri/target/
+app/src-tauri/gen/

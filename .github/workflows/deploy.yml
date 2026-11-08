@@ -76,6 +76,19 @@ jobs:
             cp app/android/app/build/outputs/apk/debug/app-debug.apk app/public/mister-x.apk
           fi
 
+      # 1b) Desktop-Dateien des letzten Releases (baut desktop.yml bei Tags) in die Web-App legen;
+      #     fehlt Release oder Datei, gibt es nur einen Hinweis. downloads.json entsteht beim Web-Build.
+      - name: Desktop-Dateien holen
+        if: steps.zugang.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p app/public/download
+          gh release download --repo "$GITHUB_REPOSITORY" --dir app/public/download \
+            --pattern Mister-X-Setup.exe --pattern Mister-X.dmg --pattern mister-x.deb \
+            || echo "::notice::Keine Desktop-Dateien im letzten Release – der Download-Knopf für Laptops bleibt aus (docs/BETRIEB.md, Abschnitt 9b)."
+          ls -l app/public/download
+
       # 2) Web-App (ohne feste Server-Adresse) samt APK bauen und veröffentlichen
       - name: Veröffentlichen
         if: steps.zugang.outputs.ok == 'true'

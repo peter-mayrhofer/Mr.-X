@@ -1,0 +1,90 @@
+// Mister X – Desktop-Hülle (Tauri 2): ein Fenster, das die Live-Web-App vom Server lädt.
+// Zuerst die lokale Startseite (`start/`), die den Server prüft und dann weiterleitet (E-58, docs/DESKTOP-APP.md).
+use tauri::{
+    webview::NewWindowResponse, AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder,
+};
+use tauri_plugin_opener::OpenerExt;
+
+/// Server-Adresse, zur Compile-Zeit festgelegt: `MRX_SERVER_URL=https://… npm run desktop:build`
+fn server_url() -> &'static str {
+    match option_env!("MRX_SERVER_URL") {
+        Some(url) if !url.is_empty() => url, // leere Variable (CI) zählt als nicht gesetzt
+        _ => STANDARD_SERVER,
+    }
+}
+#[cfg(debug_assertions)]
+const STANDARD_SERVER: &str = "http://localhost:5173";
+#[cfg(not(debug_assertions))]
+const STANDARD_SERVER: &str = "https://mister-x.mr-x-ooe.workers.dev";
+
+/// Nur http(s), mailto und tel gehen an den Standardbrowser bzw. das Standardprogramm.
+fn extern_oeffnen(app: &AppHandle, url: &Url) {
+    if matches!(url.scheme(), "http" | "https" | "mailto" | "tel") {
+        let _ = app.opener().open_url(url.as_str(), None::<&str>);
+    }
+}
+
+pub fn run() {
+    let adresse = server_url();
+    let server = Url::parse(adresse).expect("MRX_SERVER_URL ist keine gültige Adresse");
+
+    let mut builder = tauri::Builder::default();
+
+    // Muss als erstes Plugin stehen: zweiter Start holt das vorhandene Fenster nach vorne
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.show();
+                let _ = w.set_focus();
+            }
+        }));
+        builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+    }
+
+    builder
+        .plugin(tauri_plugin_opener::init())
+        .setup(move |app| {
+            let version = app.package_info().version.to_string();
+            // Läuft bei jeder Seite im Hauptfenster: Serveradresse nur für die lokale Startseite,
+            // Desktop-Kennung nur für die Server-Seite (native.ts: DESKTOP)
+            let script = format!(
+                "(function(){{var s={server};if(location.origin===new URL(s).origin){{window.__MRX_DESKTOP__={version};}}else{{window.__MRX_SERVER__=s;}}}})();",
+                server = serde_json::to_string(adresse)?,
+                version = serde_json::to_string(&version)?,
+            );
+
+            let handle_nav = app.handle().clone();
+            let handle_neu = app.handle().clone();
+            let server_nav = server.clone();
+
+            WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+                .title("Mister X")
+                .inner_size(1280.0, 800.0)
+                .min_inner_size(900.0, 600.0)
+                .center()
+                .initialization_script(script)
+                // Navigation nur auf die lokale Startseite und den Server; alles andere in den Browser
+                .on_navigation(move |url| {
+                    let lokal = matches!(
+                        (url.scheme(), url.host_str()),
+                        ("tauri", Some("localhost")) | ("http" | "https", Some("tauri.localhost"))
+                    );
+                    if lokal || url.as_str() == "about:blank" || url.origin() == server_nav.origin() {
+                        return true;
+                    }
+                    extern_oeffnen(&handle_nav, url);
+                    false
+                })
+                // Neue Fenster (target=_blank, window.open) nie in der App, sondern im Browser
+                .on_new_window(move |url, _features| {
+                    extern_oeffnen(&handle_neu, &url);
+                    NewWindowResponse::Deny
+                })
+                .build()?;
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("Mister X konnte nicht gestartet werden");
+}
