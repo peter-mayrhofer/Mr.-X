@@ -1,0 +1,14 @@
+{
+  "name": "mister-x",
+  "description": "Claude-Code-Mods für die Arbeit am Mister-X-Projekt",
+  "owner": {
+    "name": "Rote Falken OÖ"
+  },
+  "plugins": [
+    {
+      "name": "co-agenten",
+      "source": "./claude-mods/co-agenten",
+      "description": "Steuerzentrale für Claudes Co-Agenten: ob, wie viele, welches Modell – mit Live-Crew-Ansicht"
+    }
+  ]
+}
