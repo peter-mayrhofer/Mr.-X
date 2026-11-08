@@ -1,0 +1,7 @@
+{
+  "name": "co-agenten",
+  "version": "0.1.0",
+  "description": "Steuerzentrale für Claudes Co-Agenten: ob, wie viele, welches Modell – mit Live-Crew-Ansicht im Panel rechts",
+  "types": "./types/index.d.ts",
+  "license": "MIT"
+}

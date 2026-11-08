@@ -57,6 +57,7 @@ docs/       Handbücher, Betrieb, Konzept, Entscheidungen, API, Limits, Design, 
   archiv/        ursprünglicher Auftrag und Planung (Spezifikation, Prompts, Ideen) – nur zur Nachverfolgung
 assets/     Logos der Roten Falken und der Kinderfreunde
 promo/      Videos, Screenshots und ihre Quellen
+claude-mods/ Erweiterungen für Claude Code, z. B. das Co-Agenten-Panel (installieren: siehe ihre README)
 .github/    CI (Tests), Android-APK (Build + Emulator-Test), Deploy (Veröffentlichen)
 ```
 
