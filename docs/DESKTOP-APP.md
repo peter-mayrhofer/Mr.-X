@@ -1,6 +1,6 @@
 # Desktop-App (Windows · macOS · Linux) – Plan
 
-Stand: 2026-11-08. Status: **Phasen 1–3 umgesetzt, erster Windows-Build in GitHub Actions ausstehend.** Entscheidung: E-58 in `ENTSCHEIDUNGEN.md`.
+Stand: 2026-11-08. Status: **Phasen 1–3 umgesetzt; erster Windows-Build in GitHub Actions erfolgreich (Setup 1,2 MB), Test am Laptop ausstehend.** Entscheidung: E-58 in `ENTSCHEIDUNGEN.md`.
 
 Organisator, Spielleitung und Großbild arbeiten am Laptop – bisher nur im Browser. Ziel: eine eigene App
 (Windows-`.exe`, später macOS und Linux) und ein Download-Knopf, der im Browser das passende System erkennt –
@@ -62,6 +62,6 @@ Shell für die Webseite.
 |---|---|---|
 | 0 | Fremddateien aus `app/public` entfernt (wären mit `npm run deploy` öffentlich geworden), `app/public/download/` ignoriert | ✅ |
 | 1 | `shared/src/geraet.ts` + Test, `downloads.json` beim Bauen, Download-Karte auf Startseite und Laptop-Logins, Texte, E2E-Test | ✅ |
-| 2 | `app/src-tauri/` (Windows), Offline-Seite, `native.ts` kennt `desktop` | ✅ geschrieben – kompiliert erst in CI (kein Rust lokal) |
+| 2 | `app/src-tauri/` (Windows), Offline-Seite, `native.ts` kennt `desktop` | ✅ Windows-Build in CI grün |
 | 3 | `desktop.yml`, `deploy.yml`, BETRIEB.md | ✅ |
 | 4 | Beamer-Knopf, Benachrichtigungen + Zähler, Speichern unter, Updater, macOS/Linux | offen |
