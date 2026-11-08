@@ -20,6 +20,8 @@ export const SCREENS: ScreenDef[] = [
       { id: "", label: "Ohne Spiel" },
       { id: "spiel", label: "Aus QR-Link" },
       { id: "android", label: "Android-Browser" },
+      { id: "windows", label: "Windows-Browser" },
+      { id: "mac", label: "Mac-Browser" },
     ],
   },
   {

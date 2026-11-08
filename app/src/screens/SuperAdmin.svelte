@@ -11,7 +11,7 @@
 
 <script lang="ts">
   import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, LogOut, Plus, Trash } from "@lucide/svelte";
-  import { GAME_ID, LIMITS, type Template } from "@mrx/shared";
+  import { GAME_ID, LIMITS, type Downloads, type System, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
   import Card from "../ui/Card.svelte";
@@ -25,6 +25,7 @@
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
+  import DownloadKarte from "./parts/DownloadKarte.svelte";
 
   interface Props {
     allowed: boolean;
@@ -41,6 +42,9 @@
     onunarchive?: (id: string) => void;
     ondelete?: (id: string) => void;
     onback: () => void;
+    /** Download-Karte „App für diesen Laptop“ */
+    system?: System;
+    downloads?: Downloads;
   }
 
   let {
@@ -57,6 +61,8 @@
     onunarchive,
     ondelete,
     onback,
+    system = "andere",
+    downloads = {},
   }: Props = $props();
 
   const MIN_PW = 10;
@@ -229,6 +235,7 @@
         <p class="muted">{T.verwaltung.leer}</p>
       {/each}
     {/if}
+    <DownloadKarte {system} {downloads} kompakt />
   </div>
 </main>
 

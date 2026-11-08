@@ -1,7 +1,22 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { DOWNLOAD_DATEIEN, DOWNLOAD_SYSTEME, type Downloads } from "../shared/src/geraet.ts";
+
+function sammleDownloads(): Downloads {
+  const out: Downloads = {};
+  for (const system of DOWNLOAD_SYSTEME) {
+    const datei = DOWNLOAD_DATEIEN[system];
+    try {
+      const s = statSync(new URL(`public/${datei}`, import.meta.url));
+      if (s.isFile()) out[system] = { datei, groesse: s.size };
+    } catch {
+      // Datei fehlt → kein Eintrag
+    }
+  }
+  return out;
+}
 
 const { version } = JSON.parse(readFileSync(new URL("package.json", import.meta.url), "utf8")) as { version: string };
 // Build-Kennung = Commit: Web-App und APK aus demselben Stand haben dieselbe → die Android-App erkennt, ob sie veraltet ist
@@ -25,6 +40,19 @@ export default defineConfig({
       name: "mrx-version",
       generateBundle() {
         this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ version, build }) });
+      },
+    },
+    {
+      // downloads.json: welche App-Dateien (Vertrag: shared/src/geraet.ts) liegen in public/ – nur vorhandene, sonst {}
+      name: "mrx-downloads",
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "downloads.json", source: JSON.stringify(sammleDownloads()) });
+      },
+      configureServer(devServer) {
+        devServer.middlewares.use("/downloads.json", (_req, res) => {
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify(sammleDownloads()));
+        });
       },
     },
   ],

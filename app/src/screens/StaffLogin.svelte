@@ -4,10 +4,12 @@
   import Button from "../ui/Button.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import TextField from "../ui/TextField.svelte";
+  import type { Downloads, System } from "@mrx/shared";
   import { ApiError } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
+  import DownloadKarte from "./parts/DownloadKarte.svelte";
 
   type StaffRole = "schiri" | "admin";
   interface Props {
@@ -16,9 +18,12 @@
     onsubmit: (v: { role: StaffRole; code: string; name: string; secret: string }) => Promise<void>;
     onsuperadmin: () => void;
     onback: () => void;
+    /** Download-Karte „App für diesen Laptop“ */
+    system?: System;
+    downloads?: Downloads;
   }
 
-  let { role: role0 = "schiri", code: code0 = "", onsubmit, onsuperadmin, onback }: Props = $props();
+  let { role: role0 = "schiri", code: code0 = "", onsubmit, onsuperadmin, onback, system = "andere", downloads = {} }: Props = $props();
   // svelte-ignore state_referenced_locally
   let role = $state<StaffRole>(role0);
   // svelte-ignore state_referenced_locally
@@ -68,6 +73,7 @@
     <div class="super">
       <Button variant="ghost" type="button" onclick={onsuperadmin}>{T.staffLogin.superAdmin}</Button>
     </div>
+    <DownloadKarte {system} {downloads} kompakt />
   </form>
 </main>
 

@@ -390,6 +390,7 @@ deren Kontaktseite ([Region Linz](https://kinderfreunde.at/ueber-uns/kontakt/obe
 für die Region steht auf der Kontaktseite keine eigene. Der Verein bestätigt das bei der Abnahme. **F1** bleibt wie vorgeschlagen bei den PNG-Logos; öffentlich gibt es keine passenden Vektor-Dateien.
 
 ### E-44 Android-App von der Startseite
+> **Erweitert durch E-58** (Download-Knopf für alle Systeme, `downloads.json` statt HEAD-Anfrage).
 **Entscheidung:** Liegt `mister-x.apk` am Server (BETRIEB.md Schritt 9), zeigt die Startseite im Android-Browser
 „Android-App installieren“. Ob die Datei da ist, prüft die Seite mit einer HEAD-Anfrage (fehlt sie, liefert der Server
 die App-Seite als HTML – dann kein Knopf). Der Flyer erklärt beide Wege.
@@ -557,3 +558,18 @@ Firebase-Prototyp (`legacy/`, `.firebaserc`) ist entfernt und nur noch im Git-Ve
 Promo-Material ist in `videos/`, `bilder/` und `quellen/` sortiert; die README beschreibt die App statt des Umbaus.
 Sicherung des Stands davor: Branch `sicherung-vor-aufraeumen`.
 **Warum so:** Im Hauptordner lag Planungsmaterial zwischen dem Code, und die README erklärte einen Umbau, der fertig ist.
+
+### E-58 Desktop-App mit Tauri, Download-Knopf passend zum Gerät
+**Entscheidung:** Für Organisator, Spielleitung und Großbild am Laptop gibt es eine Desktop-App mit **Tauri 2**
+(zuerst Windows als NSIS-Setup `.exe`, danach macOS `.dmg` und Linux `.deb`). Die App ist eine schlanke Hülle, die
+die **Live-Web-App vom Server lädt** – anders als die APK (E-31). Die Startseite und die Logins am Laptop zeigen einen
+Download-Knopf für das erkannte System (`shared/src/geraet.ts`); welche Dateien am Server liegen, steht in
+`/downloads.json`, die beim Bauen aus `app/public` entsteht. Das ersetzt die HEAD-Prüfung aus E-44. Details und
+Phasen: `docs/DESKTOP-APP.md`.
+**Warum so:** Tauri-Installer sind wenige MB groß und passen unter die 25-MiB-Grenze für Dateien am Worker – so kommt
+die App wie die APK ohne GitHub-Konto von der eigenen Adresse (Electron: 80–150 MB). Live laden heißt: gleiche
+Adresse wie die Website (keine CORS-Erweiterung, Einladungslinks stimmen) und kein Versionsversatz, obwohl die
+Desktop-Builds wegen der teuren macOS-Minuten nur bei Versions-Tags laufen. E-31 verwarf das Fernladen nur für
+Capacitor und die Hintergrund-Drosselung von Android; ein Live-Spiel braucht ohnehin Netz.
+**Verworfen:** Electron (zu groß für den Worker), nur PWA-Installation (keine `.exe`, kaum Zugriff auf Monitore und
+Benachrichtigungen), MSI (lehnt die Version `2.0.0-beta.1` ab), AppImage (≈ 80 MB).

@@ -6,17 +6,14 @@
   import { remote } from "../lib/remote.svelte.ts";
   import { call } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
-  import { NATIVE } from "../lib/native.ts";
+  import type { Downloads } from "@mrx/shared";
+  import { ladeDownloads, meinSystem } from "../lib/downloads.ts";
 
   let { gameId }: { gameId?: string | undefined } = $props();
 
-  // Android im Browser: liegt die App am Server (docs/BETRIEB.md Schritt 9)? Fehlt sie, kommt die App-Seite (HTML) zurück.
-  const APK = `${import.meta.env.BASE_URL}mister-x.apk`;
-  let apk = $state<string | null>(null);
-  if (!NATIVE && /Android/i.test(navigator.userAgent))
-    void fetch(APK, { method: "HEAD" })
-      .then((r) => (apk = r.ok && !r.headers.get("content-type")?.includes("html") ? APK : null))
-      .catch(() => {});
+  // App zum Herunterladen (docs/DESKTOP-APP.md): /downloads.json sagt, was am Server liegt
+  let downloads = $state<Downloads>({});
+  void ladeDownloads().then((d) => (downloads = d));
 
   $effect(() => {
     if (session.ready && session.gameId) go("/spiel");
@@ -32,7 +29,8 @@
   <ErrorStates variant="nichtGefunden" onaction={() => go("/beitreten")} />
 {:else}
   <Start
-    {apk}
+    system={meinSystem()}
+    {downloads}
     game={info.value?.name}
     links={{ join: gameId ? `/beitreten/${gameId}` : "/beitreten", schiri: `/staff/schiri${q}`, admin: `/staff/admin${q}`, help: "/hilfe" }}
   />

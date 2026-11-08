@@ -28,6 +28,14 @@
   import SuperAdmin from "../screens/SuperAdmin.svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
 
+  // Beispiel-Dateien für die Varianten „Android“, „Windows“, „Mac“ der Startseite
+  const APPS = {
+    android: { datei: "mister-x.apk", groesse: 8_123_456 },
+    windows: { datei: "download/Mister-X-Setup.exe", groesse: 6_400_000 },
+    mac: { datei: "download/Mister-X.dmg", groesse: 9_800_000 },
+    linux: { datei: "download/mister-x.deb", groesse: 5_200_000 },
+  };
+
   let { n }: { n: number } = $props();
   const q = query();
   const def = $derived(SCREENS.find((s) => s.n === n) ?? SCREENS[0]!);
@@ -43,7 +51,8 @@
 
 {#if n === 1}<Start
     game={v === "spiel" ? "Mister X Linz 2027" : undefined}
-    apk={v === "android" ? "/mister-x.apk" : null}
+    system={v === "android" || v === "windows" || v === "mac" ? v : "andere"}
+    downloads={APPS}
     links={{
       join: v === "spiel" ? "/prototyp/2?v=spiel" : "/prototyp/2",
       schiri: "/prototyp/3?v=schiri",
