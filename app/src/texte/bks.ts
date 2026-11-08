@@ -33,6 +33,15 @@ export default {
     hilfe: "Pomoć",
     androidApp: "Instaliraj Android aplikaciju",
     androidHinweis: "Preporučeno: šalje lokaciju i kad je ekran zaključan",
+    windowsApp: "Preuzmi Windows aplikaciju",
+    windowsHinweis: "Otvorite instalaciju. Ako Windows javi da je zaštitio računar: odaberite „Više informacija“, pa „Ipak pokreni“.",
+    macApp: "Preuzmi Mac aplikaciju",
+    macHinweis:
+      "Povucite je iz .dmg datoteke u Aplikacije. Ako je macOS ne otvara: Postavke sustava › Privatnost i sigurnost › „Ipak otvori“.",
+    linuxApp: "Preuzmi Linux aplikaciju",
+    linuxHinweis: "Otvorite .deb datoteku programom za instalaciju paketa.",
+    andereSysteme: "Drugi sistemi",
+    systemName: { android: "Android", windows: "Windows", mac: "macOS", linux: "Linux" },
   },
   beitritt: {
     titel: "Pridruži se timu",

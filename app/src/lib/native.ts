@@ -12,6 +12,11 @@ import { tokens } from "./tokens.ts";
 import { pushTitel } from "./sprache.ts";
 
 export const NATIVE = Capacitor.isNativePlatform();
+/** Läuft in der Desktop-Hülle (Tauri). Die Hülle setzt `__MRX_DESKTOP__` (= ihre Version) per Initialisierungsskript auf
+ *  der Server-Seite (app/src-tauri/src/lib.rs) – ob Tauri `__TAURI_INTERNALS__` auch in entfernte Seiten einspielt, ist nicht belegt */
+export const DESKTOP = typeof window !== "undefined" && ("__MRX_DESKTOP__" in window || "__TAURI_INTERNALS__" in window);
+/** Schon als App installiert (Android oder Desktop) → kein Download-Knopf */
+export const INSTALLIERT = NATIVE || DESKTOP;
 
 const BG = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
 const Akku = registerPlugin<{ status(): Promise<{ ignoring: boolean }>; request(): Promise<void> }>("Akku");

@@ -6,7 +6,12 @@
   import { ApiError, call } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
+  import type { Downloads } from "@mrx/shared";
+  import { ladeDownloads, meinSystem } from "../lib/downloads.ts";
   import { T } from "../texte.ts";
+
+  let downloads = $state<Downloads>({});
+  void ladeDownloads().then((d) => (downloads = d));
 
   let list = $state<GameListEntry[]>([]);
   async function load() {
@@ -39,6 +44,8 @@
 </script>
 
 <SuperAdmin
+  system={meinSystem()}
+  {downloads}
   allowed={session.superAdmin}
   {games}
   onlogin={superLogin}

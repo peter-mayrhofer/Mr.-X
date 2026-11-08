@@ -138,6 +138,30 @@ GitHub-Release) nach `app\public\mister-x.apk` kopieren und `npm run deploy` aus
 die Startseite zeigt am Android-Handy den Knopf **„Android-App installieren“** – die Teams kommen also einfach über
 den QR-Code vom Flyer zur App.
 
+## 9b. Desktop-App verteilen (Windows · macOS · Linux)
+
+Für Laptops gibt es die Desktop-App ([`DESKTOP-APP.md`](DESKTOP-APP.md)): eine kleine Hülle, die die Web-App vom
+Server lädt. Sie enthält wie die Android-App die Adresse des Servers fest (Standard
+`https://mister-x.mr-x-ooe.workers.dev`; bei anderer Subdomain die Repository-Variable `MRX_API_URL` setzen, siehe
+Abschnitt 9).
+
+1. **Neue Version = Tag `v…`** (z. B. `git tag v2.0.0` und `git push origin v2.0.0`). GitHub baut dann die APK
+   (Workflow „Android-APK“) und die Desktop-Dateien (Workflow „Desktop-App“) und hängt alles ans Release:
+   `Mister-X-Setup.exe` (Windows), `Mister-X.dmg` (macOS), `mister-x.deb` (Linux). Handstart: **Actions → Desktop-App →
+   Run workflow** (erst möglich, wenn der Workflow auf dem Standard-Branch liegt).
+2. **Der nächste Deploy** (Abschnitt 10) holt die Desktop-Dateien des letzten Releases selbst nach `download/` auf den
+   Server. Gibt es noch kein Release, läuft der Deploy trotzdem durch. Ein Deploy ohne neues Release behält also die
+   zuletzt veröffentlichten Dateien; eine neue Desktop-Version erscheint erst mit dem Deploy nach dem Tag.
+3. **`/downloads.json`** entsteht beim Bauen aus den Dateien, die am Server liegen; die Startseite zeigt den Knopf nur
+   für Systeme, deren Datei vorhanden ist. Datei zu groß (über 25 MiB) → Warnung im Workflow, der Server liefert sie nicht
+   aus ([`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md)).
+4. **Warnhinweise beim ersten Start** (die Apps sind nicht signiert): Windows-SmartScreen → **Weitere Informationen →
+   Trotzdem ausführen**; macOS → Systemeinstellungen › Datenschutz & Sicherheit › **Dennoch öffnen**.
+5. **Kosten:** das Repository ist privat, Actions-Minuten sind begrenzt (Windows zählt 2-fach, macOS 10-fach, Linux
+   1-fach). Darum bauen nur Tags und Handstarts alle drei Systeme; bei Änderungen an `app/src-tauri` prüft GitHub nur
+   Windows. Ein Tag kostet grob 200 abgerechnete Minuten (macOS allein 150–200) von 2000 Freiminuten im Monat – Tags
+   also sparsam setzen.
+
 ## 10. Neue Version veröffentlichen
 
 ### Automatisch (empfohlen)

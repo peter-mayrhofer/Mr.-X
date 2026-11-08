@@ -26,3 +26,6 @@ export function dauer(ms: number) {
 export const km = (m: number) => `${(m / 1000).toLocaleString("de-AT", { maximumFractionDigits: 1 })} km`;
 
 export const meter = (m: number) => (m < 1000 ? `${Math.round(m / 5) * 5} m` : km(m));
+
+/** Dateigröße in MB, in der Sprache der Oberfläche (z. B. „8,1 MB“) */
+export const mb = (bytes: number, sprache = "de-AT") => `${(bytes / 1e6).toLocaleString(sprache, { maximumFractionDigits: 1 })} MB`;

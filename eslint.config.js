@@ -6,7 +6,18 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig(
-  { ignores: ["**/dist/", "claude-mods/", "docs/", "**/node_modules/", "app/android/", "**/.wrangler/"] },
+  {
+    ignores: [
+      "**/dist/",
+      "claude-mods/",
+      "docs/",
+      "**/node_modules/",
+      "app/android/",
+      "app/src-tauri/target/",
+      "app/src-tauri/gen/",
+      "**/.wrangler/",
+    ],
+  },
   js.configs.recommended,
   ts.configs.recommended,
   svelte.configs.recommended,

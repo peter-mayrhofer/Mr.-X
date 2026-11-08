@@ -42,6 +42,16 @@ export const T = {
     hilfe: "Hilfe",
     androidApp: "Android-App installieren",
     androidHinweis: "Empfohlen: sendet den Standort auch bei gesperrtem Bildschirm",
+    windowsApp: "Windows-App herunterladen",
+    windowsHinweis:
+      "Installer öffnen. Meldet Windows „Der Computer wurde geschützt“: „Weitere Informationen“ und „Trotzdem ausführen“ wählen.",
+    macApp: "Mac-App herunterladen",
+    macHinweis:
+      "Aus der .dmg in „Programme“ ziehen. Lässt macOS sie nicht öffnen: Systemeinstellungen › Datenschutz & Sicherheit › „Dennoch öffnen“.",
+    linuxApp: "Linux-App herunterladen",
+    linuxHinweis: "Die .deb-Datei mit der Paketinstallation öffnen.",
+    andereSysteme: "Andere Systeme",
+    systemName: { android: "Android", windows: "Windows", mac: "macOS", linux: "Linux" },
   },
 
   beitritt: {

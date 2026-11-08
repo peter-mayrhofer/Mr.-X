@@ -7,4 +7,7 @@ app/public/
 app/android/
 **/.wrangler/
 promo/
+app/src-tauri/target/
+app/src-tauri/gen/
+app/src-tauri/icons/
 claude-mods/
