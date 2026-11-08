@@ -9,13 +9,22 @@
   import { appVeraltet } from "@mrx/shared";
   import Banner from "../../ui/Banner.svelte";
   import { NATIVE, serverBuild } from "../../lib/native.ts";
+  import { neueDesktopVersion } from "../../lib/downloads.ts";
+  import { imBrowserOeffnen } from "../../lib/desktop.ts";
   import { API_URL } from "../../lib/server.ts";
   import { T } from "../../texte.ts";
 
+  /** Prototyp/Galerie: den Desktop-Hinweis fest zeigen */
+  let { vorschau = false }: { vorschau?: boolean } = $props();
   let neu = $state(false);
   let spaeter = $state(false);
+  // Desktop-App (docs/DESKTOP-APP.md): Adresse des neuen Installers, wenn der Server eine andere Hüllen-Version hat
+  // svelte-ignore state_referenced_locally
+  let installer = $state<string | null>(vorschau ? "/download/Mister-X-Setup.exe" : null);
 
   onMount(() => {
+    if (vorschau) return;
+    void neueDesktopVersion().then((u) => (installer = u));
     if (!NATIVE) return;
     const check = async () => {
       neu = appVeraltet(__BUILD__, await serverBuild());
@@ -28,13 +37,17 @@
   });
 </script>
 
-{#if neu && !spaeter}
+{#if (neu || installer) && !spaeter}
   <div class="upd">
-    <Banner tone="info" icon={Download} title={T.update.titel} live>
-      {T.update.text}
+    <Banner tone="info" icon={Download} title={installer ? T.update.desktopTitel : T.update.titel} live>
+      {installer ? T.update.desktopText : T.update.text}
       {#snippet action()}
         <div class="btns">
-          <a class="go" href={`${API_URL}/mister-x.apk`}>{T.update.installieren}</a>
+          {#if installer}
+            <button type="button" class="go" onclick={() => void imBrowserOeffnen(installer!)}>{T.update.desktopLaden}</button>
+          {:else}
+            <a class="go" href={`${API_URL}/mister-x.apk`}>{T.update.installieren}</a>
+          {/if}
           <button type="button" class="later" onclick={() => (spaeter = true)}>{T.update.spaeter}</button>
         </div>
       {/snippet}
@@ -77,6 +90,8 @@
   .go {
     background: var(--accent);
     color: #fff;
+    border: 0;
+    cursor: pointer;
   }
   .later {
     background: transparent;

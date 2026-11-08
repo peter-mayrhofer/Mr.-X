@@ -32,10 +32,14 @@
     joinUrl: string;
     screenUrl: (key: string) => string;
     variant?: string;
+    /** nur Desktop-App: Großbild im Vollbild auf dem Beamer öffnen */
+    onbeamer?: () => void;
   }
-  let { view, api, joinUrl, screenUrl, variant = "teams" }: Props = $props();
+  let { view, api, joinUrl, screenUrl, variant = "teams", onbeamer }: Props = $props();
   // svelte-ignore state_referenced_locally
-  let tab = $state(variant === "schiris" || variant === "zugaenge" || variant === "tracker" ? variant : "teams");
+  let tab = $state(
+    variant === "schiris" || variant === "zugaenge" || variant === "tracker" ? variant : variant === "beamer" ? "zugaenge" : "teams",
+  );
   let action = $state<string | null>(null);
   let rename = $state<{ id: string; name: string } | null>(null);
   let kick = $state<{ kind: "team" | "member"; id: string; name: string } | null>(null);
@@ -173,6 +177,7 @@
         await api({ action: "setSecret", gameId: g, kind, value });
       }}
       onreset={() => run(() => api({ action: "resetRound", gameId: g }), T.admin.neueRundeOk)}
+      {onbeamer}
     />
   {/if}
 </div>

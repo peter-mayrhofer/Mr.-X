@@ -573,3 +573,31 @@ Desktop-Builds wegen der teuren macOS-Minuten nur bei Versions-Tags laufen. E-31
 Capacitor und die Hintergrund-Drosselung von Android; ein Live-Spiel braucht ohnehin Netz.
 **Verworfen:** Electron (zu groß für den Worker), nur PWA-Installation (keine `.exe`, kaum Zugriff auf Monitore und
 Benachrichtigungen), MSI (lehnt die Version `2.0.0-beta.1` ab), AppImage (≈ 80 MB).
+
+### E-59 Desktop-App: Großbild auf dem Beamer, Benachrichtigungen, Versionshinweis
+**Entscheidung:** Nur in der Desktop-App (E-58) gibt es drei Zusatzfunktionen. Die Webseite ruft sie über zwei eigene
+Befehle der Hülle auf, freigegeben nur für die eigene Server-Adresse (`app/src-tauri/capabilities/server.json`).
+- **Großbild auf Beamer öffnen** (Zugänge → „Großbild-Link“): `grossbild_oeffnen` öffnet `#/grossbild` in einem eigenen
+  Fenster im Vollbild auf dem größten Bildschirm, auf dem das Hauptfenster nicht liegt; das Fenster übernimmt die
+  Sitzung über `localStorage`. Nur Adressen des eigenen Servers sind erlaubt.
+- **Benachrichtigungen für die Spielleitung** (bisher ohne Push, E-34): `melden` zeigt eine Windows-/macOS-Meldung und
+  lässt die Taskleiste blinken – bei neuer Team-Nachricht, neuen Warnungen (inkl. gemeldeter Übergaben, E-54) und
+  Notfällen, nur wenn die App nicht im Vordergrund ist. Ausgelöst von denselben Zählern wie die Töne, daher keine
+  Doppelungen nach dem Neuverbinden.
+- **Hinweis „Neue Version der Mister-X-App“:** Der Deploy schreibt den Release-Tag als `desktopVersion` in
+  `downloads.json`; weicht er von der Version der Hülle ab, bietet die App den Installer an (öffnet im Browser).
+**Warum so:** Am Laptop läuft die App oft neben anderen Fenstern – Meldungen und das Blinken holen die Spielleitung
+zurück; das Großbild landet ohne Ziehen und F11 auf dem Beamer. Eigene, eng begrenzte Befehle statt allgemeiner
+Fenster- oder Dateirechte für die Webseite.
+**Verworfen:** eigener „Speichern unter“-Dialog für Exporte (WebView2 speichert Downloads selbst; ein Dialog bräuchte
+Dateisystem-Rechte für die Webseite), automatisches Selbst-Update (signierter Updater – erst, wenn das Drüber-
+Installieren lästig wird).
+
+### E-60 Spielfeld-Vorlagen Linz, Steyr und Wels
+**Entscheidung:** Beim Anlegen eines Spiels und im Zonen-Editor sind „Linz Innenstadt“ (`linz`), „Steyr“ (`steyr`)
+und „Wels“ (`wels`) wählbar, dazu „leer“. Steyr und Wels sind Exporte des Zonen-Editors, fest im Code
+(`shared/src/vorlagen/`, nicht von Hand bearbeiten). Eine Liste `VORLAGEN` (`shared/src/vorlagen/index.ts`) dient
+Server, Verwaltung und Editor; die GeoJSON-Umwandlung (`fieldFromGeoJson`, `shared/src/feld.ts`) nutzen Editor-Import
+und Vorlagen gemeinsam. Der Server lehnt unbekannte Vorlagen ab (bisher: still leeres Feld).
+**Warum so:** Die Roten Falken spielen nicht nur in Linz; eine weitere Stadt braucht nur eine Datei und einen
+Listeneintrag. Die Kennung `linz` bleibt, damit bestehende Spiele und Tests unverändert funktionieren.

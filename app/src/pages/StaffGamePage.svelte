@@ -29,7 +29,11 @@
   import { go, query, router } from "../lib/router.svelte.ts";
   import type { StaffView } from "../lib/staff.ts";
   import { toast } from "../ui/toast.svelte.ts";
+  import { DESKTOP } from "../lib/native.ts";
+  import { grossbildOeffnen, meldenImHintergrund } from "../lib/desktop.ts";
   import { T } from "../texte.ts";
+
+  const M = T.melden;
 
   interface Props {
     g: string;
@@ -69,7 +73,15 @@
   );
   let lastUnread = 0;
   $effect(() => {
-    if (unread > lastUnread) signal("nachricht");
+    if (unread > lastUnread) {
+      signal("nachricht");
+      // Desktop-App: Benachrichtigung mit der neuesten ungelesenen Nachricht (nur wenn das Fenster hinten liegt)
+      const neu = Object.values(game.dmAll)
+        .flat()
+        .filter((m) => m.teamId && m.t > opened)
+        .sort((a, b) => b.t - a.t)[0];
+      if (isAdmin && neu) meldenImHintergrund(M.nachrichtTitel, M.nachricht(game.teams[neu.teamId!]?.name ?? neu.name, neu.text));
+    }
     lastUnread = unread;
   });
 
@@ -83,7 +95,10 @@
     for (const a of open)
       if (!alarmed.has(a.id)) {
         alarmed.add(a.id);
-        if (alertsReady) signal("warnung");
+        if (alertsReady) {
+          signal("warnung");
+          if (isAdmin) meldenImHintergrund(M.notfallTitel, M.notfall(game.teams[a.teamId]?.name ?? "?"));
+        }
       }
     alertsReady = true;
   });
@@ -134,18 +149,22 @@
   $effect(() => {
     if (!isAdmin || !view) return;
     const list = warnungen(view, clock.now);
-    let fresh = 0;
+    const fresh: string[] = [];
     for (const w of list)
       if (!warned.has(w.key)) {
         warned.add(w.key);
         if (warnReady) {
           toast(w.text, "warn");
-          fresh++;
+          fresh.push(w.text);
         }
       }
     // erledigte Warnungen dürfen später wieder melden
     for (const k of [...warned]) if (!list.some((w) => w.key === k)) warned.delete(k);
-    if (fresh) signal("warnung");
+    if (fresh.length) {
+      signal("warnung");
+      // Desktop-App: auch gemeldete Übergaben zur Prüfung (E-54) sind Warnungen
+      meldenImHintergrund(M.warnungTitel, fresh.length === 1 ? fresh[0]! : M.warnungen(fresh.length));
+    }
     warnReady = true;
   });
 
@@ -162,6 +181,12 @@
     id === "grossbild" ? "/grossbild" : id === "archiv" ? "/archiv" : SECTIONS.includes(id) ? `/spiel?b=${id}` : null;
   // Links für QR-Codes: immer die öffentliche Adresse (in der Android-App ist location „localhost“)
   const base = API_URL ? `${API_URL}/` : `${location.origin}${location.pathname}`;
+
+  // Desktop-App: Großbild in eigenem Vollbild-Fenster (zweiter Bildschirm); es teilt die Sitzung (localStorage) mit diesem Fenster
+  async function beamer() {
+    const ort = await grossbildOeffnen(`${base}#/grossbild`);
+    toast(ort === "beamer" ? T.grossbild.beamerOk : ort ? T.grossbild.beamerGleich : T.grossbild.beamerFehler, ort ? "ok" : "warn");
+  }
 
   async function send(text: string, ch: "alle" | "dm", teamId?: string) {
     try {
@@ -210,7 +235,13 @@
     {:else if section === "steuerung"}
       <AdminControl {view} api={call} onstarted={() => go("/spiel?b=live")} onstopped={() => go("/spiel?b=live")} />
     {:else if section === "teams"}
-      <AdminTeams {view} api={call} joinUrl="{base}#/s/{g}" screenUrl={(k) => `${base}#/g/${g}?k=${k}`} />
+      <AdminTeams
+        {view}
+        api={call}
+        joinUrl="{base}#/s/{g}"
+        screenUrl={(k) => `${base}#/g/${g}?k=${k}`}
+        onbeamer={DESKTOP ? beamer : undefined}
+      />
     {:else if section === "zonen"}
       <ZoneEditor
         initial={view.field}

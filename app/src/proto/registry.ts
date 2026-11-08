@@ -22,6 +22,7 @@ export const SCREENS: ScreenDef[] = [
       { id: "android", label: "Android-Browser" },
       { id: "windows", label: "Windows-Browser" },
       { id: "mac", label: "Mac-Browser" },
+      { id: "desktop-update", label: "Desktop-App: neue Version" },
     ],
   },
   {
@@ -161,6 +162,7 @@ export const SCREENS: ScreenDef[] = [
       { id: "schiris", label: "Schiris" },
       { id: "zugaenge", label: "Zugänge" },
       { id: "tracker", label: "Tracker" },
+      { id: "beamer", label: "Zugänge (Desktop-App)" },
     ],
   },
   {

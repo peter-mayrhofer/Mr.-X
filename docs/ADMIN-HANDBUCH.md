@@ -26,7 +26,8 @@ ersetzen. Alle Bilder: [`docs/screens/`](screens/) (hell, dunkel und Sonnen-Modu
 
 1. `https://mister-x.mr-x-ooe.workers.dev/#/verwaltung` öffnen und mit dem **Organisator-Passwort** anmelden.
 2. **Neues Spiel** → Name (z. B. „Mister X Linz 2027“), Spiel-Code (wird vorgeschlagen, z. B. `linz-2027`),
-   Vorlage **Linz Innenstadt**, **Admin-Passwort** für die Spielleitung (mindestens 8 Zeichen) → **Anlegen**.
+   Vorlage **Linz Innenstadt**, **Steyr**, **Wels** oder ein leeres Feld, **Admin-Passwort** für die Spielleitung
+   (mindestens 8 Zeichen) → **Anlegen**.
 3. Das Admin-Passwort an die Spielleitung weitergeben (nicht per Gruppenchat mit Kindern!).
 
 ![Spiele verwalten](screens/hell/21-laptop.jpg)
@@ -41,13 +42,21 @@ ersetzen. Alle Bilder: [`docs/screens/`](screens/) (hell, dunkel und Sonnen-Modu
 > **Tipp für den Laptop: die Mister-X-App.** Statt im Browser geht alles auch in der eigenen App (Windows, später
 > Mac und Linux). Unter dem Anmelde-Formular und in der Verwaltung steht dafür ein Download-Knopf, sobald die App am
 > Server liegt. Beim ersten Start warnt Windows: **Weitere Informationen → Trotzdem ausführen**. In der App schaltet
-> **F11** auf Vollbild (praktisch fürs Großbild am Beamer); Links zu anderen Seiten öffnen sich im normalen Browser.
-> Ohne Internet zeigt sie „Keine Verbindung“ und verbindet sich von selbst wieder.
+> **F11** auf Vollbild; Links zu anderen Seiten öffnen sich im normalen Browser. Ohne Internet zeigt sie „Keine
+> Verbindung“ und verbindet sich von selbst wieder. Nur in der App:
+> - **Großbild auf Beamer öffnen** (Teams & Zugänge → Zugänge → Karte „Großbild-Link“): öffnet das Großbild in einem
+>   eigenen Fenster im Vollbild auf dem zweiten Bildschirm. Gibt es keinen, im Vollbild auf diesem (F11 schaltet um).
+> - **Benachrichtigungen**, wenn die App nicht im Vordergrund ist: neue Nachricht eines Teams, neue Warnungen (auch
+>   gemeldete Übergaben zur Prüfung) und Notfälle; die Taskleiste blinkt.
+> - Gibt es eine neue Version, zeigt die App oben **„Neue Version der Mister-X-App“** – Installer laden und drüber
+>   installieren.
 
 ### 1.3 Spielfeld prüfen
 
 **Spielfeld** öffnen. Die Vorlage „Linz Innenstadt“ enthält das Spielfeld und die Sperrbereiche zum Verkleinern
-(Norden, Süden …). Du kannst
+(Norden, Süden …), die Vorlagen „Steyr“ und „Wels“ ebenso (Sperrbereiche „bereich-1“ usw. – am besten umbenennen).
+Jede Vorlage lässt sich hier auch nachladen; sie ersetzt Spielfeld und Sperrbereiche und gilt erst mit **Speichern**.
+Du kannst
 
 - Punkte der roten Grenze **ziehen** (verschieben) oder den kleinen Punkt zwischen zwei Punkten ziehen (einfügen),
 - **Sperrbereiche** anlegen, umbenennen, einfärben und ihre **Reihenfolge** festlegen,

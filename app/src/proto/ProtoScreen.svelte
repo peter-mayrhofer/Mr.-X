@@ -14,6 +14,7 @@
   import { SCREENS } from "./registry.ts";
   import Segmented from "../ui/Segmented.svelte";
   import Start from "../screens/Start.svelte";
+  import UpdateBanner from "../screens/parts/UpdateBanner.svelte";
   import Join from "../screens/Join.svelte";
   import StaffLogin from "../screens/StaffLogin.svelte";
   import Onboarding from "../screens/Onboarding.svelte";
@@ -60,6 +61,7 @@
       help: "/prototyp/11",
     }}
   />
+  {#if v === "desktop-update"}<UpdateBanner vorschau />{/if}
 {:else if n === 2}<Join
     gameName={v === "spiel" ? "Mister X Linz 2027" : undefined}
     code="linz-2027"
