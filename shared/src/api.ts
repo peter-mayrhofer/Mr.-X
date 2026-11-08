@@ -3,10 +3,11 @@ import type { ChatMessage, Config, CutEvent, Field, Handover, Pause, Report, Rol
 import type { PositionIn } from "./protocol.ts";
 import type { Results } from "./spiel.ts";
 import type { PushKind } from "./push.ts";
+import type { VorlageId } from "./vorlagen/index.ts";
 
 export type JoinRole = Role;
 export type SecretKind = "teamPw" | "schiriCode" | "adminPw";
-export type Template = "linz" | "leer";
+export type Template = VorlageId | "leer";
 
 /** Browser-Push-Abo (PushSubscription.toJSON()) */
 export interface PushSub {

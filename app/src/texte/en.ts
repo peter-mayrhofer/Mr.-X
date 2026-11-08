@@ -7,6 +7,9 @@ export default {
     text: "Please install the new app – otherwise you'll miss new features.",
     installieren: "Install now",
     spaeter: "Later",
+    desktopTitel: "New version of the Mister X app",
+    desktopText: "Please download and run the new installer – otherwise you'll miss new features.",
+    desktopLaden: "Download installer",
   },
   app: { claim: "The live street game in the city centre" },
   allgemein: {

@@ -11,7 +11,7 @@
 
 <script lang="ts">
   import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, LogOut, Plus, Trash } from "@lucide/svelte";
-  import { GAME_ID, LIMITS, type Downloads, type System, type Template } from "@mrx/shared";
+  import { GAME_ID, LIMITS, VORLAGEN, type Downloads, type System, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
   import Card from "../ui/Card.svelte";
@@ -253,7 +253,7 @@
       label={T.superadmin.vorlage}
       bind:value={tpl}
       options={[
-        { value: "linz", label: "Linz Innenstadt" },
+        ...Object.entries(VORLAGEN).map(([value, v]) => ({ value: value as Template, label: v.label })),
         { value: "leer", label: T.verwaltung.leeresFeld },
       ]}
     />

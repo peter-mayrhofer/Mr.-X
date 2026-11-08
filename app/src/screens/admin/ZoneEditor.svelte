@@ -19,7 +19,7 @@
     Utensils,
     MapPinCheck,
   } from "@lucide/svelte";
-  import { fieldProblems, LINZ_INNENSTADT, type Field, type LngLat, type Polygon } from "@mrx/shared";
+  import { fieldFromGeoJson, fieldProblems, VORLAGEN, type Field, type LngLat, type Polygon, type VorlageId } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import Button from "../../ui/Button.svelte";
   import Banner from "../../ui/Banner.svelte";
@@ -128,9 +128,9 @@
     preview = preview.filter((x) => x !== sel);
     sel = "base";
   }
-  function loadTemplate() {
+  function loadTemplate(id: VorlageId) {
     snapshot();
-    field = structuredClone(LINZ_INNENSTADT);
+    field = structuredClone(VORLAGEN[id].field);
     sel = "base";
     toast(T.zonen.vorlageGeladen, "ok");
   }
@@ -244,31 +244,10 @@
   async function importGeo(f: File | undefined) {
     if (!f) return;
     try {
-      type Feat = { properties?: Record<string, unknown>; geometry?: { type: string; coordinates: LngLat[][] } };
-      const fc = JSON.parse(await f.text()) as { features?: Feat[] };
-      const polys = (fc.features ?? []).filter((x) => x.geometry?.type === "Polygon");
-      const base = polys.find((x) => x.properties?.rolle === "spielfeld") ?? polys[0];
-      if (!base?.geometry) throw new Error("kein Polygon");
+      const imp = fieldFromGeoJson(JSON.parse(await f.text()));
       snapshot();
-      field.base = base.geometry.coordinates[0]!;
-      field.cuts = Object.fromEntries(
-        polys
-          .filter((x) => x !== base)
-          .map((x, i) => {
-            const p = x.properties ?? {};
-            const name = String(p.name ?? `Bereich ${i + 1}`);
-            return [
-              String(p.id ?? `bereich-${i + 1}`),
-              {
-                name,
-                short: String(p.kurz ?? name),
-                color: String(p.farbe ?? "#e84393"),
-                order: Number(p.reihenfolge ?? i + 1),
-                poly: x.geometry!.coordinates[0]!,
-              },
-            ];
-          }),
-      );
+      field.base = imp.base;
+      field.cuts = imp.cuts;
       sel = "base";
       toast(T.zonen.importiert, "ok");
     } catch {
@@ -348,8 +327,11 @@
       <Banner tone="info">{T.zonen.nochKeinFeld}</Banner>
       <div class="row">
         <Button size="m" icon={Plus} disabled={readonly} onclick={newBase}>{T.zonen.feldAnlegen}</Button>
-        <Button variant="secondary" size="m" icon={LayoutTemplate} disabled={readonly} onclick={loadTemplate}>{T.zonen.vorlageLaden}</Button
-        >
+        {#each Object.entries(VORLAGEN) as [id, v] (id)}
+          <Button variant="secondary" size="m" icon={LayoutTemplate} disabled={readonly} onclick={() => loadTemplate(id as VorlageId)}
+            >{T.zonen.vorlageLaden(v.label)}</Button
+          >
+        {/each}
       </div>
     {/if}
 
@@ -474,7 +456,11 @@
     </div>
     {#if !readonly}
       {#if field.base.length}
-        <Button variant="ghost" size="m" icon={LayoutTemplate} onclick={loadTemplate}>{T.zonen.vorlageLaden}</Button>
+        {#each Object.entries(VORLAGEN) as [id, v] (id)}
+          <Button variant="ghost" size="m" icon={LayoutTemplate} onclick={() => loadTemplate(id as VorlageId)}
+            >{T.zonen.vorlageLaden(v.label)}</Button
+          >
+        {/each}
       {/if}
       <Button block icon={Save} loading={saving} disabled={problems.length > 0 || !dirty || saving} onclick={save}
         >{dirty ? T.allgemein.speichern : T.zonen.allesGespeichert}</Button

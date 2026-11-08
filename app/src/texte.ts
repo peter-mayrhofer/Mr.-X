@@ -8,6 +8,9 @@ export const T = {
     text: "Bitte installiert die neue App – sonst fehlen euch neue Funktionen.",
     installieren: "Jetzt installieren",
     spaeter: "Später",
+    desktopTitel: "Neue Version der Mister-X-App",
+    desktopText: "Bitte ladet den neuen Installer und installiert ihn – sonst fehlen euch neue Funktionen.",
+    desktopLaden: "Installer laden",
   },
 
   app: {
@@ -717,7 +720,7 @@ export const T = {
     feldName: "Name des Spielfelds",
     nochKeinFeld: "Noch kein Spielfeld. Ein Quadrat anlegen und die Ecken an die Grenzstraßen ziehen – oder die Vorlage laden.",
     feldAnlegen: "Spielfeld anlegen",
-    vorlageLaden: "Vorlage „Linz Innenstadt“ laden",
+    vorlageLaden: (name: string) => `Vorlage „${name}“ laden`,
     vorlageGeladen: "Vorlage geladen – zum Übernehmen speichern",
     gespeichert: "Spielfeld gespeichert",
     allesGespeichert: "Alles gespeichert",
@@ -748,6 +751,21 @@ export const T = {
     hinweis: "Zeigt das Spiel groß für Laptop oder Beamer in der Zentrale – mit allen Positionen. Dieses Gerät bleibt dabei Spielleitung.",
     zurueck: "Zurück zur Spielleitung",
     ausblenden: "Ausblenden",
+    /** nur in der Desktop-App: eigenes Vollbild-Fenster auf dem Beamer */
+    beamer: "Großbild auf Beamer öffnen",
+    beamerOk: "Großbild auf dem zweiten Bildschirm geöffnet",
+    beamerGleich: "Kein zweiter Bildschirm gefunden – Großbild im Vollbild geöffnet (F11 schaltet um)",
+    beamerFehler: "Großbild konnte nicht geöffnet werden – bitte die neueste Mister-X-App installieren",
+  },
+
+  /** Desktop-App: Benachrichtigungen für die Spielleitung, wenn das Fenster nicht im Vordergrund ist */
+  melden: {
+    nachrichtTitel: "Neue Nachricht",
+    nachricht: (team: string, text: string) => `${team}: ${text.length > 80 ? `${text.slice(0, 79)}…` : text}`,
+    warnungTitel: "Warnung",
+    warnungen: (n: number) => `${n} neue Warnungen – bitte in der Live-Übersicht ansehen`,
+    notfallTitel: "Notfall",
+    notfall: (team: string) => `${team} hat einen Notfall gemeldet`,
   },
 
   ende: {

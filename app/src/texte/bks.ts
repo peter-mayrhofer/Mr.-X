@@ -8,6 +8,9 @@ export default {
     text: "Molimo instalirajte novu aplikaciju – inače vam nedostaju nove funkcije.",
     installieren: "Instaliraj sada",
     spaeter: "Kasnije",
+    desktopTitel: "Nova verzija aplikacije Mister X",
+    desktopText: "Molimo preuzmite novi instalacijski program i instalirajte ga – inače vam nedostaju nove funkcije.",
+    desktopLaden: "Preuzmi instalaciju",
   },
   app: { claim: "Igra uživo u centru grada" },
   allgemein: {
