@@ -1,8 +1,10 @@
 // Mister X – Desktop-Hülle (Tauri 2): ein Fenster, das die Live-Web-App vom Server lädt.
 // Zuerst die lokale Startseite (`start/`), die den Server prüft und dann weiterleitet (E-58, docs/DESKTOP-APP.md).
 use tauri::{
-    webview::NewWindowResponse, AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder,
+    webview::NewWindowResponse, AppHandle, Manager, Monitor, Url, UserAttentionType, WebviewUrl,
+    WebviewWindow, WebviewWindowBuilder,
 };
+use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_opener::OpenerExt;
 
 /// Server-Adresse, zur Compile-Zeit festgelegt: `MRX_SERVER_URL=https://… npm run desktop:build`
@@ -25,8 +27,11 @@ window.addEventListener("keydown", function (e) {
   e.preventDefault();
   var t = window.__TAURI_INTERNALS__;
   if (!t) return;
-  t.invoke("plugin:window|is_fullscreen", { label: "main" })
-    .then(function (an) { return t.invoke("plugin:window|set_fullscreen", { label: "main", value: !an }); })
+  // Label des eigenen Fensters („main“ oder „grossbild“)
+  var m = t.metadata && t.metadata.currentWindow;
+  var label = (m && m.label) || "main";
+  t.invoke("plugin:window|is_fullscreen", { label: label })
+    .then(function (an) { return t.invoke("plugin:window|set_fullscreen", { label: label, value: !an }); })
     .catch(function () {});
 }, true);
 "#;
@@ -55,6 +60,112 @@ fn extern_oeffnen(app: &AppHandle, url: &Url) {
     }
 }
 
+/// Initialisierungsskript: Serveradresse nur für die lokale Startseite, Desktop-Kennung nur für die Server-Seite
+/// (native.ts: DESKTOP). Läuft bei jeder Seite in jedem Fenster.
+fn init_skript(adresse: &str, version: &str) -> String {
+    format!(
+        "(function(){{var s={server};if(location.origin===new URL(s).origin){{window.__MRX_DESKTOP__={version};}}else{{window.__MRX_SERVER__=s;}}}})();",
+        server = serde_json::to_string(adresse).unwrap_or_default(),
+        version = serde_json::to_string(version).unwrap_or_default(),
+    )
+}
+
+/// Gemeinsamer Fensterbau für Hauptfenster und Großbild: gleiche Skripte, gleiche Navigationsregeln.
+/// Navigation nur auf die lokale Startseite und den Server; alles andere und alle neuen Fenster in den Browser.
+fn fenster_bauen<'a>(
+    app: &'a AppHandle,
+    label: &'a str,
+    url: WebviewUrl,
+    server: &Url,
+) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
+    let version = app.package_info().version.to_string();
+    let handle_nav = app.clone();
+    let handle_neu = app.clone();
+    let server_nav = server.clone();
+
+    WebviewWindowBuilder::new(app, label, url)
+        .initialization_script(init_skript(server_url(), &version))
+        .initialization_script(VOLLBILD_SKRIPT)
+        .initialization_script(LINK_SKRIPT)
+        .on_navigation(move |url| {
+            let lokal = matches!(
+                (url.scheme(), url.host_str()),
+                ("tauri", Some("localhost")) | ("http" | "https", Some("tauri.localhost"))
+            );
+            if lokal || url.as_str() == "about:blank" || url.origin() == server_nav.origin() {
+                return true;
+            }
+            extern_oeffnen(&handle_nav, url);
+            false
+        })
+        .on_new_window(move |url, _features| {
+            extern_oeffnen(&handle_neu, &url);
+            NewWindowResponse::Deny
+        })
+}
+
+/// Großbild: eigenes Fenster (Label `grossbild`) mit einer Seite der Server-Origin, im Vollbild auf einem anderen
+/// Bildschirm (Beamer) als das Hauptfenster. Rückgabe: "beamer" oder "gleicher-bildschirm".
+/// Muss `async` sein: ein Fenster aus einem synchronen Befehl zu bauen, blockiert unter Windows (Tauri-Doku).
+#[tauri::command]
+async fn grossbild_oeffnen(app: AppHandle, url: String) -> Result<&'static str, String> {
+    let ziel = Url::parse(&url).map_err(|e| format!("Ungültige Adresse: {e}"))?;
+    let server = Url::parse(server_url()).map_err(|e| e.to_string())?;
+    if ziel.origin() != server.origin() {
+        return Err("Adresse gehört nicht zum Mister-X-Server".into());
+    }
+
+    let fenster: WebviewWindow = match app.get_webview_window("grossbild") {
+        Some(w) => {
+            w.navigate(ziel).map_err(|e| e.to_string())?;
+            w
+        }
+        None => fenster_bauen(&app, "grossbild", WebviewUrl::External(ziel), &server)
+            .title("Mister X – Großbild")
+            .inner_size(1280.0, 720.0)
+            .center()
+            .build()
+            .map_err(|e| e.to_string())?,
+    };
+
+    // Bildschirm wählen: nicht der des Hauptfensters, bei mehreren der größte
+    let haupt = app.get_webview_window("main").and_then(|w| w.current_monitor().ok().flatten());
+    let gleich = |a: &Monitor, b: &Monitor| a.position() == b.position() && a.size() == b.size();
+    let beamer = app
+        .available_monitors()
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .filter(|m| haupt.as_ref().map_or(true, |h| !gleich(m, h)))
+        .max_by_key(|m| m.size().width as u64 * m.size().height as u64);
+
+    let _ = fenster.set_fullscreen(false); // aus dem Vollbild heraus wirkt set_position nicht
+    if let Some(m) = &beamer {
+        let _ = fenster.set_position(*m.position());
+    }
+    let _ = fenster.unminimize();
+    let _ = fenster.show();
+    let _ = fenster.set_fullscreen(true);
+    let _ = fenster.set_focus();
+    Ok(if beamer.is_some() { "beamer" } else { "gleicher-bildschirm" })
+}
+
+/// Native Benachrichtigung; ist das Hauptfenster nicht im Fokus, zusätzlich Taskleiste blinken bzw. Dock hüpfen.
+#[tauri::command]
+fn melden(app: AppHandle, titel: String, text: String) -> Result<(), String> {
+    app.notification()
+        .builder()
+        .title(titel)
+        .body(text)
+        .show()
+        .map_err(|e| e.to_string())?;
+    if let Some(w) = app.get_webview_window("main") {
+        if !w.is_focused().unwrap_or(true) {
+            let _ = w.request_user_attention(Some(UserAttentionType::Informational));
+        }
+    }
+    Ok(())
+}
+
 pub fn run() {
     let adresse = server_url();
     let server = Url::parse(adresse).expect("MRX_SERVER_URL ist keine gültige Adresse");
@@ -71,21 +182,19 @@ pub fn run() {
                 let _ = w.set_focus();
             }
         }));
-        builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+        // Das Großbild-Fenster soll Position/Größe/Vollbild nicht speichern
+        builder = builder.plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_denylist(&["grossbild"])
+                .build(),
+        );
     }
 
     builder
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
+        .invoke_handler(tauri::generate_handler![grossbild_oeffnen, melden])
         .setup(move |app| {
-            let version = app.package_info().version.to_string();
-            // Läuft bei jeder Seite im Hauptfenster: Serveradresse nur für die lokale Startseite,
-            // Desktop-Kennung nur für die Server-Seite (native.ts: DESKTOP)
-            let script = format!(
-                "(function(){{var s={server};if(location.origin===new URL(s).origin){{window.__MRX_DESKTOP__={version};}}else{{window.__MRX_SERVER__=s;}}}})();",
-                server = serde_json::to_string(adresse)?,
-                version = serde_json::to_string(&version)?,
-            );
-
             // Erster Start (noch kein gespeicherter Fensterzustand von window-state): maximiert öffnen.
             // Danach stellt window-state den letzten Zustand wieder her.
             let erster_start = app
@@ -94,36 +203,12 @@ pub fn run() {
                 .map(|d| !d.join(".window-state.json").exists())
                 .unwrap_or(true);
 
-            let handle_nav = app.handle().clone();
-            let handle_neu = app.handle().clone();
-            let server_nav = server.clone();
-
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+            fenster_bauen(app.handle(), "main", WebviewUrl::App("index.html".into()), &server)
                 .title("Mister X")
                 .inner_size(1280.0, 800.0)
                 .min_inner_size(900.0, 600.0)
                 .center()
                 .maximized(erster_start)
-                .initialization_script(script)
-                .initialization_script(VOLLBILD_SKRIPT)
-                .initialization_script(LINK_SKRIPT)
-                // Navigation nur auf die lokale Startseite und den Server; alles andere in den Browser
-                .on_navigation(move |url| {
-                    let lokal = matches!(
-                        (url.scheme(), url.host_str()),
-                        ("tauri", Some("localhost")) | ("http" | "https", Some("tauri.localhost"))
-                    );
-                    if lokal || url.as_str() == "about:blank" || url.origin() == server_nav.origin() {
-                        return true;
-                    }
-                    extern_oeffnen(&handle_nav, url);
-                    false
-                })
-                // Neue Fenster (target=_blank, window.open) nie in der App, sondern im Browser
-                .on_new_window(move |url, _features| {
-                    extern_oeffnen(&handle_neu, &url);
-                    NewWindowResponse::Deny
-                })
                 .build()?;
             Ok(())
         })

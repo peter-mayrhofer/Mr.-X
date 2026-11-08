@@ -15,3 +15,6 @@ export * from "./version.ts";
 export * from "./geraet.ts";
 export { M as MELDUNG, uhr } from "./meldungen.ts";
 export { LINZ_INNENSTADT } from "./vorlagen/linz.ts";
+export { STEYR } from "./vorlagen/steyr.ts";
+export { WELS } from "./vorlagen/wels.ts";
+export * from "./vorlagen/index.ts";

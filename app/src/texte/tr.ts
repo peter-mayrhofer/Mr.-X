@@ -7,6 +7,9 @@ export default {
     text: "Lütfen yeni uygulamayı yükleyin – yoksa yeni özellikler eksik kalır.",
     installieren: "Şimdi yükle",
     spaeter: "Sonra",
+    desktopTitel: "Mister X uygulamasının yeni sürümü",
+    desktopText: "Lütfen yeni yükleyiciyi indirip kurun – yoksa yeni özellikler eksik kalır.",
+    desktopLaden: "Yükleyiciyi indir",
   },
   app: { claim: "Şehir merkezinde canlı arazi oyunu" },
   allgemein: {

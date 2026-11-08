@@ -53,6 +53,7 @@
       {view}
       api={fakeApi}
       {variant}
+      onbeamer={variant === "beamer" ? () => toast(T.allgemein.prototyp(T.grossbild.beamer)) : undefined}
       joinUrl="https://mister-x.mr-x-ooe.workers.dev/#/s/linz-2027"
       screenUrl={(k) => `https://mister-x.mr-x-ooe.workers.dev/#/g/linz-2027?k=${k}`}
     />

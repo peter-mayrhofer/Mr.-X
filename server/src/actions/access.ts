@@ -2,16 +2,18 @@
 import {
   DEFAULT_CONFIG,
   LIMITS,
-  LINZ_INNENSTADT,
+  isVorlage,
   sameName,
   teamColor,
   teamShort,
+  VORLAGEN,
   type ApiResults,
   type Field,
   type GameInfo,
   type Member,
   type Role,
   type SecretKind,
+  type VorlageId,
 } from "@mrx/shared";
 import { hashKey, hashSecret, randomId, sameText, sign, verifySecret } from "../auth.ts";
 import { ensureSchema } from "../d1.ts";
@@ -39,6 +41,7 @@ export async function createGame(room: GameRoom, d: D, a: Auth): Promise<ApiResu
   const pw = typeof d.adminPassword === "string" ? d.adminPassword : "";
   if (pw.length < LIMITS.adminPw || pw.length > 64) fail("invalid", `Admin-Passwort: ${LIMITS.adminPw}–64 Zeichen`);
   if (room.d.info) fail("exists", "Diesen Spiel-Code gibt es schon");
+  if (d.template !== "leer" && !isVorlage(d.template)) fail("invalid", "Unbekannte Vorlage");
   const hash = await hashSecret(pw);
   if (room.d.info) fail("exists", "Diesen Spiel-Code gibt es schon");
   const now = Date.now();
@@ -47,7 +50,7 @@ export async function createGame(room: GameRoom, d: D, a: Auth): Promise<ApiResu
   room.set("gid", g);
   room.set("info", { name, phase: "vorbereitung", createdAt: now, spectators: DEFAULT_CONFIG.spectators } satisfies GameInfo);
   room.set("config", DEFAULT_CONFIG);
-  room.set("field", d.template === "linz" ? LINZ_INNENSTADT : EMPTY_FIELD);
+  room.set("field", d.template === "leer" ? EMPTY_FIELD : VORLAGEN[d.template as VorlageId].field);
   room.set("state", { phase: "vorbereitung", rev: 0 });
   room.set("secrets", { adminPw: hash, screenKey: randomId(18) });
   room.audit({ uid: "super", name: "Organisator", role: "superadmin" }, "Spiel angelegt", name);

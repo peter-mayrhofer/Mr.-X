@@ -65,4 +65,5 @@ Shell für die Webseite.
 | 1 | `shared/src/geraet.ts` + Test, `downloads.json` beim Bauen, Download-Karte auf Startseite und Laptop-Logins, Texte, E2E-Test | ✅ |
 | 2 | `app/src-tauri/` (Windows), Offline-Seite, `native.ts` kennt `desktop` | ✅ Windows am Laptop getestet |
 | 3 | `desktop.yml`, `deploy.yml`, BETRIEB.md | ✅ |
-| 4 | Beamer-Knopf, Benachrichtigungen + Zähler, Speichern unter, Updater, macOS/Linux | offen |
+| 4 | Beamer-Knopf, Benachrichtigungen (Taskleiste blinkt), Hinweis „Neue Version“, macOS/Linux-Builds (E-59) | ✅ – Test am Laptop mit zweitem Bildschirm ausstehend |
+| – | „Speichern unter“, Selbst-Update, macOS ohne Warnung (Apple-Konto) | verworfen bzw. offen, siehe E-59 |

@@ -31,9 +31,11 @@
     /** stimmt das eingetippte Passwort? (Server, nur Prüfsumme); fehlt im Prototyp → ungeprüft */
     checkSecret?: (kind: SecretKind, value: string) => Promise<boolean>;
     onreset?: () => void;
+    /** nur Desktop-App: Großbild im Vollbild auf dem Beamer öffnen (ohne Angabe kein Knopf) */
+    onbeamer?: () => void;
   }
 
-  let { gameName, joinUrl, loadScreenUrl, onsave, checkSecret, onreset }: Props = $props();
+  let { gameName, joinUrl, loadScreenUrl, onsave, checkSecret, onreset, onbeamer }: Props = $props();
   const values = $state<Record<SecretKind, string>>({ teamPw: "", schiriCode: "", adminPw: "" });
   let busy = $state<SecretKind | null>(null);
   let screenUrl = $state<string | null>(null);
@@ -168,6 +170,11 @@
   </Card>
 
   <Card label={T.admin.grossbildLink} icon={Monitor}>
+    {#if onbeamer}
+      <div class="row beamer">
+        <Button size="m" icon={Monitor} onclick={onbeamer}>{T.grossbild.beamer}</Button>
+      </div>
+    {/if}
     {#if screenUrl}
       <div class="qr">
         <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
@@ -273,6 +280,9 @@
   .small {
     font-size: var(--fs-s);
     margin-bottom: var(--sp-3);
+  }
+  .beamer {
+    margin: 0 0 var(--sp-3);
   }
   .sheets {
     list-style: none;

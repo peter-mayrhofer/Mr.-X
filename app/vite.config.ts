@@ -2,10 +2,10 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { DOWNLOAD_DATEIEN, DOWNLOAD_SYSTEME, type Downloads } from "../shared/src/geraet.ts";
+import { DOWNLOAD_DATEIEN, DOWNLOAD_SYSTEME, type DownloadsJson } from "../shared/src/geraet.ts";
 
-function sammleDownloads(): Downloads {
-  const out: Downloads = {};
+function sammleDownloads(): DownloadsJson {
+  const out: DownloadsJson = {};
   for (const system of DOWNLOAD_SYSTEME) {
     const datei = DOWNLOAD_DATEIEN[system];
     try {
@@ -13,6 +13,17 @@ function sammleDownloads(): Downloads {
       if (s.isFile()) out[system] = { datei, groesse: s.size };
     } catch {
       // Datei fehlt → kein Eintrag
+    }
+  }
+  // Version der Installer (vom Deploy aus dem Release-Tag geschrieben) – nur zusammen mit mindestens einer Desktop-Datei
+  if (Object.keys(out).length) {
+    try {
+      const v = readFileSync(new URL("public/download/VERSION", import.meta.url), "utf8")
+        .trim()
+        .replace(/^v/, "");
+      if (v) out.desktopVersion = v;
+    } catch {
+      // keine VERSION → keine Angabe
     }
   }
   return out;

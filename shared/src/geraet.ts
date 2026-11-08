@@ -42,8 +42,12 @@ export interface DownloadDatei {
   groesse: number;
 }
 
-/** Inhalt von /downloads.json (erzeugt beim Bauen aus den Dateien in app/public) – nur vorhandene Dateien */
+/** Die App-Dateien in /downloads.json (erzeugt beim Bauen aus den Dateien in app/public) – nur vorhandene Dateien */
 export type Downloads = Partial<Record<DownloadSystem, DownloadDatei>>;
+
+/** Ganzer Inhalt von /downloads.json: Dateien plus Version der Desktop-Installer (aus app/public/download/VERSION,
+ *  vom Deploy aus dem Release-Tag geschrieben, ohne „v“). Die Desktop-App vergleicht sie mit ihrer eigenen Version. */
+export type DownloadsJson = Downloads & { desktopVersion?: string };
 
 /** Die Datei für dieses System, sonst null (iPhone, ChromeOS, unbekannt oder Datei nicht am Server) */
 export function passenderDownload(system: System, downloads: Downloads): { system: DownloadSystem; datei: DownloadDatei } | null {
