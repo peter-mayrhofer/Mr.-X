@@ -1,9 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#0b1825"/>
-  <g transform="translate(-369.3 -0.7) scale(1.85)">
-    <path d="M284 34l34 34M318 34l-34 34" stroke="#ff2d2a" stroke-width="13" stroke-linecap="round"/>
+  <g transform="translate(-373.0 -4.4) scale(1.85)">
+    <path d="M294 44l26 26M320 44l-26 26" stroke="#ff2d2a" stroke-width="11" stroke-linecap="round"/>
     <path d="M292 80l-30 50 14 6 22-30 6 40-36 54 16 10 40-54 14 32 46-8-2-16-32 4-16-44 22 16 34-20-8-14-30 16-26-24z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
     <path d="M362 58v112" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
     <path d="M362 60c16-6 28 4 40 4s20-6 26-6v40c-6 0-14 6-26 6s-24-10-40-4z" fill="#ff2d2a"/>
+    <g fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="square" stroke-linejoin="miter" transform="rotate(-4 395 82)">
+      <path d="M369 93V71l6.5 11 6.5-11v22"/>
+      <path d="M387.5 93V80M387.5 84c1.5-3.5 4-4.6 7-4"/>
+      <path d="M404 71l12 22M416 71l-12 22" stroke="#0b1825" stroke-width="4.6"/>
+    </g>
+    <circle cx="398.6" cy="91.4" r="2.4" fill="#fff" transform="rotate(-4 395 82)"/>
   </g>
 </svg>
