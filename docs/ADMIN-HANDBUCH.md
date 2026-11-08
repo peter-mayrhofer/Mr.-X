@@ -38,6 +38,12 @@ ersetzen. Alle Bilder: [`docs/screens/`](screens/) (hell, dunkel und Sonnen-Modu
 2. Links (am Handy unten) ist das Menü: **Live, Steuerung, Teams & Zugänge, Spielfeld, Protokoll, Chat, Großbild,
    Archiv**. Das Gerät bleibt 7 Tage angemeldet.
 
+> **Tipp für den Laptop: die Mister-X-App.** Statt im Browser geht alles auch in der eigenen App (Windows, später
+> Mac und Linux). Unter dem Anmelde-Formular und in der Verwaltung steht dafür ein Download-Knopf, sobald die App am
+> Server liegt. Beim ersten Start warnt Windows: **Weitere Informationen → Trotzdem ausführen**. In der App schaltet
+> **F11** auf Vollbild (praktisch fürs Großbild am Beamer); Links zu anderen Seiten öffnen sich im normalen Browser.
+> Ohne Internet zeigt sie „Keine Verbindung“ und verbindet sich von selbst wieder.
+
 ### 1.3 Spielfeld prüfen
 
 **Spielfeld** öffnen. Die Vorlage „Linz Innenstadt“ enthält das Spielfeld und die Sperrbereiche zum Verkleinern
