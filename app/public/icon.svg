@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#c51a1a"/>
-  <circle cx="256" cy="256" r="176" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="12"/>
-  <circle cx="256" cy="256" r="112" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="12"/>
-  <path d="M168 412V104" stroke="#fff" stroke-width="32" stroke-linecap="round"/>
-  <path d="M184 112c48-28 96-28 144 0s96 28 128 8v168c-32 20-80 20-128-8s-96-28-144 0z" fill="#fff"/>
-  <path d="M262 156l84 92M346 156l-84 92" stroke="#c51a1a" stroke-width="30" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="112" fill="#0b1825"/>
+  <g transform="translate(-369.3 -0.7) scale(1.85)">
+    <path d="M284 34l34 34M318 34l-34 34" stroke="#ff2d2a" stroke-width="13" stroke-linecap="round"/>
+    <path d="M292 80l-30 50 14 6 22-30 6 40-36 54 16 10 40-54 14 32 46-8-2-16-32 4-16-44 22 16 34-20-8-14-30 16-26-24z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M362 58v112" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M362 60c16-6 28 4 40 4s20-6 26-6v40c-6 0-14 6-26 6s-24-10-40-4z" fill="#ff2d2a"/>
+  </g>
 </svg>
