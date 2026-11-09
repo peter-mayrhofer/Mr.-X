@@ -15,9 +15,7 @@ export const T = {
 
   app: {
     name: "Mister X",
-    org: "Rote Falken",
-    voll: "Mister X – Rote Falken",
-    claim: "Das Live-Geländespiel in der Innenstadt",
+    voll: "Mister X – das Live-Geländespiel",
   },
 
   allgemein: {

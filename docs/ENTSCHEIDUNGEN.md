@@ -620,3 +620,12 @@ Grund). Auf der Startseite entfällt das kleine Logo oben, weil darunter das gro
 Datenschutzhinweis ist der Veranstalter offen: Veranstalter, Adresse und Kontakt „wird noch eingetragen“.
 **Warum so:** Wunsch des Organisators – die App soll vorerst ohne Vereinslogos auskommen. Der Datenschutzhinweis
 braucht vor dem ersten echten Spiel wieder einen Verantwortlichen (DSGVO Art. 13), siehe ABNAHME F12.
+**Nachtrag:** Auch der Text „Rote Falken“ ist entfernt: Startseite (nur noch „Das Live-Geländespiel in der
+Innenstadt“), Fenstertitel, App-Beschreibung, Einstellungen und Herausgeber im Desktop-Installer. Die interne
+App-Kennung `at.rotefalken.misterx` (Android, Desktop) bleibt, weil eine neue Kennung die installierten Apps nicht mehr
+aktualisieren könnte – sie ist nirgends sichtbar.
+**Nachtrag Startseite:** Das Spray-Logo spielt ohne Kamerafahrt (neue Vorlage des Organisators, „followCam“ aus), damit
+der Schriftzug während der Animation an derselben Stelle bleibt; die Zeichenfläche ist auf den genutzten Bereich
+zugeschnitten. Der Satz unter dem Logo („Das Live-Geländespiel in der Innenstadt“) entfällt, auf der Startseite am Handy fehlt
+der Installationshinweis unter dem App-Download (am PC und auf den Anmeldeseiten bleibt er), und niedrige Handys bekommen engere
+Abstände – so passt die Startseite auf gängigen Handys ohne Scrollen (geprüft u. a. 393 × 727 mit Download-Karte).

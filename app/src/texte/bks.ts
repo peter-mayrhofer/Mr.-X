@@ -12,7 +12,6 @@ export default {
     desktopText: "Molimo preuzmite novi instalacijski program i instalirajte ga – inače vam nedostaju nove funkcije.",
     desktopLaden: "Preuzmi instalaciju",
   },
-  app: { claim: "Igra uživo u centru grada" },
   allgemein: {
     zurueck: "Nazad",
     weiter: "Dalje",
