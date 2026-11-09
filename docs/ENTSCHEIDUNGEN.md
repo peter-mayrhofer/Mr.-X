@@ -601,3 +601,13 @@ Server, Verwaltung und Editor; die GeoJSON-Umwandlung (`fieldFromGeoJson`, `shar
 und Vorlagen gemeinsam. Der Server lehnt unbekannte Vorlagen ab (bisher: still leeres Feld).
 **Warum so:** Die Roten Falken spielen nicht nur in Linz; eine weitere Stadt braucht nur eine Datei und einen
 Listeneintrag. Die Kennung `linz` bleibt, damit bestehende Spiele und Tests unverändert funktionieren.
+
+### E-61 Spray-Logo auf der Startseite
+**Entscheidung:** Der Titel „MISTER X“ der Startseite ist jetzt eine Animation nach der Vorlage des Organisators
+(Claude Design): Mister X mit Fahne holt eine Spraydose, sprüht „MISTER“ in Weiß, wechselt zur roten Dose, sprüht das
+X und bleibt in der Siegerpose stehen (15 s, spielt einmal). Rechnung in `app/src/lib/sprayLogo.ts`, Zeichnung in
+`app/src/screens/parts/SprayLogo.svelte`, Schriftzug und Fahne als Bilder in `app/public/logos/`. Bei „weniger
+Bewegung“ steht sofort das fertige Bild da. Im hellen Design sind Figur und Schrift nachtblau, das X bleibt rot.
+**Warum so:** Wunsch des Organisators – das ganze Logo als Animation. Einmal statt Endlosschleife, damit die Knöpfe
+darunter nicht ständig von Bewegung abgelenkt werden. Der Blitz beim Einschlag des alten X ist mit dem alten Titel
+entfallen.
