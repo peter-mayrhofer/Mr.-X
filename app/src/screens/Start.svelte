@@ -1,8 +1,7 @@
-<!-- Screen 1: Splash / Startseite. Großes Logo, App-Name, zwei klare Wege. -->
+<!-- Screen 1: Splash / Startseite. Spray-Logo, zwei klare Wege. -->
 <script lang="ts">
   import { CircleCheck, Crown, ShieldCheck, Users } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
-  import Logo from "../ui/Logo.svelte";
   import StartBackdrop from "./parts/StartBackdrop.svelte";
   import SprayLogo from "./parts/SprayLogo.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
@@ -27,10 +26,6 @@
 <StartBackdrop />
 <div class="scan" aria-hidden="true"></div>
 <main class="start">
-  <header>
-    <Logo height={48} />
-  </header>
-
   <section class="hero">
     <h1 class="title" aria-label="Mister X"><SprayLogo /></h1>
     <p class="caps claim">{T.app.org} · {T.app.claim}</p>
@@ -55,7 +50,6 @@
 
   <footer>
     <div class="sprache"><LanguagePicker kurz /></div>
-    <Logo which="kinderfreunde-ooe" height={28} />
     <nav>
       <a href="#{links.help}">{T.start.hilfe}</a>
       <a href="#{links.help}">{T.start.datenschutz}</a>
@@ -76,7 +70,6 @@
     margin: 0 auto;
     overflow: clip;
   }
-  header,
   .hero,
   .actions,
   footer {
@@ -116,7 +109,6 @@
       opacity: 0;
     }
   }
-  header,
   footer {
     animation: rise 0.9s ease-out 2.2s both;
   }
@@ -198,16 +190,12 @@
       max-width: 1720px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) clamp(380px, 28vw, 500px);
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: 1fr auto;
       grid-template-areas:
-        "head head"
         "hero actions"
         "foot foot";
       column-gap: clamp(32px, 5vw, 110px);
       padding-inline: clamp(32px, 4vw, 80px);
-    }
-    header {
-      grid-area: head;
     }
     .hero {
       grid-area: hero;
