@@ -11,7 +11,6 @@ export default {
     desktopText: "Please download and run the new installer – otherwise you'll miss new features.",
     desktopLaden: "Download installer",
   },
-  app: { claim: "The live street game in the city centre" },
   allgemein: {
     zurueck: "Back",
     weiter: "Next",

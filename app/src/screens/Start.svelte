@@ -28,7 +28,6 @@
 <main class="start">
   <section class="hero">
     <h1 class="title" aria-label="Mister X"><SprayLogo /></h1>
-    <p class="caps claim">{T.app.claim}</p>
   </section>
 
   <section class="actions">
@@ -40,7 +39,7 @@
     {/if}
     <Button size="xl" block icon={Users} onclick={() => go(links.join)}>{T.start.teamBeitreten}</Button>
     <p class="hint">{T.start.teamHinweis}</p>
-    <DownloadKarte {system} {downloads} />
+    <DownloadKarte {system} {downloads} ohneHinweis />
     <QrScanButton />
     <div class="staff">
       <Button variant="secondary" icon={ShieldCheck} onclick={() => go(links.schiri)}>{T.start.schiri}</Button>
@@ -64,8 +63,8 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    gap: var(--sp-6);
-    padding: calc(var(--safe-top) + var(--sp-5)) var(--gutter) calc(var(--safe-bottom) + var(--sp-4));
+    gap: var(--sp-4);
+    padding: calc(var(--safe-top) + var(--sp-4)) var(--gutter) calc(var(--safe-bottom) + var(--sp-4));
     max-width: 560px;
     margin: 0 auto;
     overflow: clip;
@@ -80,8 +79,6 @@
     display: grid;
     align-content: center;
     text-align: center;
-    gap: var(--sp-3);
-    min-height: 200px;
   }
   .title {
     margin: 0 calc(-1 * var(--sp-2));
@@ -124,10 +121,6 @@
       opacity: 1;
       transform: none;
     }
-  }
-  .claim {
-    color: var(--text-2);
-    animation: rise 0.9s ease-out 1.6s both;
   }
   .actions {
     display: grid;
@@ -184,6 +177,24 @@
     color: var(--text-2);
   }
 
+  /* niedrige Handys: enger, damit die Startseite ohne Scrollen passt */
+  @media (max-height: 760px) and (max-width: 999px) {
+    .start {
+      gap: var(--sp-3);
+      padding-top: calc(var(--safe-top) + var(--sp-2));
+    }
+    .actions {
+      gap: var(--sp-2);
+    }
+    .staff {
+      margin-top: 0;
+    }
+    footer {
+      padding-top: var(--sp-2);
+      gap: var(--sp-2);
+    }
+  }
+
   /* Laptop und größer: zwei Spalten, Titel riesig links, die Wege als Glaskarte rechts */
   @media (min-width: 1000px) {
     .start {
@@ -202,11 +213,6 @@
       text-align: left;
       align-content: center;
       gap: var(--sp-5);
-    }
-    .claim {
-      font-size: clamp(18px, 1.5vw, 26px);
-      max-width: 34ch;
-      white-space: normal;
     }
     .actions {
       grid-area: actions;

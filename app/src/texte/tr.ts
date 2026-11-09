@@ -11,7 +11,6 @@ export default {
     desktopText: "Lütfen yeni yükleyiciyi indirip kurun – yoksa yeni özellikler eksik kalır.",
     desktopLaden: "Yükleyiciyi indir",
   },
-  app: { claim: "Şehir merkezinde canlı arazi oyunu" },
   allgemein: {
     zurueck: "Geri",
     weiter: "İleri",

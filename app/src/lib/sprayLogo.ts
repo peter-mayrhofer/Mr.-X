@@ -468,20 +468,6 @@ function dripE(dr: (typeof DRIPS)[number], T: number) {
   return q < 0.18 ? (q / 0.18) * 0.12 : 0.12 + 0.88 * easeOutCubic((q - 0.18) / 0.82);
 }
 
-function camAt(T: number, x: number) {
-  type C = { s: number; fx: number; fy: number };
-  const mix = (a: C, b: C, t: number): C => ({ s: lerp(a.s, b.s, t), fx: lerp(a.fx, b.fx, t), fy: lerp(a.fy, b.fy, t) });
-  let c: C = { s: 1, fx: 784, fy: 349 };
-  c = mix(c, { s: 1.07, fx: 640, fy: 360 }, tw(T, 0, g));
-  c = mix(c, { s: 1.45, fx: x + 40, fy: 330 }, tw(T, g + 0.1, g + 0.9));
-  c = mix(c, { s: 1.25, fx: x + 250, fy: 362 }, tw(T, g + 1.8, sp + 0.4));
-  c = mix(c, { s: 1, fx: 784, fy: 349 }, tw(T, r - 0.1, r + 1.2));
-  c = mix(c, { s: 1.025, fx: 784, fy: 360 }, tw(T, ps + 0.3, ps + 3, easeOutCubic));
-  const hw = W / (2 * c.s),
-    hh = H / (2 * c.s);
-  return { s: c.s, fx: clamp(c.fx, hw, W - hw), fy: clamp(c.fy, hh, H - hh) };
-}
-
 /** Alles, was zur gespielten Zeit t (0 … DAUER Sekunden) zu sehen ist. */
 export function bild(t: number) {
   const T = choreo(t);
@@ -507,7 +493,6 @@ export function bild(t: number) {
   return {
     T,
     R,
-    cam: camAt(T, R.xw),
     /** Fortschritt je Sprühstrich 0…1 */
     striche: SEGS.map((sg) => (sg.draw ? clamp((R.p - sg.f0) / (sg.f1 - sg.f0), 0, 1) : 0)),
     /** Buchstabe fertig gesprüht → ganz zeigen */

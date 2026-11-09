@@ -47,7 +47,7 @@
   {/if}
 {/snippet}
 
-<svg class="spray" viewBox="0 0 {W} {H}" role="img" aria-label="Mister X">
+<svg class="spray" viewBox="80 0 1460 640" role="img" aria-label="Mister X">
   <defs>
     <!-- helles Design: weiße Schrift wird nachtblau, das rote X bleibt rot -->
     <filter id="mrx-dunkel" color-interpolation-filters="sRGB">
@@ -81,7 +81,7 @@
       {/each}
     </mask>
   </defs>
-  <g transform="translate({W / 2} {H / 2}) scale({b.cam.s}) translate({-b.cam.fx} {-b.cam.fy})">
+  <g>
     <!-- Schriftzug, freigelegt vom Sprühstrahl -->
     <image class="schrift" href="{basis}logos/mister-x-schrift.png" x="590" y="262" width="930" height="188" mask="url(#mrx-spray)" />
     {#each b.tropfen as dr, i (i)}
@@ -146,7 +146,7 @@
     display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 1568 / 698;
+    aspect-ratio: 1460 / 640;
     color: var(--text);
   }
   .schrift {

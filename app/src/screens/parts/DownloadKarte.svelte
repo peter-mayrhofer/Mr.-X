@@ -13,9 +13,11 @@
     downloads: Downloads;
     /** schlanker für Anmeldeseiten: kleinerer Knopf, ohne „Andere Systeme“ */
     kompakt?: boolean;
+    /** Startseite: ohne Installationshinweis, damit alles ohne Scrollen passt */
+    ohneHinweis?: boolean;
   }
 
-  let { system, downloads, kompakt = false }: Props = $props();
+  let { system, downloads, kompakt = false, ohneHinweis = false }: Props = $props();
 
   const treffer = $derived(passenderDownload(system, downloads));
   const andere = $derived(kompakt ? [] : andereDownloads(system, downloads));
@@ -43,7 +45,7 @@
       <Symbol size={22} strokeWidth={2.4} aria-hidden="true" />
       <span>{knopf[treffer.system]} <span class="gr">({mb(treffer.datei.groesse, lang)})</span></span>
     </a>
-    <p class="hint">{hinweis[treffer.system]}</p>
+    {#if !ohneHinweis}<p class="hint">{hinweis[treffer.system]}</p>{/if}
     {#if andere.length}
       <details>
         <summary>{T.start.andereSysteme}</summary>
