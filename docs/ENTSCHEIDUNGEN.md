@@ -611,3 +611,12 @@ Bewegung“ steht sofort das fertige Bild da. Im hellen Design sind Figur und Sc
 **Warum so:** Wunsch des Organisators – das ganze Logo als Animation. Einmal statt Endlosschleife, damit die Knöpfe
 darunter nicht ständig von Bewegung abgelenkt werden. Der Blitz beim Einschlag des alten X ist mit dem alten Titel
 entfallen.
+
+### E-62 Ohne Logos der Roten Falken und Kinderfreunde, Veranstalter im Datenschutz offen
+**Entscheidung:** Die Logos der Roten Falken und der Kinderfreunde OÖ sind aus App, Großbild, Einstellungen und
+Druckblättern entfernt, die Bilddateien gelöscht. Wo ein Logo Platz hatte, steht klein das Mister-X-Logo (Läufer mit
+Fahne und Schriftzug, Endbild des Spray-Logos aus E-61; `app/public/logos/mister-x.png` und `-negativ.png` für dunklen
+Grund). Auf der Startseite entfällt das kleine Logo oben, weil darunter das große Spray-Logo steht. Im
+Datenschutzhinweis ist der Veranstalter offen: Veranstalter, Adresse und Kontakt „wird noch eingetragen“.
+**Warum so:** Wunsch des Organisators – die App soll vorerst ohne Vereinslogos auskommen. Der Datenschutzhinweis
+braucht vor dem ersten echten Spiel wieder einen Verantwortlichen (DSGVO Art. 13), siehe ABNAHME F12.

@@ -27,7 +27,6 @@
 <section class="sheet {role}" aria-hidden="true">
   <header class="head">
     <Logo height={56} onDark={false} />
-    <Logo which="kinderfreunde-ooe" height={38} onDark={false} />
   </header>
 
   <div class="band">{D.rolle[role]}</div>

@@ -978,12 +978,13 @@ export const T = {
   datenschutz: {
     kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung, sie werden nach Spielende gelöscht. Kein Tracking, keine Werbung.",
     voll: "Vollständiger Datenschutzhinweis",
-    kontakt: "info@kinderfreunde-linz.at",
+    /** Veranstalter noch offen (E-62): Name, Adresse und Kontakt hier und im ersten Abschnitt eintragen */
+    kontakt: "",
     /** DSGVO Art. 13 – kurz und verständlich; Fristen wie im Server umgesetzt (docs/KONZEPT.md, Löschfristen) */
     abschnitte: [
       {
         titel: "Wer ist verantwortlich?",
-        text: "Österreichische Kinderfreunde, Region Linz-Stadt (Landesorganisation Oberösterreich, ZVR 486089761), zusammen mit den Roten Falken Veranstalter des Spiels. Adresse: Zaunmüllerstraße 4, 4020 Linz. Kontakt für alle Fragen zum Datenschutz: info@kinderfreunde-linz.at",
+        text: "Veranstalter: wird noch eingetragen. Adresse: wird noch eingetragen. Kontakt für alle Fragen zum Datenschutz: wird noch eingetragen.",
       },
       {
         titel: "Welche Daten?",

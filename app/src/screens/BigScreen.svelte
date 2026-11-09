@@ -148,7 +148,6 @@
       >{/if}
     <header>
       <Logo height={56} onDark />
-      <Logo which="kinderfreunde-ooe" height={36} onDark />
     </header>
     <h1 class="game">{v.gameName}</h1>
 

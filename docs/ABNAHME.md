@@ -105,16 +105,11 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 
 **Braucht Angaben des Vereins:**
 
-9. **F1 – Logos als Vektorgrafik (optional):** umgesetzt wie im bestätigten Vorschlag (E-20): die freigestellten
-   PNG-Dateien aus `assets/logos/`, nur klein verwendet. Öffentlich gibt es keine passenden Vektor-Dateien (geprüft am
-   28.10.2026: kinderfreunde.at hat nur das bundesweite Logo als SVG, rotefalken.at das Logo nur als JPG). Liefert der
-   Verein SVG-Dateien, werden Großbild und Flyer schärfer – Dateien in `app/public/logos/` tauschen, Endung in
-   `app/src/ui/Logo.svelte` anpassen.
-10. **F12 – Datenschutz (eingetragen, bitte bestätigen):** Verantwortlich ist die Region Linz-Stadt der Kinderfreunde OÖ. Name, Anschrift und Kontakt
-    stammen von deren Kontaktseite: **Österreichische Kinderfreunde – Region Linz-Stadt, Zaunmüllerstraße 4, 4020 Linz,
-    info@kinderfreunde-linz.at** (Quelle: [Region Linz](https://kinderfreunde.at/ueber-uns/kontakt/oberoesterreich/region-linz), abgerufen am 28.10.2026).
-    Die ZVR 486089761 ist die der Landesorganisation OÖ ([Impressum](https://kinderfreunde.at/impressum/www-kinderfreunde-ooe-at)). Bitte bestätigen oder eine andere Datenschutz-Kontaktadresse
-    nennen und den Text von der zuständigen Stelle im Verein prüfen lassen (`app/src/texte.ts`, Abschnitt `datenschutz`).
+9. **F1 – Logos:** Die Logos der Roten Falken und Kinderfreunde sind entfernt (E-62); überall steht klein das
+   Mister-X-Logo (`app/public/logos/mister-x*.png`, `app/src/ui/Logo.svelte`).
+10. **F12 – Datenschutz (offen, E-62):** Der Veranstalter ist derzeit nicht eingetragen – im Datenschutzhinweis steht bei
+    Veranstalter, Adresse und Kontakt „wird noch eingetragen“. Vor dem ersten echten Spiel Name, Anschrift und
+    Datenschutz-Kontakt in `app/src/texte.ts` (Abschnitt `datenschutz`) eintragen und den Text prüfen lassen.
 
 **Bewusst so gelöst:**
 
