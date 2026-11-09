@@ -1,7 +1,7 @@
 {
-  "name": "Mister X – Rote Falken",
+  "name": "Mister X",
   "short_name": "Mister X",
-  "description": "Live-Geländespiel der Roten Falken / Kinderfreunde Oberösterreich",
+  "description": "Das Live-Geländespiel in der Innenstadt",
   "lang": "de-AT",
   "start_url": "/",
   "scope": "/",

@@ -620,3 +620,7 @@ Grund). Auf der Startseite entfällt das kleine Logo oben, weil darunter das gro
 Datenschutzhinweis ist der Veranstalter offen: Veranstalter, Adresse und Kontakt „wird noch eingetragen“.
 **Warum so:** Wunsch des Organisators – die App soll vorerst ohne Vereinslogos auskommen. Der Datenschutzhinweis
 braucht vor dem ersten echten Spiel wieder einen Verantwortlichen (DSGVO Art. 13), siehe ABNAHME F12.
+**Nachtrag:** Auch der Text „Rote Falken“ ist entfernt: Startseite (nur noch „Das Live-Geländespiel in der
+Innenstadt“), Fenstertitel, App-Beschreibung, Einstellungen und Herausgeber im Desktop-Installer. Die interne
+App-Kennung `at.rotefalken.misterx` (Android, Desktop) bleibt, weil eine neue Kennung die installierten Apps nicht mehr
+aktualisieren könnte – sie ist nirgends sichtbar.

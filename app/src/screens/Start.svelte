@@ -28,7 +28,7 @@
 <main class="start">
   <section class="hero">
     <h1 class="title" aria-label="Mister X"><SprayLogo /></h1>
-    <p class="caps claim">{T.app.org} · {T.app.claim}</p>
+    <p class="caps claim">{T.app.claim}</p>
   </section>
 
   <section class="actions">
