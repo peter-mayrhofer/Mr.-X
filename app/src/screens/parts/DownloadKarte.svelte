@@ -13,7 +13,7 @@
     downloads: Downloads;
     /** schlanker für Anmeldeseiten: kleinerer Knopf, ohne „Andere Systeme“ */
     kompakt?: boolean;
-    /** Startseite: ohne Installationshinweis, damit alles ohne Scrollen passt */
+    /** ohne Installationshinweis (Startseite am Handy) */
     ohneHinweis?: boolean;
   }
 

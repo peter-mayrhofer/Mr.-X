@@ -626,6 +626,6 @@ App-Kennung `at.rotefalken.misterx` (Android, Desktop) bleibt, weil eine neue Ke
 aktualisieren könnte – sie ist nirgends sichtbar.
 **Nachtrag Startseite:** Das Spray-Logo spielt ohne Kamerafahrt (neue Vorlage des Organisators, „followCam“ aus), damit
 der Schriftzug während der Animation an derselben Stelle bleibt; die Zeichenfläche ist auf den genutzten Bereich
-zugeschnitten. Der Satz unter dem Logo („Das Live-Geländespiel in der Innenstadt“) entfällt, auf der Startseite fehlt
-der Installationshinweis unter dem App-Download (auf den Anmeldeseiten bleibt er), und niedrige Handys bekommen engere
+zugeschnitten. Der Satz unter dem Logo („Das Live-Geländespiel in der Innenstadt“) entfällt, auf der Startseite am Handy fehlt
+der Installationshinweis unter dem App-Download (am PC und auf den Anmeldeseiten bleibt er), und niedrige Handys bekommen engere
 Abstände – so passt die Startseite auf gängigen Handys ohne Scrollen (geprüft u. a. 393 × 727 mit Download-Karte).

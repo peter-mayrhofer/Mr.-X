@@ -39,7 +39,8 @@
     {/if}
     <Button size="xl" block icon={Users} onclick={() => go(links.join)}>{T.start.teamBeitreten}</Button>
     <p class="hint">{T.start.teamHinweis}</p>
-    <DownloadKarte {system} {downloads} ohneHinweis />
+    <!-- am Handy ohne Installationshinweis, damit alles ohne Scrollen passt -->
+    <DownloadKarte {system} {downloads} ohneHinweis={system === "android"} />
     <QrScanButton />
     <div class="staff">
       <Button variant="secondary" icon={ShieldCheck} onclick={() => go(links.schiri)}>{T.start.schiri}</Button>
