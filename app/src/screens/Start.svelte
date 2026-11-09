@@ -4,6 +4,7 @@
   import Button from "../ui/Button.svelte";
   import Logo from "../ui/Logo.svelte";
   import StartBackdrop from "./parts/StartBackdrop.svelte";
+  import SprayLogo from "./parts/SprayLogo.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
   import DownloadKarte from "./parts/DownloadKarte.svelte";
   import LanguagePicker from "./parts/LanguagePicker.svelte";
@@ -24,7 +25,6 @@
 </script>
 
 <StartBackdrop />
-<div class="flash" aria-hidden="true"></div>
 <div class="scan" aria-hidden="true"></div>
 <main class="start">
   <header>
@@ -32,12 +32,7 @@
   </header>
 
   <section class="hero">
-    <h1 class="title" aria-label="Mister X">
-      <span class="word" aria-hidden="true"
-        >{#each "MISTER" as ch, i (i)}<span class="ch" style="--i:{i}">{ch}</span>{/each}</span
-      >
-      <span class="x" aria-hidden="true">X</span>
-    </h1>
+    <h1 class="title" aria-label="Mister X"><SprayLogo /></h1>
     <p class="caps claim">{T.app.org} · {T.app.claim}</p>
   </section>
 
@@ -96,94 +91,9 @@
     min-height: 200px;
   }
   .title {
-    font-size: clamp(72px, 24vw, 132px);
-    line-height: 0.85;
-    /* immer eine Zeile – sonst springt alles, wenn die Schrift nachlädt (schmälere Ersatzschrift bricht um) */
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
+    margin: 0 calc(-1 * var(--sp-2));
   }
-  .word {
-    display: inline-block;
-  }
-  .x {
-    position: relative;
-    color: var(--accent-text);
-    display: inline-block;
-    transform: rotate(-6deg);
-    text-shadow: 0 0 40px var(--accent-soft);
-    will-change: transform;
-    animation: x-in 1.1s cubic-bezier(0.2, 1.15, 0.3, 1) 1.15s both;
-  }
-  /* Druckwelle, wenn das X einschlägt */
-  .x::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0.9em;
-    height: 0.9em;
-    margin: -0.45em 0 0 -0.45em;
-    border-radius: 50%;
-    border: 0.05em solid var(--accent-text);
-    opacity: 0;
-    animation: boom 1.3s cubic-bezier(0.1, 0.6, 0.3, 1) 1.75s both;
-  }
-  .ch {
-    display: inline-block;
-    will-change: transform, opacity;
-    animation: slam 0.75s cubic-bezier(0.2, 1.2, 0.3, 1) calc(0.45s + var(--i) * 0.075s) both;
-  }
-  @keyframes slam {
-    from {
-      opacity: 0;
-      transform: translateY(-140px) scale(2.4) rotate(-9deg);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  @keyframes x-in {
-    from {
-      opacity: 0;
-      transform: rotate(-6deg) scale(8) rotate(-560deg);
-    }
-    60% {
-      opacity: 1;
-    }
-    to {
-      opacity: 1;
-      transform: rotate(-6deg);
-    }
-  }
-  @keyframes boom {
-    from {
-      opacity: 0.95;
-      transform: scale(0.3);
-    }
-    to {
-      opacity: 0;
-      transform: scale(16);
-    }
-  }
-  /* Blitz beim Einschlag und ein Lichtstrahl, der einmal über die Seite fegt */
-  .flash {
-    position: fixed;
-    inset: 0;
-    z-index: 4;
-    pointer-events: none;
-    background: radial-gradient(circle at 50% 40%, rgb(255 255 255 / 0.55), transparent 65%);
-    animation: flash 0.7s ease-out 1.75s both;
-  }
-  @keyframes flash {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
+  /* Ein Lichtstrahl, der einmal über die Seite fegt */
   .scan {
     position: fixed;
     top: 0;
@@ -304,10 +214,6 @@
       text-align: left;
       align-content: center;
       gap: var(--sp-5);
-    }
-    .title {
-      font-size: clamp(110px, 12.5vw, 270px);
-      line-height: 0.8;
     }
     .claim {
       font-size: clamp(18px, 1.5vw, 26px);
