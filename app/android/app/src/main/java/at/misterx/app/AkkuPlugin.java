@@ -1,4 +1,4 @@
-package at.rotefalken.misterx;
+package at.misterx.app;
 
 import android.content.Context;
 import android.content.Intent;

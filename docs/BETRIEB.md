@@ -239,7 +239,7 @@ Adresse: `https://mister-x-vorschau.mr-x-ooe.workers.dev` – dort mit dem neuen
 
 ## 14. Eigene Domain (optional)
 
-Wenn der Verein eine eigene Domain hat (z. B. `mrx.rotefalken-ooe.at`): Domain zu Cloudflare hinzufügen
+Wenn der Verein eine eigene Domain hat (z. B. `mrx.meinverein.at`): Domain zu Cloudflare hinzufügen
 (**Websites → Add a domain**, kostenloser Tarif), dann **Workers & Pages → mister-x → Settings → Domains & Routes →
 Add → Custom domain**. Die Android-App braucht danach eine neue APK mit `MRX_API_URL` (Schritt 9).
 

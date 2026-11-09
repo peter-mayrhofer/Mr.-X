@@ -6,6 +6,10 @@ Die Android-App ist dieselbe App wie im Browser, eingepackt mit [Capacitor](http
 - **Benachrichtigungen** auch dann zeigen, wenn die App geschlossen ist,
 - direkt zu **„Akku-Optimierung ausschalten“** führen.
 
+> **Ab Version 2.0.0-beta.4 hat die App eine neue interne Kennung (`at.misterx.app`, E-62).** Wer eine ältere
+> Version installiert hat, deinstalliert sie einmal und installiert die neue – die alte bekommt keine Updates mehr.
+> Dasselbe gilt für die Desktop-App unter Windows/macOS/Linux.
+
 iPhones nutzen die Web-App (Safari → Teilen → „Zum Home-Bildschirm“) – eine iOS-App ist nicht Teil dieses Projekts.
 
 ---
@@ -17,7 +21,7 @@ iPhones nutzen die Web-App (Safari → Teilen → „Zum Home-Bildschirm“) –
    Repositorys öffnen und `mister-x.apk` herunterladen.
 2. Antippen → Android fragt: **„Installation aus unbekannten Quellen zulassen?“** → für den Browser bzw. „Dateien“
    **erlauben** → zurück → **Installieren**.
-   (Der Hinweis kommt, weil die App nicht aus dem Play Store kommt. Sie ist mit dem Schlüssel der Roten Falken signiert.)
+   (Der Hinweis kommt, weil die App nicht aus dem Play Store kommt. Sie ist mit dem eigenen Schlüssel des Organisators signiert.)
 3. App öffnen → **Team beitreten** → Spiel-Code eingeben (steht auf dem Flyer), Teamname, Team-Passwort.
 4. Im Onboarding:
    - **Standort erlauben** → „Beim Verwenden der App“ wählen. Für das Senden im Hintergrund zeigt die App eine
@@ -49,7 +53,7 @@ Mit installiertem [Java 21](https://adoptium.net), in der Eingabeaufforderung (W
 keytool -genkeypair -v -keystore mister-x.jks -alias misterx -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Das Programm fragt nach einem Passwort (zweimal) und nach Namen/Organisation (z. B. „Rote Falken OÖ“, „AT“).
+Das Programm fragt nach einem Passwort (zweimal) und nach Namen/Organisation (z. B. „Mister X“, „AT“).
 
 Den Schlüssel für GitHub in Text umwandeln:
 

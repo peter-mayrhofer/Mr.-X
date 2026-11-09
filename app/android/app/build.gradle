@@ -9,10 +9,10 @@ def versionNumber = (System.getenv('MRX_VERSION_CODE') ?: '1') as Integer
 def keystore = System.getenv('MRX_KEYSTORE_FILE')
 
 android {
-    namespace = "at.rotefalken.misterx"
+    namespace = "at.misterx.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "at.rotefalken.misterx"
+        applicationId "at.misterx.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode versionNumber

@@ -69,7 +69,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: mister-x.apk
-          body: "Android-App „Mister X – Rote Falken“. Installation: docs/ANDROID-APK.md"
+          body: "Android-App „Mister X“. Installation: docs/ANDROID-APK.md"
 
   # Gerätetest im Android-Emulator (Definition of Done: Standort bei gesperrtem Bildschirm, Benachrichtigungen).
   # Die Test-APK spricht mit dem Spiel-Server auf diesem Rechner (im Emulator über adb reverse als 127.0.0.1:8787).

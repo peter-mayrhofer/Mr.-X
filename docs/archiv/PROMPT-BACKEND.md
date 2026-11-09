@@ -1,4 +1,4 @@
-# Auftrag: Backend für „Mister X – Rote Falken“ auf Cloudflare
+# Auftrag: Backend für „Mister X“ auf Cloudflare
 
 > **Hinweis (aktueller Stand):** Der Frontend-Agent hat die Meilensteine 1–8 bereits mit Firebase gebaut
 > (Branch `claude/elegant-volta-i3dbpr`: `app/`, `functions/`, `shared/`, `tests/`). Der Umzug auf Cloudflare wird deshalb
@@ -13,7 +13,7 @@
 
 ## 0. Ausgangslage und Arbeitsteilung
 
-Die App „Mister X – Rote Falken“ wird komplett neu gebaut. **Zwei KI-Agenten arbeiten parallel:**
+Die App „Mister X“ wird komplett neu gebaut. **Zwei KI-Agenten arbeiten parallel:**
 
 | Agent | Zuständig für | Auftrag |
 |---|---|---|

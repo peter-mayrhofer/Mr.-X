@@ -13,7 +13,7 @@ import { createRequire } from "node:module";
 
 const { _android: android } = createRequire(import.meta.url)("playwright");
 const SERVER = "http://127.0.0.1:8787";
-const PKG = "at.rotefalken.misterx";
+const PKG = "at.misterx.app";
 const G = "emulator";
 const START = { lat: 48.3059, lng: 14.2862 }; // Hauptplatz
 const STEP = 0.000225; // ≈ 25 m nach Süden pro Schritt (Landstraße entlang, bleibt im Spielfeld)

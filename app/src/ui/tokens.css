@@ -4,11 +4,9 @@
  * Themes: data-theme="dunkel" | "hell" | "sonne" am <html>. Mister-X-Modus: data-mrx am <html>.
  */
 :root {
-  /* Markenfarben – exakt aus assets/logos/ gemessen */
-  --rf-rot: #c51a1a;
-  --rf-blau: #214c6b;
-  --kf-rot: #dc0219;
-  --kf-blau: #005ca8;
+  /* Markenfarben von Mister X */
+  --mrx-rot: #c51a1a;
+  --mrx-blau: #214c6b;
 
   /* Paletten */
   --rot-300: #ff8a80;

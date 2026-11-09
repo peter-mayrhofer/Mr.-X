@@ -1,6 +1,6 @@
 # Mister X – Hinweise für Claude
 
-Live-Geländespiel der Roten Falken / Kinderfreunde OÖ in der Linzer Innenstadt: Teams jagen Mister X, Spielleitung
+Live-Geländespiel in der Linzer Innenstadt: Teams jagen Mister X, Spielleitung
 und Schiris steuern, das Großbild zeigt die Jagd. Live: https://mister-x.mr-x-ooe.workers.dev. Überblick: `README.md`.
 
 ## Mit dem Organisator

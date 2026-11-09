@@ -371,7 +371,7 @@
     gap: 24px;
     padding: 80px;
     text-align: center;
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     z-index: var(--z-overlay);
     animation: in var(--dur-3) var(--ease-out);
   }

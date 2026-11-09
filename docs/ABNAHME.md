@@ -1,4 +1,4 @@
-# Abnahmebericht: Mister X – Rote Falken
+# Abnahmebericht: Mister X
 
 **Stand: 27.10.2026**, Branch `claude/elegant-volta-i3dbpr`, Pull Request
 [peter-mayrhofer/Mr.-X#1](https://github.com/peter-mayrhofer/Mr.-X/pull/1).
@@ -105,7 +105,7 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 
 **Braucht Angaben des Vereins:**
 
-9. **F1 – Logos:** Die Logos der Roten Falken und Kinderfreunde sind entfernt (E-62); überall steht klein das
+9. **F1 – Logos:** Vereinslogos sind entfernt (E-62); überall steht klein das
    Mister-X-Logo (`app/public/logos/mister-x*.png`, `app/src/ui/Logo.svelte`).
 10. **F12 – Datenschutz (offen, E-62):** Der Veranstalter ist derzeit nicht eingetragen – im Datenschutzhinweis steht bei
     Veranstalter, Adresse und Kontakt „wird noch eingetragen“. Vor dem ersten echten Spiel Name, Anschrift und

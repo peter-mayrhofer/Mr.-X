@@ -71,7 +71,7 @@
     color: #fff;
   }
   .neuMrx {
-    background: radial-gradient(circle at 50% 35%, #e0302a, var(--rf-rot) 45%, var(--rot-700));
+    background: radial-gradient(circle at 50% 35%, #e0302a, var(--mrx-rot) 45%, var(--rot-700));
   }
   h1 {
     font-size: var(--fs-3xl);

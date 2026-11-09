@@ -6,18 +6,17 @@ mit allen Zuständen liegt unter `#/komponenten`.
 
 ## Leitidee
 
-Ein Handy-Spiel mit Agenten-Gefühl in den Farben der Roten Falken: dunkles Nacht-Blau als Spielfläche, Rote-Falken-Rot
+Ein Handy-Spiel mit Agenten-Gefühl in Rot-Weiß: dunkles Nacht-Blau als Spielfläche, kräftiges Rot
 für alles, was mit Mister X und Aktionen zu tun hat, Weiß für Lesbarkeit. Agenten-Elemente sparsam: schmale, fette
 Großbuchstaben wie Akten-Etiketten, Fadenkreuz-Ecken am Countdown, Radar-Ping bei neuen Meldungen, Stempel „Gefangen!“.
-Die Wärme der Roten Falken kommt über runde Formen, Fahne und Falke und die freundliche Sprache („Tapperl“).
+Die Wärme kommt über runde Formen, Fahne und Falke und die freundliche Sprache („Tapperl“).
 
 ## Design-Tokens (`app/src/ui/tokens.css`)
 
 | Token | Wert | Herkunft / Verwendung |
 |---|---|---|
-| `--rf-rot` | `#C51A1A` | exakt aus `assets/logos/rote-falken.png` – Mister X, Hauptaktionen |
-| `--rf-blau` | `#214C6B` | exakt aus dem Rote-Falken-Schriftzug – Basis des Nacht-Blaus |
-| `--kf-rot` / `--kf-blau` | `#DC0219` / `#005CA8` | Kinderfreunde-Logo (Logo-Darstellung) |
+| `--mrx-rot` | `#C51A1A` | Mister-X-Rot – Mister X, Hauptaktionen |
+| `--mrx-blau` | `#214C6B` | Basis des Nacht-Blaus |
 | Signalfarben | Gelb `#FFC531`, Grün `#2FBF71`, Blau `#3B9CFF` | Warnung/Wartezeit, ok/frei, Info/eigenes Team |
 | Schrift | Barlow Condensed (Überschriften, Countdown) + Inter (Text) | lokal eingebunden, tabellarische Ziffern, **Mindestgröße 16 px** |
 | Touch-Ziele | 48 / 56 / 72 px | wichtige Aktionen unten in der Daumenzone |

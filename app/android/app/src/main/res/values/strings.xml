@@ -2,9 +2,9 @@
 <resources>
     <string name="app_name">Mister X</string>
     <string name="title_activity_main">Mister X</string>
-    <string name="package_name">at.rotefalken.misterx</string>
-    <string name="custom_url_scheme">at.rotefalken.misterx</string>
-    <!-- Dauer-Benachrichtigung des Standort-Dienstes: Fahnen-Symbol, Rote-Falken-Rot -->
+    <string name="package_name">at.misterx.app</string>
+    <string name="custom_url_scheme">at.misterx.app</string>
+    <!-- Dauer-Benachrichtigung des Standort-Dienstes: Fahnen-Symbol, Mister-X-Rot -->
     <string name="capacitor_background_geolocation_notification_icon">drawable/ic_stat_flag</string>
     <string name="capacitor_background_geolocation_notification_color">#C51A1A</string>
 </resources>

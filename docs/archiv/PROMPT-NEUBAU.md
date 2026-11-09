@@ -1,4 +1,4 @@
-# Auftrag: Kompletter Neubau der App „Mister X – Rote Falken“
+# Auftrag: Kompletter Neubau der App „Mister X“
 
 > **⚠️ Änderung (Stand später):** Das Backend läuft **nicht auf Firebase**, sondern komplett auf **Cloudflare (Gratis-Tarif)**
 > und wird von einem eigenen Agenten nach `PROMPT-BACKEND.md` gebaut. Für das Frontend gilt `NACHRICHT-AN-FRONTEND.md`.
@@ -40,7 +40,7 @@ Abläufe und Daten (v. a. die Spielfeld-Koordinaten).
 
 ## 1. Das Spiel (reale Welt) – unbedingt verstehen
 
-„Mister X“ ist ein **Live-Geländespiel** der **Roten Falken / Kinderfreunde Oberösterreich** in der
+„Mister X“ ist ein **Live-Geländespiel** in der
 **Linzer Innenstadt**, angelehnt an das Brettspiel „Scotland Yard“. Es wird **real mit echten Menschen**
 auf der Straße gespielt, nicht am Bildschirm. Die App ist das **Werkzeug**, das die bisherige WhatsApp-Gruppe
 zuverlässiger macht (Fotos und Smalltalk laufen weiter über WhatsApp – **keine Foto-Funktion bauen**).
@@ -113,7 +113,7 @@ Lies `SPEC.md`, `IDEEN.md`, `README.md` und den Code. Übernimm **die Abläufe**
 
 | Rolle | Wer | Gerät | Situation |
 |---|---|---|---|
-| **Super-Admin** | Organisator (Roten Falken OÖ) | Laptop/Handy | Legt Spiele/Orte an, vergibt Spiel-Admins |
+| **Super-Admin** | Organisator | Laptop/Handy | Legt Spiele/Orte an, vergibt Spiel-Admins |
 | **Spiel-Admin** | Spielleitung in der Zentrale | Laptop + Beamer, Handy | Steuert das ganze Spiel, sieht alles |
 | **Schiri** | Erwachsene Begleiter von Mister X | Handy, unterwegs, E-Roller | Bestätigt Fänge, löst Übergaben aus |
 | **Team** | Betreuer oder Jugendliche (12–18) | 1 Handy pro Team, draußen | Jagt Mister X oder ist Mister X |
@@ -213,7 +213,7 @@ Priorität der Standortquellen: Tracker der Fahne > Mister-X-Gerät > Schiri-Ger
 ## 7. Funktionsumfang (vollständig)
 
 ### 7.1 Einstieg & Konten
-- **Startseite** mit großem Logo, App-Name „Mister X – Rote Falken“, zwei klaren Wegen: **„Team beitreten“** (Spiel-Code/QR scannen,
+- **Startseite** mit großem Logo, App-Name „Mister X“, zwei klaren Wegen: **„Team beitreten“** (Spiel-Code/QR scannen,
   Teamname, Team-Passwort) und **„Schiri“** / **„Admin“** (dezenter).
 - QR-Code-Beitritt: Admin zeigt/druckt pro Spiel einen QR-Code (Link mit Spiel-ID); Team-Passwort bleibt Pflicht.
 - Bleibt angemeldet (Gerät merkt sich das Team); „Abmelden“ mit Bestätigung.
@@ -307,23 +307,18 @@ Priorität der Standortquellen: Tracker der Fahne > Mister-X-Gerät > Schiri-Ger
 
 ---
 
-## 8. Design – „Mix aus Agenten-Spiel und Rote Falken“
+## 8. Design – „Mix aus Agenten-Spiel und Jugendgruppe“
 
 ### 8.1 Leitidee
 Ein **hochwertiges Handy-Spiel mit Detektiv-/Agenten-Feeling** („Scotland Yard“, Fahndung, geheime Meldungen),
-aber **in den Farben und mit der Wärme der Roten Falken / Kinderfreunde**: kräftiges **Rot**, **Weiß**, dazu dunkle
+aber **mit Wärme und in Rot-Weiß**: kräftiges **Rot**, **Weiß**, dazu dunkle
 Flächen für den Spiel-Look. Es soll sich anfühlen wie ein **echtes, cooles Spiel**, das Jugendliche gern benutzen,
 und trotzdem für Betreuer sofort verständlich und seriös wirken.
 
 ### 8.2 Markenelemente
-- App-Name: **„Mister X – Rote Falken“**.
-- **Logos** liegen im Repo unter **`assets/logos/`**:
-  - `kinderfreunde-ooe.png` – Die Kinderfreunde Oberösterreich (260 × 60 px, transparent; Rot mit Herz-Symbol, blauer Schriftzug).
-  - `rote-falken.png` – Rote Falken (200 × 88 px, weißer Hintergrund; roter Falke im Kreis, „rote“ rot, „falken“ dunkelblau, Kinderfreunde-Herz).
-    Für dunkle Flächen freistellen bzw. eine transparente Version anfragen.
-  Beide sind klein – für scharfe Darstellung (Splash, Großbild) nach Vektor-/größeren Versionen fragen.
-  Logos auf Startseite, Splash, Großbild, Auswertung. **Exakte Farben (Rot, Blau) aus dem Logo übernehmen.**
-- Farben grob (verfeinern, als Design-Tokens): Rote-Falken-Rot und das Dunkelblau aus dem Schriftzug (exakt aus den Logos übernehmen), Weiß,
+- App-Name: **„Mister X“**.
+- **Logos:** (Vereinslogos inzwischen entfernt, E-62; die App hat ein eigenes Mister-X-Logo.)
+- Farben grob (verfeinern, als Design-Tokens): kräftiges Rot und ein Dunkelblau, Weiß,
   tiefes Nacht-Blau/Anthrazit als Spiel-Hintergrund, Signalfarben: Gelb (Warnung), Grün (ok/frei), Blau (Info, eigenes Team).
 - Fahne als zentrales Symbol (Mister X = Fahne).
 

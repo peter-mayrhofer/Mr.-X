@@ -1,6 +1,6 @@
 # Mister X – App-Spezifikation
 
-Live-Version von „Scotland Yard“ der Roten Falken / Kinderfreunde Oberösterreich in der Linzer Innenstadt.
+Live-Version von „Scotland Yard“ in der Linzer Innenstadt.
 Ziel: eine Handy-Web-App, die zuverlässiger ist als nur die WhatsApp-Gruppe.
 
 ## Das Spiel (Ist-Stand)

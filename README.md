@@ -1,6 +1,6 @@
-# Mister X – Rote Falken
+# Mister X
 
-Das Live-Geländespiel der Roten Falken / Kinderfreunde Oberösterreich in der Linzer Innenstadt – als App.
+Das Live-Geländespiel in der Linzer Innenstadt – als App.
 Teams jagen Mister X durch die Stadt: Mister X meldet seinen Standort in festen Abständen, die Jäger sehen die
 letzte Meldung auf der Karte, wer Mister X fängt, wird selbst Mister X. Spielleitung und Schiris steuern das Spiel,
 das Großbild zeigt die Jagd am Beamer.
@@ -55,7 +55,7 @@ tests/      Server-, Rechte-, Last- und Ende-zu-Ende-Tests (lokale Cloudflare-La
             Android-Gerätetest, Push-Test, Screenshot- und Flyer-Skript
 docs/       Handbücher, Betrieb, Konzept, Entscheidungen, API, Limits, Design, Screenshots
   archiv/        ursprünglicher Auftrag und Planung (Spezifikation, Prompts, Ideen) – nur zur Nachverfolgung
-assets/     Logos der Roten Falken und der Kinderfreunde
+assets/     App-Icon in voller Größe (Vorlage für alle Icon-Größen)
 promo/      Videos, Screenshots und ihre Quellen
 claude-mods/ Erweiterungen für Claude Code, z. B. das Co-Agenten-Panel (installieren: siehe ihre README)
 .github/    CI (Tests), Android-APK (Build + Emulator-Test), Deploy (Veröffentlichen)
