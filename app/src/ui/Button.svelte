@@ -46,16 +46,43 @@
     cursor: pointer;
     user-select: none;
     transition:
-      transform var(--dur-1) var(--ease-out),
+      transform var(--dur-2) var(--ease-spring),
       background-color var(--dur-1),
+      border-color var(--dur-1),
+      box-shadow var(--dur-2) var(--ease-out),
+      filter var(--dur-1),
       opacity var(--dur-1);
   }
+  /* Maus: Knopf hebt sich leicht – am Handy gibt es kein „Darüberfahren“ */
+  @media (hover: hover) {
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.07);
+    }
+    .primary:hover:not(:disabled),
+    .ok:hover:not(:disabled),
+    .warn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .secondary:hover:not(:disabled) {
+      filter: none;
+      background: var(--surface-3);
+      border-color: var(--line-strong);
+    }
+    .ghost:hover:not(:disabled),
+    .danger:hover:not(:disabled) {
+      filter: none;
+      background: var(--hover);
+    }
+  }
+  /* Drücken geht sofort, Loslassen federt zurück */
   .btn:active:not(:disabled) {
     transform: scale(0.97);
+    transition-duration: 60ms;
   }
   .btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+    box-shadow: none;
   }
   .l {
     min-height: var(--touch-l);
@@ -75,9 +102,9 @@
     width: 100%;
   }
   .primary {
-    background: var(--accent);
+    background: linear-gradient(var(--accent-hi), var(--accent));
     color: var(--on-accent);
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-accent);
   }
   .primary:active:not(:disabled) {
     background: var(--accent-press);
@@ -104,10 +131,12 @@
   .ok {
     background: var(--ok);
     color: var(--on-ok);
+    box-shadow: var(--shadow-1);
   }
   .warn {
     background: var(--warn);
     color: var(--on-warn);
+    box-shadow: var(--shadow-1);
   }
   .label {
     line-height: 1.1;

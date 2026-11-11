@@ -29,8 +29,12 @@
   }
   h1 {
     flex: 1;
+    min-width: 0;
     font-size: var(--fs-2xl);
     padding-left: var(--sp-1);
+  }
+  .bar:has(.act:not(:empty)) h1 {
+    font-size: clamp(var(--fs-l), 6.2vw, var(--fs-2xl));
   }
   .act {
     display: flex;

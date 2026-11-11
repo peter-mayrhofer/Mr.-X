@@ -48,6 +48,12 @@
   }
   button.item {
     cursor: pointer;
+    transition: background-color var(--dur-1);
+  }
+  @media (hover: hover) {
+    button.item:hover {
+      background: var(--hover);
+    }
   }
   button.item:active {
     background: var(--surface-2);

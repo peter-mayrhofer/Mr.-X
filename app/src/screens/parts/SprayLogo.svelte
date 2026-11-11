@@ -96,7 +96,7 @@
         />
       {/if}
     {/each}
-    {#if R.drop}{@render dose(R.drop.pos[0], R.drop.pos[1] + 2, R.drop.rot, 1, false)}{/if}
+    {#if R.drop && R.drop.o > 0}<g opacity={R.drop.o}>{@render dose(R.drop.pos[0], R.drop.pos[1] + 2, R.drop.rot, 1, false)}</g>{/if}
 
     <g transform="translate({R.xw} 0) scale({R.face} 1) translate({-R.x} 0)">
       <!-- Fahne -->

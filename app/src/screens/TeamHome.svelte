@@ -581,6 +581,11 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    animation: einblenden var(--dur-2) var(--ease-out);
+  }
+  /* Reiterwechsel: der neue Inhalt blendet weich ein */
+  .pane > :global(*) {
+    animation: einblenden var(--dur-2) var(--ease-out);
   }
   .menu {
     padding: var(--sp-3) var(--sp-2);

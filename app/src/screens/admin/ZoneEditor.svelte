@@ -506,6 +506,8 @@
     border-radius: var(--r-pill);
     background: var(--glass);
     font-size: var(--fs-s);
+    /* rechts bleibt Platz für den Karten-Hinweis (i) */
+    max-width: calc(100% - var(--sp-3) - 44px);
   }
   .panel {
     display: grid;

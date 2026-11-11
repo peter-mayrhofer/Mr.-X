@@ -419,8 +419,8 @@ function rig(T: number) {
   const swapped = T >= Sa + 0.4;
   const canS = swapped ? tw(T, Sa + 0.6, Sa + 0.85, easeOutBack) : T < Sa + 0.2 ? tw(T, g + 0.6, g + 0.85, easeOutBack) : 0;
   if (T > S0 && T < r && (T < Sa || T > Sb)) canRot += clamp((tg[1] - noz[1]) * 0.25, -12, 18);
-  // die weiße Dose fällt zu Boden und rollt aus
-  let drop: { pos: P; rot: number } | null = null;
+  // die weiße Dose fällt zu Boden, rollt aus und verschwindet, wenn er zurückgeht (das fertige Logo zeigt keine Dose)
+  let drop: { pos: P; rot: number; o: number } | null = null;
   if (T >= Sa + 0.2) {
     const rp = add(add(sprayHand, [-10, 30]), [4, -8]);
     const t = T - (Sa + 0.2),
@@ -431,6 +431,7 @@ function rig(T: number) {
     drop = {
       pos: [rp[0] - 70 * tf - 45 * (1 - Math.exp(-roll * 3)), Math.min(G, rp[1] + 0.5 * gy * tf * tf)],
       rot: -95 * clamp(t / land, 0, 1) - 20 * Math.sin(Math.min(roll, 0.5) * Math.PI * 2) * Math.exp(-roll * 4),
+      o: 1 - tw(T, r + 0.3, r + 1.2),
     };
   }
   const sprayOn = (T > S0 && T < S1 && (T < Sa || T > Sb) ? 1 : 0) * sprayOnAt(p);

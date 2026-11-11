@@ -20,7 +20,9 @@ Die Wärme kommt über runde Formen, Fahne und Falke und die freundliche Sprache
 | Signalfarben | Gelb `#FFC531`, Grün `#2FBF71`, Blau `#3B9CFF` | Warnung/Wartezeit, ok/frei, Info/eigenes Team |
 | Schrift | Barlow Condensed (Überschriften, Countdown) + Inter (Text) | lokal eingebunden, tabellarische Ziffern, **Mindestgröße 16 px** |
 | Touch-Ziele | 48 / 56 / 72 px | wichtige Aktionen unten in der Daumenzone |
-| Bewegung | 150 / 250 / 400 ms | „Bewegung reduzieren“ schaltet Animationen ab |
+| Bewegung | 150 / 250 / 400 ms, `--ease-out`, `--ease-spring` (federt leicht) | „Bewegung reduzieren“ schaltet Animationen ab; Drücken reagiert sofort (60 ms), Loslassen federt zurück |
+| Tiefe | `--shadow-1`, `--shadow-2`, `--shadow-accent`, `--hilite` | weiche, weit gestreute Schatten statt harter Kanten; roter Hauptknopf mit leichtem Verlauf; „Sonne“ bleibt flach |
+| Zustände | `--hover`, `--ring` | Maus: Knöpfe/Reiter/Listen hellen leicht auf; Eingabefelder bekommen beim Antippen einen weichen Ring |
 
 Drei Darstellungen über `data-theme`: **Dunkel** (Standard im Spiel), **Hell**, **Sonne** (Hochkontrast: weißer Grund,
 schwarze Schrift, 2–3 px Ränder, keine Schatten/Transparenz). Umschalten: Einstellungen oder Sonnen-Knopf auf der Karte.

@@ -276,6 +276,7 @@
     margin: 12px 0 0;
     padding: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
   }
   .rank li {
@@ -420,7 +421,7 @@
     .big {
       position: static;
       min-height: 100dvh;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       grid-template-rows: 55dvh auto;
     }
     aside {

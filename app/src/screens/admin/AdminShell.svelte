@@ -128,6 +128,10 @@
     overflow: auto;
     position: relative;
   }
+  /* Bereichswechsel: der neue Inhalt blendet weich ein */
+  .content > :global(*) {
+    animation: einblenden var(--dur-2) var(--ease-out);
+  }
   @media (min-width: 1000px) {
     .shell {
       grid-template-columns: 248px 1fr;

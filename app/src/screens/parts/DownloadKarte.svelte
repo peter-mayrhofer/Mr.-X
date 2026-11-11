@@ -43,7 +43,7 @@
   <div class="karte" class:kompakt>
     <a class="dl" href={href(treffer.datei.datei)} download>
       <Symbol size={22} strokeWidth={2.4} aria-hidden="true" />
-      <span>{knopf[treffer.system]} <span class="gr">({mb(treffer.datei.groesse, lang)})</span></span>
+      <span class="lbl">{knopf[treffer.system]} <small class="gr">{mb(treffer.datei.groesse, lang)}</small></span>
     </a>
     {#if !ohneHinweis}<p class="hint">{hinweis[treffer.system]}</p>{/if}
     {#if andere.length}
@@ -82,11 +82,30 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
     text-decoration: none;
+    transition:
+      background-color var(--dur-1),
+      border-color var(--dur-1),
+      transform var(--dur-2) var(--ease-spring);
+  }
+  @media (hover: hover) {
+    .dl:hover {
+      background: var(--surface-3);
+      border-color: var(--line-strong);
+    }
+  }
+  .dl:active {
+    transform: scale(0.97);
+    transition-duration: 60ms;
+  }
+  .lbl {
+    display: grid;
+    justify-items: start;
+    line-height: 1.15;
   }
   .gr {
     font-family: var(--font-text);
     font-weight: 500;
-    font-size: var(--fs-s);
+    font-size: 14px;
     letter-spacing: 0;
     text-transform: none;
     color: var(--text-2);

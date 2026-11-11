@@ -23,10 +23,18 @@
   const viewer = $derived(match("/z/:spiel"));
   const screen = $derived(match("/g/:spiel"));
   const archiveRun = $derived(match("/archiv/:lauf"));
+
+  // Seitenwechsel blendet weich ein. Nur die Deckkraft: nichts verschiebt sich, feste Leisten bleiben an ihrem Platz.
+  const seite = $derived(p === "/spiel" ? p : router.path);
+  $effect(() => {
+    void seite;
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+      document.getElementById("app")?.animate({ opacity: [0, 1] }, { duration: 220, easing: "ease-out" });
+  });
 </script>
 
 <!-- Spiel-Ansicht: Bereichswechsel (?b=…) ohne Neuaufbau, damit die Live-Daten nicht neu geladen werden -->
-{#key p === "/spiel" ? p : router.path}
+{#key seite}
   <!-- Prototyp, Verwaltung, Archiv, Großbild: erst bei Bedarf geladen -->
   {#if proto}{#await import("./proto/ProtoScreen.svelte") then { default: ProtoScreen }}<ProtoScreen n={Number(proto.n)} />{/await}
   {:else if p === "/prototyp"}{#await import("./proto/Gallery.svelte") then { default: Gallery }}<Gallery />{/await}

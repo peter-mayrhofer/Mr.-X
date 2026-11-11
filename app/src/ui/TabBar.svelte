@@ -49,9 +49,22 @@
     cursor: pointer;
     font-size: var(--fs-s);
     font-weight: 600;
+    transition: color var(--dur-1);
+  }
+  @media (hover: hover) {
+    button:hover:not(.on) {
+      color: var(--text);
+    }
   }
   .on {
     color: var(--accent-text);
+  }
+  .on .ic {
+    background: var(--accent-soft);
+  }
+  button:active .ic {
+    transform: scale(0.9);
+    transition-duration: 60ms;
   }
   :global([data-theme="sonne"]) .on {
     color: #000;
@@ -61,11 +74,16 @@
   .ic {
     position: relative;
     display: grid;
+    padding: 2px 14px;
+    border-radius: var(--r-pill);
+    transition:
+      background-color var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-spring);
   }
   .badge {
     position: absolute;
-    top: -6px;
-    right: -14px;
+    top: -4px;
+    right: 0;
     min-width: 22px;
     height: 22px;
     padding: 0 6px;

@@ -626,3 +626,26 @@ der Schriftzug während der Animation an derselben Stelle bleibt; die Zeichenfl�
 zugeschnitten. Der Satz unter dem Logo („Das Live-Geländespiel in der Innenstadt“) entfällt, auf der Startseite am Handy fehlt
 der Installationshinweis unter dem App-Download (am PC und auf den Anmeldeseiten bleibt er), und niedrige Handys bekommen engere
 Abstände – so passt die Startseite auf gängigen Handys ohne Scrollen (geprüft u. a. 393 × 727 mit Download-Karte).
+
+### E-63 Weicheres Design und neue Startseite
+**Entscheidung:** Auf Wunsch des Organisators („smoother“, vor allem die Startseite) ist das Design gleichmäßiger und
+ruhiger geworden, ohne die Marke zu ändern (Großbuchstaben, Ausrufezeichen, animierter Hintergrund, Siegerehrung und
+Farben bleiben).
+- **Bausteine** (`app/src/ui/`): weichere Schatten (`--shadow-*`), leichter Verlauf auf dem roten Hauptknopf, federndes
+  Loslassen (`--ease-spring`), Hover-Zustände am PC, weicher Fokusring an Eingabefeldern, gewählter Reiter unten mit
+  runder Fläche, Sprachwahl in Neutral (Rot bleibt der Hauptaktion), Dialoge und Blätter blenden weicher ein.
+- **Übergänge:** Seitenwechsel (`App.svelte`) und Reiter-/Bereichswechsel blenden den neuen Inhalt in 250 ms ein – nur
+  Deckkraft, nichts verschiebt sich. Bei „weniger Bewegung“ entfällt das.
+- **Startseite:** Logo oben groß, alle Wege auf einer ruhigen Fläche darunter. Rangfolge: „Team beitreten“ (rot), „QR-Code
+  scannen“, App-Download; „Ich bin Schiri“ und „Spielleitung“ als leise Links unter einer Linie. Die Jagd-Route und die
+  wandernden Punkte laufen nicht mehr hinter dem Text; ohne Animation (weniger Bewegung, langsames Gerät) verschwinden
+  die Punkte statt in der Ecke zu kleben. Die liegengebliebene Spraydose blendet am Ende aus. Auf Handys bis 680 px
+  Höhe entfällt die Hinweiszeile unter dem roten Knopf, damit nichts scrollt.
+- **Fehler behoben:** Reiter-Leisten brechen nicht mehr um, sondern lassen sich seitlich wischen (Verlauf am Rand zeigt
+  es an); „Wie viele seid ihr?“ nutzt die Breite (Hinweis darunter); Titel „Spiele verwalten“ bricht nicht mehr um;
+  Download-Knopf zeigt die Größe in zweiter Zeile; Karten-Hinweis (i) liegt beim Schiri über der Übergabe-Leiste und
+  im Spielfeld-Editor neben dem Hinweis; Abstand zwischen Sammelruf-Text und Knopf; Auswertung und Großbild ziehen
+  schmale Handys (320 px) nicht mehr breit; Stepper, Einführungs-Striche passen sich an.
+**Warum so:** Die Marke bleibt erkennbar (CLAUDE.md: Design nicht ungefragt ändern – hier ausdrücklich gewünscht); die
+Änderungen sind „leise“: Tiefe, Bewegung und Abstände statt neuer Formen. Alles über Design-Tokens, damit „Sonne“
+(Hochkontrast) flach bleibt.
