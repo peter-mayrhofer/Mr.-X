@@ -276,6 +276,7 @@
     margin: 12px 0 0;
     padding: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
   }
   .rank li {
@@ -371,7 +372,7 @@
     gap: 24px;
     padding: 80px;
     text-align: center;
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     z-index: var(--z-overlay);
     animation: in var(--dur-3) var(--ease-out);
   }
@@ -420,7 +421,7 @@
     .big {
       position: static;
       min-height: 100dvh;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       grid-template-rows: 55dvh auto;
     }
     aside {

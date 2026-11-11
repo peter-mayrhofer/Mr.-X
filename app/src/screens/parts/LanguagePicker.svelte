@@ -29,19 +29,34 @@
     gap: var(--sp-2);
   }
   button {
-    font: inherit;
     font-weight: 600;
-    min-height: 44px;
-    padding: var(--sp-2) var(--sp-3);
-    border-radius: var(--r-pill, 999px);
-    border: 1px solid var(--border, rgb(128 128 128 / 0.4));
-    background: var(--surface, transparent);
-    color: var(--text);
+    font-size: var(--fs-s);
+    min-height: 40px;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-pill);
+    border: var(--border-w) solid var(--line);
+    background: var(--surface);
+    color: var(--text-2);
     cursor: pointer;
+    transition:
+      background-color var(--dur-1),
+      color var(--dur-1),
+      border-color var(--dur-1),
+      transform var(--dur-2) var(--ease-spring);
+  }
+  @media (hover: hover) {
+    button:hover:not(.on) {
+      color: var(--text);
+      border-color: var(--line-strong);
+    }
+  }
+  button:active {
+    transform: scale(0.95);
+    transition-duration: 60ms;
   }
   button.on {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    background: var(--text);
+    border-color: var(--text);
+    color: var(--bg);
   }
 </style>

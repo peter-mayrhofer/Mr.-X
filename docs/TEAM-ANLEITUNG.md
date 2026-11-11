@@ -18,8 +18,8 @@ Die Android-App sendet euren Standort auch, wenn das Handy in der Tasche ist und
 1. QR-Code vom Flyer mit der Kamera scannen → im Browser tippt ihr auf **Android-App installieren**
    (oder ihr bekommt die Datei `mister-x.apk` von der Spielleitung).
 2. Die Datei antippen. Android fragt **„Installation aus unbekannten Quellen zulassen?“** → für den Browser bzw.
-   „Dateien“ **erlauben** → zurück → **Installieren**. (Die App kommt nicht aus dem Play Store, ist aber von den
-   Roten Falken signiert.)
+   „Dateien“ **erlauben** → zurück → **Installieren**. (Die App kommt nicht aus dem Play Store, ist aber vom
+   Organisator signiert.)
 3. App **Mister X** öffnen → **Team beitreten** → den **Spiel-Code** vom Flyer eingeben.
 
 Ohne Installation geht es auch im Browser – dann wie beim iPhone den Bildschirm anlassen.

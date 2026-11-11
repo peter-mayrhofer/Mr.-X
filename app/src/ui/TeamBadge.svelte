@@ -62,7 +62,7 @@
     text-shadow: 0 1px 1px rgb(0 0 0 / 0.35);
   }
   .mrx {
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     border-color: #fff;
   }
   .me {

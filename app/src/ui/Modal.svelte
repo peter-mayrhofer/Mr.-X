@@ -54,14 +54,20 @@
   }
   dialog::backdrop {
     background: var(--scrim);
+    animation: dim var(--dur-2) var(--ease-out);
   }
   dialog[open] {
-    animation: pop var(--dur-2) var(--ease-out);
+    animation: pop var(--dur-3) var(--ease-spring);
   }
   @keyframes pop {
     from {
       opacity: 0;
-      transform: scale(0.94);
+      transform: translateY(12px) scale(0.95);
+    }
+  }
+  @keyframes dim {
+    from {
+      opacity: 0;
     }
   }
   .danger {

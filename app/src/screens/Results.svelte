@@ -111,6 +111,7 @@
 <style>
   .end {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-6);
     max-width: 880px;
     margin: 0 auto;
@@ -169,7 +170,7 @@
   }
   .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-3);
   }
   .stats div {
@@ -188,6 +189,9 @@
   .stats span {
     font-size: var(--fs-s);
     color: var(--text-2);
+    /* lange Wörter („Gesamtstrecke“) brechen um, statt die Seite am schmalen Handy aufzuziehen */
+    overflow-wrap: anywhere;
+    hyphens: auto;
   }
   .timeline h2 {
     font-size: var(--fs-s);

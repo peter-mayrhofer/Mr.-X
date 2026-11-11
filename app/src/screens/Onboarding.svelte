@@ -88,9 +88,11 @@
   .dots {
     display: flex;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
   .dots i {
-    width: 36px;
+    flex: 0 1 36px;
     height: 6px;
     border-radius: 3px;
     background: var(--surface-3);

@@ -27,10 +27,23 @@
     border-radius: var(--r-pill);
     border: var(--border-w) solid var(--line);
     cursor: pointer;
-    transition: transform var(--dur-1) var(--ease-out);
+    transition:
+      transform var(--dur-2) var(--ease-spring),
+      background-color var(--dur-1),
+      filter var(--dur-1);
+  }
+  @media (hover: hover) {
+    .ib:hover {
+      filter: brightness(1.1);
+    }
+    .plain:hover {
+      filter: none;
+      background: var(--hover);
+    }
   }
   .ib:active {
     transform: scale(0.92);
+    transition-duration: 60ms;
   }
   .l {
     width: var(--touch-l);

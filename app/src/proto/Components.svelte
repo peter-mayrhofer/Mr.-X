@@ -37,10 +37,8 @@
   const start = clock.now;
 
   const COLORS = [
-    ["--rf-rot", "Rote-Falken-Rot (Logo)"],
-    ["--rf-blau", "Rote-Falken-Blau (Logo)"],
-    ["--kf-rot", "Kinderfreunde-Rot"],
-    ["--kf-blau", "Kinderfreunde-Blau"],
+    ["--mrx-rot", "Mister-X-Rot"],
+    ["--mrx-blau", "Mister-X-Blau"],
     ["--bg", "Hintergrund"],
     ["--surface", "Fläche"],
     ["--surface-2", "Fläche 2"],
@@ -270,7 +268,7 @@
     font-weight: 400;
   }
   .dark {
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     border-radius: var(--r-m);
     padding: 4px;
   }

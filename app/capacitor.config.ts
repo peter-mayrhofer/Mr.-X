@@ -2,7 +2,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "at.rotefalken.misterx",
+  appId: "at.misterx.app",
   appName: "Mister X",
   webDir: "dist",
   android: {
@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     useLegacyBridge: true,
   },
   plugins: {
-    // lokale Benachrichtigungen (kein Firebase): kleines Fahnen-Symbol, Farbe der Roten Falken
+    // lokale Benachrichtigungen (kein Firebase): kleines Fahnen-Symbol, Mister-X-Rot
     LocalNotifications: { smallIcon: "ic_stat_flag", iconColor: "#C51A1A" },
   },
 };

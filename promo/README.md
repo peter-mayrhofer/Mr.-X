@@ -14,8 +14,8 @@ promo/
 
 | Datei | Inhalt |
 |---|---|
-| `Mister-X-Rote-Falken.mp4` | Langes Video (1:54, Querformat 1920×1080) – Admin, Mister X, Jäger, Schiri, Fang aus drei Sichten, Zeitraffer, Siegerehrung, Archiv |
-| `Mister-X-Rote-Falken-Kurz-Hochformat.mp4` | Kurzfassung (41 s, Hochformat 1080×1920) für WhatsApp-Status, Instagram-Story/Reel |
+| `Mister-X-Film.mp4` | Langes Video (1:54, Querformat 1920×1080) – Admin, Mister X, Jäger, Schiri, Fang aus drei Sichten, Zeitraffer, Siegerehrung, Archiv |
+| `Mister-X-Film-Kurz-Hochformat.mp4` | Kurzfassung (41 s, Hochformat 1080×1920) für WhatsApp-Status, Instagram-Story/Reel |
 | `Mister-X-Promo-Hype.mp4` | Hype-Clip (16 s, Querformat 1920×1080, 60 fps): Funke → MISTER X → Jagen/Fangen/Mister X werden → Live-Karte → Übergabe in der App → Logo |
 | `Mister-X-Promo-Hype-Hochformat.mp4` | Derselbe Hype-Clip im Hochformat (1080×1920) für Reels, Stories und WhatsApp-Status |
 | `Mister-X-Rundgang.mp4` | Rundgang-Video (53 s, Querformat 1920×1080, 60 fps): der rote Mister-X-Punkt läuft ohne Schnitt durch 13 echte App-Stationen – QR-Scan, Beitritt, Onboarding, Spielstart, Vorsprung, Benachrichtigungen, Live-Karte, Kompass, Sperrgebiet/Durchsage, Chat, Übergabe, Großbild, Siegerehrung |

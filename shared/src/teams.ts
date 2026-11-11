@@ -29,7 +29,7 @@ export const sameName = (a: string, b: string) => normalizeName(a).toLocaleLower
  * Ist das Kürzel vergeben, wird der zweite Buchstabe durch weitere Buchstaben des Namens, dann durch Ziffern ersetzt.
  */
 export function teamShort(name: string, taken: string[]): string {
-  const STOP = new Set(["og", "ortsgruppe", "team", "die", "der", "das", "rote", "falken"]);
+  const STOP = new Set(["og", "ortsgruppe", "team", "die", "der", "das"]);
   const words = normalizeName(name)
     .split(" ")
     .filter((w) => !STOP.has(w.toLocaleLowerCase("de")));

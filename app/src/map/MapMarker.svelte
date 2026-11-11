@@ -79,7 +79,7 @@
     box-shadow: var(--shadow-1);
   }
   .name.mrx {
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     color: #fff;
   }
   .big .name {
@@ -124,7 +124,7 @@
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     color: #fff;
     border: 3px solid #fff;
     box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
@@ -134,7 +134,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 3px solid var(--rf-rot);
+    border: 3px solid var(--mrx-rot);
   }
   .pulse {
     animation: pulse 2s var(--ease-out) infinite;
@@ -172,7 +172,7 @@
     justify-items: center;
     padding: 4px 10px;
     border-radius: 10px;
-    background: var(--rf-rot);
+    background: var(--mrx-rot);
     color: #fff;
     white-space: nowrap;
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.4);

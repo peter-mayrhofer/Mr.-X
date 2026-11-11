@@ -1,4 +1,4 @@
-package at.rotefalken.misterx;
+package at.misterx.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

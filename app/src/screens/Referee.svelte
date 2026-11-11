@@ -42,6 +42,8 @@
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   let tab = $state<Tab>("karte");
   let map: GameMap | undefined = $state();
+  /** Höhe der unteren Leiste (nächste Jäger + Übergabe): der Karten-Hinweis (i) rückt darüber */
+  let fuss = $state(0);
   // svelte-ignore state_referenced_locally
   let sheet = $state(!!preset);
   let waitSheet = $state(false);
@@ -109,7 +111,7 @@
 </script>
 
 <main class="screen">
-  <div class="mapzone">
+  <div class="mapzone" style:--karten-fuss="{fuss + 12}px">
     <GameMap
       bind:this={map}
       field={view.field}
@@ -142,7 +144,7 @@
       />
     </div>
 
-    <div class="bottom">
+    <div class="bottom" bind:clientHeight={fuss}>
       <div class="near" aria-label={T.schiri.naechsteJaeger}>
         <span class="caps">{T.schiri.naechsteJaeger}</span>
         {#if view.config.refereeHunters === false}
@@ -292,6 +294,11 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    animation: einblenden var(--dur-2) var(--ease-out);
+  }
+  /* Reiterwechsel: der neue Inhalt blendet weich ein */
+  .pane > :global(*) {
+    animation: einblenden var(--dur-2) var(--ease-out);
   }
   .follow {
     padding: var(--sp-3) var(--gutter) 0;

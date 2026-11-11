@@ -115,8 +115,7 @@ der Sonne, kein Google-Fonts-Abruf (kein Tracking, offline verfügbar).
 
 ### E-14 Icons: Lucide
 **Entscheidung:** Ein Icon-Set: Lucide (`@lucide/svelte`), nur die verwendeten Icons landen im Paket.
-**Warum:** Einheitlicher Strich, große Auswahl (Fahne, Radar, Funk …), freie Lizenz (ISC). Eigene Icons (Falke, Fahne mit
-Rote-Falken-Form) werden im gleichen Strichstil ergänzt.
+**Warum:** Einheitlicher Strich, große Auswahl (Fahne, Radar, Funk …), freie Lizenz (ISC). Eigene Icons (Fahne) werden im gleichen Strichstil ergänzt.
 
 ### E-15 Monorepo mit npm-Workspaces, `shared/` ohne Abhängigkeiten
 **Entscheidung:** `shared/` (reine Logik + Typen), `app/`, `functions/`. Die Functions werden mit esbuild zu einer Datei
@@ -383,11 +382,8 @@ langsame Verbindungen sogar langsamer waren als vorher (gemessen).
 **Entscheidung:** Das Protokoll der Spielleitung (enthält Namen) wird wie der Chat 30 Tage nach Spielende und bei
 „Neue Runde“ gelöscht; Prüfsummen von IP-Adressen (Schutz gegen Passwort-Raten) nur so lange wie die Sperre (10 Min).
 Vollständiger Datenschutzhinweis (Art. 13 DSGVO, kindgerecht formuliert) in der App unter Regeln → Datenschutz.
-**F12:** Verantwortlich ist laut Auftraggeber die Region Linz-Stadt der Kinderfreunde OÖ. Name, Anschrift und Kontakt aus
-deren Kontaktseite ([Region Linz](https://kinderfreunde.at/ueber-uns/kontakt/oberoesterreich/region-linz), abgerufen am 28.10.2026):
-Österreichische Kinderfreunde – Region Linz-Stadt, Zaunmüllerstraße 4, 4020 Linz, `info@kinderfreunde-linz.at`. Die ZVR-Nummer
-486089761 gehört laut [Impressum](https://kinderfreunde.at/impressum/www-kinderfreunde-ooe-at) der Landesorganisation Oberösterreich;
-für die Region steht auf der Kontaktseite keine eigene. Der Verein bestätigt das bei der Abnahme. **F1** bleibt wie vorgeschlagen bei den PNG-Logos; öffentlich gibt es keine passenden Vektor-Dateien.
+**F12:** Der Verantwortliche im Datenschutzhinweis ist derzeit offen (E-62) und wird vor dem ersten echten Spiel
+eingetragen.
 
 ### E-44 Android-App von der Startseite
 > **Erweitert durch E-58** (Download-Knopf für alle Systeme, `downloads.json` statt HEAD-Anfrage).
@@ -599,7 +595,7 @@ und „Wels“ (`wels`) wählbar, dazu „leer“. Steyr und Wels sind Exporte d
 (`shared/src/vorlagen/`, nicht von Hand bearbeiten). Eine Liste `VORLAGEN` (`shared/src/vorlagen/index.ts`) dient
 Server, Verwaltung und Editor; die GeoJSON-Umwandlung (`fieldFromGeoJson`, `shared/src/feld.ts`) nutzen Editor-Import
 und Vorlagen gemeinsam. Der Server lehnt unbekannte Vorlagen ab (bisher: still leeres Feld).
-**Warum so:** Die Roten Falken spielen nicht nur in Linz; eine weitere Stadt braucht nur eine Datei und einen
+**Warum so:** Gespielt wird nicht nur in Linz; eine weitere Stadt braucht nur eine Datei und einen
 Listeneintrag. Die Kennung `linz` bleibt, damit bestehende Spiele und Tests unverändert funktionieren.
 
 ### E-61 Spray-Logo auf der Startseite
@@ -612,20 +608,44 @@ Bewegung“ steht sofort das fertige Bild da. Im hellen Design sind Figur und Sc
 darunter nicht ständig von Bewegung abgelenkt werden. Der Blitz beim Einschlag des alten X ist mit dem alten Titel
 entfallen.
 
-### E-62 Ohne Logos der Roten Falken und Kinderfreunde, Veranstalter im Datenschutz offen
-**Entscheidung:** Die Logos der Roten Falken und der Kinderfreunde OÖ sind aus App, Großbild, Einstellungen und
+### E-62 Ohne Vereinslogos und Vereinsnamen, Veranstalter im Datenschutz offen
+**Entscheidung:** Die Vereinslogos sind aus App, Großbild, Einstellungen und
 Druckblättern entfernt, die Bilddateien gelöscht. Wo ein Logo Platz hatte, steht klein das Mister-X-Logo (Läufer mit
 Fahne und Schriftzug, Endbild des Spray-Logos aus E-61; `app/public/logos/mister-x.png` und `-negativ.png` für dunklen
 Grund). Auf der Startseite entfällt das kleine Logo oben, weil darunter das große Spray-Logo steht. Im
 Datenschutzhinweis ist der Veranstalter offen: Veranstalter, Adresse und Kontakt „wird noch eingetragen“.
 **Warum so:** Wunsch des Organisators – die App soll vorerst ohne Vereinslogos auskommen. Der Datenschutzhinweis
 braucht vor dem ersten echten Spiel wieder einen Verantwortlichen (DSGVO Art. 13), siehe ABNAHME F12.
-**Nachtrag:** Auch der Text „Rote Falken“ ist entfernt: Startseite (nur noch „Das Live-Geländespiel in der
-Innenstadt“), Fenstertitel, App-Beschreibung, Einstellungen und Herausgeber im Desktop-Installer. Die interne
-App-Kennung `at.rotefalken.misterx` (Android, Desktop) bleibt, weil eine neue Kennung die installierten Apps nicht mehr
-aktualisieren könnte – sie ist nirgends sichtbar.
+**Nachtrag:** Auch der Vereinsname als Text ist entfernt: Startseite (nur noch „Das Live-Geländespiel in der
+Innenstadt“), Fenstertitel, App-Beschreibung, Einstellungen und Herausgeber im Desktop-Installer. Später auf Wunsch des
+Organisators auch die interne App-Kennung: jetzt `at.misterx.app` (Android, Desktop). Folge: bisher installierte Apps
+bekommen keine Updates mehr und müssen einmal deinstalliert und neu installiert werden. Das Repository nennt den Verein
+nirgends mehr; die alten Promo-Videos sind ohne Vereinsnamen und -logos neu gerendert.
 **Nachtrag Startseite:** Das Spray-Logo spielt ohne Kamerafahrt (neue Vorlage des Organisators, „followCam“ aus), damit
 der Schriftzug während der Animation an derselben Stelle bleibt; die Zeichenfläche ist auf den genutzten Bereich
 zugeschnitten. Der Satz unter dem Logo („Das Live-Geländespiel in der Innenstadt“) entfällt, auf der Startseite am Handy fehlt
 der Installationshinweis unter dem App-Download (am PC und auf den Anmeldeseiten bleibt er), und niedrige Handys bekommen engere
 Abstände – so passt die Startseite auf gängigen Handys ohne Scrollen (geprüft u. a. 393 × 727 mit Download-Karte).
+
+### E-63 Weicheres Design und neue Startseite
+**Entscheidung:** Auf Wunsch des Organisators („smoother“, vor allem die Startseite) ist das Design gleichmäßiger und
+ruhiger geworden, ohne die Marke zu ändern (Großbuchstaben, Ausrufezeichen, animierter Hintergrund, Siegerehrung und
+Farben bleiben).
+- **Bausteine** (`app/src/ui/`): weichere Schatten (`--shadow-*`), leichter Verlauf auf dem roten Hauptknopf, federndes
+  Loslassen (`--ease-spring`), Hover-Zustände am PC, weicher Fokusring an Eingabefeldern, gewählter Reiter unten mit
+  runder Fläche, Sprachwahl in Neutral (Rot bleibt der Hauptaktion), Dialoge und Blätter blenden weicher ein.
+- **Übergänge:** Seitenwechsel (`App.svelte`) und Reiter-/Bereichswechsel blenden den neuen Inhalt in 250 ms ein – nur
+  Deckkraft, nichts verschiebt sich. Bei „weniger Bewegung“ entfällt das.
+- **Startseite:** Logo oben groß, alle Wege auf einer ruhigen Fläche darunter. Rangfolge: „Team beitreten“ (rot), „QR-Code
+  scannen“, App-Download; „Ich bin Schiri“ und „Spielleitung“ als leise Links unter einer Linie. Die Jagd-Route und die
+  wandernden Punkte laufen nicht mehr hinter dem Text; ohne Animation (weniger Bewegung, langsames Gerät) verschwinden
+  die Punkte statt in der Ecke zu kleben. Die liegengebliebene Spraydose blendet am Ende aus. Auf Handys bis 680 px
+  Höhe entfällt die Hinweiszeile unter dem roten Knopf, damit nichts scrollt.
+- **Fehler behoben:** Reiter-Leisten brechen nicht mehr um, sondern lassen sich seitlich wischen (Verlauf am Rand zeigt
+  es an); „Wie viele seid ihr?“ nutzt die Breite (Hinweis darunter); Titel „Spiele verwalten“ bricht nicht mehr um;
+  Download-Knopf zeigt die Größe in zweiter Zeile; Karten-Hinweis (i) liegt beim Schiri über der Übergabe-Leiste und
+  im Spielfeld-Editor neben dem Hinweis; Abstand zwischen Sammelruf-Text und Knopf; Auswertung und Großbild ziehen
+  schmale Handys (320 px) nicht mehr breit; Stepper, Einführungs-Striche passen sich an.
+**Warum so:** Die Marke bleibt erkennbar (CLAUDE.md: Design nicht ungefragt ändern – hier ausdrücklich gewünscht); die
+Änderungen sind „leise“: Tiefe, Bewegung und Abstände statt neuer Formen. Alles über Design-Tokens, damit „Sonne“
+(Hochkontrast) flach bleibt.

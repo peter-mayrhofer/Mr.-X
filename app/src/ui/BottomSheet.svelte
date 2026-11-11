@@ -5,6 +5,7 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import { fly, fade } from "svelte/transition";
+  import { quintOut } from "svelte/easing";
   import { X } from "@lucide/svelte";
   import { T } from "../texte.ts";
 
@@ -24,7 +25,7 @@
 
 {#if open}
   {#if modal}
-    <button class="scrim" transition:fade={{ duration: 150 }} aria-label={T.allgemein.schliessen} onclick={onclose}></button>
+    <button class="scrim" transition:fade={{ duration: 200 }} aria-label={T.allgemein.schliessen} onclick={onclose}></button>
   {/if}
   <div
     class="sheet"
@@ -32,7 +33,7 @@
     role={modal ? "dialog" : "region"}
     aria-modal={modal || undefined}
     aria-label={title}
-    transition:fly={{ y: 400, duration: 250 }}
+    transition:fly={{ y: 400, duration: 360, easing: quintOut }}
   >
     <div class="grip" aria-hidden="true"></div>
     {#if title}

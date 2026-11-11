@@ -62,11 +62,19 @@
     border: var(--border-strong) solid var(--line);
     background: var(--surface);
     font-size: var(--fs-l);
-    transition: border-color var(--dur-1);
+    transition:
+      border-color var(--dur-1),
+      box-shadow var(--dur-2) var(--ease-out);
+  }
+  @media (hover: hover) {
+    input:hover:not(:focus) {
+      border-color: var(--line-strong);
+    }
   }
   input:focus {
     outline: none;
     border-color: var(--focus);
+    box-shadow: 0 0 0 4px var(--ring);
   }
   .has-error input {
     border-color: var(--accent);

@@ -224,6 +224,10 @@
   .map :global(.maplibregl-ctrl-attrib) {
     font-size: 12px;
   }
+  /* liegt unten eine Leiste über der Karte (Schiri: Übergabe-Knopf), hebt --karten-fuss den Karten-Hinweis darüber */
+  .map :global(.maplibregl-ctrl-bottom-right) {
+    bottom: var(--karten-fuss, 0px);
+  }
   /* data-names wird zur Laufzeit gesetzt → :global, sonst entfernt Svelte die Regel */
   .map:global([data-names="off"]):not(.always) :global(.name) {
     display: none;

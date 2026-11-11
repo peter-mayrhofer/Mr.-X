@@ -1,4 +1,4 @@
-# Konzept: „Mister X – Rote Falken“
+# Konzept: „Mister X“
 
 Stand: Meilenstein 1 (Analyse & Konzept) + Design-Prototyp – **vom Organisator bestätigt am 27.10.2026**
 (alle Vorschläge aus Abschnitt 9 angenommen, siehe E-20). **Aktualisiert in Meilenstein 9b:** Der Server läuft jetzt bei
@@ -301,12 +301,12 @@ Cloudflare-Laufzeit nach.
 ## 9. Offene Fragen
 
 Zu jeder Frage steht der **Vorschlag**. Bestätigt am 27.10.2026: F2, F3, F6, F8, F10, F14 ausdrücklich, alle übrigen
-als Standard. F1: PNG-Logos wie vorgeschlagen (Vektor-Dateien optional, öffentlich nicht verfügbar). F12 ist mit den
-Angaben aus dem Impressum der Kinderfreunde OÖ eingetragen (E-43) und wird bei der Abnahme bestätigt.
+als Standard. F1: PNG-Logos wie vorgeschlagen (Vektor-Dateien optional, öffentlich nicht verfügbar). F12 (Verantwortlicher
+im Datenschutzhinweis) ist derzeit offen (E-62) und wird vor dem ersten echten Spiel eingetragen.
 
 | # | Frage | Vorschlag |
 |---|---|---|
-| F1 | **Logos & Farben:** Gibt es die Logos als Vektor (SVG/PDF) oder größer? Rote-Falken-Logo mit transparentem Hintergrund? Nutzungsrechte für die App bestätigt? | Farben exakt aus den PNGs: Rote-Falken-Rot `#C51A1A`, Rote-Falken-Blau `#214C6B`; Kinderfreunde-Rot `#DC0219`, -Blau `#005CA8`. Bis Vektoren da sind: PNGs freigestellt, nur klein verwendet |
+| F1 | **Logos & Farben:** Welche Logos und Farben verwendet die App? | Eigenes Mister-X-Logo (E-61, E-62), Farben Mister-X-Rot `#C51A1A` und -Blau `#214C6B` |
 | F2 | **Pause-Funktion** (z. B. Regen)? | **Ja**: friert Meldungen, Wartezeiten und Spielende ein |
 | F3 | **Aufbewahrung** Archiv / Chat? | Archiv (Meldungen, Übergaben, Auswertung) **1 Jahr**, Chat **30 Tage**, Live-Standorte **sofort bei Spielende** gelöscht |
 | F4 | Sehen sich **Jäger-Teams gegenseitig** auf der Karte? | **Nein** (wie bisher) |
@@ -317,7 +317,7 @@ Angaben aus dem Impressum der Kinderfreunde OÖ eingetragen (E-43) und wird bei 
 | F9 | **Vorsprung am Start** = Meldeintervall oder eigener Wert? | eigener Wert `headStartMin`, Standard 10 Min |
 | F10 | Nach einer Übergabe **sofort** den Standort des neuen Mister X melden? (`archiv/SPEC.md`: ja) | **Ja**, Übergabe-Meldung am Übergabeort |
 | F11 | **Umkreis** für die Wartezeit nach Übergabe? | 200 m (wie Prototyp), live änderbar |
-| F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Die Kinderfreunde OÖ – bitte Adresse/E-Mail nennen |
+| F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Offen – vor dem ersten echten Spiel eintragen (E-62) |
 | F13 | **APK-Verteilung:** Das Repository ist privat → GitHub-Downloads brauchen ein Konto. | APK über die eigene Adresse ausliefern (`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk`, E-38) + QR-Code |
 | F14 | Darf ein Team ein **zweites Handy** (Ersatzgerät) anmelden? | **Ja**, gleiches Team-Passwort; das jeweils neueste Signal zählt |
 
@@ -325,10 +325,10 @@ Angaben aus dem Impressum der Kinderfreunde OÖ eingetragen (E-43) und wird bei 
 
 ## 10. Design-Konzept (Kurzfassung – Details im Klick-Prototyp)
 
-**Leitidee „Fahndung in Rot-Weiß“:** dunkles Nacht-Blau (abgeleitet vom Rote-Falken-Blau) als Spielfläche, kräftiges
-Rote-Falken-Rot für alles, was mit Mister X und Aktionen zu tun hat, Weiß für Lesbarkeit. Agenten-Elemente sparsam:
+**Leitidee „Fahndung in Rot-Weiß“:** dunkles Nacht-Blau als Spielfläche, kräftiges
+Rot für alles, was mit Mister X und Aktionen zu tun hat, Weiß für Lesbarkeit. Agenten-Elemente sparsam:
 schmale, fette Großbuchstaben-Überschriften (wie Akten-Stempel), Radar-Ping bei Meldungen, gestrichelte Spur,
-Ecken-Markierungen wie ein Fadenkreuz am Countdown. Wärme der Roten Falken: runde Formen, Fahne + Falke, freundliche
+Ecken-Markierungen wie ein Fadenkreuz am Countdown. Wärme: runde Formen, Fahne + Falke, freundliche
 Sprache („Tapperl“, „Ihr seid Mister X!“).
 
 - **Drei Darstellungen:** *Dunkel* (Standard im Spiel), *Hell*, **Sonne** (Hochkontrast: weißer Grund, schwarze Schrift,

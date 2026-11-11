@@ -281,7 +281,7 @@
           >{T.admin.sammelrufBeenden}</Button
         >
       {:else}
-        <p class="muted">{T.admin.sammelrufHinweis(view.field.meet?.name ?? T.admin.spielfeldmitte)}</p>
+        <p class="muted lead">{T.admin.sammelrufHinweis(view.field.meet?.name ?? T.admin.spielfeldmitte)}</p>
         <Button
           block
           icon={MapPinCheck}
@@ -576,6 +576,9 @@
     font-size: var(--fs-xl);
     font-weight: 700;
     margin-bottom: var(--sp-2);
+  }
+  .lead {
+    margin-bottom: var(--sp-3);
   }
   .reveal {
     display: flex;

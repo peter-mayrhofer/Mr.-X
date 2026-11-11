@@ -31,7 +31,7 @@
     background: var(--surface);
     border: var(--border-w) solid var(--line);
     border-radius: var(--r-l);
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-1), var(--hilite);
   }
   .pad {
     padding: var(--sp-4);
