@@ -976,13 +976,12 @@ export const T = {
   datenschutz: {
     kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung, sie werden nach Spielende gelöscht. Kein Tracking, keine Werbung.",
     voll: "Vollständiger Datenschutzhinweis",
-    /** Veranstalter noch offen (E-62): Name, Adresse und Kontakt hier und im ersten Abschnitt eintragen */
-    kontakt: "",
+    kontakt: "petermayrhofer08@gmail.com",
     /** DSGVO Art. 13 – kurz und verständlich; Fristen wie im Server umgesetzt (docs/KONZEPT.md, Löschfristen) */
     abschnitte: [
       {
         titel: "Wer ist verantwortlich?",
-        text: "Veranstalter: wird noch eingetragen. Adresse: wird noch eingetragen. Kontakt für alle Fragen zum Datenschutz: wird noch eingetragen.",
+        text: "Peter Mayrhofer, Madersdorferstraße 10a, 4523 Neuzeug – Veranstalter des Spiels. Kontakt für alle Fragen zum Datenschutz: petermayrhofer08@gmail.com oder +43 660 8184922.",
       },
       {
         titel: "Welche Daten?",
