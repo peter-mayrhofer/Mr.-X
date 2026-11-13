@@ -44,13 +44,15 @@ describe("Urkunden", () => {
     await page.getByRole("button", { name: T.urkunde.knopf }).click();
     await expect.poll(() => druckZustand(page)).toEqual({ gedruckt: 1, blaetter: 12, modus: "urkunden" });
     const urk = page.locator(".urkunden .urk");
-    await expect.poll(() => urk.filter({ hasText: "Auwiesen" }).locator(".stempel").count()).toBe(1);
-    expect(await urk.locator(".stempel").count()).toBe(1);
+    await expect.poll(() => urk.filter({ hasText: "Auwiesen" }).locator(".stempel.sieger").count()).toBe(1);
+    expect(await urk.locator(".stempel.sieger").count()).toBe(1);
+    // „Mission erfüllt“ bekommt jedes Team
+    expect(await urk.locator(".stempel.rund").count()).toBe(12);
     expect(await urk.first().textContent()).toContain("Mister X Linz 2027");
     // im Druck: nur die Urkunden, der Rest der App ist ganz weg
     await page.emulateMedia({ media: "print" });
     expect(await page.locator("#app").evaluate((e) => getComputedStyle(e).display)).toBe("none");
-    expect(await urk.first().evaluate((e) => getComputedStyle(e).display)).toBe("block");
+    expect(await urk.first().evaluate((e) => getComputedStyle(e).display)).toBe("flex");
     // Druckdialog zu → Urkunden weg, Modus zurück
     await page.evaluate(() => dispatchEvent(new Event("afterprint")));
     await expect.poll(() => druckZustand(page)).toEqual({ gedruckt: 1, blaetter: 0, modus: null });
@@ -62,7 +64,7 @@ describe("Urkunden", () => {
     await page.getByRole("button", { name: T.urkunde.knopf }).click();
     await expect.poll(() => druckZustand(page)).toMatchObject({ gedruckt: 1, modus: "urkunden" });
     expect((await druckZustand(page)).blaetter).toBeGreaterThan(0);
-    expect(await page.locator(".urkunden .stempel").count()).toBe(0);
+    expect(await page.locator(".urkunden .stempel.sieger").count()).toBe(0);
     await page.emulateMedia({ media: "print" });
     expect(await page.locator("section.sheet").evaluate((e) => getComputedStyle(e).display)).toBe("none");
     await page.evaluate(() => dispatchEvent(new Event("afterprint")));

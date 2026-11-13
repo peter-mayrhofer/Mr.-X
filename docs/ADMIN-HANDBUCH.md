@@ -222,7 +222,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
 
 1. **Urkunden drucken** (Knopf unten in der Auswertung): ein A4-Blatt pro Team mit Teamname, Glückwunsch zur
    Teilnahme, Spielname und Datum. Das Sieger-Team bekommt den Stempel **Sieger**, wer Mister X war, die Zeit dazu
-   (z. B. „1:12 h als Mister X · 2× die Fahne getragen“).
+   (z. B. „1:12 h als Mister X · 2× die Fahne getragen“). Jedes Team bekommt den Stempel „Mission erfüllt“. Im
+   Druckdialog **Hintergrundgrafiken** einschalten (falls angeboten), damit Kopf und Stadtplan mitgedruckt werden.
 2. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
    gemeldet und gefangen), Chat-Verlauf, **Als Datei sichern** (JSON) und **Drucken**.
 3. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
