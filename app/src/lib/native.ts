@@ -6,10 +6,11 @@
 // - Akku-Optimierung abschalten (eigenes kleines Plugin „Akku“)
 import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community/background-geolocation";
-import type { ApiReply, Note, PositionIn } from "@mrx/shared";
+import { uebersetze, type ApiReply, type Note, type PositionIn } from "@mrx/shared";
 import { API_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
-import { pushTitel } from "./sprache.ts";
+import { sprache } from "./sprache.ts";
+import { T } from "../texte.ts";
 
 export const NATIVE = Capacitor.isNativePlatform();
 /** Läuft in der Desktop-Hülle (Tauri). Die Hülle setzt `__MRX_DESKTOP__` (= ihre Version) per Initialisierungsskript auf
@@ -28,7 +29,7 @@ export async function watchNative(background: boolean, onLoc: (l: Location) => v
   await stopNative();
   watcher = await BG.addWatcher(
     {
-      ...(background ? { backgroundTitle: "Mister X läuft", backgroundMessage: "Euer Standort wird an die Spielleitung gesendet." } : {}),
+      ...(background ? { backgroundTitle: T.einstellungen.hintergrundTitel, backgroundMessage: T.einstellungen.hintergrundText } : {}),
       requestPermissions: true,
       stale: false,
       distanceFilter: 5,
@@ -60,8 +61,8 @@ export async function enableLocal(ask: boolean): Promise<boolean> {
   if (perm.display !== "granted") return false;
   channel ??= LocalNotifications.createChannel({
     id: "spiel",
-    name: "Spiel",
-    description: "Meldungen, Übergaben, Wartezeiten, Durchsagen",
+    name: T.einstellungen.kanalName,
+    description: T.einstellungen.kanalText,
     importance: 5,
     vibration: true,
     visibility: 1,
@@ -85,8 +86,8 @@ export async function showLocal(n: Note) {
     notifications: [
       {
         id: (Date.now() % 2_000_000_000) + shown.size,
-        title: pushTitel[n.title] ?? n.title,
-        body: n.body,
+        title: uebersetze(n.title, sprache),
+        body: uebersetze(n.body, sprache),
         channelId: "spiel",
         smallIcon: "ic_stat_flag",
         // sofort anzeigen, kein Wecker: sonst verlangt das Plugin ab Android 12 erst die Erlaubnis für exakte Alarme

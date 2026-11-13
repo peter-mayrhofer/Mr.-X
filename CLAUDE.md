@@ -16,8 +16,9 @@ und Schiris steuern, das Großbild zeigt die Jagd. Live: https://mister-x.mr-x-o
 ## Aufbau
 
 - `app/` Svelte 5 + TypeScript (Vite). Alle Texte in `app/src/texte.ts` (Deutsch); Übersetzungen der
-  Team-Bildschirme in `app/src/texte/{en,tr,bks}.ts`, typgeprüft gegen `texte.ts` – neue Team-Texte in allen vier
-  Sprachen anlegen. Spielleitung, Schiri und Großbild sind nur deutsch. Android-App: `app/android/` (Capacitor).
+  Team-Bildschirme in `app/src/texte/{en,es,it,tr}.ts`, typgeprüft gegen `texte.ts` – neue Team-Texte in allen fünf
+  Sprachen anlegen; Chat-Meldungen und Push-Titel vom Server in `shared/src/sprachen/` (E-67). Spielleitung, Schiri und
+  Großbild sind nur deutsch. Android-App: `app/android/` (Capacitor).
 - `server/` Cloudflare Worker, ein Spielraum (Durable Object) pro Spiel, D1, Web Push. Regeln in `server/src/ablauf.ts`
   und `server/src/actions/`. Chat-/Server-Meldungen in `shared/src/meldungen.ts`, Push-Titel in `shared/src/push.ts`.
 - `shared/` Spiel-Logik, Geometrie, Schnittstellen-Vertrag – mit Unit-Tests.

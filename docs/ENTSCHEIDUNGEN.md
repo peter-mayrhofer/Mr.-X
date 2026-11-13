@@ -674,3 +674,31 @@ Saira Stencil One mit rotem Pinselstrich, Teamname in Permanent Marker auf gelbe
 (Schreibmaschine) – alle drei Schriften lokal über `@fontsource` (OFL/Apache), werden vor dem Druck geladen.
 Runder Stempel „Mission erfüllt“ für alle, „Sieger“-Stempel für den Sieger. Papierton statt Reinweiß, damit es nach
 Urkunde aussieht; der Kopf braucht Farbe, der Rest bleibt hell (wenig Tinte).
+
+### E-66 Werkzeuge aktuell halten (GitHub-Bausteine, Sicherheitswarnungen)
+**Entscheidung:** Die GitHub-Abläufe nutzen die Bausteine, die auf Node 24 laufen (`actions/checkout@v6`,
+`setup-node@v6`, `setup-java@v5`, `upload-artifact@v6`, `download-artifact@v7`, `softprops/action-gh-release@v3`).
+Capacitor auf 8.6.2 (bringt neuere Hilfspakete `xcode`, `rimraf`/`glob` mit), ESLint 10.14 und typescript-eslint 8.72.2.
+ESLint hängt noch an `minimatch` 10 mit einer DoS-Warnung (GHSA-g3hv-75wg-m249); `overrides` in `package.json` zwingt
+`minimatch` 11 – entfernen, sobald ESLint selbst `minimatch` 11 verlangt.
+**Warum so:** GitHub schaltet Node 20 für Bausteine ab; die alten liefen nur noch mit Warnung. `npm audit` meldete
+17 Warnungen, alle in Entwickler-Werkzeugen (die App selbst: 0). Übrig bleiben 2 niedrige in `deepmerge` (über
+`@sveltejs/vite-plugin-svelte`, nur beim Bauen), für die es noch keine behobene Version gibt.
+
+### E-67 Sprachen hinter dem Zahnrad, Spanisch und Italienisch, alles im Spiel übersetzt
+**Entscheidung:** Die Sprachwahl liegt auf der Startseite nicht mehr offen, sondern hinter einem **Zahnrad** oben rechts
+(Blatt „Einstellungen“ mit der Sprache); in der App weiter unter **Mehr → Einstellungen**. Sprachen: Deutsch, Englisch,
+Spanisch, Italienisch, Türkisch – Bosnisch/Kroatisch/Serbisch fällt weg (Wunsch des Organisators; wer es gewählt hatte,
+landet wieder bei Deutsch). Im Spiel ist jetzt alles übersetzt, was Teams sehen: auch die automatischen
+**Chat-Meldungen** des Servers, Text und Titel der **Benachrichtigungen**, Uhrzeit-/Datumsformat, „vor 6 Min“,
+Kartenbeschriftung, Vorlese-Texte, Archiv mit Wiederholung und der **Datenschutz-Hinweis** (ersetzt E-56 in diesem
+Punkt). Umsetzung: Der Server schreibt weiter deutsch; `shared/src/sprachen.ts` erkennt jede deutsche Meldung über ihr
+Muster aus `meldungen.ts` und setzt sie mit Teamnamen und Minuten in der Sprache neu zusammen – in der App beim
+Anzeigen (Chat, Android-Benachrichtigung) und am Server für Web-Push (das Gerät meldet seine Sprache mit
+`pushSubscribe`). Texte von Menschen (Durchsagen, Chat, Regel-Ergänzungen, Teamnamen) bleiben, wie sie geschrieben
+wurden. Spielende ohne Sieger hat eine eigene Meldung statt „Niemand“. Nebenbei behoben: Im Warteraum fehlten in
+anderen Sprachen die drei wichtigsten Regeln (Auswahl über das Symbol statt über den deutschen Titel).
+**Warum so:** Wunsch des Organisators. Muster statt neuer Felder im Server: alte Chat-Verläufe werden mit übersetzt,
+und es braucht keine Umstellung der gespeicherten Daten. Neue Meldung in `meldungen.ts` → in allen vier Sprachdateien
+unter `shared/src/sprachen/` ergänzen (TypeScript meldet fehlende). Die Übersetzungen sollte vor dem Einsatz jemand mit
+der jeweiligen Muttersprache durchsehen.

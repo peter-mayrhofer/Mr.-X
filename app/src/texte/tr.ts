@@ -2,6 +2,9 @@
 import type { Uebersetzung } from "../lib/sprache.ts";
 
 export default {
+  app: {
+    voll: "Mister X – canlı arazi oyunu",
+  },
   update: {
     titel: "Uygulamanın yeni sürümü",
     text: "Lütfen yeni uygulamayı yükleyin – yoksa yeni özellikler eksik kalır.",
@@ -23,6 +26,10 @@ export default {
     laden: "Yükleniyor …",
     min: "dk",
     gespeichert: "Kaydedildi",
+    geradeEben: "az önce",
+    vor: (dauer: string) => `${dauer} önce`,
+    weniger: "azalt",
+    mehr: "artır",
   },
   start: {
     teamBeitreten: "Takıma katıl",
@@ -65,6 +72,7 @@ export default {
     andererName: "Başka bir takım adı gir",
   },
   onboarding: {
+    schritt: (n: number, von: number) => `Adım ${n} / ${von}`,
     ueberspringen: "Atla",
     los: "Hadi başlayalım!",
     schritte: [
@@ -114,6 +122,7 @@ export default {
     alleRegeln: "Tüm kurallar",
   },
   status: {
+    titel: "Oyun durumu",
     naechsteMeldung: "Sonraki bildirim",
     eureMeldung: "Konumunuz bildirilecek:",
     spielzeit: "Oyun süresi",
@@ -130,6 +139,8 @@ export default {
     probelauf: "Deneme oyunu",
   },
   karte: {
+    titel: "Oyun alanının haritası",
+    daten: "Veriler:",
     aufMich: "Beni ortala",
     misterXZeigen: "Mister X'i göster",
     ganzesFeld: "Tüm oyun alanı",
@@ -164,6 +175,7 @@ export default {
     karte: "Haritayı gör",
   },
   uebergabe: {
+    vorsprungKurz: "Kaçış süresi",
     gefangen: "Yakalandı!",
     strafe: "Ceza devri",
     fahneAn: (team: string) => `Bayrak ${team} takımına geçiyor`,
@@ -174,6 +186,7 @@ export default {
     zurueck: "Devir teslim geri alındı.",
   },
   chat: {
+    kanal: "Sohbet kanalı",
     alle: "Herkes",
     spielleitung: "Oyun yönetimi",
     platzhalter: "Mesaj …",
@@ -195,6 +208,7 @@ export default {
     keineKamera: "Kamera bulunamadı. Lütfen oyun kodunu elle girin.",
   },
   kompass: {
+    pfeil: (richtung: string) => `Yön: ${richtung}`,
     titel: "Pusula",
     zurMeldung: "Mister X'in son bildirimine",
     zumTreffpunkt: (ort: string) => `Buluşma noktasına: ${ort}`,
@@ -296,6 +310,7 @@ export default {
   mehr: {
     titel: "Daha fazla",
     einstellungen: "Ayarlar",
+    einstellungenHinweis: "Görünüm, ses, bildirimler",
     regeln: "Kurallar ve yardım",
     team: "Takımımız",
     gelaufen: (strecke: string) => `${strecke} yüründü`,
@@ -305,6 +320,7 @@ export default {
     groesseOk: "Kaydedildi",
   },
   ende: {
+    archiv: "Arşive git",
     titel: "Oyun bitti!",
     sieger: "Kazanan",
     letzterMrx: "son Mister X",
@@ -319,6 +335,23 @@ export default {
     zeitstrahl: "Kim ne zaman Mister X'ti?",
     zurKarte: "Harita ve sohbet",
     auswertung: "Sonuçlar",
+  },
+  archiv: {
+    titel: "Arşiv",
+    replay: "Tekrar",
+    abspielen: "Oynat",
+    anhalten: "Durdur",
+    tempo: "Hız",
+    auswertung: "Sonuçlar",
+    chat: "Sohbet",
+    leer: "Henüz geçmiş oyun yok.",
+    ansicht: "Görünüm",
+    sichern: "Dosya olarak kaydet",
+    drucken: "Yazdır",
+    notstopp: "acil durdurma ile bitti",
+    chatGeloescht: "Sohbet yok (30 gün sonra otomatik silinir).",
+    nichtGefunden: "Bu tur arşivde yok (artık yok).",
+    teams: (n: number) => `${n} takım`,
   },
   einstellungen: {
     titel: "Ayarlar",
@@ -346,6 +379,11 @@ export default {
     pushNichtMoeglich: "Bu tarayıcı bildirim gösteremiyor. iPhone: Paylaş simgesi → „Ana Ekrana Ekle“, sonra uygulamayı oradan açın.",
     standort: "Konum",
     hintergrund: "Arka planda gönder (Android uygulaması)",
+    hintergrundHinweis: "Kalıcı bildirim „Mister X oyunu sürüyor – konum paylaşılıyor“",
+    hintergrundTitel: "Mister X oyunu sürüyor",
+    hintergrundText: "Konumunuz oyun yönetimine gönderiliyor.",
+    kanalName: "Oyun",
+    kanalText: "Bildirimler, devir teslimler, bekleme süreleri, duyurular",
     wach: "Ekranı açık tut",
     ueber: "Uygulama hakkında",
     version: "Sürüm",
@@ -404,24 +442,42 @@ export default {
     bald: "Oyun yakında başlıyor. Harita burada görünecek.",
     abmelden: "Çıkış yap",
   },
+  datenschutz: {
+    kurz: "Sadece oyunun ihtiyaç duyduğunu kaydediyoruz: takım adı, sohbet ve oyun sırasında konumunuz. Canlı konumları sadece oyun yönetimi görür ve oyun bitince silinir. Takip yok, reklam yok.",
+    voll: "Gizlilik bildiriminin tamamı",
+    abschnitte: [
+      {
+        titel: "Sorumlu kim?",
+        text: "Peter Mayrhofer, Madersdorferstraße 10a, 4523 Neuzeug (Avusturya) – oyunun düzenleyicisi. Gizlilikle ilgili tüm sorular için iletişim: petermayrhofer08@gmail.com veya +43 660 8184922.",
+      },
+      {
+        titel: "Hangi veriler?",
+        text: "Takım adınız, hakemler ve oyun yönetimi için ise ön ad; oyun sırasında telefonun konumu (konum, doğruluk, yön, pil seviyesi); sohbet mesajları; hangi bildirimleri istediğiniz. E-posta adresi yok, telefon numarası yok, hesap yok. Yanlış bir şifreden sonra, şifre tahminine karşı korumak için IP adresinin bir sağlama toplamı en fazla 10 dakika saklanır.",
+      },
+      {
+        titel: "Ne için?",
+        text: "Sadece oyun için: Mister X'i bildirmek, bir yakalamadan sonra bekleme sürelerini hesaplamak, oyun alanının sınırından önce uyarmak ve güvenliğiniz (oyun yönetimi nerede olduğunuzu görür). Takip yok, reklam yok, başkalarıyla paylaşım yok. „Yemek ustası“ ödülü için bir takımın bir yemek yerinde en az 10 dakika kaç kez kaldığı sayılır – sadece bu sayı kaydedilir, konum değil. Bir takım acil durum düğmesine basarsa oyun yönetimi ve hakemler takımın o anda nerede olduğunu görür; bu bildirim sohbetle birlikte silinir.",
+      },
+      {
+        titel: "Kim neyi görür?",
+        text: "Avcı takımların konumlarını sadece oyun yönetimi, hakemler (oyun yönetimi bunu kapatmadıkça) ve merkezdeki büyük ekran görür – diğer takımlar ve izleyiciler görmez. Mister X'in bildirilen konumunu tüm oyuncular görür.",
+      },
+      {
+        titel: "Ne kadar süre?",
+        text: "Canlı konumlar oyunun sonuna kadar, sonra hemen silinir. Sohbet ve oyun yönetiminin kaydı: oyun bittikten 30 gün sonra. Mister X bildirimleri ve devir teslimlerle sonuçlar: 1 yıl. Telefonunuzdaki oturum 7 gün ya da çıkış yapana kadar geçerlidir.",
+      },
+      {
+        titel: "Veriler nerede işlenir?",
+        text: "Cloudflare sunucularında (veri işleyen); oyun verileri genellikle Avrupa'daki bir veri merkezinde bulunur, Cloudflare ABD'ye aktarımlar için AB-ABD Veri Gizliliği Çerçevesi'ne göre sertifikalıdır. Harita görüntüleri OpenFreeMap ve OpenStreetMap'ten gelir: bu hizmetler IP adresinizi ve hangi harita bölümlerinin yüklendiğini görür, ama oyun verilerini görmez. Bildirimler tarayıcınızın veya telefonunuzun bildirim hizmeti üzerinden şifreli gönderilir.",
+      },
+      {
+        titel: "Hukuki dayanak",
+        text: "Etkinliğe katılım (GDPR md. 6/1-b). Konumunuzu rızanızla paylaşırsınız („Konuma izin ver“, GDPR md. 6/1-a) – rızanızı istediğiniz zaman telefonun ayarlarından geri alabilirsiniz. 14 yaşından küçükler için ebeveyn onayı gerekir.",
+      },
+      {
+        titel: "Haklarınız",
+        text: "Bilgi alma, düzeltme, silme, kısıtlama, itiraz ve veri taşınabilirliği hakkınız var – yukarıdaki iletişim adresine yazmanız yeterli. Avusturya Veri Koruma Kurumu'na (www.dsb.gv.at) şikâyette bulunabilirsiniz.",
+      },
+    ],
+  },
 } satisfies Uebersetzung;
-
-/** Bildirim başlıkları (sunucudan Almanca gelir) */
-export const pushTitel: Record<string, string> = {
-  "Mister X gemeldet": "Mister X bildirildi",
-  "Übergabe!": "Devir teslim!",
-  "Ihr seid Mister X!": "Mister X sizsiniz!",
-  "Bitte stehen bleiben": "Lütfen olduğunuz yerde durun",
-  "Ihr dürft weiter!": "Devam edebilirsiniz!",
-  Durchsage: "Duyuru",
-  "Spielfeld wird kleiner": "Oyun alanı küçülüyor",
-  Regeländerung: "Kural değişikliği",
-  "Nachricht der Spielleitung": "Oyun yönetiminden mesaj",
-  "Das Spiel beginnt!": "Oyun başlıyor!",
-  Pause: "Mola",
-  "Weiter geht's!": "Devam ediyoruz!",
-  "Übergabe rückgängig": "Devir teslim geri alındı",
-  "Spielende!": "Oyun bitti!",
-  "Endphase!": "Son aşama!",
-  Sammelruf: "Toplanma çağrısı",
-};

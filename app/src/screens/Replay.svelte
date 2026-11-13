@@ -138,7 +138,7 @@
         <Pill tone="accent" icon={Trophy}>{T.ende.sieger}: {team(R.winner).name}</Pill>
         <Pill icon={Timer}>{dauer(R.durationMs)}</Pill>
         <Pill icon={Flag}>{R.handovers} {T.ende.uebergaben}</Pill>
-        <Pill icon={Users}>{Object.keys(data.teams).length} Teams</Pill>
+        <Pill icon={Users}>{T.archiv.teams(Object.keys(data.teams).length)}</Pill>
         {#if R.longest}<Pill icon={Timer}>{T.ende.laengste}: {team(R.longest.teamId).name} ({dauer(R.longest.ms)})</Pill>{/if}
         {#if R.most}<Pill icon={Repeat}>{T.ende.oefteste}: {team(R.most.teamId).name} ({R.most.count}×)</Pill>{/if}
         {#if R.farthest}<Pill icon={Footprints}>{T.ende.distanz}: {team(R.farthest.teamId).name} ({km(R.farthest.m)})</Pill>{/if}

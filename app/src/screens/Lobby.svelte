@@ -44,7 +44,8 @@
     children,
   }: Props = $props();
   let confirmOut = $state(false);
-  const quick = $derived(T.regeln.liste(config).filter((r) => ["Fangen", "Übergabe", "Meldungen"].includes(r.titel)));
+  // nach Symbol, nicht nach Titel – die Titel sind übersetzt
+  const quick = $derived(T.regeln.liste(config).filter((r) => ["hand", "repeat", "radar"].includes(r.icon)));
 </script>
 
 <AmbientBackdrop />

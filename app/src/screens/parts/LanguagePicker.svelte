@@ -2,12 +2,6 @@
 <script lang="ts">
   import { SPRACHEN, sprache, setSprache } from "../../lib/sprache.ts";
   import { T } from "../../texte.ts";
-
-  interface Props {
-    /** kurze Namen (Startseite) */
-    kurz?: boolean;
-  }
-  let { kurz = false }: Props = $props();
 </script>
 
 <div class="sprachen" role="group" aria-label={T.einstellungen.sprache}>
@@ -16,8 +10,8 @@
       type="button"
       class:on={s.code === sprache}
       aria-pressed={s.code === sprache}
-      lang={s.code === "bks" ? "bs" : s.code}
-      onclick={() => s.code !== sprache && setSprache(s.code)}>{kurz && "kurz" in s ? s.kurz : s.name}</button
+      lang={s.code}
+      onclick={() => s.code !== sprache && setSprache(s.code)}>{s.name}</button
     >
   {/each}
 </div>

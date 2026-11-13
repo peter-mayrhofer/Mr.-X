@@ -30,6 +30,10 @@ export const T = {
     laden: "Wird geladen …",
     min: "Min",
     gespeichert: "Gespeichert",
+    geradeEben: "gerade eben",
+    vor: (dauer: string) => `vor ${dauer}`,
+    weniger: "weniger",
+    mehr: "mehr",
     prototyp: (was: string) => `Prototyp: würde jetzt „${was}“ auslösen.`,
   },
 
@@ -90,6 +94,7 @@ export const T = {
   },
 
   onboarding: {
+    schritt: (n: number, von: number) => `Schritt ${n} von ${von}`,
     ueberspringen: "Überspringen",
     los: "Los geht's!",
     schritte: [
@@ -141,6 +146,7 @@ export const T = {
   },
 
   status: {
+    titel: "Spielstatus",
     misterX: "Mister X",
     naechsteMeldung: "Nächste Meldung",
     eureMeldung: "Euer Standort wird gemeldet in",
@@ -159,6 +165,8 @@ export const T = {
   },
 
   karte: {
+    titel: "Karte des Spielfelds",
+    daten: "Daten von",
     aufMich: "Auf mich zentrieren",
     misterXZeigen: "Mister X zeigen",
     ganzesFeld: "Ganzes Spielfeld",
@@ -197,6 +205,7 @@ export const T = {
   },
 
   uebergabe: {
+    vorsprungKurz: "Vorsprung",
     gefangen: "Gefangen!",
     strafe: "Strafübergabe",
     fahneAn: (team: string) => `Die Fahne geht an ${team}`,
@@ -217,6 +226,7 @@ export const T = {
     durchsage: "Durchsage",
     leer: "Noch keine Nachrichten.",
     zeichen: (n: number, max: number) => `${n}/${max}`,
+    kanal: "Chat-Kanal",
     postfach: "Postfach",
     zuSchnell: "Nicht so schnell – höchstens eine Nachricht alle 2 Sekunden.",
   },
@@ -331,6 +341,7 @@ export const T = {
   },
 
   kompass: {
+    pfeil: (richtung: string) => `Richtung ${richtung}`,
     titel: "Kompass",
     zurMeldung: "Zur letzten Meldung von Mister X",
     zumTreffpunkt: (ort: string) => `Zum Treffpunkt: ${ort}`,
@@ -452,6 +463,7 @@ export const T = {
   mehr: {
     titel: "Mehr",
     einstellungen: "Einstellungen",
+    einstellungenHinweis: "Darstellung, Ton, Benachrichtigungen",
     regeln: "Regeln & Hilfe",
     team: "Unser Team",
     gelaufen: (strecke: string) => `${strecke} gelaufen`,
@@ -815,6 +827,7 @@ export const T = {
     notstopp: "durch Notstopp beendet",
     chatGeloescht: "Kein Chat (nach 30 Tagen automatisch gelöscht).",
     nichtGefunden: "Dieser Lauf ist nicht (mehr) im Archiv.",
+    teams: (n: number) => `${n} Teams`,
   },
 
   tracker: {
@@ -890,6 +903,11 @@ export const T = {
       "Dieser Browser kann keine Benachrichtigungen. iPhone: Teilen-Symbol → „Zum Home-Bildschirm“, dann die App von dort öffnen.",
     standort: "Standort",
     hintergrund: "Im Hintergrund senden (Android-App)",
+    hintergrundHinweis: "Dauer-Benachrichtigung „Mister X läuft – Standort wird geteilt“",
+    hintergrundTitel: "Mister X läuft",
+    hintergrundText: "Euer Standort wird an die Spielleitung gesendet.",
+    kanalName: "Spiel",
+    kanalText: "Meldungen, Übergaben, Wartezeiten, Durchsagen",
     wach: "Bildschirm wach halten",
     ueber: "Über die App",
     version: "Version",

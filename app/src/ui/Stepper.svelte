@@ -1,6 +1,7 @@
 <!-- Zahl mit großen −/+ Knöpfen (Einstellungen mit Handschuhen bedienbar). -->
 <script lang="ts">
   import { Minus, Plus } from "@lucide/svelte";
+  import { T } from "../texte.ts";
 
   interface Props {
     label: string;
@@ -19,11 +20,11 @@
 <div class="stepper">
   <span class="txt" id="l-{uid}">{label}</span>
   <div class="ctl" role="group" aria-labelledby="l-{uid}">
-    <button type="button" aria-label="weniger" disabled={value <= min} onclick={() => (value = Math.max(min, value - step))}>
+    <button type="button" aria-label={T.allgemein.weniger} disabled={value <= min} onclick={() => (value = Math.max(min, value - step))}>
       <Minus size={22} strokeWidth={2.6} aria-hidden="true" />
     </button>
     <output class="num" aria-live="polite">{value} <span>{unit}</span></output>
-    <button type="button" aria-label="mehr" disabled={value >= max} onclick={() => (value = Math.min(max, value + step))}>
+    <button type="button" aria-label={T.allgemein.mehr} disabled={value >= max} onclick={() => (value = Math.min(max, value + step))}>
       <Plus size={22} strokeWidth={2.6} aria-hidden="true" />
     </button>
   </div>

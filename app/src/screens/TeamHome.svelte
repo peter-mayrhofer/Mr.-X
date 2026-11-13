@@ -381,12 +381,7 @@
             <ListItem title={T.mehr.team} subtitle={myTeam.name} onclick={() => (sub = "team")} chevron>
               {#snippet lead()}<Users size={26} aria-hidden="true" />{/snippet}
             </ListItem>
-            <ListItem
-              title={T.mehr.einstellungen}
-              subtitle="Darstellung, Ton, Benachrichtigungen"
-              onclick={() => (sub = "einstellungen")}
-              chevron
-            >
+            <ListItem title={T.mehr.einstellungen} subtitle={T.mehr.einstellungenHinweis} onclick={() => (sub = "einstellungen")} chevron>
               {#snippet lead()}<Settings size={26} aria-hidden="true" />{/snippet}
             </ListItem>
             <ListItem title={T.mehr.regeln} onclick={() => (tab = "regeln")} chevron>

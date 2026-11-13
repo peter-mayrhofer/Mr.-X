@@ -4,6 +4,7 @@ import {
   LIMITS,
   PUSH_KINDS,
   PUSH_TITLE,
+  istSprache,
   type ApiResults,
   type ArchiveData,
   type ChatMessage,
@@ -78,7 +79,8 @@ export function pushSubscribe(room: GameRoom, d: D, a: Auth): ApiResults["pushSu
   const prefs: Partial<Record<PushKind, boolean>> = {};
   for (const k of PUSH_KINDS) if (typeof prefsIn[k] === "boolean") prefs[k] = prefsIn[k];
   const s = d.sub === undefined ? room.d.push[who.uid]?.sub : sub(d.sub);
-  room.put("push", who.uid, { ...(s ? { sub: s } : {}), prefs, t: Date.now() } satisfies PushReg);
+  const lang = istSprache(d.lang) && d.lang !== "de" ? { lang: d.lang } : {};
+  room.put("push", who.uid, { ...(s ? { sub: s } : {}), prefs, ...lang, t: Date.now() } satisfies PushReg);
   return {};
 }
 

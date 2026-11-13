@@ -3,6 +3,7 @@
 // darüber die Spiel-Ebenen: außerhalb abgedunkelt, leuchtend rote Grenze, gesperrte Bereiche schraffiert.
 import type { ExpressionSpecification, LayerSpecification, StyleSpecification, GeoJSONSourceSpecification } from "maplibre-gl";
 import type { Theme } from "../lib/theme.svelte.ts";
+import { T } from "../texte.ts";
 
 interface Palette {
   bg: string;
@@ -109,8 +110,9 @@ const PAL: Record<Theme, Palette> = {
   },
 };
 
-export const ATTRIBUTION =
-  '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> Daten von <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>';
+// erst beim Aufbau der Karte lesen: dann steht die Übersetzung schon in T
+const attribution = () =>
+  `<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank">OpenMapTiles</a> ${T.karte.daten} <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>`;
 
 const lines: ExpressionSpecification = ["match", ["geometry-type"], ["LineString", "MultiLineString"], true, false];
 const polys: ExpressionSpecification = ["match", ["geometry-type"], ["Polygon", "MultiPolygon"], true, false];
@@ -468,7 +470,7 @@ export function mapStyle(theme: Theme, data: Overlays, raster = false): StyleSpe
               attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             },
           }
-        : { omt: { type: "vector", url: "https://tiles.openfreemap.org/planet", attribution: ATTRIBUTION } }),
+        : { omt: { type: "vector", url: "https://tiles.openfreemap.org/planet", attribution: attribution() } }),
       mask: geo(data.mask),
       boundary: geo(data.boundary),
       cuts: geo(data.cuts),

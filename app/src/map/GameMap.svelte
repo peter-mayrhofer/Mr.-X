@@ -5,6 +5,7 @@
 <script module lang="ts">
   import type { Point } from "@mrx/shared";
   import type { MarkerProps } from "./MapMarker.svelte";
+  import { T } from "../texte.ts";
 
   export interface MapPin extends Point {
     key: string;
@@ -47,7 +48,7 @@
     accuracy,
     padding = { top: 150, bottom: 110, left: 24, right: 88 },
     interactive = true,
-    label = "Karte des Spielfelds",
+    label = T.karte.titel,
     edit = EMPTY,
     onready,
     alwaysNames = false,

@@ -10,6 +10,7 @@ import {
   WS_CLOSE,
   pushTargets,
   stepCheck,
+  uebersetze,
   type ApiCall,
   type ApiReply,
   type AuditEntry,
@@ -306,7 +307,10 @@ export class GameRoom extends DurableObject<Env> {
       const sub = this.d.push[uid]?.sub;
       if (!sub || this.ctx.getWebSockets(uid).some((ws) => (ws.deserializeAttachment() as Att).vis)) continue;
       push.push(uid);
-      this.#pushQ.push({ uid, sub, topic: kind, payload: JSON.stringify({ title, body, kind, tag: kind, link: "/#/spiel" }) });
+      // in der Sprache des Geräts (Android übersetzt selbst, die Note oben bleibt deutsch)
+      const l = this.d.push[uid]?.lang;
+      const payload = { title: uebersetze(title, l), body: uebersetze(body, l), kind, tag: kind, link: "/#/spiel" };
+      this.#pushQ.push({ uid, sub, topic: kind, payload: JSON.stringify(payload) });
     }
     if (this.env.TEST_HOOKS) {
       this.outbox.push({ kind, title, body, to, push, t: n.t });

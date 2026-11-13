@@ -1,7 +1,10 @@
-<!-- Screen 1: Startseite. Oben das Spray-Logo, darunter alle Wege auf einer ruhigen Fläche (E-63). -->
+<!-- Screen 1: Startseite. Oben das Spray-Logo, darunter alle Wege auf einer ruhigen Fläche (E-63).
+     Sprache hinter dem Zahnrad oben rechts (E-67). -->
 <script lang="ts">
-  import { CircleCheck, Crown, ShieldCheck, Users } from "@lucide/svelte";
+  import { CircleCheck, Crown, Settings, ShieldCheck, Users } from "@lucide/svelte";
   import Button from "../ui/Button.svelte";
+  import IconButton from "../ui/IconButton.svelte";
+  import BottomSheet from "../ui/BottomSheet.svelte";
   import StartBackdrop from "./parts/StartBackdrop.svelte";
   import SprayLogo from "./parts/SprayLogo.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
@@ -21,11 +24,15 @@
   }
 
   let { game, links, system = "andere", downloads = {} }: Props = $props();
+  let menue = $state(false);
 </script>
 
 <StartBackdrop />
 <div class="scan" aria-hidden="true"></div>
 <main class="start">
+  <div class="zahnrad">
+    <IconButton icon={Settings} label={T.einstellungen.titel} size="m" onclick={() => (menue = true)} />
+  </div>
   <section class="hero">
     <h1 class="title" aria-label="Mister X"><SprayLogo /></h1>
   </section>
@@ -52,13 +59,17 @@
   </section>
 
   <footer>
-    <LanguagePicker kurz />
     <nav>
       <a href="#{links.help}">{T.start.hilfe}</a>
       <a href="#{links.help}">{T.start.datenschutz}</a>
     </nav>
   </footer>
 </main>
+
+<BottomSheet open={menue} title={T.einstellungen.titel} onclose={() => (menue = false)}>
+  <h2 class="caps sprache">{T.einstellungen.sprache}</h2>
+  <LanguagePicker />
+</BottomSheet>
 
 <style>
   .start {
@@ -77,6 +88,18 @@
   .actions,
   footer {
     position: relative;
+  }
+  .zahnrad {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--safe-top) + var(--sp-3));
+    right: var(--gutter);
+    animation: rise 0.7s var(--ease-out) 0.45s both;
+  }
+  .sprache {
+    margin: 0 0 var(--sp-3);
+    font-size: var(--fs-s);
+    color: var(--text-2);
   }
   .hero {
     flex: 1;
@@ -297,9 +320,6 @@
     }
     footer {
       grid-area: foot;
-      grid-auto-flow: column;
-      justify-content: space-between;
-      align-items: center;
     }
   }
 </style>

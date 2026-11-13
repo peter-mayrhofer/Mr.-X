@@ -1,7 +1,10 @@
-// English – texts the teams see (Spielleitung/Schiris stay German). Base: texte.ts
+// English – texts the teams see (organisers' and referees' screens stay German). Base: texte.ts
 import type { Uebersetzung } from "../lib/sprache.ts";
 
 export default {
+  app: {
+    voll: "Mister X – the live city chase game",
+  },
   update: {
     titel: "New version of the app",
     text: "Please install the new app – otherwise you'll miss new features.",
@@ -23,6 +26,10 @@ export default {
     laden: "Loading …",
     min: "min",
     gespeichert: "Saved",
+    geradeEben: "just now",
+    vor: (dauer: string) => `${dauer} ago`,
+    weniger: "less",
+    mehr: "more",
   },
   start: {
     teamBeitreten: "Join a team",
@@ -65,6 +72,7 @@ export default {
     andererName: "Enter a different team name",
   },
   onboarding: {
+    schritt: (n: number, von: number) => `Step ${n} of ${von}`,
     ueberspringen: "Skip",
     los: "Let's go!",
     schritte: [
@@ -114,6 +122,7 @@ export default {
     alleRegeln: "All rules",
   },
   status: {
+    titel: "Game status",
     naechsteMeldung: "Next report",
     eureMeldung: "Your location will be reported in",
     spielzeit: "Game time",
@@ -130,6 +139,8 @@ export default {
     probelauf: "Trial run",
   },
   karte: {
+    titel: "Map of the playing area",
+    daten: "Data from",
     aufMich: "Centre on me",
     misterXZeigen: "Show Mister X",
     ganzesFeld: "Whole playing area",
@@ -164,6 +175,7 @@ export default {
     karte: "View map",
   },
   uebergabe: {
+    vorsprungKurz: "Head start",
     gefangen: "Caught!",
     strafe: "Penalty handover",
     fahneAn: (team: string) => `The flag goes to ${team}`,
@@ -174,6 +186,7 @@ export default {
     zurueck: "The handover was undone.",
   },
   chat: {
+    kanal: "Chat channel",
     alle: "Everyone",
     spielleitung: "Organisers",
     platzhalter: "Message …",
@@ -195,6 +208,7 @@ export default {
     keineKamera: "No camera found. Please type in the game code.",
   },
   kompass: {
+    pfeil: (richtung: string) => `Direction ${richtung}`,
     titel: "Compass",
     zurMeldung: "To the last report of Mister X",
     zumTreffpunkt: (ort: string) => `To the meeting point: ${ort}`,
@@ -300,6 +314,7 @@ export default {
   mehr: {
     titel: "More",
     einstellungen: "Settings",
+    einstellungenHinweis: "Appearance, sound, notifications",
     regeln: "Rules & help",
     team: "Our team",
     gelaufen: (strecke: string) => `${strecke} walked`,
@@ -309,6 +324,7 @@ export default {
     groesseOk: "Saved",
   },
   ende: {
+    archiv: "To the archive",
     titel: "Game over!",
     sieger: "Winner",
     letzterMrx: "the last Mister X",
@@ -323,6 +339,23 @@ export default {
     zeitstrahl: "Who was Mister X when?",
     zurKarte: "Map & chat",
     auswertung: "Results",
+  },
+  archiv: {
+    titel: "Archive",
+    replay: "Replay",
+    abspielen: "Play",
+    anhalten: "Pause",
+    tempo: "Speed",
+    auswertung: "Results",
+    chat: "Chat",
+    leer: "No past games yet.",
+    ansicht: "View",
+    sichern: "Save as file",
+    drucken: "Print",
+    notstopp: "ended by emergency stop",
+    chatGeloescht: "No chat (deleted automatically after 30 days).",
+    nichtGefunden: "This round is not (or no longer) in the archive.",
+    teams: (n: number) => `${n} teams`,
   },
   einstellungen: {
     titel: "Settings",
@@ -350,6 +383,11 @@ export default {
     pushNichtMoeglich: "This browser can't show notifications. iPhone: Share icon → “Add to Home Screen”, then open the app from there.",
     standort: "Location",
     hintergrund: "Send in the background (Android app)",
+    hintergrundHinweis: "Permanent notification “Mister X is running – location is being shared”",
+    hintergrundTitel: "Mister X is running",
+    hintergrundText: "Your location is being sent to the organisers.",
+    kanalName: "Game",
+    kanalText: "Reports, handovers, waiting times, announcements",
     wach: "Keep the screen on",
     ueber: "About the app",
     version: "Version",
@@ -404,24 +442,42 @@ export default {
     bald: "The game starts soon. The map will appear here.",
     abmelden: "Log out",
   },
+  datenschutz: {
+    kurz: "We only store what the game needs: team name, chat and your location during the game. Only the organisers see live locations, and they are deleted after the game. No tracking, no advertising.",
+    voll: "Full privacy notice",
+    abschnitte: [
+      {
+        titel: "Who is responsible?",
+        text: "Peter Mayrhofer, Madersdorferstraße 10a, 4523 Neuzeug (Austria) – organiser of the game. Contact for all privacy questions: petermayrhofer08@gmail.com or +43 660 8184922.",
+      },
+      {
+        titel: "Which data?",
+        text: "Your team name, or the first name for referees and organisers; during the game your phone's location (position, accuracy, direction, battery level); chat messages; which notifications you want. No email address, no phone number, no account. After a wrong password, a checksum of the IP address is stored for at most 10 minutes to protect against password guessing.",
+      },
+      {
+        titel: "What for?",
+        text: "Only for the game: reporting Mister X, working out waiting times after a catch, warning you before the edge of the playing area, and your safety (the organisers see where you are). No tracking, no advertising, no sharing with others. For the “Snack pro” award we count how often a team spent at least 10 minutes at a food place – only this number is stored, not the location. If a team presses the emergency button, the organisers and referees see where it is at that moment; this report is deleted together with the chat.",
+      },
+      {
+        titel: "Who sees what?",
+        text: "The locations of the hunter teams are only seen by the organisers, the referees (unless the organisers switch this off) and the big screen at headquarters – not by other teams or spectators. Everyone playing sees the reported location of Mister X.",
+      },
+      {
+        titel: "How long?",
+        text: "Live locations until the end of the game, then they are deleted immediately. Chat and the organisers' log: 30 days after the end of the game. Results with Mister X reports and handovers: 1 year. The login on your phone is valid for 7 days or until you log out.",
+      },
+      {
+        titel: "Where is the data processed?",
+        text: "On servers of Cloudflare (processor); the game data is usually kept in a data centre in Europe, and Cloudflare is certified under the EU-US Data Privacy Framework for transfers to the USA. The map images come from OpenFreeMap and OpenStreetMap: these services see your IP address and which parts of the map are loaded, but no game data. Notifications are sent encrypted via the push service of your browser or phone.",
+      },
+      {
+        titel: "Legal basis",
+        text: "Taking part in the event (Art. 6(1)(b) GDPR). You share your location with your consent (“Allow location”, Art. 6(1)(a) GDPR) – you can withdraw it at any time in your phone's settings. Under 14, this needs your parents' consent.",
+      },
+      {
+        titel: "Your rights",
+        text: "You have the right to access, rectification, erasure, restriction, objection and data portability – just write to the contact address above. You can complain to the Austrian Data Protection Authority (www.dsb.gv.at).",
+      },
+    ],
+  },
 } satisfies Uebersetzung;
-
-/** Titel der Benachrichtigungen (kommen deutsch vom Server) */
-export const pushTitel: Record<string, string> = {
-  "Mister X gemeldet": "Mister X reported",
-  "Übergabe!": "Handover!",
-  "Ihr seid Mister X!": "You are Mister X!",
-  "Bitte stehen bleiben": "Please stay where you are",
-  "Ihr dürft weiter!": "You may go on!",
-  Durchsage: "Announcement",
-  "Spielfeld wird kleiner": "Playing area gets smaller",
-  Regeländerung: "Rule change",
-  "Nachricht der Spielleitung": "Message from the organisers",
-  "Das Spiel beginnt!": "The game begins!",
-  Pause: "Pause",
-  "Weiter geht's!": "Let's go on!",
-  "Übergabe rückgängig": "Handover undone",
-  "Spielende!": "Game over!",
-  "Endphase!": "Final phase!",
-  Sammelruf: "Gathering call",
-};
