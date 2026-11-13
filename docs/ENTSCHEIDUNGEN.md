@@ -674,3 +674,13 @@ Saira Stencil One mit rotem Pinselstrich, Teamname in Permanent Marker auf gelbe
 (Schreibmaschine) – alle drei Schriften lokal über `@fontsource` (OFL/Apache), werden vor dem Druck geladen.
 Runder Stempel „Mission erfüllt“ für alle, „Sieger“-Stempel für den Sieger. Papierton statt Reinweiß, damit es nach
 Urkunde aussieht; der Kopf braucht Farbe, der Rest bleibt hell (wenig Tinte).
+
+### E-66 Werkzeuge aktuell halten (GitHub-Bausteine, Sicherheitswarnungen)
+**Entscheidung:** Die GitHub-Abläufe nutzen die Bausteine, die auf Node 24 laufen (`actions/checkout@v6`,
+`setup-node@v6`, `setup-java@v5`, `upload-artifact@v6`, `download-artifact@v7`, `softprops/action-gh-release@v3`).
+Capacitor auf 8.6.2 (bringt neuere Hilfspakete `xcode`, `rimraf`/`glob` mit), ESLint 10.14 und typescript-eslint 8.72.2.
+ESLint hängt noch an `minimatch` 10 mit einer DoS-Warnung (GHSA-g3hv-75wg-m249); `overrides` in `package.json` zwingt
+`minimatch` 11 – entfernen, sobald ESLint selbst `minimatch` 11 verlangt.
+**Warum so:** GitHub schaltet Node 20 für Bausteine ab; die alten liefen nur noch mit Warnung. `npm audit` meldete
+17 Warnungen, alle in Entwickler-Werkzeugen (die App selbst: 0). Übrig bleiben 2 niedrige in `deepmerge` (über
+`@sveltejs/vite-plugin-svelte`, nur beim Bauen), für die es noch keine behobene Version gibt.
