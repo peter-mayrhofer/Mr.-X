@@ -14,6 +14,7 @@ import {
 } from "@mrx/shared";
 import { fail, newKey, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 /** höchstens eine Nachricht alle 2 s pro Gerät */
@@ -52,7 +53,7 @@ export function deleteChat(room: GameRoom, d: D, a: Auth): ApiResults["deleteCha
   const msg = dm ? room.d.dm[dm]?.[id] : room.d.chat[id];
   if (!msg) return {}; // schon weg
   room.put(dm ? "dm" : "chat", dm ? `${dm}/${id}` : id, null);
-  room.audit(who, "Nachricht gelöscht", `${msg.name}: ${msg.text.slice(0, 60)}`);
+  room.audit(who, P.nachrichtGeloescht, `${msg.name}: ${msg.text.slice(0, 60)}`);
   return {};
 }
 

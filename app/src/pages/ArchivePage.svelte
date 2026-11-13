@@ -1,13 +1,12 @@
 <!-- „/archiv“ und „/archiv/:lauf“: vergangene Läufe des eigenen Spiels, Wiederholung mit Zeitschieberegler (Meilenstein 10). -->
 <script lang="ts">
-  import type { ApiReason } from "@mrx/shared";
   import Archive from "../screens/Archive.svelte";
   import Replay from "../screens/Replay.svelte";
   import ErrorStates from "../screens/ErrorStates.svelte";
   import Skeleton from "../ui/Skeleton.svelte";
   import { session } from "../lib/session.svelte.ts";
   import { remote } from "../lib/remote.svelte.ts";
-  import { ApiError, call } from "../lib/api.ts";
+  import { call, fehlerText } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
   import { T } from "../texte.ts";
@@ -15,8 +14,7 @@
   let { run }: { run?: string | undefined } = $props();
   const g = $derived(session.gameId);
 
-  const errText = (e: unknown) =>
-    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  const errText = (e: unknown) => fehlerText(e);
   const runs = remote(
     () => (g && !run ? g : null),
     async (id) => {

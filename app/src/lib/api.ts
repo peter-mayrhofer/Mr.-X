@@ -3,6 +3,8 @@
 import type { ApiReason, ApiReply, ApiRequest, ApiResults } from "@mrx/shared";
 import { API_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
+import { sprache } from "./sprache.ts";
+import { T } from "../texte.ts";
 
 export class ApiError extends Error {
   constructor(
@@ -12,6 +14,18 @@ export class ApiError extends Error {
     super(message);
   }
 }
+
+/** Ablehnung als Text für die Oberfläche. Bei „invalid“ schickt der Server eine deutsche Erklärung – in anderen
+ *  Sprachen steht stattdessen der allgemeine Hinweis (E-68). */
+// ponytail: nur deutsche Erklärungen vom Server; eigene Gründe statt Text, falls andere Sprachen mehr brauchen
+export const fehlerText = (e: unknown): string =>
+  !(e instanceof ApiError)
+    ? T.apiFehler.network
+    : e.reason === "invalid"
+      ? sprache === "de"
+        ? e.message
+        : T.apiFehler.invalid
+      : T.apiFehler[e.reason];
 
 const SUPER_ONLY = new Set<ApiRequest["action"]>(["superSetup", "superLogin", "listGames", "createGame", "archiveGame", "deleteGame"]);
 

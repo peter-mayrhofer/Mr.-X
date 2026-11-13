@@ -3,6 +3,7 @@
 import { LIMITS, sameName, teamShort, type ApiResults } from "@mrx/shared";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P, PROTOKOLL_ROLLE as P_ROLLE } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 
@@ -52,7 +53,7 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
       Object.entries(room.d.devices).map(([id, { pos: _p, ...dev }]) => [id, { ...dev, assign: dev.assign === "fahne" ? "fahne" : null }]),
     ),
   );
-  room.audit(who, "Neue Runde vorbereitet");
+  room.audit(who, P.neueRunde);
   return {};
 }
 
@@ -62,7 +63,7 @@ export function removeMember(room: GameRoom, d: D, a: Auth): ApiResults["removeM
   const m = room.d.members[uid];
   if (!m) fail("invalid", "Gerät unbekannt");
   room.removeMember(uid, "removed");
-  room.audit(who, "Gerät entfernt", `${m.name} (${m.role})`);
+  room.audit(who, P.geraetEntfernt, P.geraetMit(m.name, P_ROLLE[m.role] ?? m.role));
   return {};
 }
 
@@ -80,7 +81,7 @@ export function removeTeam(room: GameRoom, d: D, a: Auth): ApiResults["removeTea
   room.put("track", t, null);
   for (const [uid, m] of Object.entries(room.d.members)) if (m.teamId === t) room.removeMember(uid, "removed");
   for (const [id, dev] of Object.entries(room.d.devices)) if (dev.assign === t) room.put("devices", id, { ...dev, assign: null });
-  room.audit(who, "Team entfernt", team.name);
+  room.audit(who, P.teamEntfernt, team.name);
   return {};
 }
 
@@ -102,6 +103,6 @@ export function renameTeam(room: GameRoom, d: D, a: Auth): ApiResults["renameTea
   });
   // Geräte des Teams tragen den Teamnamen als Namen (Chat, Mitgliederliste)
   for (const [uid, m] of Object.entries(room.d.members)) if (m.teamId === t) room.put("members", uid, { ...m, name });
-  room.audit(who, "Team umbenannt", `${team.name} → ${name}`);
+  room.audit(who, P.teamUmbenannt, `${team.name} → ${name}`);
   return {};
 }

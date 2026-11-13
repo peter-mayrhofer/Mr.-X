@@ -8,7 +8,7 @@
   import Banner from "../ui/Banner.svelte";
   import Stepper from "../ui/Stepper.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
-  import { ApiError } from "../lib/api.ts";
+  import { fehlerText } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
 
@@ -58,7 +58,7 @@
       if (r.status === "teamExists") existing = r.teamName;
       else onjoined();
     } catch (e) {
-      error = e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network;
+      error = fehlerText(e);
     } finally {
       loading = false;
     }

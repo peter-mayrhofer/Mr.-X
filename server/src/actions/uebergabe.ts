@@ -14,6 +14,7 @@ import {
 import { fail, MIN, newKey } from "../util.ts";
 import type { Auth, GameRoom, Who } from "../room.ts";
 import { flagTracker } from "../ablauf.ts";
+import { PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const REQUEST_ID = /^[A-Za-z0-9_-]{8,40}$/;
@@ -113,9 +114,17 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
     );
   room.audit(
     who,
-    type === "fang" ? "Übergabe" : "Strafübergabe",
-    `${ts[from]?.name ?? "?"} → ${ts[to]!.name}; Wartezeit: ${locked.map((t) => ts[t]?.name ?? t).join(", ") || "niemand"}` +
-      (pruefen ? `; bitte prüfen: ${pruefen.distM === undefined ? "keine aktuellen Standorte" : `${pruefen.distM} m auseinander`}` : ""),
+    type === "fang" ? P.uebergabe : P.strafuebergabe,
+    ((alt: string, neu: string, wartende: string) =>
+      !pruefen
+        ? P.fang(alt, neu, wartende)
+        : pruefen.distM === undefined
+          ? P.fangPruefen(alt, neu, wartende)
+          : P.fangPruefenM(alt, neu, wartende, pruefen.distM))(
+      ts[from]?.name ?? "?",
+      ts[to]!.name,
+      locked.map((t) => ts[t]?.name ?? t).join(", ") || P.niemand,
+    ),
   );
   return { handoverId: rid, locked };
 }
@@ -143,6 +152,6 @@ export function undo(room: GameRoom, d: D, a: Auth): ApiResults["undo"] {
   for (const t of new Set([...(h.locked ?? []), h.to])) room.put("locks", t, h.prevLocks?.[t] ?? null);
   if (h.reportId && room.d.reports[h.reportId]) room.put("reports", h.reportId, { ...room.d.reports[h.reportId], void: true });
   room.notify("uebergabe", { all: true }, PUSH_TITLE.rueckgaengig, text);
-  room.audit(who, "Übergabe rückgängig", `${ts[h.to]?.name ?? "?"} → wieder ${ts[h.from!]?.name ?? "?"}`);
+  room.audit(who, P.uebergabeZurueck, P.wieder(ts[h.to]?.name ?? "?", ts[h.from!]?.name ?? "?"));
   return {};
 }

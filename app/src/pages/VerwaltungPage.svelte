@@ -1,9 +1,9 @@
 <!-- „/verwaltung“: Super-Admin (Organisator) – Anmeldung mit Passwort, Spiele anlegen, öffnen, Admin-Zugang, archivieren, löschen. -->
 <script lang="ts">
-  import type { ApiReason, GameListEntry } from "@mrx/shared";
+  import type { GameListEntry } from "@mrx/shared";
   import SuperAdmin, { type GameRow } from "../screens/SuperAdmin.svelte";
   import { session, startSession, superLogin, superLogout, superSetup } from "../lib/session.svelte.ts";
-  import { ApiError, call } from "../lib/api.ts";
+  import { call, fehlerText } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
   import type { Downloads } from "@mrx/shared";
@@ -30,8 +30,7 @@
     list.map((g) => ({ id: g.id, name: g.name, phase: g.archived ? "archiviert" : g.phase, teams: g.teams })),
   );
   const nameOf = (id: string) => list.find((g) => g.id === id)?.name ?? id;
-  const errText = (e: unknown) =>
-    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  const errText = (e: unknown) => fehlerText(e);
   async function run(fn: () => Promise<unknown>, ok: string) {
     try {
       await fn();

@@ -5,7 +5,7 @@
   import Segmented from "../ui/Segmented.svelte";
   import TextField from "../ui/TextField.svelte";
   import type { Downloads, System } from "@mrx/shared";
-  import { ApiError } from "../lib/api.ts";
+  import { fehlerText } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
   import QrScanButton from "./parts/QrScanButton.svelte";
@@ -40,7 +40,7 @@
     try {
       await onsubmit({ role, code: code.trim().toLowerCase(), name: name.trim(), secret });
     } catch (err) {
-      error = err instanceof ApiError ? (err.reason === "invalid" ? err.message : T.apiFehler[err.reason]) : T.apiFehler.network;
+      error = fehlerText(err);
     } finally {
       loading = false;
     }

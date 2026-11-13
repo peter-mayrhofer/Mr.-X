@@ -22,7 +22,7 @@
   import Modal from "../ui/Modal.svelte";
   import Banner from "../ui/Banner.svelte";
   import { toast } from "../ui/toast.svelte.ts";
-  import { ApiError } from "../lib/api.ts";
+  import { fehlerText } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
   import DownloadKarte from "./parts/DownloadKarte.svelte";
@@ -102,7 +102,7 @@
   };
   const phaseLabel = (p: string | undefined) =>
     p && p in T.superadmin.phase ? T.superadmin.phase[p as keyof typeof T.superadmin.phase] : "–";
-  const msg = (e: unknown) => (e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network);
+  const msg = (e: unknown) => fehlerText(e);
 
   async function create() {
     busy = true;

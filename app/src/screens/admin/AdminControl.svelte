@@ -21,7 +21,7 @@
   } from "@lucide/svelte";
   import TextField from "../../ui/TextField.svelte";
   import type { TemplateEntry } from "@mrx/shared";
-  import { LIMITS, nextReportAfterIntervalChange, type ApiReason, type Config } from "@mrx/shared";
+  import { LIMITS, nextReportAfterIntervalChange, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Card from "../../ui/Card.svelte";
@@ -36,7 +36,7 @@
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { dauer, uhr } from "../../lib/format.ts";
-  import { ApiError } from "../../lib/api.ts";
+  import { fehlerText } from "../../lib/api.ts";
   import type { Api, StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
 
@@ -83,8 +83,7 @@
   const cuts = $derived(Object.entries(view.field.cuts).sort((a, b) => a[1].order - b[1].order));
   const fieldReady = $derived(view.field.base.length >= 3);
 
-  const errText = (e: unknown) =>
-    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  const errText = (e: unknown) => fehlerText(e);
   async function run<R>(fn: () => Promise<R>, okText?: string): Promise<R | undefined> {
     busy = true;
     try {
@@ -512,7 +511,7 @@
     onclose={() => (ask = null)}
   >
     {#if lock && running}
-      <Stepper label={T.admin.vorwarnung} bind:value={warnMin} unit="Min" min={0} max={60} hint={T.admin.vorwarnungHinweis} />
+      <Stepper label={T.admin.vorwarnung} bind:value={warnMin} unit={T.allgemein.min} min={0} max={60} hint={T.admin.vorwarnungHinweis} />
     {/if}
     {T.admin.aenderungMeldung}
   </Modal>

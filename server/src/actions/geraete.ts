@@ -5,6 +5,7 @@ import type { ApiResults, Device } from "@mrx/shared";
 import { randomId } from "../auth.ts";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const MAX_DEVICES = 20;
@@ -17,7 +18,7 @@ export function addDevice(room: GameRoom, d: D, a: Auth): ApiResults["addDevice"
   const key = randomId(12);
   room.put("devices", id, { name, assign: null, createdAt: Date.now() } satisfies Device);
   room.set("secrets", { ...room.d.secrets, deviceKeys: { ...room.d.secrets.deviceKeys, [id]: key } });
-  room.audit(who, "Tracker angelegt", name);
+  room.audit(who, P.trackerAngelegt, name);
   return { device: id, key };
 }
 
@@ -29,7 +30,7 @@ export function setDevice(room: GameRoom, d: D, a: Auth): ApiResults["setDevice"
   const assign = d.assign === null ? null : String(d.assign ?? "");
   if (assign !== null && assign !== "fahne" && !room.d.teams[assign]) fail("invalid", "Team unbekannt");
   room.put("devices", id, { ...dev, assign });
-  room.audit(who, "Tracker zugeordnet", `${dev.name} → ${assign === "fahne" ? "Fahne" : assign ? room.d.teams[assign]!.name : "niemand"}`);
+  room.audit(who, P.trackerZugeordnet, `${dev.name} → ${assign === "fahne" ? P.fahne : assign ? room.d.teams[assign]!.name : P.niemand}`);
   return {};
 }
 
@@ -41,7 +42,7 @@ export function removeDevice(room: GameRoom, d: D, a: Auth): ApiResults["removeD
   room.put("devices", id, null);
   const { [id]: _, ...keys } = room.d.secrets.deviceKeys ?? {};
   room.set("secrets", { ...room.d.secrets, deviceKeys: keys });
-  room.audit(who, "Tracker entfernt", dev.name);
+  room.audit(who, P.trackerEntfernt, dev.name);
   return {};
 }
 

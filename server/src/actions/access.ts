@@ -19,6 +19,7 @@ import { hashKey, hashSecret, randomId, sameText, sign, verifySecret } from "../
 import { ensureSchema } from "../d1.ts";
 import { DAY, fail, gameId, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P, PROTOKOLL_ROLLE as P_ROLLE } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 
@@ -53,7 +54,7 @@ export async function createGame(room: GameRoom, d: D, a: Auth): Promise<ApiResu
   room.set("field", d.template === "leer" ? EMPTY_FIELD : VORLAGEN[d.template as VorlageId].field);
   room.set("state", { phase: "vorbereitung", rev: 0 });
   room.set("secrets", { adminPw: hash, screenKey: randomId(18) });
-  room.audit({ uid: "super", name: "Organisator", role: "superadmin" }, "Spiel angelegt", name);
+  room.audit({ uid: "super", name: P.organisator, role: "superadmin" }, P.spielAngelegt, name);
   return { gameId: g };
 }
 
@@ -130,7 +131,7 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
   const uid = randomId();
   const m: Member = { role, name, joinedAt: now, ...(teamId ? { teamId } : {}) };
   room.put("members", uid, m);
-  room.audit({ uid, name, role }, "Beigetreten", role === "team" ? `Team ${name}` : role);
+  room.audit({ uid, name, role }, P.beigetreten, role === "team" ? P.team(name) : (P_ROLLE[role] ?? role));
   const token = await sign(room.env.TOKEN_SECRET, { g: room.d.gid, u: uid, e: now + SESSION_MS });
   return { status: "joined", role, ...(teamId ? { teamId } : {}), token, uid };
 }
@@ -139,7 +140,7 @@ export function leave(room: GameRoom, _d: D, a: Auth): ApiResults["leave"] {
   const m = a.uid ? room.d.members[a.uid] : undefined;
   if (!m) return {}; // schon weg (entfernt, neue Runde) – nichts zu tun
   room.removeMember(a.uid!, null);
-  room.audit({ uid: a.uid!, name: m.name, role: m.role }, "Abgemeldet");
+  room.audit({ uid: a.uid!, name: m.name, role: m.role }, P.abgemeldet);
   return {};
 }
 
@@ -154,7 +155,7 @@ export async function setSecret(room: GameRoom, d: D, a: Auth): Promise<ApiResul
   if (value === null) {
     if (kind === "adminPw") fail("invalid", "Das Admin-Passwort kann nicht gelöscht werden");
     room.set("secrets", { ...room.d.secrets, [kind]: undefined });
-    room.audit(who, `${LABEL[kind]} gelöscht`);
+    room.audit(who, P[`${kind}Geloescht`]);
     return {};
   }
   if (typeof value !== "string" || value.length < MIN[kind] || value.length > 64)
@@ -164,7 +165,7 @@ export async function setSecret(room: GameRoom, d: D, a: Auth): Promise<ApiResul
   // Admin-Passwort geändert → alle anderen Admin-Geräte müssen sich neu anmelden (Sitzungen widerrufen)
   if (kind === "adminPw")
     for (const [uid, m] of Object.entries(room.d.members)) if (m.role === "admin" && uid !== who.uid) room.removeMember(uid, "session");
-  room.audit(who, `${LABEL[kind]} festgelegt`);
+  room.audit(who, P[`${kind}Festgelegt`]);
   return {};
 }
 

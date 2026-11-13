@@ -2,6 +2,7 @@
 // Im echten Spiel kommen dieselben Strukturen aus der Datenbank (shared/types.ts).
 import {
   LINZ_INNENSTADT,
+  PROTOKOLL,
   inField,
   type AuditEntry,
   type Results,
@@ -217,14 +218,14 @@ export const inbox = [
 ];
 
 export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "spielfeld" | "zugang"; undone?: boolean })[] = [
-  { id: "a1", t: at(-95), name: "Peter", role: "admin", action: "Team-Passwort festgelegt", details: "", cat: "zugang" },
+  { id: "a1", t: at(-95), name: "Peter", role: "admin", action: PROTOKOLL.teamPwFestgelegt, details: "", cat: "zugang" },
   {
     id: "a2",
     t: at(-83),
     name: "Peter",
     role: "admin",
-    action: "Spiel gestartet",
-    details: "Start-Mister-X: Neue Heimat (ausgelost)",
+    action: PROTOKOLL.spielGestartet,
+    details: PROTOKOLL.istMrxGelost("Neue Heimat"),
     cat: "regeln",
   },
   {
@@ -232,8 +233,8 @@ export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "s
     t: at(-71),
     name: "Schiri Anna",
     role: "schiri",
-    action: "Übergabe (Fang)",
-    details: "Neue Heimat → Pichling · Wartezeit: Neue Heimat, Traun",
+    action: PROTOKOLL.uebergabe,
+    details: PROTOKOLL.fang("Neue Heimat", "Pichling", "Neue Heimat, Traun"),
     cat: "uebergabe",
   },
   {
@@ -241,8 +242,8 @@ export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "s
     t: at(-60),
     name: "Schiri Martin",
     role: "schiri",
-    action: "Übergabe (Fang)",
-    details: "Pichling → Ansfelden · Wartezeit: Pichling",
+    action: PROTOKOLL.uebergabe,
+    details: PROTOKOLL.fang("Pichling", "Ansfelden", "Pichling"),
     cat: "uebergabe",
     undone: true,
   },
@@ -251,8 +252,8 @@ export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "s
     t: at(-59),
     name: "Schiri Martin",
     role: "schiri",
-    action: "Übergabe rückgängig",
-    details: "falsches Team gewählt",
+    action: PROTOKOLL.uebergabeZurueck,
+    details: PROTOKOLL.wieder("Ansfelden", "Pichling"),
     cat: "uebergabe",
   },
   {
@@ -260,8 +261,8 @@ export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "s
     t: at(-52),
     name: "Schiri Anna",
     role: "schiri",
-    action: "Übergabe (Fang)",
-    details: "Pichling → Spallerhof · Wartezeit: Pichling, Ebelsberg",
+    action: PROTOKOLL.uebergabe,
+    details: PROTOKOLL.fang("Pichling", "Spallerhof", "Pichling, Ebelsberg"),
     cat: "uebergabe",
   },
   {
@@ -269,12 +270,12 @@ export const audit: (AuditEntry & { id: string; cat: "uebergabe" | "regeln" | "s
     t: at(-38.2),
     name: "Schiri Martin",
     role: "schiri",
-    action: "Übergabe (Fang)",
-    details: "Spallerhof → Kleinmünchen · Wartezeit: Spallerhof, Bindermichl",
+    action: PROTOKOLL.uebergabe,
+    details: PROTOKOLL.fang("Spallerhof", "Kleinmünchen", "Spallerhof, Bindermichl"),
     cat: "uebergabe",
   },
-  { id: "a8", t: at(-20), name: "Peter", role: "admin", action: "Bereich gesperrt", details: "Westen", cat: "spielfeld" },
-  { id: "a9", t: at(-12), name: "Peter", role: "admin", action: "Team entfernt", details: "Test-Handy", cat: "zugang" },
+  { id: "a8", t: at(-20), name: "Peter", role: "admin", action: PROTOKOLL.bereichGesperrt, details: "Westen", cat: "spielfeld" },
+  { id: "a9", t: at(-12), name: "Peter", role: "admin", action: PROTOKOLL.teamEntfernt, details: "Test-Handy", cat: "zugang" },
 ];
 
 export const stats: Record<string, { distM: number; mrxMs: number; mrxCount: number }> = {
