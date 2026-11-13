@@ -666,3 +666,11 @@ leeren Seiten erzeugt), `druckeUrkunden()` in `app/src/lib/druck.svelte.ts` (rä
 Test `tests/e2e-urkunden.test.ts`.
 **Warum so:** Wunsch des Organisators. Druck über den Browser wie bei den Zugangs-Blättern (kein PDF-Paket nötig,
 geht am Laptop der Spielleitung sofort). Nur Deutsch, wie alle Bildschirme der Spielleitung.
+**Nachtrag (Gestaltung):** Die erste, schlichte Fassung (weiß, nur Ecken) war dem Organisator zu langweilig. Jetzt:
+Kopf in Nachtblau wie die App (Raster, Radar-Kreise, weißes Spray-Logo in Druckauflösung
+`app/public/logos/mister-x-urkunde.png`) mit Farbtropfen ins Blatt; darunter ein ausgedachter Stadtplan als Muster
+(Fluss, Straßen, rotes Spielfeld mit Sperrzone, Jagd-Route am Rand; `app/src/lib/urkundeKarte.ts`). „URKUNDE“ in
+Saira Stencil One mit rotem Pinselstrich, Teamname in Permanent Marker auf gelbem Textmarker, Text in Special Elite
+(Schreibmaschine) – alle drei Schriften lokal über `@fontsource` (OFL/Apache), werden vor dem Druck geladen.
+Runder Stempel „Mission erfüllt“ für alle, „Sieger“-Stempel für den Sieger. Papierton statt Reinweiß, damit es nach
+Urkunde aussieht; der Kopf braucht Farbe, der Rest bleibt hell (wenig Tinte).

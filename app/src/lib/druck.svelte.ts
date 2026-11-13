@@ -12,6 +12,13 @@ export const druck = $state<{ pw: Record<string, Partial<Record<SecretKind, stri
 export async function druckeUrkunden(warten: () => Promise<void>, fertig: () => void) {
   document.documentElement.dataset.druck = "urkunden";
   await warten();
+  // Schriften und Bilder der Urkunden laden, bevor der Druckdialog das Blatt festhält
+  await Promise.all([
+    ...['400 40px "Saira Stencil One"', '400 40px "Permanent Marker"', '400 16px "Special Elite"'].map((f) =>
+      document.fonts.load(f).catch(() => []),
+    ),
+    ...[...document.querySelectorAll<HTMLImageElement>(".urkunden img")].map((i) => i.decode().catch(() => {})),
+  ]);
   addEventListener(
     "afterprint",
     () => {
