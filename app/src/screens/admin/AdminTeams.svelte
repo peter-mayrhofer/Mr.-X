@@ -170,6 +170,7 @@
   {:else}
     <AccessPanel
       gameName={view.gameName}
+      teams={view.teams}
       {joinUrl}
       checkSecret={async (kind: SecretKind, value: string) => (await api({ action: "checkSecret", gameId: g, kind, value })).ok}
       loadScreenUrl={async () => screenUrl((await api({ action: "screenLink", gameId: g })).key)}

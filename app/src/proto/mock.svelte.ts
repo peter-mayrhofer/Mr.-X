@@ -318,6 +318,11 @@ export const result: Results = {
     ] as [string, number][]
   ).map(([t, m]) => [t, m * MIN]),
 };
+// Zeit und Anzahl als Mister X aus dem Zeitstrahl (wie der Server sie berechnet)
+for (const [id, ms] of result.timeline) {
+  result.mrxMs[id] = (result.mrxMs[id] ?? 0) + ms;
+  result.mrxCount[id] = (result.mrxCount[id] ?? 0) + 1;
+}
 
 export const archive = [
   {

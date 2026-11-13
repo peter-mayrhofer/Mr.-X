@@ -1,6 +1,9 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
-  import { Archive, Compass, Footprints, LogOut, MapPinCheck, Medal, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
+  import { Archive, Compass, Footprints, LogOut, MapPinCheck, Medal, Printer, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
+  import { tick } from "svelte";
+  import Urkunden from "./parts/Urkunden.svelte";
+  import { druckeUrkunden } from "../lib/druck.svelte.ts";
   import Banner from "../ui/Banner.svelte";
   import Pill from "../ui/Pill.svelte";
   import type { Results, Team } from "@mrx/shared";
@@ -25,8 +28,11 @@
     trial?: boolean;
     /** Sammelruf nach dem Spiel (Teams): Weg zeigen, „Wir sind da“ */
     gather?: { name: string; arrived: boolean; onarrived: () => void; oncompass: () => void };
+    /** Spielleitung: Urkunden (ein Blatt pro Team, mit Sieger) drucken – Spielname fürs Blatt */
+    urkunden?: string;
   }
-  let { results: R, teams, onarchive, onscreen, done, onleave, trial = false, gather }: Props = $props();
+  let { results: R, teams, onarchive, onscreen, done, onleave, trial = false, gather, urkunden }: Props = $props();
+  let drucke = $state(false);
 
   const team = (id: string | null | undefined): Team => (id && teams[id]) || { name: "–", short: "?", color: "#888" };
   const winner = $derived(team(R.winner));
@@ -103,10 +109,26 @@
   <div class="actions">
     {#if onarchive}<Button size="xl" icon={Archive} onclick={onarchive}>{T.ende.archiv}</Button>{/if}
     {#if onscreen}<Button variant="secondary" icon={Medal} onclick={onscreen}>{T.admin.nav.grossbild}</Button>{/if}
+    {#if urkunden !== undefined}
+      <Button
+        variant="secondary"
+        icon={Printer}
+        onclick={() =>
+          druckeUrkunden(
+            async () => {
+              drucke = true;
+              await tick();
+            },
+            () => (drucke = false),
+          )}>{T.urkunde.knopf}</Button
+      >
+    {/if}
     {#if done}<Button size="xl" variant={onarchive ? "secondary" : "primary"} onclick={done.onclick}>{done.label}</Button>{/if}
     {#if onleave}<Button variant="ghost" icon={LogOut} onclick={onleave}>{T.warten.abmelden}</Button>{/if}
   </div>
 </main>
+
+{#if drucke && urkunden !== undefined}<Urkunden gameName={urkunden} {teams} results={R} />{/if}
 
 <style>
   .end {

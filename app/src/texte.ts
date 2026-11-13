@@ -784,6 +784,20 @@ export const T = {
     auswertung: "Auswertung",
   },
 
+  urkunde: {
+    knopf: "Urkunden drucken",
+    hinweis: (n: number) =>
+      `Ein Blatt pro Team (${n}) – Name, Glückwunsch zur Teilnahme, Datum und Unterschrift. Nach dem Spiel steht auch der Sieger drauf.`,
+    kicker: "Mister X · Das Live-Geländespiel",
+    titel: "Urkunde",
+    fuer: "für das Team",
+    text: (spiel: string) =>
+      `Herzlichen Glückwunsch zur Teilnahme an „${spiel}“! Ihr habt Mister X durch die Stadt gejagt, seid zusammengeblieben und habt bis zum Schluss durchgehalten. Danke, dass ihr dabei wart!`,
+    sieger: "Sieger",
+    zeit: (dauer: string, mal: number) => `${dauer} als Mister X · ${mal}× die Fahne getragen`,
+    unterschrift: "Spielleitung",
+  },
+
   archiv: {
     titel: "Archiv",
     replay: "Wiederholung",

@@ -655,3 +655,14 @@ Farben bleiben).
 (`app/src/texte.ts`, Abschnitt `datenschutz`) und ersetzt die Platzhalter aus E-62.
 **Warum so:** Die Vereine sind aus der App entfernt (E-62); der Datenschutzhinweis braucht trotzdem eine erreichbare
 Person. Angaben vom Organisator am 13.11.2026.
+
+### E-65 Urkunden für die Teams
+**Entscheidung:** Die Spielleitung druckt mit einem Knopf ein A4-Blatt pro Team als Urkunde: Mister-X-Logo,
+„Urkunde für das Team“, Teamname (ohne Team-Kreis, Wunsch des Organisators), Glückwunsch zur Teilnahme mit Spielname, Datum und eine Linie für
+die Unterschrift. Aus der **Auswertung** gedruckt stehen auch der Stempel **Sieger** und die Zeit als Mister X drauf;
+unter **Teams & Zugänge → Zugänge** geht es schon vor dem Spiel (ohne Ergebnis). Umsetzung:
+`app/src/screens/parts/Urkunden.svelte` (nur beim Drucken eingehängt, direkt an `<body>`, damit der Rest der App keine
+leeren Seiten erzeugt), `druckeUrkunden()` in `app/src/lib/druck.svelte.ts` (räumt nach „afterprint“ auf),
+Test `tests/e2e-urkunden.test.ts`.
+**Warum so:** Wunsch des Organisators. Druck über den Browser wie bei den Zugangs-Blättern (kein PDF-Paket nötig,
+geht am Laptop der Spielleitung sofort). Nur Deutsch, wie alle Bildschirme der Spielleitung.

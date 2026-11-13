@@ -82,7 +82,7 @@
       size: A4;
       margin: 0;
     }
-    :global(body *) {
+    :global(html:not([data-druck="urkunden"]) body *) {
       visibility: hidden;
     }
     .sheet,
@@ -90,9 +90,13 @@
       visibility: visible;
     }
     /* nur eine Seite: der (unsichtbare) Rest der App erzeugt sonst leere Seiten */
-    :global(#app) {
+    :global(html:not([data-druck="urkunden"]) #app) {
       height: 280mm;
       overflow: hidden;
+    }
+    /* Urkunden drucken: das Druckblatt bleibt weg */
+    :global(html[data-druck="urkunden"]) .sheet {
+      display: none;
     }
     .sheet {
       --c: #c51a1a;

@@ -82,6 +82,9 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
    beim Drucken danach und prüft, ob es stimmt. Gespeichert wird es dafür nirgends – nur auf dem Papier.
    Das Blatt für die Spielleitung ist **vertraulich** (nicht aushängen, nach dem Spiel vernichten).
 5. **Großbild-Link** nur auf dem Laptop für den Beamer öffnen (der Link enthält einen Schlüssel).
+6. **Urkunden drucken:** ein A4-Blatt pro Team – Teamname, Glückwunsch zur Teilnahme, Spielname, Datum und eine
+   Linie für die Unterschrift der Spielleitung. Geht schon vor dem Spiel; nach dem Spiel lieber aus der Auswertung
+   drucken (Schritt 6), dann steht auch der Sieger drauf.
 
 ![Teams & Zugänge](screens/hell/15-laptop.jpg)
 
@@ -217,12 +220,15 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
 
 ## 6. Nach dem Spiel
 
-1. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
+1. **Urkunden drucken** (Knopf unten in der Auswertung): ein A4-Blatt pro Team mit Teamname, Glückwunsch zur
+   Teilnahme, Spielname und Datum. Das Sieger-Team bekommt den Stempel **Sieger**, wer Mister X war, die Zeit dazu
+   (z. B. „1:12 h als Mister X · 2× die Fahne getragen“).
+2. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
    gemeldet und gefangen), Chat-Verlauf, **Als Datei sichern** (JSON) und **Drucken**.
-2. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
+3. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
    und Schiris werden abgemeldet, das Team-Passwort wird gelöscht, Chat und Standorte werden geleert. Das Archiv
    bleibt. Danach ein neues Team-Passwort festlegen (Schritt 1.4).
-3. Fertig mit der Saison? Der Organisator kann das Spiel in der Verwaltung **archivieren** (niemand kann mehr
+4. Fertig mit der Saison? Der Organisator kann das Spiel in der Verwaltung **archivieren** (niemand kann mehr
    beitreten) oder **löschen** (alles weg, auch das Archiv).
 
 ![Archiv & Wiederholung](screens/hell/20-handy.jpg)
