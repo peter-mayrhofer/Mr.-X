@@ -229,6 +229,7 @@
         teams={archive.value.teams}
         onarchive={() => go("/archiv")}
         onscreen={() => go("/grossbild")}
+        urkunden={gameName}
       />
     {:else if section === "live"}
       <AdminLive {view} api={call} />

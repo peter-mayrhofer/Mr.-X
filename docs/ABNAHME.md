@@ -107,9 +107,8 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 
 9. **F1 – Logos:** Vereinslogos sind entfernt (E-62); überall steht klein das
    Mister-X-Logo (`app/public/logos/mister-x*.png`, `app/src/ui/Logo.svelte`).
-10. **F12 – Datenschutz (offen, E-62):** Der Veranstalter ist derzeit nicht eingetragen – im Datenschutzhinweis steht bei
-    Veranstalter, Adresse und Kontakt „wird noch eingetragen“. Vor dem ersten echten Spiel Name, Anschrift und
-    Datenschutz-Kontakt in `app/src/texte.ts` (Abschnitt `datenschutz`) eintragen und den Text prüfen lassen.
+10. **F12 – Datenschutz (eingetragen, E-64):** Verantwortlicher ist der Organisator Peter Mayrhofer, Madersdorferstraße
+    10a, 4523 Neuzeug, petermayrhofer08@gmail.com, +43 660 8184922 (`app/src/texte.ts`, Abschnitt `datenschutz`).
 
 **Bewusst so gelöst:**
 
@@ -123,5 +122,5 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 2. Signier-Schlüssel erzeugen und in GitHub hinterlegen, signierte APK bauen, auf den Server legen
    ([`ANDROID-APK.md`](ANDROID-APK.md), [`BETRIEB.md`](BETRIEB.md) Schritt 9).
 3. **Feldtest** mit 3–5 Handys in der Innenstadt ([`FELDTEST.md`](FELDTEST.md)), Protokoll zurückschicken.
-4. F12 (Datenschutz-Angaben) bestätigen; optional Vektor-Logos (F1) nachreichen.
+4. Optional Vektor-Logos (F1) nachreichen.
 5. Erstes echtes Spiel mit der [Spieltag-Checkliste](SPIELTAG-CHECKLISTE.md); danach die Haupt-Adresse umstellen.

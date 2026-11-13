@@ -784,6 +784,20 @@ export const T = {
     auswertung: "Auswertung",
   },
 
+  urkunde: {
+    knopf: "Urkunden drucken",
+    hinweis: (n: number) =>
+      `Ein Blatt pro Team (${n}) – Name, Glückwunsch zur Teilnahme, Datum und Unterschrift. Nach dem Spiel steht auch der Sieger drauf.`,
+    kicker: "Mister X · Das Live-Geländespiel",
+    titel: "Urkunde",
+    fuer: "für das Team",
+    text: (spiel: string) =>
+      `Herzlichen Glückwunsch zur Teilnahme an „${spiel}“! Ihr habt Mister X durch die Stadt gejagt, seid zusammengeblieben und habt bis zum Schluss durchgehalten. Danke, dass ihr dabei wart!`,
+    sieger: "Sieger",
+    zeit: (dauer: string, mal: number) => `${dauer} als Mister X · ${mal}× die Fahne getragen`,
+    unterschrift: "Spielleitung",
+  },
+
   archiv: {
     titel: "Archiv",
     replay: "Wiederholung",
@@ -976,13 +990,12 @@ export const T = {
   datenschutz: {
     kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung, sie werden nach Spielende gelöscht. Kein Tracking, keine Werbung.",
     voll: "Vollständiger Datenschutzhinweis",
-    /** Veranstalter noch offen (E-62): Name, Adresse und Kontakt hier und im ersten Abschnitt eintragen */
-    kontakt: "",
+    kontakt: "petermayrhofer08@gmail.com",
     /** DSGVO Art. 13 – kurz und verständlich; Fristen wie im Server umgesetzt (docs/KONZEPT.md, Löschfristen) */
     abschnitte: [
       {
         titel: "Wer ist verantwortlich?",
-        text: "Veranstalter: wird noch eingetragen. Adresse: wird noch eingetragen. Kontakt für alle Fragen zum Datenschutz: wird noch eingetragen.",
+        text: "Peter Mayrhofer, Madersdorferstraße 10a, 4523 Neuzeug – Veranstalter des Spiels. Kontakt für alle Fragen zum Datenschutz: petermayrhofer08@gmail.com oder +43 660 8184922.",
       },
       {
         titel: "Welche Daten?",

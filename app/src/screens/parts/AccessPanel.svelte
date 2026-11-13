@@ -8,16 +8,17 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { renderSVG } from "uqr";
-  import { CircleCheck, Copy, KeyRound, Monitor, Printer, RefreshCw, ShieldCheck, Trash, TriangleAlert } from "@lucide/svelte";
-  import { LIMITS, type SecretKind } from "@mrx/shared";
+  import { Award, CircleCheck, Copy, KeyRound, Monitor, Printer, RefreshCw, ShieldCheck, Trash, TriangleAlert } from "@lucide/svelte";
+  import { LIMITS, type SecretKind, type Team } from "@mrx/shared";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import TextField from "../../ui/TextField.svelte";
   import Modal from "../../ui/Modal.svelte";
   import PrintSheet from "./PrintSheet.svelte";
+  import Urkunden from "./Urkunden.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { ApiError } from "../../lib/api.ts";
-  import { druck, merke } from "../../lib/druck.svelte.ts";
+  import { druck, druckeUrkunden, merke } from "../../lib/druck.svelte.ts";
   import { T } from "../../texte.ts";
 
   type Role = "team" | "schiri" | "admin";
@@ -33,9 +34,13 @@
     onreset?: () => void;
     /** nur Desktop-App: Großbild im Vollbild auf dem Beamer öffnen (ohne Angabe kein Knopf) */
     onbeamer?: () => void;
+    /** Teams des Spiels: Urkunden (ein Blatt pro Team) */
+    teams?: Record<string, Team>;
   }
 
-  let { gameName, joinUrl, loadScreenUrl, onsave, checkSecret, onreset, onbeamer }: Props = $props();
+  let { gameName, joinUrl, loadScreenUrl, onsave, checkSecret, onreset, onbeamer, teams = {} }: Props = $props();
+  let urkunden = $state(false);
+  const teamZahl = $derived(Object.keys(teams).length);
   const values = $state<Record<SecretKind, string>>({ teamPw: "", schiriCode: "", adminPw: "" });
   let busy = $state<SecretKind | null>(null);
   let screenUrl = $state<string | null>(null);
@@ -169,6 +174,24 @@
     </div>
   </Card>
 
+  <Card label={T.urkunde.knopf} icon={Award}>
+    <p class="muted small">{T.urkunde.hinweis(teamZahl)}</p>
+    <Button
+      size="m"
+      variant="secondary"
+      icon={Printer}
+      disabled={!teamZahl}
+      onclick={() =>
+        druckeUrkunden(
+          async () => {
+            urkunden = true;
+            await tick();
+          },
+          () => (urkunden = false),
+        )}>{T.urkunde.knopf}</Button
+    >
+  </Card>
+
   <Card label={T.admin.grossbildLink} icon={Monitor}>
     {#if onbeamer}
       <div class="row beamer">
@@ -201,6 +224,8 @@
     </Card>
   {/if}
 </div>
+
+{#if urkunden}<Urkunden {gameName} {teams} />{/if}
 
 <!-- Druckansicht (nur beim Drucken sichtbar); Beispiel: docs/flyer-beispiel.pdf -->
 <PrintSheet

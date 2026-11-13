@@ -134,6 +134,7 @@
     teams={M.teams}
     onarchive={() => go("/prototyp/20?v=replay")}
     onscreen={() => go("/prototyp/18")}
+    urkunden="Mister X Linz 2027"
   />
 {:else if n === 20}{#if v === "replay"}<Replay data={M.archiveData()} onback={() => to(20, "liste")} />{:else}<Archive
       runs={M.archiveRuns}

@@ -382,8 +382,7 @@ langsame Verbindungen sogar langsamer waren als vorher (gemessen).
 **Entscheidung:** Das Protokoll der Spielleitung (enthält Namen) wird wie der Chat 30 Tage nach Spielende und bei
 „Neue Runde“ gelöscht; Prüfsummen von IP-Adressen (Schutz gegen Passwort-Raten) nur so lange wie die Sperre (10 Min).
 Vollständiger Datenschutzhinweis (Art. 13 DSGVO, kindgerecht formuliert) in der App unter Regeln → Datenschutz.
-**F12:** Der Verantwortliche im Datenschutzhinweis ist derzeit offen (E-62) und wird vor dem ersten echten Spiel
-eingetragen.
+**F12:** Verantwortlicher ist seit E-64 der Organisator selbst.
 
 ### E-44 Android-App von der Startseite
 > **Erweitert durch E-58** (Download-Knopf für alle Systeme, `downloads.json` statt HEAD-Anfrage).
@@ -649,3 +648,21 @@ Farben bleiben).
 **Warum so:** Die Marke bleibt erkennbar (CLAUDE.md: Design nicht ungefragt ändern – hier ausdrücklich gewünscht); die
 Änderungen sind „leise“: Tiefe, Bewegung und Abstände statt neuer Formen. Alles über Design-Tokens, damit „Sonne“
 (Hochkontrast) flach bleibt.
+
+### E-64 Organisator als Verantwortlicher im Datenschutzhinweis
+**Entscheidung:** Verantwortlicher (DSGVO Art. 13) ist der Organisator persönlich: Peter Mayrhofer, Madersdorferstraße
+10a, 4523 Neuzeug, petermayrhofer08@gmail.com, +43 660 8184922. Steht im Datenschutzhinweis der App
+(`app/src/texte.ts`, Abschnitt `datenschutz`) und ersetzt die Platzhalter aus E-62.
+**Warum so:** Die Vereine sind aus der App entfernt (E-62); der Datenschutzhinweis braucht trotzdem eine erreichbare
+Person. Angaben vom Organisator am 13.11.2026.
+
+### E-65 Urkunden für die Teams
+**Entscheidung:** Die Spielleitung druckt mit einem Knopf ein A4-Blatt pro Team als Urkunde: Mister-X-Logo,
+„Urkunde für das Team“, Teamname (ohne Team-Kreis, Wunsch des Organisators), Glückwunsch zur Teilnahme mit Spielname, Datum und eine Linie für
+die Unterschrift. Aus der **Auswertung** gedruckt stehen auch der Stempel **Sieger** und die Zeit als Mister X drauf;
+unter **Teams & Zugänge → Zugänge** geht es schon vor dem Spiel (ohne Ergebnis). Umsetzung:
+`app/src/screens/parts/Urkunden.svelte` (nur beim Drucken eingehängt, direkt an `<body>`, damit der Rest der App keine
+leeren Seiten erzeugt), `druckeUrkunden()` in `app/src/lib/druck.svelte.ts` (räumt nach „afterprint“ auf),
+Test `tests/e2e-urkunden.test.ts`.
+**Warum so:** Wunsch des Organisators. Druck über den Browser wie bei den Zugangs-Blättern (kein PDF-Paket nötig,
+geht am Laptop der Spielleitung sofort). Nur Deutsch, wie alle Bildschirme der Spielleitung.

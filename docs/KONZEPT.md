@@ -301,8 +301,8 @@ Cloudflare-Laufzeit nach.
 ## 9. Offene Fragen
 
 Zu jeder Frage steht der **Vorschlag**. Bestätigt am 27.10.2026: F2, F3, F6, F8, F10, F14 ausdrücklich, alle übrigen
-als Standard. F1: PNG-Logos wie vorgeschlagen (Vektor-Dateien optional, öffentlich nicht verfügbar). F12 (Verantwortlicher
-im Datenschutzhinweis) ist derzeit offen (E-62) und wird vor dem ersten echten Spiel eingetragen.
+als Standard. F1: PNG-Logos wie vorgeschlagen (Vektor-Dateien optional, öffentlich nicht verfügbar). F12: Verantwortlicher ist
+der Organisator selbst (E-64).
 
 | # | Frage | Vorschlag |
 |---|---|---|
@@ -317,7 +317,7 @@ im Datenschutzhinweis) ist derzeit offen (E-62) und wird vor dem ersten echten S
 | F9 | **Vorsprung am Start** = Meldeintervall oder eigener Wert? | eigener Wert `headStartMin`, Standard 10 Min |
 | F10 | Nach einer Übergabe **sofort** den Standort des neuen Mister X melden? (`archiv/SPEC.md`: ja) | **Ja**, Übergabe-Meldung am Übergabeort |
 | F11 | **Umkreis** für die Wartezeit nach Übergabe? | 200 m (wie Prototyp), live änderbar |
-| F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Offen – vor dem ersten echten Spiel eintragen (E-62) |
+| F12 | **Datenschutz:** Wer ist „Verantwortlicher“ (Name, Adresse, Kontakt-E-Mail) für den Datenschutzhinweis? | Der Organisator Peter Mayrhofer (E-64) |
 | F13 | **APK-Verteilung:** Das Repository ist privat → GitHub-Downloads brauchen ein Konto. | APK über die eigene Adresse ausliefern (`https://mister-x.mr-x-ooe.workers.dev/mister-x.apk`, E-38) + QR-Code |
 | F14 | Darf ein Team ein **zweites Handy** (Ersatzgerät) anmelden? | **Ja**, gleiches Team-Passwort; das jeweils neueste Signal zählt |
 
