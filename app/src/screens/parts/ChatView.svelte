@@ -6,7 +6,8 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { ArrowDown, Flag, Info, MapPin, Megaphone, Play, Send, Shrink } from "@lucide/svelte";
-  import type { ChatMessage, Team } from "@mrx/shared";
+  import { uebersetze, type ChatMessage, type Team } from "@mrx/shared";
+  import { sprache } from "../../lib/sprache.ts";
   import Segmented from "../../ui/Segmented.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import ListItem from "../../ui/ListItem.svelte";
@@ -97,7 +98,7 @@
   {#if channels}
     <div class="head">
       <Segmented
-        label="Chat-Kanal"
+        label={T.chat.kanal}
         bind:value={tab}
         options={[
           { value: "alle", label: T.chat.alle },
@@ -146,7 +147,7 @@
           <article class="sys">
             <IconC size={20} aria-hidden="true" />
             <div>
-              <p>{m.text}</p>
+              <p>{uebersetze(m.text, sprache)}</p>
               <time>{uhr(m.t)}</time>
               {#if m.reportId && onreport}
                 <button class="jump" onclick={() => onreport(m.reportId!)}>{T.chat.aufKarte} ›</button>

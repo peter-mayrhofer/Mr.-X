@@ -10,6 +10,8 @@ export interface PushReg {
   sub?: PushSub;
   /** abgeschaltete Arten stehen auf false; fehlend = an */
   prefs?: Partial<Record<PushKind, boolean>>;
+  /** Sprache der Oberfläche – Web-Push kommt darin (sprachen.ts) */
+  lang?: string;
   t?: number;
 }
 

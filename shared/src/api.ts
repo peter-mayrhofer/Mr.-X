@@ -68,7 +68,7 @@ export type ApiRequest =
   | { action: "deleteChat"; gameId: string; id: string; dm?: string }
   // Push (Web Push, VAPID): Abo dieses Geräts und gewünschte Arten
   // sub weglassen = Abo bleibt, nur Arten ändern; null = kein Web-Push (Android-App: lokale Benachrichtigungen)
-  | { action: "pushSubscribe"; gameId: string; sub?: PushSub | null; prefs: Partial<Record<PushKind, boolean>> }
+  | { action: "pushSubscribe"; gameId: string; sub?: PushSub | null; prefs: Partial<Record<PushKind, boolean>>; lang?: string }
   // Tracker (Meilenstein 11): Gerät anlegen (liefert den Schlüssel für die Geräte-Kennung), zuordnen, entfernen
   | { action: "addDevice"; gameId: string; name: string }
   | { action: "setDevice"; gameId: string; device: string; assign: string | null }

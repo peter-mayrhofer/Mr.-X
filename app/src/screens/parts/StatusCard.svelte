@@ -40,7 +40,7 @@
   const gps = $derived(gpsAcc === undefined ? T.status.gpsAus : gpsAcc <= 30 ? T.status.gpsGut : T.status.gpsSchwach);
 </script>
 
-<section class="status" class:mrx={isMrx} aria-label="Spielstatus">
+<section class="status" class:mrx={isMrx} aria-label={T.status.titel}>
   <div class="main">
     {#if isMrx}
       <p class="caps kicker">{T.status.ihrSeidMrx}</p>

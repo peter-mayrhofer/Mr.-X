@@ -95,7 +95,13 @@
           <text transform="rotate({d}) translate(0 -108) rotate({-d})" class:north={l === "N"}>{l}</text>
         {/each}
       </svg>
-      <svg class="arrow" viewBox="-160 -160 320 320" style:transform="rotate({arrowRot}deg)" role="img" aria-label="Richtung {dirWord}">
+      <svg
+        class="arrow"
+        viewBox="-160 -160 320 320"
+        style:transform="rotate({arrowRot}deg)"
+        role="img"
+        aria-label={T.kompass.pfeil(dirWord ?? "")}
+      >
         <path d="M0 -118 L44 40 L0 18 L-44 40 Z" class="head" />
         <circle r="10" class="hub" />
       </svg>

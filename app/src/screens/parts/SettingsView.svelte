@@ -70,11 +70,7 @@
   <Card label={T.einstellungen.standort} icon={MapPin}>
     <!-- Hintergrund-Standort gibt es nur in der Android-App -->
     {#if NATIVE}
-      <Switch
-        label={T.einstellungen.hintergrund}
-        hint="Dauer-Benachrichtigung „Mister X läuft – Standort wird geteilt“"
-        bind:checked={prefs.background}
-      />
+      <Switch label={T.einstellungen.hintergrund} hint={T.einstellungen.hintergrundHinweis} bind:checked={prefs.background} />
     {/if}
     <Switch label={T.einstellungen.wach} bind:checked={prefs.wake} />
   </Card>

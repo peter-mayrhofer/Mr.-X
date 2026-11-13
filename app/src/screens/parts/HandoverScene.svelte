@@ -35,7 +35,7 @@
     <div class="flagwrap" aria-hidden="true"><Flag size={140} strokeWidth={1.6} /></div>
     <h1 class="display big">{T.uebergabe.ihrSeidMrx}</h1>
     <p class="lead">{T.uebergabe.vorsprung(waitMin)}</p>
-    <CountdownRing until={at + waitMin * 60_000} total={waitMin * 60_000} size={150} tone="light" label="Vorsprung" />
+    <CountdownRing until={at + waitMin * 60_000} total={waitMin * 60_000} size={150} tone="light" label={T.uebergabe.vorsprungKurz} />
     <Button variant="secondary" size="xl" onclick={onclose}>{T.allgemein.ok}</Button>
   {:else}
     <p class="stamp-wrap">

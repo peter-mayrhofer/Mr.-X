@@ -8,6 +8,7 @@ import { onNote, onView, session } from "./session.svelte.ts";
 import { E2E } from "./server.ts";
 import { enableLocal, NATIVE, seenNote, showLocal } from "./native.ts";
 import { appVisible } from "./sichtbar.ts";
+import { sprache as lang } from "./sprache.ts";
 
 export type PushStatus = "an" | "aus" | "verweigert" | "nichtMoeglich";
 
@@ -77,7 +78,7 @@ export class PushState {
     try {
       if (NATIVE) {
         if (!(await enableLocal(!silent))) return (this.status = silent ? this.status : "verweigert");
-        await call({ action: "pushSubscribe", gameId: this.#g, sub: null, prefs });
+        await call({ action: "pushSubscribe", gameId: this.#g, sub: null, prefs, lang });
         return (this.status = "an");
       }
       if (!("Notification" in window)) return (this.status = "nichtMoeglich");
@@ -87,7 +88,7 @@ export class PushState {
       for (let i = 0; i < 20 && !session.vapid && !E2E; i++) await new Promise((r) => setTimeout(r, 250));
       if (!session.vapid && !E2E) return (this.status = "nichtMoeglich");
       const sub = await subscribe(session.vapid ?? "", this.#uid);
-      await call({ action: "pushSubscribe", gameId: this.#g, sub, prefs });
+      await call({ action: "pushSubscribe", gameId: this.#g, sub, prefs, lang });
       return (this.status = "an");
     } catch {
       return (this.status = NATIVE || pushPossible() ? "aus" : "nichtMoeglich");
@@ -96,6 +97,6 @@ export class PushState {
 
   async setPref(k: PushKind, on: boolean) {
     this.prefs[k] = on;
-    if (this.status === "an" && this.#g) await call({ action: "pushSubscribe", gameId: this.#g, prefs: $state.snapshot(this.prefs) });
+    if (this.status === "an" && this.#g) await call({ action: "pushSubscribe", gameId: this.#g, prefs: $state.snapshot(this.prefs), lang });
   }
 }

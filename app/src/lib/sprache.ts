@@ -1,13 +1,15 @@
-// Sprache der Team-Oberfläche. Deutsch (texte.ts) ist die Grundlage; Englisch, Türkisch und Bosnisch/Kroatisch/Serbisch
-// überschreiben die Texte, die Teams sehen. Spielleitung, Schiris und der Datenschutz-Hinweis bleiben deutsch.
+// Sprache der Team-Oberfläche (E-67). Deutsch (texte.ts) ist die Grundlage; Englisch, Spanisch, Italienisch und Türkisch
+// überschreiben die Texte, die Teams sehen. Spielleitung und Schiris bleiben deutsch. Chat-Meldungen und Push-Titel
+// vom Server übersetzt @mrx/shared (sprachen.ts).
 // Wird in main.ts als ERSTES geladen: die Übersetzung steht in T, bevor irgendeine Seite einen Text liest.
 import { T } from "../texte.ts";
 
 export const SPRACHEN = [
   { code: "de", name: "Deutsch" },
   { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+  { code: "it", name: "Italiano" },
   { code: "tr", name: "Türkçe" },
-  { code: "bks", name: "Bosanski / Hrvatski / Srpski", kurz: "BKS" },
 ] as const;
 export type Sprache = (typeof SPRACHEN)[number]["code"];
 
@@ -41,20 +43,14 @@ function merge(base: Record<string, unknown>, over: Record<string, unknown>) {
   }
 }
 
-type Paket = { default: Uebersetzung; pushTitel: Record<string, string> };
-const laden: Record<Exclude<Sprache, "de">, () => Promise<Paket>> = {
+const laden: Record<Exclude<Sprache, "de">, () => Promise<{ default: Uebersetzung }>> = {
   en: () => import("../texte/en.ts"),
+  es: () => import("../texte/es.ts"),
+  it: () => import("../texte/it.ts"),
   tr: () => import("../texte/tr.ts"),
-  bks: () => import("../texte/bks.ts"),
 };
-/** Titel der Benachrichtigungen (kommen deutsch vom Server) in der gewählten Sprache */
-export let pushTitel: Record<string, string> = {};
-if (sprache !== "de") {
-  const p = await laden[sprache]();
-  merge(T as unknown as Record<string, unknown>, p.default as Record<string, unknown>);
-  pushTitel = p.pushTitel;
-}
-if (typeof document !== "undefined") document.documentElement.lang = sprache === "bks" ? "bs" : sprache;
+if (sprache !== "de") merge(T as unknown as Record<string, unknown>, (await laden[sprache]()).default as Record<string, unknown>);
+if (typeof document !== "undefined") document.documentElement.lang = sprache;
 
 /** Sprache wechseln: merken und neu laden (alle Texte kommen dann in der neuen Sprache) */
 export function setSprache(s: Sprache) {

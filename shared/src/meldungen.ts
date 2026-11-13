@@ -1,5 +1,6 @@
 // Texte der automatischen System-Meldungen im Chat (vom Server geschrieben) – zentral wie texte.ts der App.
-const quelle: Record<string, string> = {
+/** Woher eine Meldung kommt – auch die Übersetzungen (sprachen.ts) kennen diese Arten */
+export const QUELLE: Record<string, string> = {
   handy: "",
   tracker: " – Standort vom Tracker",
   schiri: " – Standort vom Schiri",
@@ -13,7 +14,7 @@ export const uhr = (t: number) =>
 export const M = {
   start: (mrx: string, min: number) => `Spiel gestartet! ${mrx} ist Mister X und hat ${min} Min Vorsprung.`,
   meldung: (mrx: string, src: string, uhr: string) =>
-    `Standort von Mister X (${mrx}) gemeldet${quelle[src] ?? ""}${src === "letzter" ? ` von ${uhr}` : ""}.`,
+    `Standort von Mister X (${mrx}) gemeldet${QUELLE[src] ?? ""}${src === "letzter" ? ` von ${uhr}` : ""}.`,
   sofort: (mrx: string) => `Sofort-Meldung: Standort von Mister X (${mrx}) auf Anweisung der Spielleitung.`,
   keinStandort: (mrx: string) => `Mister X (${mrx}) konnte nicht gemeldet werden – kein Standort vorhanden.`,
   fang: (neu: string, alt: string, min: number) => `${neu} hat ${alt} gefangen und ist jetzt Mister X! ${min} Min Wartezeit in der Nähe.`,
@@ -47,4 +48,5 @@ export const M = {
       : `${alt} hat den Fang durch ${neu} gemeldet, die Handys waren aber ${distM} m auseinander. Bitte prüfen und notfalls rückgängig machen.`,
   notfallZurueck: (team: string) => `Entwarnung: ${team} hat den Notfall zurückgenommen (Fehlalarm).`,
   ende: (sieger: string) => `Spielende! ${sieger} ist der letzte Mister X und hat gewonnen!`,
+  endeOhne: "Spielende! Diesmal gibt es keinen Sieger.",
 };

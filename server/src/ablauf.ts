@@ -208,7 +208,7 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
     distM: Object.fromEntries(Object.entries(d.stats).map(([t, v]) => [t, v.distM])),
     food: room.d.secrets.food ?? {},
   });
-  room.sys(MELDUNG.ende(res.winner ? (d.teams[res.winner]?.name ?? "?") : "Niemand"), endedAt);
+  room.sys(res.winner ? MELDUNG.ende(d.teams[res.winner]?.name ?? "?") : MELDUNG.endeOhne, endedAt);
   room.set("info", { ...d.info!, phase: "beendet" });
   const archive = {
     name: d.info!.name,
@@ -234,7 +234,7 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   // Zählerstände für „Futter-Profi“ stehen jetzt in der Auswertung, hier nicht mehr nötig
   room.set("secrets", { ...room.d.secrets, endAt: undefined, food: undefined });
   room.set("purgeAt", endedAt + CHAT_KEEP_MS);
-  room.notify("spiel", { all: true }, PUSH_TITLE.ende, MELDUNG.ende(res.winner ? (d.teams[res.winner]?.name ?? "?") : "Niemand"));
+  room.notify("spiel", { all: true }, PUSH_TITLE.ende, res.winner ? MELDUNG.ende(d.teams[res.winner]?.name ?? "?") : MELDUNG.endeOhne);
   void room.env.DB.prepare(
     "INSERT INTO archive (game, run, name, startedAt, endedAt, winner, data, chat) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
   )

@@ -11,7 +11,7 @@ das Großbild zeigt die Jagd am Beamer.
 
 - **Teams und Mister X** (Handy, Web-App oder Android-App): Beitritt per QR-Code, Karte mit Spielfeld und Spur von
   Mister X, Countdown bis zur nächsten Meldung, Kompass, Übergabe, Wartezeiten, Durchsagen, Chat, Regeln, Notfall-Knopf.
-  Oberfläche auf Deutsch, Englisch, Türkisch und Bosnisch/Kroatisch/Serbisch.
+  Oberfläche auf Deutsch, Englisch, Spanisch, Italienisch und Türkisch (Zahnrad auf der Startseite).
 - **Schiris:** alle Teams live, Übergabe nach Nähe, Rückgängig.
 - **Spielleitung:** Start (gewählt oder ausgelost), Pause, Notstopp, Verkleinerung des Spielfelds, Sofort-Meldung,
   Durchsagen mit Vorlagen, Sammelruf, Warnungen (Akku, Funkstille, Übergabe prüfen), Teams und Zugänge, Protokoll,

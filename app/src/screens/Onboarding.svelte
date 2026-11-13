@@ -26,7 +26,14 @@
 <AmbientBackdrop />
 <main class="ob">
   <header>
-    <div class="dots" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step + 1} aria-label="Schritt {step + 1} von 4">
+    <div
+      class="dots"
+      role="progressbar"
+      aria-valuemin={1}
+      aria-valuemax={4}
+      aria-valuenow={step + 1}
+      aria-label={T.onboarding.schritt(step + 1, 4)}
+    >
       {#each [0, 1, 2, 3] as i (i)}<i class:on={i <= step}></i>{/each}
     </div>
     <Button variant="ghost" size="m" onclick={ondone}>{T.onboarding.ueberspringen}</Button>
