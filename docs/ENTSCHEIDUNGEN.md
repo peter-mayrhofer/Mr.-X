@@ -702,3 +702,16 @@ anderen Sprachen die drei wichtigsten Regeln (Auswahl über das Symbol statt üb
 und es braucht keine Umstellung der gespeicherten Daten. Neue Meldung in `meldungen.ts` → in allen vier Sprachdateien
 unter `shared/src/sprachen/` ergänzen (TypeScript meldet fehlende). Die Übersetzungen sollte vor dem Einsatz jemand mit
 der jeweiligen Muttersprache durchsehen.
+
+### E-68 Die ganze App in fünf Sprachen
+**Entscheidung:** Nicht nur die Team-Bildschirme, sondern alles ist übersetzt: Anmeldung für Schiri und Spielleitung,
+Schiri-Ansicht, Spielleitung (Live, Steuerung, Teams & Zugänge, Spielfeld-Editor, Protokoll, Tracker), Großbild,
+Verwaltung des Organisators, Druckblätter und Urkunden (ersetzt E-56 und E-67 in diesem Punkt). Das **Protokoll**
+schreibt der Server weiter deutsch, aber nur noch über die Vorlagen in `shared/src/protokoll.ts`; die App übersetzt
+Aktion und Details beim Anzeigen über ihr Muster (`uebersetzeProtokoll`, eigene Muster neben denen der
+Chat-Meldungen), auch feste Wörter in den Teilen („niemand“, „Schiri“, „Fahne“). Freier Text (Durchsagen, gelöschte
+Nachrichten) bleibt. Erklärungen des Servers bei falschen Eingaben („invalid“) gibt es nur auf Deutsch – in anderen
+Sprachen zeigt `fehlerText()` (`app/src/lib/api.ts`) den allgemeinen Hinweis „Bitte Eingaben prüfen“.
+**Warum so:** Wunsch des Organisators („gefühlt alles ist noch deutsch“). Was Menschen eintippen (Teamnamen,
+Bereichsnamen, Regel-Ergänzungen, Durchsagen) wird nicht übersetzt. Neue Texte immer in allen fünf Sprachen anlegen,
+neue Protokoll-Einträge nur über `protokoll.ts` (TypeScript meldet fehlende Übersetzungen).

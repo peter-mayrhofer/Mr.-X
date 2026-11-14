@@ -336,7 +336,7 @@
     {/if}
 
     {#if problems.length}
-      <Banner tone="danger" title="Bitte prüfen">
+      <Banner tone="danger" title={T.zonen.bittePruefen}>
         {#each problems as p (p)}<div>{p}</div>{/each}
       </Banner>
     {:else}

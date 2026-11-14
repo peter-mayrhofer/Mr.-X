@@ -6,7 +6,7 @@
   import { BatteryFull, BatteryLow, BatteryMedium, Ellipsis, Hourglass, Pencil, ShieldCheck, Split, Trash, Users } from "@lucide/svelte";
   import Stepper from "../../ui/Stepper.svelte";
   import { uhr } from "../../lib/format.ts";
-  import { LIMITS, type ApiReason, type SecretKind } from "@mrx/shared";
+  import { LIMITS, type SecretKind } from "@mrx/shared";
   import Segmented from "../../ui/Segmented.svelte";
   import ListItem from "../../ui/ListItem.svelte";
   import TeamBadge from "../../ui/TeamBadge.svelte";
@@ -22,7 +22,7 @@
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
   import { vor } from "../../lib/format.ts";
-  import { ApiError } from "../../lib/api.ts";
+  import { fehlerText } from "../../lib/api.ts";
   import { isOffline, type Api, type StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
 
@@ -59,8 +59,7 @@
   const locked = (id: string) => (view.locks[id]?.until ?? 0) > clock.now;
   const running = $derived(view.state.phase === "laeuft");
 
-  const errText = (e: unknown) =>
-    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  const errText = (e: unknown) => fehlerText(e);
   async function run(fn: () => Promise<unknown>, okText: string) {
     try {
       await fn();

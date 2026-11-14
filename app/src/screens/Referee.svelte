@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
   import { Flag, Hourglass, Map as MapIcon, Menu, MessageCircle, ScrollText } from "@lucide/svelte";
-  import { distanceM, type ApiReason } from "@mrx/shared";
+  import { distanceM } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import StatusCard from "./parts/StatusCard.svelte";
   import HandoverFlow from "./parts/HandoverFlow.svelte";
@@ -23,7 +23,7 @@
   import { toast } from "../ui/toast.svelte.ts";
   import { clock } from "../lib/clock.svelte.ts";
   import { meter, mmss, uhr } from "../lib/format.ts";
-  import { ApiError } from "../lib/api.ts";
+  import { fehlerText } from "../lib/api.ts";
   import { isOffline, trailOf, type Api, type StaffView } from "../lib/staff.ts";
   import type { PushState } from "../lib/push.svelte.ts";
   import { T } from "../texte.ts";
@@ -98,8 +98,7 @@
       .map(([uid, p]) => ({ key: uid, lat: p.lat, lng: p.lng, props: { kind: "staff" as const, name: p.name ?? T.status.schiri } })),
   ]);
 
-  const msg = (e: unknown) =>
-    e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason as ApiReason | "network"]) : T.apiFehler.network;
+  const msg = (e: unknown) => fehlerText(e);
 
   async function follow(on: boolean) {
     try {

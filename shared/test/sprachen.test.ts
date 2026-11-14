@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MELDUNG, PUSH_TITLE, SPRACH_CODES, uebersetze } from "../src/index.ts";
+import { MELDUNG, PROTOKOLL as P, PUSH_TITLE, SPRACH_CODES, uebersetze, uebersetzeProtokoll } from "../src/index.ts";
 
 describe("Server-Texte übersetzen", () => {
   it("erkennt Meldungen mit Teamnamen und Minuten", () => {
@@ -37,5 +37,26 @@ describe("Server-Texte übersetzen", () => {
     expect(uebersetze(MELDUNG.pause, "de")).toBe(MELDUNG.pause);
     expect(uebersetze("Treffpunkt beim Brunnen!", "en")).toBe("Treffpunkt beim Brunnen!");
     expect(uebersetze(MELDUNG.pause, "xx")).toBe(MELDUNG.pause);
+  });
+
+  it("Protokoll: Aktionen und Details, feste Wörter in den Teilen mit übersetzt", () => {
+    expect(uebersetzeProtokoll(P.uebergabe, "en")).toBe("Handover");
+    expect(uebersetzeProtokoll(P.fang("Traun", "Urfahr", P.niemand), "en")).toBe("Traun → Urfahr; waiting: nobody");
+    expect(uebersetzeProtokoll(P.fangPruefenM("A", "B", "C, D", 300), "it")).toBe(
+      "A → B; in attesa: C, D; da controllare: 300 m di distanza",
+    );
+    expect(uebersetzeProtokoll(P.geraetMit("Peter", P.schiri), "es")).toBe("Peter (Árbitro)");
+    expect(uebersetzeProtokoll(P.aufgeteilt("A", "B", 1), "en")).toBe("A → B (1 device)");
+    expect(uebersetzeProtokoll(P.aufgeteilt("A", "B", 3), "en")).toBe("A → B (3 devices)");
+    expect(uebersetzeProtokoll(P.organisator, "tr")).toBe("Organizatör");
+    expect(uebersetzeProtokoll(P.istMrxGelost("Traun"), "es")).toBe("Traun es Mister X (por sorteo)");
+    for (const l of SPRACH_CODES.filter((s) => s !== "de"))
+      for (const [k, f] of Object.entries(P)) {
+        const de = typeof f === "string" ? f : (f as (...a: (string | number)[]) => string)("Team 1", "Team 2", "Team 3", 7);
+        const x = uebersetzeProtokoll(de, l);
+        if (!["geraetMit", "teamMin", "pause"].includes(k) && !(l === "en" && ["team", "durchsage"].includes(k)))
+          expect(x, `${k} ${l}`).not.toBe(de);
+        expect(x, `${k} ${l}`).not.toMatch(/undefined|\uE000/);
+      }
   });
 });

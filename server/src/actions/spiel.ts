@@ -14,6 +14,7 @@ import {
 import { fail, MIN, newKey, str } from "../util.ts";
 import { finish, lockCut, writeReport } from "../ablauf.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const rand = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
@@ -50,7 +51,7 @@ export function startGame(room: GameRoom, d: D, a: Auth): ApiResults["startGame"
   for (const t of ids) if (t !== mrx && cfg.headStartMin > 0) room.put("locks", t, { until: head, reason: "start" } satisfies Lock);
   room.notify("spiel", { all: true, except: [mrx] }, PUSH_TITLE.start, MELDUNG.start(ts[mrx].name, cfg.headStartMin));
   room.notify("spiel", { teams: [mrx] }, PUSH_TITLE.neuerMrx, MELDUNG.vorsprung(cfg.headStartMin));
-  room.audit(who, "Spiel gestartet", `${ts[mrx].name} ist Mister X${drawn ? " (ausgelost)" : ""}`);
+  room.audit(who, P.spielGestartet, (drawn ? P.istMrxGelost : P.istMrx)(ts[mrx].name));
   return { mrx };
 }
 
@@ -64,7 +65,7 @@ export function pause(room: GameRoom, _d: D, a: Auth): ApiResults["pause"] {
   room.put("pauses", newKey(), { from: now });
   room.sys(MELDUNG.pause, now);
   room.notify("spiel", { all: true }, PUSH_TITLE.pause, MELDUNG.pause);
-  room.audit(who, "Pause");
+  room.audit(who, P.pause);
   return {};
 }
 
@@ -84,7 +85,7 @@ export function resume(room: GameRoom, _d: D, a: Auth): ApiResults["resume"] {
   if (room.d.secrets.endAt) room.set("secrets", { ...room.d.secrets, endAt: room.d.secrets.endAt + dur });
   room.sys(MELDUNG.weiter, now);
   room.notify("spiel", { all: true }, PUSH_TITLE.fortsetzung, MELDUNG.weiter);
-  room.audit(who, "Fortgesetzt", `nach ${Math.round(dur / MIN)} Min Pause`);
+  room.audit(who, P.fortgesetzt, P.nachPause(Math.round(dur / MIN)));
   return {};
 }
 
@@ -92,7 +93,7 @@ export function resume(room: GameRoom, _d: D, a: Auth): ApiResults["resume"] {
 export function stopGame(room: GameRoom, _d: D, a: Auth): ApiResults["stopGame"] {
   const who = room.who(a, ["admin"]);
   if (!finish(room, Date.now(), "notstopp")) fail("wrongPhase", "Das Spiel läuft nicht");
-  room.audit(who, "Notstopp");
+  room.audit(who, P.notstopp);
   return {};
 }
 
@@ -198,17 +199,21 @@ export function setConfig(room: GameRoom, d: D, a: Auth): ApiResults["setConfig"
   if (endAt !== undefined) room.set("secrets", { ...room.d.secrets, endAt });
   room.audit(
     who,
-    "Einstellungen geändert",
+    P.einstellungen,
     changed
       .map((k) =>
         k === "rulesText"
-          ? "Regeltext"
+          ? P.regeltext
           : k === "announceTemplates"
-            ? "Durchsage-Vorlagen"
+            ? P.durchsageVorlagen
             : k === "trial"
-              ? `Probelauf: ${next.trial ? "an" : "aus"}`
+              ? next.trial
+                ? P.probelaufAn
+                : P.probelaufAus
               : k === "refereeHunters"
-                ? `Schiris sehen Jäger: ${next.refereeHunters === false ? "aus" : "an"}`
+                ? next.refereeHunters === false
+                  ? P.jaegerAus
+                  : P.jaegerAn
                 : `${k}: ${String(cur[k])} → ${String(next[k])}`,
       )
       .join(", "),
@@ -237,10 +242,10 @@ export function setCut(room: GameRoom, d: D, a: Auth): ApiResults["setCut"] {
     const text = MELDUNG.sperreAngekuendigt(cut.short, inMin);
     room.sys(text, now);
     room.notify("spielfeld", { all: true }, PUSH_TITLE.spielfeld, text);
-    room.audit(who, "Sperre angekündigt", `${cut.short} in ${inMin} Min`);
+    room.audit(who, P.sperreAngekuendigt, P.inMin(cut.short, inMin));
   } else if (locked) {
     lockCut(room, id, now);
-    room.audit(who, "Bereich gesperrt", cut.short);
+    room.audit(who, P.bereichGesperrt, cut.short);
   } else if (pending) {
     // Vorwarnung zurücknehmen
     const { [id]: _, ...warn } = cur.warnCuts!;
@@ -248,7 +253,7 @@ export function setCut(room: GameRoom, d: D, a: Auth): ApiResults["setCut"] {
     const text = MELDUNG.sperreAbgesagt(cut.short);
     room.sys(text, now);
     room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, text);
-    room.audit(who, "Sperre abgesagt", cut.short);
+    room.audit(who, P.sperreAbgesagt, cut.short);
   } else {
     const cuts = { ...cur.cuts };
     delete cuts[id];
@@ -257,7 +262,7 @@ export function setCut(room: GameRoom, d: D, a: Auth): ApiResults["setCut"] {
     room.put("cutLog", newKey(), { cut: id, locked: false, t: now });
     room.sys(text, now);
     if (live(room)) room.notify("spielfeld", { all: true }, PUSH_TITLE.regeln, text);
-    room.audit(who, "Bereich freigegeben", cut.short);
+    room.audit(who, P.bereichFrei, cut.short);
   }
   return {};
 }
@@ -273,7 +278,7 @@ export function setLock(room: GameRoom, d: D, a: Auth): ApiResults["setLock"] {
   if (room.d.state.phase !== "laeuft") fail("wrongPhase", "Das Spiel läuft nicht");
   room.put("locks", t, min ? ({ until: Date.now() + min * MIN, reason: "manuell" } satisfies Lock) : null);
   if (min) room.notify("wartezeit", { teams: [t] }, PUSH_TITLE.warten, MELDUNG.wartenHand(min));
-  room.audit(who, min ? "Wartezeit gegeben" : "Wartezeit aufgehoben", min ? `${team.name}: ${min} Min` : team.name);
+  room.audit(who, min ? P.wartezeitGegeben : P.wartezeitAufgehoben, min ? P.teamMin(team.name, min) : team.name);
   return {};
 }
 
@@ -284,7 +289,7 @@ export function instantReport(room: GameRoom, _d: D, a: Auth): ApiResults["insta
   if (st.phase !== "laeuft" || !st.mrx) fail("wrongPhase", "Das Spiel läuft nicht");
   const name = room.d.teams[st.mrx]?.name ?? "?";
   const reportId = writeReport(room, { mrx: st.mrx, kind: "sofort", now: Date.now(), text: MELDUNG.sofort(name) });
-  room.audit(who, "Sofort-Meldung", name);
+  room.audit(who, P.sofortMeldung, name);
   return { reportId };
 }
 
@@ -294,14 +299,14 @@ export function announce(room: GameRoom, d: D, a: Auth): ApiResults["announce"] 
   const text = str(d.text, [1, LIMITS.chat], "Durchsage");
   room.put("chat", newKey(), { uid: who.uid, name: who.name, text, t: Date.now(), kind: "ann" });
   room.notify("durchsage", { all: true }, PUSH_TITLE.durchsage, text);
-  room.audit(who, "Durchsage", text);
+  room.audit(who, P.durchsage, text);
   return {};
 }
 
 /** Admin kann den geheimen Zeitpunkt bei Bedarf sehen – wird protokolliert */
 export function revealEnd(room: GameRoom, _d: D, a: Auth): ApiResults["revealEnd"] {
   const who = room.who(a, ["admin"]);
-  room.audit(who, "Spielende aufgedeckt");
+  room.audit(who, P.endeAufgedeckt);
   return { endAt: room.d.secrets.endAt ?? null };
 }
 
@@ -312,6 +317,6 @@ export function follow(room: GameRoom, d: D, a: Auth): ApiResults["follow"] {
   const on = d.on === true;
   const { followsFlag: _, ...m } = room.d.members[who.uid]!;
   room.put("members", who.uid, on ? { ...m, followsFlag: true } : m);
-  room.audit(who, on ? "Begleitet Mister X" : "Begleitet Mister X nicht mehr");
+  room.audit(who, on ? P.begleitet : P.begleitetNicht);
   return {};
 }

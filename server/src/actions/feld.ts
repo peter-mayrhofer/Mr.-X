@@ -4,6 +4,7 @@
 import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type MeetPoint, type Polygon, type Spot } from "@mrx/shared";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
+import { PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const MAX_POINTS = 2000;
@@ -87,7 +88,7 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
   if (Object.keys(st.cuts ?? {}).some((id) => !cuts[id]))
     room.setState({ ...st, cuts: Object.fromEntries(Object.entries(st.cuts ?? {}).filter(([id]) => cuts[id])) });
   room.set("field", field);
-  room.audit(who, "Spielfeld gespeichert", `${field.base.length - 1} Punkte, ${Object.keys(cuts).length} Sperrbereiche`);
+  room.audit(who, P.feldGespeichert, P.feld(field.base.length - 1, Object.keys(cuts).length));
   return {};
 }
 
@@ -100,7 +101,7 @@ export function archiveGame(room: GameRoom, d: D, a: Auth): ApiResults["archiveG
   const on = d.archived !== false;
   const { archived: _, ...info } = room.d.info!;
   room.set("info", on ? { ...info, archived: true } : info);
-  room.audit({ uid: "super", name: "Organisator", role: "superadmin" }, on ? "Spiel archiviert" : "Spiel reaktiviert");
+  room.audit({ uid: "super", name: P.organisator, role: "superadmin" }, on ? P.spielArchiviert : P.spielReaktiviert);
   return {};
 }
 

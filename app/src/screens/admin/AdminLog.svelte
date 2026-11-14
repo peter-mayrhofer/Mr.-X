@@ -1,7 +1,8 @@
 <!-- Screen 17: Protokoll (Audit-Log) – wer hat wann was ausgelöst; wichtig bei Streit. Export als CSV. -->
 <script lang="ts">
   import { Download } from "@lucide/svelte";
-  import type { AuditEntry } from "@mrx/shared";
+  import { PROTOKOLL, uebersetzeProtokoll, type AuditEntry } from "@mrx/shared";
+  import { sprache } from "../../lib/sprache.ts";
   import Segmented from "../../ui/Segmented.svelte";
   import Button from "../../ui/Button.svelte";
   import Pill from "../../ui/Pill.svelte";
@@ -24,12 +25,21 @@
           ? "zugang"
           : "regeln";
   const list = $derived([...audit].reverse().filter((a) => cat === "alle" || catOf(a) === cat));
-  const ROLE: Record<string, string> = { ...T.warten.rolle, admin: "Spielleitung", superadmin: "Organisator" };
+  const ROLE: Record<string, string> = { ...T.warten.rolle, superadmin: T.admin.organisator };
+  // Protokoll kommt deutsch vom Server – in der Sprache der Oberfläche zeigen (E-68); freier Text bleibt
+  const ue = (s: string) => uebersetzeProtokoll(s, sprache);
+  const frei: string[] = [PROTOKOLL.durchsage, PROTOKOLL.nachrichtGeloescht];
+  const details = (a: Entry) =>
+    !a.details || frei.includes(a.action)
+      ? (a.details ?? "")
+      : a.action === PROTOKOLL.einstellungen
+        ? a.details.split(", ").map(ue).join(", ")
+        : ue(a.details);
 
   function csv() {
     const rows = [
-      ["Zeit", "Wer", "Rolle", "Aktion", "Details"],
-      ...audit.map((a) => [new Date(a.t).toISOString(), a.name, ROLE[a.role] ?? a.role, a.action, a.details ?? ""]),
+      [T.admin.csv.zeit, T.admin.csv.wer, T.admin.csv.rolle, T.admin.csv.aktion, T.admin.csv.details],
+      ...audit.map((a) => [new Date(a.t).toISOString(), ue(a.name), ROLE[a.role] ?? a.role, ue(a.action), details(a)]),
     ];
     const text = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(";")).join("\n");
     const a = document.createElement("a");
@@ -46,7 +56,7 @@
     <Button variant="secondary" size="m" icon={Download} onclick={csv}>CSV</Button>
   </header>
   <Segmented
-    label="Filter"
+    label={T.admin.filterTitel}
     bind:value={cat}
     options={(Object.keys(T.admin.filter) as Cat[]).map((k) => ({ value: k, label: T.admin.filter[k] }))}
   />
@@ -56,13 +66,13 @@
         <time class="num">{uhr(a.t)}</time>
         <div class="body">
           <p class="act">
-            {a.action}
+            {ue(a.action)}
             {#if a.undone}<Pill tone="warn">{T.admin.rueckgaengigGemacht}</Pill>{/if}
           </p>
-          {#if a.details}<p class="det">{a.details}</p>{/if}
+          {#if a.details}<p class="det">{details(a)}</p>{/if}
           <p class="who">
             <Pill tone={a.role === "admin" || a.role === "superadmin" ? "accent" : "info"}>{ROLE[a.role] ?? a.role}</Pill>
-            {a.name}
+            {ue(a.name)}
           </p>
         </div>
       </li>

@@ -16,11 +16,12 @@ und Schiris steuern, das Großbild zeigt die Jagd. Live: https://mister-x.mr-x-o
 ## Aufbau
 
 - `app/` Svelte 5 + TypeScript (Vite). Alle Texte in `app/src/texte.ts` (Deutsch); Übersetzungen der
-  Team-Bildschirme in `app/src/texte/{en,es,it,tr}.ts`, typgeprüft gegen `texte.ts` – neue Team-Texte in allen fünf
-  Sprachen anlegen; Chat-Meldungen und Push-Titel vom Server in `shared/src/sprachen/` (E-67). Spielleitung, Schiri und
-  Großbild sind nur deutsch. Android-App: `app/android/` (Capacitor).
+  ganzen App in `app/src/texte/{en,es,it,tr}.ts`, typgeprüft gegen `texte.ts` – neue Texte in allen fünf Sprachen
+  anlegen, auch für Spielleitung und Schiri. Chat-Meldungen, Push-Titel und Protokoll vom Server in
+  `shared/src/sprachen/` (E-67, E-68). Android-App: `app/android/` (Capacitor).
 - `server/` Cloudflare Worker, ein Spielraum (Durable Object) pro Spiel, D1, Web Push. Regeln in `server/src/ablauf.ts`
-  und `server/src/actions/`. Chat-/Server-Meldungen in `shared/src/meldungen.ts`, Push-Titel in `shared/src/push.ts`.
+  und `server/src/actions/`. Chat-/Server-Meldungen in `shared/src/meldungen.ts`, Push-Titel in `shared/src/push.ts`,
+  Protokoll-Texte in `shared/src/protokoll.ts`.
 - `shared/` Spiel-Logik, Geometrie, Schnittstellen-Vertrag – mit Unit-Tests.
 - `tests/` Server-, Rechte-, Last- und Ende-zu-Ende-Tests (lokale Cloudflare-Laufzeit + Playwright).
 - `docs/` Handbücher und Technik. Jede Entscheidung mit Begründung als neuer Eintrag in `docs/ENTSCHEIDUNGEN.md`

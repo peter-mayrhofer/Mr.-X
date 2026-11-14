@@ -32,6 +32,7 @@ export const T = {
     gespeichert: "Gespeichert",
     geradeEben: "gerade eben",
     vor: (dauer: string) => `vor ${dauer}`,
+    ungelesen: (was: string, n: number) => `${was}, ${n} neu`,
     weniger: "weniger",
     mehr: "mehr",
     prototyp: (was: string) => `Prototyp: würde jetzt „${was}“ auslösen.`,
@@ -692,6 +693,9 @@ export const T = {
     zuletzt: "zuletzt",
     protokoll: "Protokoll",
     filter: { alle: "Alle", uebergabe: "Übergaben", regeln: "Regeln", spielfeld: "Spielfeld", zugang: "Zugang" },
+    filterTitel: "Filter",
+    organisator: "Organisator",
+    csv: { zeit: "Zeit", wer: "Wer", rolle: "Rolle", aktion: "Aktion", details: "Details" },
   },
 
   zonen: {
@@ -740,6 +744,7 @@ export const T = {
     kurzname: "Kurzname (Karte, Meldungen)",
     farbe: "Farbe",
     bereichLoeschen: "Bereich löschen",
+    bittePruefen: "Bitte prüfen",
   },
 
   grossbild: {

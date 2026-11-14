@@ -17,7 +17,7 @@
   import PrintSheet from "./PrintSheet.svelte";
   import Urkunden from "./Urkunden.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
-  import { ApiError } from "../../lib/api.ts";
+  import { ApiError, fehlerText } from "../../lib/api.ts";
   import { druck, druckeUrkunden, merke } from "../../lib/druck.svelte.ts";
   import { T } from "../../texte.ts";
 
@@ -83,7 +83,7 @@
       values[kind] = "";
       toast(value === null ? T.zugang.geloescht(LABEL[kind]) : T.zugang.gespeichert(LABEL[kind]), value === null ? "warn" : "ok");
     } catch (e) {
-      toast(e instanceof ApiError ? (e.reason === "invalid" ? e.message : T.apiFehler[e.reason]) : T.apiFehler.network, "warn");
+      toast(fehlerText(e), "warn");
     } finally {
       busy = null;
     }

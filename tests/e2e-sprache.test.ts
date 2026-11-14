@@ -9,7 +9,7 @@ import en from "../app/src/texte/en.ts";
 import es from "../app/src/texte/es.ts";
 import it_ from "../app/src/texte/it.ts";
 import tr from "../app/src/texte/tr.ts";
-import { MELDUNG, uebersetze } from "@mrx/shared";
+import { MELDUNG, PROTOKOLL, uebersetze, uebersetzeProtokoll } from "@mrx/shared";
 import { call, join, resetServer, startApp, superAdminToken, val, visible, type Device } from "./helpers.ts";
 
 const G = "linz-sprache";
@@ -114,5 +114,22 @@ describe("Sprachen", { timeout: 60_000 }, () => {
     const cfg = (await val(`games/${G}/config`)) as { headStartMin: number };
     await visible(p, uebersetze(MELDUNG.start("Urfahr", cfg.headStartMin), "es"));
     await ctx.close();
+  });
+
+  it("Spielleitung auf Italienisch: Anmeldung, Steuerung, Protokoll", async () => {
+    const p = await phone();
+    await p.addInitScript(() => localStorage.setItem("mrx.sprache", "it"));
+    await p.goto(`${URL}#/staff/admin?g=${G}`);
+    await p.getByText(it_.staffLogin.titel).first().waitFor();
+    await p.getByLabel(it_.staffLogin.name).fill("Peter");
+    await p.getByLabel(it_.staffLogin.adminPasswort).fill("admin1234");
+    await p.getByRole("button", { name: it_.staffLogin.los, exact: true }).click();
+    // das Spiel läuft schon (Test davor) → Live-Übersicht; das Protokoll zeigt die Einträge übersetzt
+    // am Handy liegt das Protokoll unter „Mehr“
+    await p.getByRole("button", { name: it_.tabs.mehr, exact: true }).click();
+    await p.getByRole("dialog").getByText(it_.admin.nav.protokoll, { exact: true }).click();
+    await p.getByRole("heading", { name: it_.admin.protokoll }).waitFor();
+    await visible(p, uebersetzeProtokoll(PROTOKOLL.spielGestartet, "it"));
+    await visible(p, uebersetzeProtokoll(PROTOKOLL.istMrx("Urfahr"), "it"));
   });
 });

@@ -1,6 +1,7 @@
 <!-- Untere Navigation: groß, Daumen-erreichbar, mit Ungelesen-Zählern. -->
 <script lang="ts">
   import type { Icon } from "./icons.ts";
+  import { T } from "../texte.ts";
 
   interface Props {
     items: { id: string; label: string; icon: Icon; badge?: number }[];
@@ -17,7 +18,7 @@
     <button
       class:on={active === it.id}
       aria-current={active === it.id ? "page" : undefined}
-      aria-label={it.badge ? `${it.label}, ${it.badge} neu` : it.label}
+      aria-label={it.badge ? T.allgemein.ungelesen(it.label, it.badge) : it.label}
       onclick={() => onselect(it.id)}
     >
       <span class="ic">
