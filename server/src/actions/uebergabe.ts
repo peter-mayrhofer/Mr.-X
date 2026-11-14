@@ -52,6 +52,8 @@ export function handover(room: GameRoom, d: D, a: Auth): ApiResults["handover"] 
   const { teams: ts, config: cfg, positions: pos, state: cur } = room.d;
   if (typeof to !== "string" || !ts[to]) fail("invalid", "Team unbekannt");
   if (cur.lastHandover === rid) return { handoverId: rid, locked: room.d.handovers[rid]?.locked ?? [] };
+  // eine ältere Übergabe mit derselben Kennung würde sonst überschrieben (Auswertung und Wiederholung)
+  if (Object.hasOwn(room.d.handovers, rid)) fail("conflict", "Anfrage-Kennung schon verwendet");
   if (cur.phase !== "laeuft") fail("wrongPhase", "Das Spiel läuft nicht");
   if (cur.mrx !== expectedMrx || cur.mrx === to) fail("conflict", "Mister X hat sich inzwischen geändert");
 
@@ -143,6 +145,8 @@ export function undo(room: GameRoom, d: D, a: Auth): ApiResults["undo"] {
   const cur = room.d.state;
   if (cur.phase !== "laeuft" && cur.phase !== "pause") fail("wrongPhase", "Das Spiel läuft nicht");
   if (cur.lastHandover !== id || cur.mrx !== h.to) fail("conflict", "Nur die letzte Übergabe kann rückgängig gemacht werden");
+  // das alte Team wurde inzwischen entfernt – es kann nicht wieder Mister X werden
+  if (!h.from || !Object.hasOwn(ts, h.from)) fail("conflict", "Das vorige Team gibt es nicht mehr");
 
   const { lastHandover: _, ...rest } = cur;
   room.setState({ ...rest, ...h.prev });

@@ -13,9 +13,11 @@ export const mmss = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-export const uhr = (t: number) => new Date(t).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" });
+// Uhrzeit immer in Österreich (wie die Meldungen des Servers) – auch auf einem Laptop mit anderer Zeitzone
+const TZ = "Europe/Vienna";
+export const uhr = (t: number) => new Date(t).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
-export const datum = (t: number) => new Date(t).toLocaleDateString(loc(), { day: "numeric", month: "long", year: "numeric" });
+export const datum = (t: number) => new Date(t).toLocaleDateString(loc(), { day: "numeric", month: "long", year: "numeric", timeZone: TZ });
 
 export function vor(t: number, now: number) {
   const m = Math.floor((now - t) / MIN);

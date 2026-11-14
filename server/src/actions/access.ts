@@ -65,6 +65,7 @@ export function gameInfo(room: GameRoom): ApiResults["gameInfo"] {
 }
 
 const ROLES: Role[] = ["team", "schiri", "admin", "screen", "viewer"];
+const MAX_ZUSCHAUER = 300;
 
 export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["join"]> {
   const info = room.d.info!;
@@ -91,6 +92,8 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
   else if (role === "admin") ok = !!a.superAdmin || (await verifySecret(secret, sec.adminPw));
   else if (role === "screen") ok = sameText(secret, sec.screenKey);
   else if (room.d.config.spectators === false) fail("noSpectators", "Zuschauer sind in diesem Spiel nicht vorgesehen");
+  // Zuschauer brauchen kein Passwort – ohne Obergrenze könnte ein Skript Mitglieder und Protokoll endlos füllen
+  else if (Object.values(room.d.members).filter((x) => x.role === "viewer").length >= MAX_ZUSCHAUER) fail("tooMany", "Zu viele Zuschauer");
   if (!ok) {
     const cur = room.d.rate[ipKey];
     room.put("rate", ipKey, !cur || now - cur.since >= WINDOW_MS ? { n: 1, since: now } : { n: cur.n + 1, since: cur.since });

@@ -1,4 +1,5 @@
 // Kurze Rückmeldungen („Übergabe gespeichert“). Optional mit Aktion („Rückgängig“).
+import { untrack } from "svelte";
 export interface Toast {
   id: number;
   text: string;
@@ -14,6 +15,7 @@ export const toasts = new Toasts();
 
 export function toast(text: string, tone: Toast["tone"] = "info", action?: Toast["action"], ms = 4000) {
   const id = next++;
-  toasts.list.push({ id, text, tone, ...(action ? { action } : {}) });
+  // untrack: push liest die Liste – aus einem $effect heraus gerufen würde sich der Effekt sonst selbst neu auslösen
+  untrack(() => toasts.list.push({ id, text, tone, ...(action ? { action } : {}) }));
   setTimeout(() => (toasts.list = toasts.list.filter((t) => t.id !== id)), ms);
 }
