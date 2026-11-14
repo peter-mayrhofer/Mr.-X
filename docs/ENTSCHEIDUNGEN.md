@@ -715,3 +715,22 @@ Sprachen zeigt `fehlerText()` (`app/src/lib/api.ts`) den allgemeinen Hinweis „
 **Warum so:** Wunsch des Organisators („gefühlt alles ist noch deutsch“). Was Menschen eintippen (Teamnamen,
 Bereichsnamen, Regel-Ergänzungen, Durchsagen) wird nicht übersetzt. Neue Texte immer in allen fünf Sprachen anlegen,
 neue Protokoll-Einträge nur über `protokoll.ts` (TypeScript meldet fehlende Übersetzungen).
+
+### E-69 Fehlersuche: was behoben wurde
+**Entscheidung:** Durchsicht aller Bildschirme (alle Sprachen, drei Größen, automatisch) und des Servers. Behoben:
+- **Live-Standorte** kamen bei Spielleitung, Schiris und Großbild ab dem zweiten Standort nur alle 30 s statt alle 2 s
+  an – der Speicher-Zeitgeber blockierte den Verteil-Takt. Jetzt eigener Zeitgeber fürs Speichern (`room.ts`).
+- **Pause:** angekündigte Sperren liefen in der Pause weiter und schlugen beim Fortsetzen sofort zu; ebenso zählte der
+  Bezug fürs Meldeintervall die Pause mit. Beides wird jetzt wie Wartezeiten um die Pause verschoben.
+- **Sammelruf:** die automatische Ankunft (und Essens-Orte) wurde erst mit der nächsten Aktion verteilt und gespeichert;
+  jetzt sofort.
+- **Kennungen wie „constructor“** (Namen aus `Object.prototype`) bestanden Prüfungen wie „Team vorhanden?“ – ein Schiri
+  hätte Mister X auf ein nicht vorhandenes Team setzen können. Der Server lehnt solche Kennungen jetzt an einer Stelle ab.
+- Übergabe-Kennung kann eine ältere Übergabe nicht mehr überschreiben; Rückgängig geht nicht mehr auf ein inzwischen
+  entferntes Team; nach Spielende/neuer Runde werden keine wartenden Standorte mehr nachgeschickt; höchstens 300
+  Zuschauer pro Spiel.
+- App: Endlosschleife beim Laden der Vorlagen (Rückmeldung aus einem Effekt heraus), zu breiter Übergabe-Stempel
+  („YAKALANDINIZ!“) und lange Überschriften auf kleinen Handys („BENACHRICHTIGUNGEN“); Uhrzeiten immer in
+  österreichischer Zeit; Android holt verpasste Benachrichtigungen auch bei vorgehender Handy-Uhr.
+**Warum so:** Wunsch des Organisators („Suche nach Bugs“). Jede Korrektur hat einen Test (`tests/fehler.test.ts`,
+`tests/neu.test.ts`); der Test für die Live-Standorte schlägt mit dem alten Verhalten nachweislich an.

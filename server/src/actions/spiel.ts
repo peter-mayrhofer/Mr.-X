@@ -78,7 +78,15 @@ export function resume(room: GameRoom, _d: D, a: Auth): ApiResults["resume"] {
   const since = cur.pausedAt;
   const dur = now - since;
   const { pausedAt: _, ...rest } = cur;
-  room.setState({ ...rest, phase: "laeuft", nextReportAt: (cur.nextReportAt ?? now) + dur });
+  // auch angekündigte Sperren und der Bezug fürs Meldeintervall stehen in der Pause still
+  const warnCuts = cur.warnCuts && Object.fromEntries(Object.entries(cur.warnCuts).map(([id, at]) => [id, at > since ? at + dur : at]));
+  room.setState({
+    ...rest,
+    phase: "laeuft",
+    nextReportAt: (cur.nextReportAt ?? now) + dur,
+    ...(cur.lastReportAt ? { lastReportAt: cur.lastReportAt + dur } : {}),
+    ...(warnCuts ? { warnCuts } : {}),
+  });
   room.set("info", { ...room.d.info!, phase: "laeuft" });
   for (const [t, l] of Object.entries(room.d.locks)) if (l.until > since) room.put("locks", t, { ...l, until: l.until + dur });
   for (const [k, p] of Object.entries(room.d.pauses)) if (p.to === undefined) room.put("pauses", k, { ...p, to: now });

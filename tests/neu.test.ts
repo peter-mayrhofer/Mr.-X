@@ -177,11 +177,16 @@ describe("Im Spiel", () => {
     expect(await state()).toMatchObject({ gather: { name: "Hauptplatz", lat: 48.3059 } });
     expect(await lastChat()).toBe("Sammelruf: Alle bitte jetzt zum Treffpunkt Hauptplatz.");
     // Traun kommt in die Nähe (30 m) → angekommen
+    const lead = connect(admin.token);
+    await lead.until(() => true);
     const phone = connect(b.token);
     await phone.until(() => true);
     phone.sendPos(at(0.0003));
     const s = await eventually(state, (x) => !!x.gather?.arrived?.[b.teamId!]);
     expect(s.gather.arrived[b.teamId!]).toBeGreaterThan(0);
+    // die Spielleitung sieht die Ankunft sofort (früher erst mit der nächsten Aktion oder dem nächsten Alarm)
+    await lead.until((v) => !!v.state.gather?.arrived?.[b.teamId!], 3000);
+    lead.close();
     phone.close();
     // „Wir sind da“ – nur fürs eigene Team; zurücknehmen nur die Spielleitung
     expect(reason(await run(a, "arrived", { teamId: a2.teamId, on: true }))).toBe("forbidden");
