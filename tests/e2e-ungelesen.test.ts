@@ -93,6 +93,8 @@ describe("Ungelesen-Zähler", { timeout: 60_000 }, () => {
         b.dispatchEvent(new Event("scroll"));
       });
     await nachOben();
+    // der Server nimmt pro Gerät höchstens alle 2 s eine Nachricht an (CHAT_GAP_MS)
+    await sleep(2100);
     await teamPage.getByPlaceholder(T.chat.platzhalter).fill("Unsere eigene Nachricht");
     await teamPage.getByRole("button", { name: T.chat.senden }).click();
     await visible(teamPage, "Unsere eigene Nachricht");
