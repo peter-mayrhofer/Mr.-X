@@ -838,9 +838,10 @@ export const T = {
     video: "Video",
     videoTitel: "Video speichern",
     format: "Format",
-    hochformat: "Hochformat (Handy, Story)",
-    querformat: "Querformat (Bildschirm, YouTube)",
-    videoHinweis: "Das ganze Spiel als 40-Sekunden-Video mit allen Teams. Das Erstellen dauert je nach Gerät 1–3 Minuten.",
+    hochformat: "Hochformat",
+    querformat: "Querformat",
+    videoHinweis:
+      "Das ganze Spiel als 40-Sekunden-Video mit allen Teams. Hochformat passt fürs Handy und Storys, Querformat für Bildschirm und YouTube. Das Erstellen dauert je nach Gerät 1–3 Minuten.",
     videoErstellen: "Video erstellen",
     videoLaeuft: "Video wird erstellt",
     videoFertig: "Video ist fertig.",

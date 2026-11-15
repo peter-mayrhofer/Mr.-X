@@ -372,9 +372,10 @@ export default {
     video: "Vídeo",
     videoTitel: "Guardar vídeo",
     format: "Formato",
-    hochformat: "Vertical (móvil, historia)",
-    querformat: "Horizontal (pantalla, YouTube)",
-    videoHinweis: "Toda la partida en un vídeo de 40 segundos con todos los equipos. Según el dispositivo tarda 1–3 minutos.",
+    hochformat: "Vertical",
+    querformat: "Horizontal",
+    videoHinweis:
+      "Toda la partida en un vídeo de 40 segundos con todos los equipos. Vertical para el móvil e historias, horizontal para pantallas y YouTube. Según el dispositivo tarda 1–3 minutos.",
     videoErstellen: "Crear vídeo",
     videoLaeuft: "Creando vídeo",
     videoFertig: "El vídeo está listo.",

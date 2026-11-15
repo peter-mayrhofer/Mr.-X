@@ -378,9 +378,10 @@ export default {
     video: "Video",
     videoTitel: "Salva video",
     format: "Formato",
-    hochformat: "Verticale (telefono, storia)",
-    querformat: "Orizzontale (schermo, YouTube)",
-    videoHinweis: "Tutta la partita in un video di 40 secondi con tutte le squadre. A seconda del dispositivo ci vogliono 1–3 minuti.",
+    hochformat: "Verticale",
+    querformat: "Orizzontale",
+    videoHinweis:
+      "Tutta la partita in un video di 40 secondi con tutte le squadre. Verticale per telefono e storie, orizzontale per schermi e YouTube. A seconda del dispositivo ci vogliono 1–3 minuti.",
     videoErstellen: "Crea video",
     videoLaeuft: "Creazione del video",
     videoFertig: "Il video è pronto.",

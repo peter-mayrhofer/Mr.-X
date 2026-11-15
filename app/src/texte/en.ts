@@ -369,9 +369,10 @@ export default {
     video: "Video",
     videoTitel: "Save video",
     format: "Format",
-    hochformat: "Portrait (phone, story)",
-    querformat: "Landscape (screen, YouTube)",
-    videoHinweis: "The whole game as a 40-second video with all teams. Depending on the device, this takes 1–3 minutes.",
+    hochformat: "Portrait",
+    querformat: "Landscape",
+    videoHinweis:
+      "The whole game as a 40-second video with all teams. Portrait suits phones and stories, landscape suits screens and YouTube. Depending on the device, this takes 1–3 minutes.",
     videoErstellen: "Create video",
     videoLaeuft: "Creating video",
     videoFertig: "Video is ready.",

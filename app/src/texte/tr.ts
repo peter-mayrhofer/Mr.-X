@@ -365,9 +365,10 @@ export default {
     video: "Video",
     videoTitel: "Videoyu kaydet",
     format: "Biçim",
-    hochformat: "Dikey (telefon, hikâye)",
-    querformat: "Yatay (ekran, YouTube)",
-    videoHinweis: "Tüm oyun, tüm takımlarla 40 saniyelik bir video olarak. Cihaza göre 1–3 dakika sürer.",
+    hochformat: "Dikey",
+    querformat: "Yatay",
+    videoHinweis:
+      "Tüm oyun, tüm takımlarla 40 saniyelik bir video olarak. Dikey telefon ve hikâyeler için, yatay ekran ve YouTube için. Cihaza göre 1–3 dakika sürer.",
     videoErstellen: "Video oluştur",
     videoLaeuft: "Video oluşturuluyor",
     videoFertig: "Video hazır.",
