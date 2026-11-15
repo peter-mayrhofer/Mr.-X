@@ -641,7 +641,7 @@ export default {
     aufdeckenText: "Gizli zaman gösterilir ve kayda geçer. Takımlar onu görmez.",
     startAusgelost: "Mister X kurayla belirlenir.",
     startMit: (team: string) => `Mister X: ${team}.`,
-    startDetails: (head: number, a: number, b: number) => ` ${head} dk kaçış süresi, ${a} ile ${b} saat arasında rastgele bitiş.`,
+    startDetails: (head: number, a: string, b: string) => ` ${head} dk kaçış süresi, ${a} ile ${b} arasında rastgele bitiş.`,
     freigebenFrage: (bereich: string) => `${bereich} yeniden açılsın mı?`,
     gesperrtOk: (bereich: string) => `${bereich} kapatıldı – herkes bilgilendirildi`,
     vorwarnung: "Ön uyarı",

@@ -657,7 +657,7 @@ export default {
     aufdeckenText: "L'ora segreta viene mostrata e annotata nel registro. Le squadre non la vedono.",
     startAusgelost: "Mister X viene sorteggiato.",
     startMit: (team: string) => `${team} è Mister X.`,
-    startDetails: (head: number, a: number, b: number) => ` ${head} min di vantaggio, fine casuale tra ${a} e ${b} h.`,
+    startDetails: (head: number, a: string, b: string) => ` ${head} min di vantaggio, fine casuale tra ${a} e ${b}.`,
     freigebenFrage: (bereich: string) => `Riaprire ${bereich}?`,
     gesperrtOk: (bereich: string) => `${bereich} chiuso – tutti sono stati informati`,
     vorwarnung: "Preavviso",

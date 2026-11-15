@@ -734,3 +734,11 @@ neue Protokoll-Einträge nur über `protokoll.ts` (TypeScript meldet fehlende Ü
   österreichischer Zeit; Android holt verpasste Benachrichtigungen auch bei vorgehender Handy-Uhr.
 **Warum so:** Wunsch des Organisators („Suche nach Bugs“). Jede Korrektur hat einen Test (`tests/fehler.test.ts`,
 `tests/neu.test.ts`); der Test für die Live-Standorte schlägt mit dem alten Verhalten nachweislich an.
+
+### E-70 Kurze Spiele: Spielende ab 10 bzw. 20 Minuten
+**Entscheidung:** Das Zufallsende lässt sich jetzt kürzer einstellen: „frühestens“ ab 10 Min, „spätestens“ ab 20 Min
+(vorher beide ab 30 Min). Unter einer Stunde geht es in 10-Minuten-Schritten, darüber wie bisher in halben Stunden;
+angezeigt wird „20 Min“ bzw. „1,5 h“. Grenzen an einer Stelle (`ENDE_MIN_H`, `ENDE_MAX_MIN_H` in
+`shared/src/defaults.ts`), Server und App nutzen dieselben Werte. Der Stepper kann dafür feste Stufen (`stufen`)
+und eine eigene Anzeige (`format`).
+**Warum so:** Wunsch des Organisators (kurze Runden, z. B. zum Ausprobieren oder für Kinder).

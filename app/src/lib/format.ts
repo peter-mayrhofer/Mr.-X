@@ -25,6 +25,10 @@ export function vor(t: number, now: number) {
   return T.allgemein.vor(m < 60 ? `${m} ${T.allgemein.min}` : `${Math.floor(m / 60)} h ${m % 60} ${T.allgemein.min}`);
 }
 
+/** Spieldauer aus Stunden: unter einer Stunde in Minuten („20 Min“), sonst „1,5 h“ */
+export const stunden = (h: number) =>
+  h < 1 ? `${Math.round(h * 60)} ${T.allgemein.min}` : `${h.toLocaleString(loc(), { maximumFractionDigits: 2 })} h`;
+
 /** 1:23 h bzw. 45 Min */
 export function dauer(ms: number) {
   const m = Math.floor(ms / MIN);

@@ -91,7 +91,8 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
 ### 1.5 Regeln einstellen
 
 **Steuerung → Regeln live ändern**: Meldeintervall (Standard **10 Min**), Vorsprung am Start (**10 Min**), Wartezeit
-nach Übergabe (**5 Min**), Umkreis für die Wartezeit (**200 m**), Zufallsende (zwischen **3 und 4 Stunden**).
+nach Übergabe (**5 Min**), Umkreis für die Wartezeit (**200 m**), Zufallsende (zwischen **3 und 4 Stunden**; einstellbar ab frühestens **10 Min** und
+spätestens **20 Min**, unter einer Stunde in 10-Minuten-Schritten).
 Alles lässt sich auch während des Spiels ändern; alle bekommen dann automatisch eine Meldung.
 
 **Steuerung → Regeln für die Teams**: eigene Regeln und Hinweise für dieses Spiel, z. B. Treffpunkt nach dem Spiel,

@@ -21,7 +21,7 @@
   } from "@lucide/svelte";
   import TextField from "../../ui/TextField.svelte";
   import type { TemplateEntry } from "@mrx/shared";
-  import { LIMITS, nextReportAfterIntervalChange, type Config } from "@mrx/shared";
+  import { ENDE_MAX_MIN_H, ENDE_MIN_H, LIMITS, nextReportAfterIntervalChange, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Card from "../../ui/Card.svelte";
@@ -35,7 +35,7 @@
   import TeamBadge from "../../ui/TeamBadge.svelte";
   import { toast } from "../../ui/toast.svelte.ts";
   import { clock } from "../../lib/clock.svelte.ts";
-  import { dauer, uhr } from "../../lib/format.ts";
+  import { dauer, stunden, uhr } from "../../lib/format.ts";
   import { fehlerText } from "../../lib/api.ts";
   import type { Api, StaffView } from "../../lib/staff.ts";
   import { T } from "../../texte.ts";
@@ -60,6 +60,8 @@
   const [gRadius, sRadius] = bind("radiusM");
   const [gEndMin, sEndMin] = bind("endMinH");
   const [gEndMax, sEndMax] = bind("endMaxH");
+  // Spielende: unter einer Stunde in 10-Min-Schritten (ab 10 bzw. 20 Min), darüber halbe Stunden bis 12 h
+  const DAUER = [...[10, 20, 30, 40, 50].map((m) => m / 60), ...Array.from({ length: 23 }, (_, i) => 1 + i / 2)];
 
   let previewCut = $state<string | null>(null);
   let ask = $state<null | "stop" | "reveal" | "start" | { cut: string; lock: boolean }>(null);
@@ -192,8 +194,24 @@
           run(() => api({ action: "setConfig", gameId: g, config: { trial: on } }), on ? T.admin.probelaufAn : T.admin.probelaufAus)}
       />
       <div class="steppers">
-        <Stepper label={T.admin.endeFrueh} bind:value={gEndMin, sEndMin} unit="h" min={0.5} max={val("endMaxH")} step={0.5} />
-        <Stepper label={T.admin.endeSpaet} bind:value={gEndMax, sEndMax} unit="h" min={val("endMinH")} max={12} step={0.5} />
+        <Stepper
+          label={T.admin.endeFrueh}
+          bind:value={gEndMin, sEndMin}
+          unit="h"
+          min={ENDE_MIN_H}
+          max={val("endMaxH")}
+          stufen={DAUER}
+          format={stunden}
+        />
+        <Stepper
+          label={T.admin.endeSpaet}
+          bind:value={gEndMax, sEndMax}
+          unit="h"
+          min={Math.max(ENDE_MAX_MIN_H, val("endMinH"))}
+          max={12}
+          stufen={DAUER}
+          format={stunden}
+        />
       </div>
       <Button
         size="xl"
@@ -484,7 +502,7 @@
 </Modal>
 <Modal open={ask === "start"} title="{T.admin.spielStarten}?" confirm={T.admin.spielStarten} onconfirm={start} onclose={() => (ask = null)}>
   {startMrx === "random" ? T.admin.startAusgelost : T.admin.startMit(view.teams[startMrx ?? ""]?.name ?? "")}
-  {T.admin.startDetails(val("headStartMin"), val("endMinH"), val("endMaxH"))}
+  {T.admin.startDetails(val("headStartMin"), stunden(val("endMinH")), stunden(val("endMaxH")))}
 </Modal>
 {#if ask && typeof ask === "object"}
   {@const id = ask.cut}

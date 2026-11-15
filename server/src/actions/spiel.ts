@@ -14,7 +14,7 @@ import {
 import { fail, MIN, newKey, str } from "../util.ts";
 import { finish, lockCut, writeReport } from "../ablauf.ts";
 import type { Auth, GameRoom } from "../room.ts";
-import { PROTOKOLL as P } from "@mrx/shared";
+import { ENDE_MAX_MIN_H, ENDE_MIN_H, PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const rand = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
@@ -114,8 +114,8 @@ const RANGE: Record<
   waitMin: [0, 30, "Wartezeit"],
   radiusM: [0, 2000, "Umkreis"],
   undoMin: [0, 10, "Rückgängig-Frist"],
-  endMinH: [0.5, 12, "Spielende frühestens"],
-  endMaxH: [0.5, 12, "Spielende spätestens"],
+  endMinH: [ENDE_MIN_H, 12, "Spielende frühestens"],
+  endMaxH: [ENDE_MAX_MIN_H, 12, "Spielende spätestens"],
 };
 
 /** Regeln live ändern (Abschnitt 7.7) – mit automatischer Meldung an alle */

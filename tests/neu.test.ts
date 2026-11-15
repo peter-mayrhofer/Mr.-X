@@ -76,6 +76,14 @@ describe("Vorlagen und Probelauf (vor dem Start)", () => {
     await ok(admin, "templateDelete", { id: id2 });
     expect(((await ok(admin, "templateList")) as { templates: unknown[] }).templates).toHaveLength(1);
   });
+  it("Spielende: frühestens ab 10 Min, spätestens ab 20 Min", async () => {
+    expect(reason(await run(admin, "setConfig", { config: { endMinH: 5 / 60 } }))).toBe("invalid");
+    expect(reason(await run(admin, "setConfig", { config: { endMinH: 10 / 60, endMaxH: 10 / 60 } }))).toBe("invalid");
+    await ok(admin, "setConfig", { config: { endMinH: 10 / 60, endMaxH: 20 / 60 } });
+    expect(await val(`games/${G}/config/endMaxH`)).toBeCloseTo(1 / 3);
+    await ok(admin, "setConfig", { config: { endMinH: 3, endMaxH: 4 } });
+  });
+
   it("Probelauf an – geht nur vor dem Start", async () => {
     await ok(admin, "setConfig", { config: { trial: true } });
     expect(await val(`games/${G}/config/trial`)).toBe(true);
