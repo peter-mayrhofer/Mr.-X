@@ -44,7 +44,9 @@ Setup-Geheimnis `lokal`.
 
 - Standard-Branch ist `claude/vibrant-darwin-2gk2cj`. **Jeder Merge dorthin geht automatisch live** (Workflow
   „Deploy“: Web-App und Android-APK aus demselben Stand). Deshalb Änderungen auf einem eigenen Branch, Pull Request,
-  CI abwarten (CI, Android-APK mit Emulator-Test), erst auf ausdrücklichen Wunsch des Organisators zusammenführen.
+  CI abwarten (CI, Android-APK mit Emulator-Test). **Ist alles grün, selbst zusammenführen – ohne auf „mergen“ zu
+  warten** (Wunsch des Organisators vom 15.11.2026). Danach kurz prüfen, ob „Deploy“ durchgelaufen ist, und es ihm
+  sagen. Bei roter CI nie zusammenführen.
 - `server/wrangler.jsonc` enthält keine Datenbank-ID; der Organisator hat seine lokal eingetragen, CI sucht sie über
   den Namen. Nie eine ID committen.
 - Nicht ins Repository: Musikdateien (Mixkit-Lizenz), Hilfsskripte für Videoaufnahmen, APKs, `server/geheimnisse*.json`.
