@@ -194,6 +194,18 @@ const lastN = <T>(o: Record<string, T>, n: number): Record<string, T> => {
       );
 };
 
+/** Namen aus Object.prototype („constructor“, „__proto__“ …) sind in jedem Objekt „vorhanden“ – als Kennung oder
+ *  Schlüssel würden sie Prüfungen wie `!teams[to]` überlisten. Freitext-Felder sind ausgenommen. */
+const PROTO = new Set(Object.getOwnPropertyNames(Object.prototype));
+const FREITEXT = new Set(["text", "name", "value", "message", "teamName", "secret", "adminPassword", "password"]);
+function protoName(x: unknown, tief = 0): boolean {
+  if (Array.isArray(x)) return x.some((v) => (typeof v === "string" ? PROTO.has(v) : protoName(v, tief + 1)));
+  if (!x || typeof x !== "object" || tief > 5) return false;
+  return Object.entries(x).some(
+    ([k, v]) => PROTO.has(k) || (typeof v === "string" ? tief === 0 && !FREITEXT.has(k) && PROTO.has(v) : protoName(v, tief + 1)),
+  );
+}
+
 type Out = { t: "snap"; v: number; view: View; vapid?: string } | { t: "patch"; p: Patch[] } | { t: "note"; n: Note };
 
 export class GameRoom extends DurableObject<Env> {
@@ -215,6 +227,8 @@ export class GameRoom extends DurableObject<Env> {
   readonly food = new Map<string, Presence>();
   #livePatches = new Map<string, Patch>();
   #liveTimer: ReturnType<typeof setTimeout> | undefined;
+  /** eigener Zeitgeber fürs Speichern – sonst blockiert er den 2-s-Takt zum Verteilen (Standorte kamen nur alle 30 s) */
+  #saveTimer: ReturnType<typeof setTimeout> | undefined;
   #liveSavedAt = 0;
   #indexed = "";
   /** Verbrauch seit dem Aufwachen, so wie Cloudflare zählt (Lasttest, docs/CLOUDFLARE-LIMITS.md §5) */
@@ -235,6 +249,8 @@ export class GameRoom extends DurableObject<Env> {
   /** Teil ganz ersetzen */
   set<K extends Key>(key: K, value: Data[K]) {
     this.d[key] = value;
+    // wartende Live-Standorte dieses Teils sind überholt (z. B. Spielende löscht alle Standorte)
+    for (const k of this.#livePatches.keys()) if (k.startsWith(`${key}/`)) this.#livePatches.delete(k);
     this.#dirty.add(key);
     this.#patches.push([key as Patch[0], null, value ?? null]);
   }
@@ -245,8 +261,10 @@ export class GameRoom extends DurableObject<Env> {
     let node = this.d[key] as unknown as Record<string, unknown>;
     for (const p of parts.slice(0, -1)) node = (node[p] ??= {}) as Record<string, unknown>;
     const last = parts.at(-1)!;
-    if (value === null || value === undefined) delete node[last];
-    else node[last] = value;
+    if (value === null || value === undefined) {
+      delete node[last];
+      this.#livePatches.delete(`${key}/${id}`);
+    } else node[last] = value;
     this.#dirty.add(key);
     this.#patches.push([key as Patch[0], id, value ?? null]);
   }
@@ -346,7 +364,7 @@ export class GameRoom extends DurableObject<Env> {
     if (again) return again;
     const action = ACTIONS[req.action];
     const r = await reply(async () => {
-      if (!action) fail("invalid", "Unbekannte Aktion");
+      if (!action || !Object.hasOwn(ACTIONS, req.action) || protoName(req)) fail("invalid", "Unbekannte Aktion");
       if (!this.d.info && req.action !== "gameInfo" && req.action !== "createGame") fail("notFound", "Spiel nicht gefunden");
       try {
         return await action(this, req as unknown as Record<string, unknown>, a);
@@ -622,6 +640,8 @@ export class GameRoom extends DurableObject<Env> {
       this.d.staff[uid] = s;
       this.#live("staff", uid, s);
     }
+    // Ankunft beim Sammelruf u. Ä. über setState/put – sofort speichern und verteilen
+    if (this.#dirty.size) this.commit();
   }
 
   /** neuer Standort eines Teams (Handy oder Tracker): Plausibilität, Strecke, verteilen */
@@ -673,6 +693,7 @@ export class GameRoom extends DurableObject<Env> {
     this.d.devices[id] = next;
     this.#live("devices", id, next);
     if (dev.assign && dev.assign !== "fahne" && this.d.teams[dev.assign]) this.#teamPos(dev.assign, { ...p });
+    if (this.#dirty.size) this.commit();
     return true;
   }
 
@@ -682,11 +703,20 @@ export class GameRoom extends DurableObject<Env> {
     const patches = [...this.#livePatches.values()];
     this.#livePatches.clear();
     if (patches.length) this.#broadcast(patches, []);
-    if (Date.now() - this.#liveSavedAt >= POS_SAVE_MS) {
+    if (patches.length) this.#saveLive();
+  }
+
+  #saveLive() {
+    const wait = POS_SAVE_MS - (Date.now() - this.#liveSavedAt);
+    if (wait <= 0) {
       this.#liveSavedAt = Date.now();
       void this.ctx.storage.put(Object.fromEntries(LIVE_KEYS.map((k) => [k, this.d[k]])));
       this.usage.rows += LIVE_KEYS.length;
-    } else if (patches.length) this.#liveTimer = setTimeout(() => this.#flushLive(), POS_SAVE_MS);
+    } else if (!this.#saveTimer)
+      this.#saveTimer = setTimeout(() => {
+        this.#saveTimer = undefined;
+        this.#saveLive();
+      }, wait);
   }
 
   // ---------- Zeitsteuerung ----------

@@ -648,7 +648,7 @@ export default {
     aufdeckenText: "The secret time is shown and noted in the log. Teams don't see it.",
     startAusgelost: "Mister X is drawn by lot.",
     startMit: (team: string) => `${team} is Mister X.`,
-    startDetails: (head: number, a: number, b: number) => ` ${head} min head start, random end between ${a} and ${b} h.`,
+    startDetails: (head: number, a: string, b: string) => ` ${head} min head start, random end between ${a} and ${b}.`,
     freigebenFrage: (bereich: string) => `Reopen ${bereich}?`,
     gesperrtOk: (bereich: string) => `${bereich} closed – everyone has been informed`,
     vorwarnung: "Advance warning",

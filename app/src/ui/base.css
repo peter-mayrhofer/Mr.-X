@@ -32,6 +32,9 @@ h3,
   letter-spacing: 0.01em;
   margin: 0;
   text-wrap: balance; /* gleich lange Zeilen statt eines einzelnen Worts in der letzten */
+  /* lange Wörter („BENACHRICHTIGUNGEN“, Teamnamen) auf schmalen Handys trennen statt seitlich hinauszuragen */
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 h1 {

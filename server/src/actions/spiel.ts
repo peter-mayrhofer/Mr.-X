@@ -14,7 +14,7 @@ import {
 import { fail, MIN, newKey, str } from "../util.ts";
 import { finish, lockCut, writeReport } from "../ablauf.ts";
 import type { Auth, GameRoom } from "../room.ts";
-import { PROTOKOLL as P } from "@mrx/shared";
+import { ENDE_MAX_MIN_H, ENDE_MIN_H, PROTOKOLL as P } from "@mrx/shared";
 
 type D = Record<string, unknown>;
 const rand = () => crypto.getRandomValues(new Uint32Array(1))[0]! / 2 ** 32;
@@ -78,7 +78,15 @@ export function resume(room: GameRoom, _d: D, a: Auth): ApiResults["resume"] {
   const since = cur.pausedAt;
   const dur = now - since;
   const { pausedAt: _, ...rest } = cur;
-  room.setState({ ...rest, phase: "laeuft", nextReportAt: (cur.nextReportAt ?? now) + dur });
+  // auch angekündigte Sperren und der Bezug fürs Meldeintervall stehen in der Pause still
+  const warnCuts = cur.warnCuts && Object.fromEntries(Object.entries(cur.warnCuts).map(([id, at]) => [id, at > since ? at + dur : at]));
+  room.setState({
+    ...rest,
+    phase: "laeuft",
+    nextReportAt: (cur.nextReportAt ?? now) + dur,
+    ...(cur.lastReportAt ? { lastReportAt: cur.lastReportAt + dur } : {}),
+    ...(warnCuts ? { warnCuts } : {}),
+  });
   room.set("info", { ...room.d.info!, phase: "laeuft" });
   for (const [t, l] of Object.entries(room.d.locks)) if (l.until > since) room.put("locks", t, { ...l, until: l.until + dur });
   for (const [k, p] of Object.entries(room.d.pauses)) if (p.to === undefined) room.put("pauses", k, { ...p, to: now });
@@ -106,8 +114,8 @@ const RANGE: Record<
   waitMin: [0, 30, "Wartezeit"],
   radiusM: [0, 2000, "Umkreis"],
   undoMin: [0, 10, "Rückgängig-Frist"],
-  endMinH: [0.5, 12, "Spielende frühestens"],
-  endMaxH: [0.5, 12, "Spielende spätestens"],
+  endMinH: [ENDE_MIN_H, 12, "Spielende frühestens"],
+  endMaxH: [ENDE_MAX_MIN_H, 12, "Spielende spätestens"],
 };
 
 /** Regeln live ändern (Abschnitt 7.7) – mit automatischer Meldung an alle */

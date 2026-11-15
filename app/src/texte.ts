@@ -648,7 +648,7 @@ export const T = {
     aufdeckenText: "Der geheime Zeitpunkt wird angezeigt und im Protokoll vermerkt. Teams sehen ihn nicht.",
     startAusgelost: "Mister X wird ausgelost.",
     startMit: (team: string) => `${team} ist Mister X.`,
-    startDetails: (head: number, a: number, b: number) => ` ${head} Min Vorsprung, Ende zufällig zwischen ${a} und ${b} h.`,
+    startDetails: (head: number, a: string, b: string) => ` ${head} Min Vorsprung, Ende zufällig zwischen ${a} und ${b}.`,
     freigebenFrage: (bereich: string) => `${bereich} wieder freigeben?`,
     gesperrtOk: (bereich: string) => `${bereich} gesperrt – alle wurden informiert`,
     vorwarnung: "Vorwarnung",

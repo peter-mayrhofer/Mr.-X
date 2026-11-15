@@ -76,6 +76,14 @@ describe("Vorlagen und Probelauf (vor dem Start)", () => {
     await ok(admin, "templateDelete", { id: id2 });
     expect(((await ok(admin, "templateList")) as { templates: unknown[] }).templates).toHaveLength(1);
   });
+  it("Spielende: frühestens ab 10 Min, spätestens ab 20 Min", async () => {
+    expect(reason(await run(admin, "setConfig", { config: { endMinH: 5 / 60 } }))).toBe("invalid");
+    expect(reason(await run(admin, "setConfig", { config: { endMinH: 10 / 60, endMaxH: 10 / 60 } }))).toBe("invalid");
+    await ok(admin, "setConfig", { config: { endMinH: 10 / 60, endMaxH: 20 / 60 } });
+    expect(await val(`games/${G}/config/endMaxH`)).toBeCloseTo(1 / 3);
+    await ok(admin, "setConfig", { config: { endMinH: 3, endMaxH: 4 } });
+  });
+
   it("Probelauf an – geht nur vor dem Start", async () => {
     await ok(admin, "setConfig", { config: { trial: true } });
     expect(await val(`games/${G}/config/trial`)).toBe(true);
@@ -177,11 +185,16 @@ describe("Im Spiel", () => {
     expect(await state()).toMatchObject({ gather: { name: "Hauptplatz", lat: 48.3059 } });
     expect(await lastChat()).toBe("Sammelruf: Alle bitte jetzt zum Treffpunkt Hauptplatz.");
     // Traun kommt in die Nähe (30 m) → angekommen
+    const lead = connect(admin.token);
+    await lead.until(() => true);
     const phone = connect(b.token);
     await phone.until(() => true);
     phone.sendPos(at(0.0003));
     const s = await eventually(state, (x) => !!x.gather?.arrived?.[b.teamId!]);
     expect(s.gather.arrived[b.teamId!]).toBeGreaterThan(0);
+    // die Spielleitung sieht die Ankunft sofort (früher erst mit der nächsten Aktion oder dem nächsten Alarm)
+    await lead.until((v) => !!v.state.gather?.arrived?.[b.teamId!], 3000);
+    lead.close();
     phone.close();
     // „Wir sind da“ – nur fürs eigene Team; zurücknehmen nur die Spielleitung
     expect(reason(await run(a, "arrived", { teamId: a2.teamId, on: true }))).toBe("forbidden");

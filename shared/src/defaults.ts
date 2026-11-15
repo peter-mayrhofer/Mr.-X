@@ -15,6 +15,10 @@ export const DEFAULT_CONFIG: Config = {
 /** Spiel-Code: Kleinbuchstaben, Ziffern, Bindestrich – steht im QR-Link */
 export const GAME_ID = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
 
+/** kürzestes Spiel (Wunsch des Organisators): Ende frühestens nach 10 Min, spätestens frühestens nach 20 Min */
+export const ENDE_MIN_H = 10 / 60;
+export const ENDE_MAX_MIN_H = 20 / 60;
+
 export const LIMITS = {
   teamName: [2, 30],
   personName: [2, 30],

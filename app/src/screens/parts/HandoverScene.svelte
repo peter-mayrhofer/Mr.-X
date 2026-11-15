@@ -22,6 +22,7 @@
   }
 
   let { variant, from, to, type = "fang", waitMin, at, onclose }: Props = $props();
+  const stempel = $derived(variant === "erwischt" ? T.uebergabe.erwischt : type === "strafe" ? T.uebergabe.strafe : T.uebergabe.gefangen);
 </script>
 
 <div
@@ -38,10 +39,9 @@
     <CountdownRing until={at + waitMin * 60_000} total={waitMin * 60_000} size={150} tone="light" label={T.uebergabe.vorsprungKurz} />
     <Button variant="secondary" size="xl" onclick={onclose}>{T.allgemein.ok}</Button>
   {:else}
-    <p class="stamp-wrap">
-      <span class="stamp" class:yellow={variant === "erwischt"}
-        >{variant === "erwischt" ? T.uebergabe.erwischt : type === "strafe" ? T.uebergabe.strafe : T.uebergabe.gefangen}</span
-      >
+    <!-- --len: lange Wörter (z. B. „YAKALANDINIZ!“) werden kleiner, damit sie auf schmale Handys passen -->
+    <p class="stamp-wrap" style:--len={stempel.length}>
+      <span class="stamp" class:yellow={variant === "erwischt"}>{stempel}</span>
     </p>
     <div class="handover" aria-hidden="true">
       <TeamBadge short={from.short} color={from.color} size={72} />
@@ -100,7 +100,7 @@
     }
   }
   .stamp-wrap {
-    font-size: clamp(56px, 16vw, 110px);
+    font-size: min(clamp(56px, 16vw, 110px), calc(150vw / var(--len, 9)));
     color: var(--rot-400);
   }
   .stamp {

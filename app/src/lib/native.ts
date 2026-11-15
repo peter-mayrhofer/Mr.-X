@@ -9,6 +9,7 @@ import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community
 import { uebersetze, type ApiReply, type Note, type PositionIn } from "@mrx/shared";
 import { API_URL } from "./server.ts";
 import { tokens } from "./tokens.ts";
+import { clock } from "./clock.svelte.ts";
 import { sprache } from "./sprache.ts";
 import { T } from "../texte.ts";
 
@@ -51,7 +52,10 @@ export const openLocationSettings = () => BG.openSettings();
 // ---------- Benachrichtigungen (lokal) ----------
 
 const shown = new Set<string>();
-let lastNoteAt = Date.now();
+// Zeiten der Benachrichtigungen sind Server-Zeit. Start der App in Server-Zeit rechnen, sobald die Abweichung der
+// Handy-Uhr bekannt ist – geht die Uhr vor, würden sonst verpasste Benachrichtigungen übersprungen
+const appStart = Date.now();
+let lastNoteAt = 0;
 let channel: Promise<void> | null = null;
 
 /** Erlaubnis für Benachrichtigungen (Android 13+ fragt) und Kanal „Spiel“ anlegen */
@@ -104,7 +108,7 @@ export async function nativePos(p: PositionIn): Promise<void> {
   const r = await CapacitorHttp.post({
     url: `${API_URL}/api/pos`,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokens.game}` },
-    data: { p, since: lastNoteAt },
+    data: { p, since: Math.max(lastNoteAt, appStart + clock.offset) },
   });
   const j = r.data as ApiReply<{ notes: Note[] }>;
   if (r.status >= 300 || !j.ok) throw new Error(`HTTP ${r.status}`);

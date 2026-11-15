@@ -10,21 +10,30 @@
     min?: number;
     max?: number;
     step?: number;
+    /** erlaubte Werte statt eines festen Schritts (−/+ springt zum nächsten) */
+    stufen?: number[];
+    /** eigene Anzeige des Werts (dann ohne `unit`) */
+    format?: (v: number) => string;
     hint?: string;
   }
 
-  let { label, value = $bindable(), unit, min = 0, max = 999, step = 1, hint }: Props = $props();
+  let { label, value = $bindable(), unit, min = 0, max = 999, step = 1, stufen, format, hint }: Props = $props();
+  const erlaubt = $derived(stufen?.filter((s) => s >= min && s <= max));
+  const runter = () => (erlaubt ? (erlaubt.findLast((s) => s < value) ?? value) : Math.max(min, value - step));
+  const rauf = () => (erlaubt ? (erlaubt.find((s) => s > value) ?? value) : Math.min(max, value + step));
   const uid = $props.id();
 </script>
 
 <div class="stepper">
   <span class="txt" id="l-{uid}">{label}</span>
   <div class="ctl" role="group" aria-labelledby="l-{uid}">
-    <button type="button" aria-label={T.allgemein.weniger} disabled={value <= min} onclick={() => (value = Math.max(min, value - step))}>
+    <button type="button" aria-label={T.allgemein.weniger} disabled={runter() === value} onclick={() => (value = runter())}>
       <Minus size={22} strokeWidth={2.6} aria-hidden="true" />
     </button>
-    <output class="num" aria-live="polite">{value} <span>{unit}</span></output>
-    <button type="button" aria-label={T.allgemein.mehr} disabled={value >= max} onclick={() => (value = Math.min(max, value + step))}>
+    <output class="num" aria-live="polite"
+      >{#if format}{format(value)}{:else}{value} <span>{unit}</span>{/if}</output
+    >
+    <button type="button" aria-label={T.allgemein.mehr} disabled={rauf() === value} onclick={() => (value = rauf())}>
       <Plus size={22} strokeWidth={2.6} aria-hidden="true" />
     </button>
   </div>

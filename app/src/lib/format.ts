@@ -13,15 +13,21 @@ export const mmss = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-export const uhr = (t: number) => new Date(t).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" });
+// Uhrzeit immer in Österreich (wie die Meldungen des Servers) – auch auf einem Laptop mit anderer Zeitzone
+const TZ = "Europe/Vienna";
+export const uhr = (t: number) => new Date(t).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 
-export const datum = (t: number) => new Date(t).toLocaleDateString(loc(), { day: "numeric", month: "long", year: "numeric" });
+export const datum = (t: number) => new Date(t).toLocaleDateString(loc(), { day: "numeric", month: "long", year: "numeric", timeZone: TZ });
 
 export function vor(t: number, now: number) {
   const m = Math.floor((now - t) / MIN);
   if (m < 1) return T.allgemein.geradeEben;
   return T.allgemein.vor(m < 60 ? `${m} ${T.allgemein.min}` : `${Math.floor(m / 60)} h ${m % 60} ${T.allgemein.min}`);
 }
+
+/** Spieldauer aus Stunden: unter einer Stunde in Minuten („20 Min“), sonst „1,5 h“ */
+export const stunden = (h: number) =>
+  h < 1 ? `${Math.round(h * 60)} ${T.allgemein.min}` : `${h.toLocaleString(loc(), { maximumFractionDigits: 2 })} h`;
 
 /** 1:23 h bzw. 45 Min */
 export function dauer(ms: number) {
