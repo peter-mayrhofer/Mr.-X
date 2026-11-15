@@ -235,7 +235,8 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
   room.set("spuren", {});
   room.set("locks", {});
   // Zählerstände für „Futter-Profi“ stehen jetzt in der Auswertung, hier nicht mehr nötig
-  room.set("secrets", { ...room.d.secrets, endAt: undefined, food: undefined });
+  // eingelöste Bonus-Posten verraten, wo ein Team war – mit dem Spiel weg
+  room.set("secrets", { ...room.d.secrets, endAt: undefined, food: undefined, posten: undefined });
   room.set("purgeAt", endedAt + CHAT_KEEP_MS);
   room.notify("spiel", { all: true }, PUSH_TITLE.ende, res.winner ? MELDUNG.ende(d.teams[res.winner]?.name ?? "?") : MELDUNG.endeOhne);
   const db = room.env.DB;

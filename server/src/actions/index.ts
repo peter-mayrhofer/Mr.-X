@@ -9,6 +9,7 @@ import { archiveGame, deleteGame, setField } from "./feld.ts";
 import { archiveGet, archiveList, chat, deleteChat, pushSubscribe } from "./chat.ts";
 import { addDevice, deviceKey, removeDevice, setDevice } from "./geraete.ts";
 import * as extra from "./extra.ts";
+import { posten, postenCodes } from "./posten.ts";
 
 type Action = (room: GameRoom, d: Record<string, unknown>, a: Auth) => unknown;
 
@@ -40,4 +41,6 @@ export const ACTIONS: Partial<Record<ApiRequest["action"], Action>> = {
   removeDevice,
   deviceKey,
   ...extra,
+  posten,
+  postenCodes,
 };

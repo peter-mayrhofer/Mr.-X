@@ -5,9 +5,10 @@
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { Download, Film, Flag, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils, X } from "@lucide/svelte";
+  import { Download, Film, Flag, Flame, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils, X } from "@lucide/svelte";
   import { replayAt, replayMarks, replayTeams, type ArchiveData, type Team } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
+  import { EMPTY } from "../map/style.ts";
   import AppBar from "../ui/AppBar.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import IconButton from "../ui/IconButton.svelte";
@@ -75,6 +76,22 @@
         ]
       : []),
   ]);
+  // Wärmekarte (E-73): alle Punkte aller Teams auf einmal – zeigt, wo am meisten gelaufen wurde
+  let waerme = $state(false);
+  const heat = $derived<GeoJSON.FeatureCollection>(
+    waerme && data.tracks
+      ? {
+          type: "FeatureCollection",
+          features: Object.values(data.tracks).flatMap((spur) =>
+            spur.map(([, lat, lng]): GeoJSON.Feature => ({
+              type: "Feature",
+              properties: {},
+              geometry: { type: "Point", coordinates: [lng / 1e5, lat / 1e5] },
+            })),
+          ),
+        }
+      : EMPTY,
+  );
   const chat = $derived(Object.entries(data.chat ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)));
   const R = $derived(data.results);
 
@@ -119,9 +136,15 @@
       locked={frame.locked}
       trail={frame.trail}
       {pins}
+      {heat}
       padding={{ top: 30, bottom: 30, left: 30, right: 30 }}
       label={T.archiv.replay}
     />
+    {#if data.tracks}
+      <div class="heatbtn">
+        <IconButton icon={Flame} label={T.archiv.waermekarte} active={waerme} onclick={() => (waerme = !waerme)} />
+      </div>
+    {/if}
     <div class="now"><span class="caps">{T.status.misterX}</span> <b>{team(frame.mrx).name}</b></div>
   </div>
   <div class="controls">
@@ -232,6 +255,12 @@
   .map {
     position: relative;
     min-height: 0;
+  }
+  .heatbtn {
+    position: absolute;
+    top: var(--sp-3);
+    right: var(--sp-3);
+    z-index: var(--z-ui);
   }
   .now {
     position: absolute;

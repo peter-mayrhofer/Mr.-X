@@ -61,6 +61,10 @@ Du kannst
 - Punkte der roten Grenze **ziehen** (verschieben) oder den kleinen Punkt zwischen zwei Punkten ziehen (einfügen),
 - **Sperrbereiche** anlegen, umbenennen, einfärben und ihre **Reihenfolge** festlegen,
 - die **Toleranz an Grenzstraßen** einstellen (die Grenzstraßen gehören noch zum Spielfeld),
+- **Bonus-Posten** setzen (Punkt ziehen, Namen geben) und nach dem Speichern **QR-Blätter drucken** – ein A4-Blatt pro
+  Posten zum Aufhängen. Jäger-Teams scannen den Code vor Ort (Karte → QR-Knopf) und sehen Richtung und ungefähre
+  Entfernung zu Mister X, einmal pro Team. Der Code gilt nur, wer wirklich dort steht (bis etwa 60 m); im **Protokoll**
+  steht, welches Team welchen Posten eingelöst hat,
 - ein Spielfeld als **GeoJSON** exportieren und in einem anderen Spiel wieder importieren.
 
 Unten steht, ob alles in Ordnung ist (z. B. „Die Linie kreuzt sich selbst“). **Speichern** – der Server prüft noch
@@ -129,6 +133,9 @@ Spätestens eine Woche vorher mit 3–5 Handys in der Innenstadt testen: [`FELDT
 4. **Großbild:** Laptop am Beamer, Großbild-Link öffnen (oder als Spielleitung im Menü **Großbild**).
 5. Unter **Live** siehst du, welche Teams angemeldet sind und ob ihr Standort ankommt
    („… hat noch keinen Standort geschickt“ = Handy prüfen lassen).
+6. **Steuerung → Spieltag-Checkliste:** Was die App selbst sieht, hakt sie ab (Spielfeld, Team-Passwort, Teams,
+   Standorte, Akku, Schiri, Begleitung von Mister X, Fahnen-Tracker). Großbild, Regeln erklärt usw. hakst du selbst
+   ab. Starten geht auch, wenn nicht alles grün ist.
 
 ![Warteraum eines Teams](screens/hell/05-handy.jpg)
 
@@ -226,7 +233,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
    (z. B. „1:12 h als Mister X · 2× die Fahne getragen“). Jedes Team bekommt den Stempel „Mission erfüllt“. Im
    Druckdialog **Hintergrundgrafiken** einschalten (falls angeboten), damit Kopf und Stadtplan mitgedruckt werden.
 2. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
-   gemeldet und gefangen, wo waren alle Teams), Chat-Verlauf, **Video** (MP4, Hoch- oder Querformat, 40 Sekunden),
+   gemeldet und gefangen, wo waren alle Teams), **Wärmekarte** (Knopf oben rechts: wo am meisten gelaufen wurde),
+   Chat-Verlauf, **Video** (MP4, Hoch- oder Querformat, 40 Sekunden),
    **Als Datei sichern** (JSON) und **Drucken**. Die Wege der Teams gibt es 30 Tage lang, danach nur noch Mister X.
 3. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
    und Schiris werden abgemeldet, das Team-Passwort wird gelöscht, Chat und Standorte werden geleert. Das Archiv

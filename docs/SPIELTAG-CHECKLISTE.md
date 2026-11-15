@@ -15,6 +15,7 @@ Zum Ausdrucken und Abhaken. Details stehen im [Handbuch für die Spielleitung](A
 - [ ] Flyer gedruckt (Teams & Zugänge → Zugänge → Drucken), Team-Passwort und Notfall-Nummer eingetragen
 - [ ] Schiris eingeteilt (mindestens einer begleitet Mister X), Schiri-Code und Kurzeinweisung verschickt
 - [ ] Optional: Tracker in der Fahne eingerichtet und getestet (sendet?)
+- [ ] Optional: Bonus-Posten im Spielfeld-Editor gesetzt, QR-Blätter gedruckt und am Spieltag aufgehängt
 - [ ] Eltern informiert (Datenschutz-Kurztext aus der App, Zuschauer-Link `…/#/z/<spiel-code>`)
 
 ## Am Vortag
@@ -26,6 +27,8 @@ Zum Ausdrucken und Abhaken. Details stehen im [Handbuch für die Spielleitung](A
 - [ ] Cloudflare-Dashboard erreichbar (Anmeldung funktioniert)
 
 ## Am Treffpunkt – vor dem Start
+
+Die wichtigsten Punkte stehen auch in der App unter **Steuerung → Spieltag-Checkliste** (vieles hakt sie selbst ab).
 
 - [ ] Spielleitung angemeldet, **Live** zeigt den Warteraum
 - [ ] Flyer ausgeteilt; jedes Team ist beigetreten (Live: Anzahl Teams stimmt)

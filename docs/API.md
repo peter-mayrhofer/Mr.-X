@@ -88,7 +88,9 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 | `undo` | Schiri, Spielleitung | `handoverId` | `{}` |
 | `follow` | Schiri | `on` | `{}` |
 | `resetRound`, `removeMember`, `removeTeam`, `renameTeam` | Spielleitung | `uid` / `teamId` / `name` | `{}` |
-| `setField` | Spielleitung | `field` (Spielfeld + Sperrbereiche) | `{}` |
+| `setField` | Spielleitung | `field` (Spielfeld + Sperrbereiche, Essens-Orte, Treffpunkt, Bonus-Posten) | `{}` |
+| `postenCodes` | Spielleitung | – | `{ codes: { [postenId]: "id.unterschrift" } }` – Inhalt der QR-Codes `#/posten/{spiel}/{code}` (E-75) |
+| `posten` | Team | `code` | `{ status, name, m?, richtung? }` – `hinweis` (Entfernung zu Mister X auf 50 m, 0 = unter 100 m; Richtung 0–7 ab Norden), `schon`, `weit`, `keinStandort`, `mrx`, `keinMrx` |
 | `chat` | Team, Schiri, Spielleitung | `text`, `dm?` (Team-Id = Direktkanal) | `{ id }` |
 | `deleteChat` | Spielleitung | `id`, `dm?` | `{}` |
 | `pushSubscribe` | Mitglied | `sub` (Web-Push-Abo; `null` = keins; weglassen = behalten), `prefs` | `{}` |

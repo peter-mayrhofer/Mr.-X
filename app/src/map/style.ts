@@ -147,9 +147,15 @@ export interface Overlays {
   accuracy: GeoJSON.FeatureCollection;
   /** Zonen-Editor: Linie, Eckpunkte, Mittelpunkte zum Einfügen */
   edit: GeoJSON.FeatureCollection;
+  /** Wiederholung: alle Wege der Teams als Wärmekarte (E-73) */
+  heat?: GeoJSON.FeatureCollection;
+  /** Bonus-Posten (E-75) */
+  posten?: GeoJSON.FeatureCollection;
 }
 
 export const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+/** Bonus-Posten auf der Karte, im Editor und auf dem Druckblatt */
+export const POSTEN_FARBE = "#7c4dff";
 
 /** raster = Ersatz, falls OpenFreeMap ausfällt: OSM-Rasterkacheln (E-07), Spiel-Ebenen bleiben */
 export function mapStyle(theme: Theme, data: Overlays, raster = false): StyleSpecification {
@@ -283,6 +289,44 @@ export function mapStyle(theme: Theme, data: Overlays, raster = false): StyleSpe
       source: "boundary",
       layout: { "line-join": "round" },
       paint: { "line-color": c.border, "line-width": theme === "sonne" ? 5 : 3.5 },
+    },
+    {
+      id: "heat",
+      type: "heatmap",
+      source: "heat",
+      paint: {
+        "heatmap-radius": ["interpolate", ["exponential", 2], ["zoom"], 12, 4, 15, 14, 18, 40],
+        "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 12, 0.6, 17, 1.4],
+        "heatmap-opacity": 0.8,
+        "heatmap-color": [
+          "interpolate",
+          ["linear"],
+          ["heatmap-density"],
+          0,
+          "rgba(0,0,0,0)",
+          0.15,
+          "#2c7bb6",
+          0.4,
+          "#00a6ca",
+          0.6,
+          "#f9d057",
+          0.8,
+          "#f29e2e",
+          1,
+          "#d7191c",
+        ],
+      },
+    },
+    {
+      id: "posten",
+      type: "circle",
+      source: "posten",
+      paint: {
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 4, 16, 9],
+        "circle-color": POSTEN_FARBE,
+        "circle-stroke-color": "#fff",
+        "circle-stroke-width": 2.5,
+      },
     },
     {
       id: "accuracy",
@@ -434,6 +478,20 @@ export function mapStyle(theme: Theme, data: Overlays, raster = false): StyleSpe
       paint: { "text-color": c.trail, "text-opacity": ["get", "fade"], "text-halo-color": c.labelHalo, "text-halo-width": 2 },
     },
     {
+      id: "posten-label",
+      type: "symbol",
+      source: "posten",
+      minzoom: 14.5,
+      layout: {
+        "text-field": ["get", "name"],
+        "text-font": font(true),
+        "text-size": 13 + c.labelBoost,
+        "text-offset": [0, 1.1],
+        "text-anchor": "top",
+      },
+      paint: { "text-color": POSTEN_FARBE, "text-halo-color": c.labelHalo, "text-halo-width": 2 },
+    },
+    {
       id: "cuts-label",
       type: "symbol",
       source: "cuts",
@@ -478,9 +536,11 @@ export function mapStyle(theme: Theme, data: Overlays, raster = false): StyleSpe
       trail: geo(data.trail),
       accuracy: geo(data.accuracy),
       edit: geo(data.edit),
+      heat: geo(data.heat ?? EMPTY),
+      posten: geo(data.posten ?? EMPTY),
     },
     layers: raster
-      ? [...osm, ...game, ...labels.filter((l) => l.id === "cuts-label" || l.id === "trail-label"), ...edit]
+      ? [...osm, ...game, ...labels.filter((l) => l.id === "cuts-label" || l.id === "trail-label" || l.id === "posten-label"), ...edit]
       : [...base, ...game, ...labels, ...edit],
   };
 }

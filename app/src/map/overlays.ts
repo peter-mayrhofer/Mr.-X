@@ -25,9 +25,16 @@ export function fieldOverlays(
   field: Field,
   locked: string[],
   preview: string[] = [],
-): Pick<Overlays, "mask" | "boundary" | "cuts" | "preview"> {
+): Pick<Overlays, "mask" | "boundary" | "cuts" | "preview" | "posten"> {
+  const posten = fc(
+    (field.posten ?? []).map((x) => ({
+      type: "Feature",
+      properties: { name: x.name },
+      geometry: { type: "Point", coordinates: [x.lng, x.lat] },
+    })),
+  );
   // noch kein Spielfeld gezeichnet (Zonen-Editor) → nichts abdunkeln
-  if (field.base.length < 4) return { mask: EMPTY, boundary: EMPTY, cuts: EMPTY, preview: EMPTY };
+  if (field.base.length < 4) return { mask: EMPTY, boundary: EMPTY, cuts: EMPTY, preview: EMPTY, posten };
   const allowed = allowedArea(field, locked);
   return {
     mask: fc([
@@ -63,6 +70,7 @@ export function fieldOverlays(
           : [];
       }),
     ),
+    posten,
   };
 }
 

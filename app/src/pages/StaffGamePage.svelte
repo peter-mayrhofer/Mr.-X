@@ -250,6 +250,11 @@
         onsave={async (field) => {
           await call({ action: "setField", gameId: g, field });
         }}
+        {gameName}
+        postenLinks={async () => {
+          const { codes } = await call({ action: "postenCodes", gameId: g });
+          return Object.fromEntries(Object.entries(codes).map(([id, c]) => [id, `${base}#/posten/${g}/${c}`]));
+        }}
       />
     {:else if section === "chat"}
       <AdminChat {view} {seen} onthread={(t) => (seen[t] = clock.now)} onsend={send} />

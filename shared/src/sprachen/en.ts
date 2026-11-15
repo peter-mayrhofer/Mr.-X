@@ -111,6 +111,7 @@ export default {
     notfallZurueck: "Emergency taken back",
     notfallErledigt: "Emergency resolved",
     sammelrufStart: "Gathering call started",
+    postenEingeloest: "Bonus post redeemed",
     sammelrufEnde: "Gathering call ended",
     vorlageGespeichert: "Template saved",
     vorlageGeladen: "Template loaded",

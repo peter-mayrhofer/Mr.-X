@@ -58,6 +58,9 @@ export type ApiRequest =
   // Sammelruf: Spielleitung startet/beendet; Ankunft meldet das Team selbst oder die Spielleitung (auch zurücknehmen)
   | { action: "gather"; gameId: string; on: boolean }
   | { action: "arrived"; gameId: string; teamId: string; on: boolean }
+  // Bonus-Posten (E-75): Team löst einen gescannten Code ein; Spielleitung holt die Codes zum Drucken
+  | { action: "posten"; gameId: string; code: string }
+  | { action: "postenCodes"; gameId: string }
   // Vorlagen (Regeln, Spielfeld, Durchsagen) für alle Spiele des Organisators
   | { action: "templateList"; gameId: string }
   | { action: "templateSave"; gameId: string; name: string }
@@ -173,6 +176,8 @@ export interface ApiResults {
   sosDone: Record<string, never>;
   gather: Record<string, never>;
   arrived: Record<string, never>;
+  posten: PostenErgebnis;
+  postenCodes: { codes: Record<string, string> };
   templateList: { templates: TemplateEntry[] };
   templateSave: { id: string };
   templateLoad: Record<string, never>;
@@ -212,6 +217,21 @@ export type ApiReason =
   | "archived"
   /** Sitzung ungültig (abgelaufen, entfernt, neue Runde) – neu anmelden */
   | "session";
+
+/** Ergebnis beim Einlösen eines Bonus-Postens – die App macht daraus den Text in ihrer Sprache */
+export type PostenErgebnis =
+  /** Mister X ist etwa `m` Meter (auf 50 m gerundet; 0 = unter 100 m) in Richtung `richtung` (0 = Norden … 7 = Nordwesten) */
+  | { status: "hinweis"; name: string; m: number; richtung: number }
+  /** dieses Team hat den Posten schon eingelöst */
+  | { status: "schon"; name: string }
+  /** zu weit weg (`m` Meter) – Code abfotografiert? */
+  | { status: "weit"; name: string; m: number }
+  /** kein frischer Standort vom Team */
+  | { status: "keinStandort"; name: string }
+  /** Mister X selbst kann keine Posten einlösen */
+  | { status: "mrx"; name: string }
+  /** von Mister X gibt es gerade keinen Standort – Posten bleibt gültig */
+  | { status: "keinMrx"; name: string };
 
 export interface Member {
   role: Role;

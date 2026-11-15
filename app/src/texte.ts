@@ -503,6 +503,53 @@ export const T = {
     bis: (uhr: string) => `bis ${uhr}`,
   },
 
+  posten: {
+    titel: "Bonus-Posten",
+    scannen: "Bonus-Posten scannen",
+    hinweis: (m: number, r: string) => `Mister X ist etwa ${m} m ${r} von hier.`,
+    ganzNah: "Mister X ist ganz in der Nähe – weniger als 100 m von hier!",
+    richtungen: ["nördlich", "nordöstlich", "östlich", "südöstlich", "südlich", "südwestlich", "westlich", "nordwestlich"],
+    nurIhr: "Diesen Hinweis seht nur ihr. Jeder Posten gilt einmal pro Team.",
+    schon: "Diesen Posten habt ihr schon eingelöst.",
+    weit: (m: number) => `Ihr seid ${m} m vom Posten entfernt. Geht direkt hin und scannt dort.`,
+    keinStandort: "Euer Standort fehlt gerade. Standort freigeben, kurz warten und nochmal scannen.",
+    mrx: "Bonus-Posten sind nur für die Jäger – lauf weiter!",
+    keinMrx: "Von Mister X gibt es gerade keinen Standort. Der Posten bleibt gültig – scannt später nochmal.",
+    nurImSpiel: "Bonus-Posten gelten nur, während das Spiel läuft.",
+    ungueltig: "Dieser Code gehört zu keinem Bonus-Posten dieses Spiels.",
+    nichtImSpiel: "Bitte in der Mister-X-App scannen, mit der euer Team im Spiel ist (Karte → QR-Knopf).",
+    zurueck: "Zurück zum Spiel",
+  },
+  postenDruck: {
+    band: "Bonus-Posten",
+    schritte: [
+      "Nur für Jäger-Teams: In der Mister-X-App auf der Karte den QR-Knopf tippen.",
+      "Diesen Code scannen – ihr müsst hier stehen.",
+      "Ihr seht Richtung und Entfernung zu Mister X. Einmal pro Team.",
+    ],
+  },
+  checkliste: {
+    titel: "Spieltag-Checkliste",
+    stand: (a: number, b: number) => `${a} von ${b}`,
+    erledigt: "erledigt",
+    offen: "offen",
+    spielfeld: "Spielfeld gespeichert",
+    teamPw: "Team-Passwort festgelegt",
+    teams: (n: number) => `Mindestens 2 Teams beigetreten (jetzt ${n})`,
+    standorte: "Alle Teams senden ihren Standort",
+    akku: (p: number) => `Akku bei allen Teams über ${p} %`,
+    schiri: "Schiri angemeldet",
+    begleitung: "Ein Schiri begleitet Mister X („Ich begleite Mister X“)",
+    fahne: "Tracker in der Fahne sendet",
+    manuell: [
+      "Großbild läuft",
+      "Regeln erklärt (Tapperl, zusammenbleiben, keine Gebäude, Öffis)",
+      "Notfall-Nummer steht auf jedem Flyer",
+      "Android: Akku-Optimierung aus · iPhone: vom Home-Bildschirm geöffnet",
+    ],
+    hinweis:
+      "Grün = von der App geprüft. Die übrigen Punkte hakt ihr selbst ab (nur auf diesem Gerät gemerkt). Starten geht auch ohne alle Haken.",
+  },
   admin: {
     nav: {
       live: "Live",
@@ -713,6 +760,14 @@ export const T = {
     treffpunktHierher: "In die Kartenmitte holen",
     treffpunktWeg: "Treffpunkt löschen",
     essensOrte: "Essens-Orte",
+    posten: "Bonus-Posten",
+    postenHinweis:
+      "QR-Codes zum Aufhängen. Jäger-Teams scannen sie vor Ort (bis etwa 60 m) und sehen dann Richtung und Entfernung zu Mister X – einmal pro Team. Die Posten sind für alle auf der Karte zu sehen.",
+    neuerPosten: "Neuer Posten",
+    postenHinzu: "Posten hinzufügen",
+    postenWeg: "Posten löschen",
+    postenDrucken: "QR-Blätter drucken",
+    postenErstSpeichern: "Zuerst speichern, dann drucken.",
     essensHinweis:
       "Für die Auszeichnung „Futter-Profi“: Teams, die mindestens 10 Minuten bei einem dieser Orte bleiben, bekommen einen Besuch gutgeschrieben. Orte auf der Karte ziehen.",
     neuerOrt: "Neuer Essens-Ort",
@@ -835,6 +890,7 @@ export const T = {
     chatGeloescht: "Kein Chat (nach 30 Tagen automatisch gelöscht).",
     nichtGefunden: "Dieser Lauf ist nicht (mehr) im Archiv.",
     teams: (n: number) => `${n} Teams`,
+    waermekarte: "Wärmekarte: wo am meisten gelaufen wurde",
     video: "Video",
     videoTitel: "Video speichern",
     format: "Format",
@@ -1042,7 +1098,7 @@ export const T = {
       },
       {
         titel: "Wofür?",
-        text: "Nur für das Spiel: Mister X melden, Wartezeiten nach einem Fang berechnen, vor der Spielfeldgrenze warnen und eure Sicherheit (die Spielleitung sieht, wo ihr seid). Kein Tracking, keine Werbung, keine Weitergabe an andere. Für die Auszeichnung „Futter-Profi“ wird gezählt, wie oft ein Team mindestens 10 Minuten bei einem Essens-Ort war – gespeichert wird nur diese Zahl, nicht der Standort. Drückt ein Team den Notfall-Knopf, sehen Spielleitung und Schiris, wo es gerade ist; diese Meldung wird mit dem Chat gelöscht.",
+        text: "Nur für das Spiel: Mister X melden, Wartezeiten nach einem Fang berechnen, vor der Spielfeldgrenze warnen und eure Sicherheit (die Spielleitung sieht, wo ihr seid). Bei Bonus-Posten wird geprüft, ob ihr wirklich dort steht; gespeichert wird nur, welche Posten ihr eingelöst habt – bis Spielende. Kein Tracking, keine Werbung, keine Weitergabe an andere. Für die Auszeichnung „Futter-Profi“ wird gezählt, wie oft ein Team mindestens 10 Minuten bei einem Essens-Ort war – gespeichert wird nur diese Zahl, nicht der Standort. Drückt ein Team den Notfall-Knopf, sehen Spielleitung und Schiris, wo es gerade ist; diese Meldung wird mit dem Chat gelöscht.",
       },
       {
         titel: "Wer sieht was?",

@@ -65,6 +65,8 @@
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import StatusCard from "./parts/StatusCard.svelte";
   import MapControls from "./parts/MapControls.svelte";
+  import QrScanner from "./parts/QrScanner.svelte";
+  import { go } from "../lib/router.svelte.ts";
   import LockOverlay from "./parts/LockOverlay.svelte";
   import HandoverScene from "./parts/HandoverScene.svelte";
   import ChatView from "./parts/ChatView.svelte";
@@ -123,6 +125,8 @@
     oncaught,
   }: Props = $props();
   let pickCatcher = $state(false);
+  // Bonus-Posten (E-75): Jäger scannen den QR-Code am Posten
+  let scannen = $state(false);
   let catcher = $state<string | null>(null);
   let askSos = $state(false);
   let sizeDraft = $state<number | null>(null);
@@ -299,6 +303,7 @@
         {me}
         {map}
         onfield={() => map?.fitField()}
+        onscan={view.field.posten?.length && st.phase === "laeuft" && !isMrx ? () => (scannen = true) : undefined}
         bind:this={controls}
       />
       {#if onsos && !openAlert}
@@ -425,6 +430,16 @@
     {/each}
   </div>
 </BottomSheet>
+{#if scannen}
+  <QrScanner
+    onroute={(route) => {
+      scannen = false;
+      go(route);
+    }}
+    onclose={() => (scannen = false)}
+  />
+{/if}
+
 <Modal
   open={!!catcher}
   title={T.gefangen.frage(catcher ? (view.teams[catcher]?.name ?? "") : "")}

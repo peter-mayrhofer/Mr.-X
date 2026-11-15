@@ -49,6 +49,11 @@ export async function verify(secret: string, token: string | null | undefined): 
   }
 }
 
+/** Unterschrift eines Bonus-Postens (E-75): steht im QR-Code – wer einlöst, hat den Code gesehen, nicht nur die Kennung */
+export async function postenSig(secret: string, g: string, id: string): Promise<string> {
+  return b64u(await crypto.subtle.sign("HMAC", await hmacKey(secret), enc.encode(`posten/${g}/${id}`))).slice(0, 12);
+}
+
 /** Höchstwert der Cloudflare-Laufzeit für PBKDF2 (E-33) */
 const ITER = 100_000;
 

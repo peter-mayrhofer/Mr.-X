@@ -772,3 +772,36 @@ gespeichert wird mit den übrigen Standorten, also ohne zusätzliche Schreibvorg
 GIF (riesig, schlechte Qualität).
 **Getestet:** `shared/test/replay.test.ts`, `tests/spiel.test.ts` (Spuren im Archiv, danach gelöscht),
 `tests/e2e-video.test.ts` (Teams auf der Karte, MP4-Datei).
+
+### E-73 Wärmekarte in der Wiederholung
+**Entscheidung:** Knopf oben rechts auf der Karte der Wiederholung (nur solange die Wege der Teams da sind, 30 Tage):
+alle Punkte aller Teams als Wärmekarte (MapLibre-Ebene `heatmap`, Quelle `heat`). Rot = hier wurde am meisten gelaufen.
+**Warum so:** Wunsch des Organisators; hilft auch beim Planen des Spielfelds fürs nächste Mal. Nutzt die vorhandenen
+Daten aus E-72 und die Kartenbibliothek, nichts Neues am Server.
+**Getestet:** `tests/e2e-video.test.ts`.
+
+### E-74 Spieltag-Checkliste in der Steuerung
+**Entscheidung:** Vor dem Start zeigt die Steuerung eine Checkliste. Automatisch abgehakt, was die App selbst sieht:
+Spielfeld gespeichert, Team-Passwort (Protokoll-Eintrag oder schon ein Team da), mindestens 2 Teams, alle Teams mit
+Standort, Akku über 30 % (Teams darunter werden genannt), Schiri angemeldet, ein Schiri begleitet Mister X,
+Fahnen-Tracker sendet (nur wenn einer zugeordnet ist). Dazu vier Punkte zum Abhaken (Großbild, Regeln erklärt,
+Notfall-Nummer, Akku-Optimierung/Home-Bildschirm) – nur in diesem Browser gemerkt. Die Checkliste sperrt den Start nicht.
+**Warum so:** Wunsch des Organisators; die gedruckte Liste (`docs/SPIELTAG-CHECKLISTE.md`) bleibt für die Vorbereitung,
+in der App steht nur, was am Treffpunkt zählt. Keine Änderung am Server.
+**Getestet:** `tests/e2e-checkliste.test.ts`.
+
+### E-75 Bonus-Posten mit QR-Code
+**Entscheidung:** Im Spielfeld-Editor setzt die Spielleitung Bonus-Posten (Punkt + Name, höchstens 20) und druckt pro
+Posten ein A4-Blatt mit QR-Code. Jäger-Teams scannen im Spiel über den QR-Knopf auf der Karte. Belohnung: Richtung
+(8 Himmelsrichtungen) und Entfernung zu Mister X (auf 50 m gerundet, unter 100 m nur „ganz nah“) – nur für das
+scannende Team, einmal pro Posten und Lauf. Der Server prüft: Unterschrift im Code (HMAC mit dem Token-Schlüssel, ein
+abgeschriebener Link ohne Code geht nicht), Spiel läuft, das Team steht dort (eigener frischer Standort höchstens 60 m
+plus GPS-Ungenauigkeit – ein abfotografierter Code nützt aus der Ferne nichts), Mister X hat einen Standort (sonst
+bleibt der Posten gültig). Welche Posten ein Team eingelöst hat, steht nur am Server (`secrets.posten`) und wird bei
+Spielende gelöscht; das Protokoll nennt Team und Posten. Die Posten sind für alle auf der Karte zu sehen.
+**Warum so:** Wunsch des Organisators („Bonus-Posten mit QR-Code“). Der Hinweis ist bewusst grob, damit ein Posten
+hilft, aber das Spiel nicht entscheidet. Die Unterschrift kommt ohne gespeicherte Schlüssel aus.
+**Nebenbei behoben:** Die Druckregeln des Zugangs-Blatts versteckten beim Drucken alles außer dem Blatt selbst – jetzt
+greifen sie nur, wenn kein anderer Druck (Urkunden, Posten) läuft.
+**Getestet:** `tests/posten.test.ts` (alle Fälle am Server), `tests/e2e-posten.test.ts` (Editor, Druckblätter,
+Scan-Knopf, Hinweis), `shared/test/qr.test.ts`.

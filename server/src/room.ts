@@ -87,6 +87,8 @@ export interface Data {
     deviceKeys?: Record<string, string>;
     /** „Futter-Profi“: Besuche (mind. 10 Min) und Zeit an Essens-Orten je Team – nur Zählerstände, keine Standorte */
     food?: Record<string, { visits: number; ms: number }>;
+    /** Bonus-Posten (E-75): welche Posten jedes Team in diesem Lauf schon eingelöst hat */
+    posten?: Record<string, string[]>;
   };
   /** Fehlversuche beim Beitritt je IP (gehasht) */
   rate: Record<string, { n: number; since: number }>;
