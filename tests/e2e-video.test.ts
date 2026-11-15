@@ -77,6 +77,12 @@ describe("Wiederholung mit allen Teams", { timeout: 300_000 }, () => {
     await p.locator(".maplibregl-marker .team", { hasText: "Urfahr" }).waitFor();
   });
 
+  it("Wärmekarte zeigt alle Wege auf einmal (E-73)", async () => {
+    const knopf = p.getByRole("button", { name: T.archiv.waermekarte });
+    await knopf.click();
+    await expect.poll(() => knopf.getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("Video im Querformat: MP4 in 1920 × 1080", async () => {
     await p.getByRole("button", { name: T.archiv.video, exact: true }).click();
     await p.getByRole("tab", { name: T.archiv.querformat }).click();

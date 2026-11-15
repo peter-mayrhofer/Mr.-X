@@ -89,6 +89,9 @@ wichtigsten Regeln.
 - **Regeln**: alle Spielregeln zum Nachlesen, mit Suche.
 - **Mehr**: Einstellungen (Ton, Vibration, Benachrichtigungen), **Sonnen-Modus** für grelles Licht, Abmelden.
 - Das ☀-Symbol auf der Karte schaltet schnell auf den Sonnen-Modus (sehr starker Kontrast).
+- **Bonus-Posten** (wenn die Spielleitung welche aufgehängt hat, lila Punkte auf der Karte): hingehen, auf der Karte
+  den **QR-Knopf** tippen und den Code am Posten scannen. Ihr seht dann, in welcher Richtung und wie weit weg
+  Mister X ist – nur ihr, einmal pro Posten. Mister X selbst kann keine Posten einlösen.
 - Der **Zentrier-Knopf** (Fadenkreuz) auf der Karte: 1× tippen = die Karte folgt euch, 2× tippen = die Karte dreht sich
   mit, wohin ihr schaut (Kompass, wie beim Navi), 3× tippen = wieder Norden oben. Verschiebt ihr die Karte mit dem
   Finger, hört sie auf zu folgen.
@@ -99,7 +102,7 @@ Das Spiel endet zu einem geheimen Zeitpunkt. Alle sehen die **Auswertung**: Wer 
 Ab dann sendet die App **keinen Standort mehr**.
 
 Unter **Archiv** könnt ihr das Spiel noch einmal ansehen: die **Wiederholung** zeigt die Meldungen von Mister X und
-die Wege **aller Teams** im Zeitraffer. Mit **Video** speichert ihr das ganze Spiel als 40-Sekunden-Video – im
+die Wege **aller Teams** im Zeitraffer; die **Wärmekarte** (Knopf oben rechts) zeigt, wo am meisten gelaufen wurde. Mit **Video** speichert ihr das ganze Spiel als 40-Sekunden-Video – im
 **Hochformat** (Handy, Story) oder **Querformat** (Bildschirm, YouTube). In der Android-App öffnet sich dafür
 „Teilen“ (z. B. in die Galerie oder an WhatsApp).
 

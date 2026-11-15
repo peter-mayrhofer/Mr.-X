@@ -112,6 +112,7 @@ export default {
     notfallZurueck: "Emergencia retirada",
     notfallErledigt: "Emergencia resuelta",
     sammelrufStart: "Llamada de reunión iniciada",
+    postenEingeloest: "Puesto de bonificación canjeado",
     sammelrufEnde: "Llamada de reunión terminada",
     vorlageGespeichert: "Plantilla guardada",
     vorlageGeladen: "Plantilla cargada",

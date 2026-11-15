@@ -45,7 +45,7 @@ export function startGame(room: GameRoom, d: D, a: Auth): ApiResults["startGame"
   });
   room.set("info", { ...room.d.info!, phase: "laeuft" });
   room.put("handovers", newKey(), { to: mrx, at: now, type: "start", byName: who.name, byUid: who.uid });
-  room.set("secrets", { ...room.d.secrets, endAt: randomEnd(now, cfg.endMinH, cfg.endMaxH, rand()) });
+  room.set("secrets", { ...room.d.secrets, endAt: randomEnd(now, cfg.endMinH, cfg.endMaxH, rand()), posten: undefined });
   room.set("purgeAt", null);
   room.sys(MELDUNG.start(ts[mrx].name, cfg.headStartMin), now);
   for (const t of ids) if (t !== mrx && cfg.headStartMin > 0) room.put("locks", t, { until: head, reason: "start" } satisfies Lock);

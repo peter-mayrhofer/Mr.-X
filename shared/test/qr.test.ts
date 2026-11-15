@@ -10,6 +10,11 @@ describe("gescannte QR-Codes", () => {
     expect(routeFromQr("https://example.at/#/s/linz-2027")).toBe("/s/linz-2027");
     expect(routeFromQr("https://example.at/#/g/linz-2027?k=k1")).toBe("/g/linz-2027?k=k1");
   });
+  it("Bonus-Posten (E-75): Spiel, Posten und Unterschrift", () => {
+    expect(routeFromQr("https://x.at/#/posten/linz-2027/brun01.Ab3_-x9Zq0kL")).toBe("/posten/linz-2027/brun01.Ab3_-x9Zq0kL");
+    expect(routeFromQr("https://x.at/#/posten/linz-2027/brun01")).toBeNull(); // ohne Unterschrift
+    expect(routeFromQr("https://x.at/#/posten/linz-2027/brun01.kurz")).toBeNull();
+  });
   it("reiner Spiel-Code → Startseite des Spiels", () => {
     expect(routeFromQr(" Linz-2027 ")).toBe("/s/linz-2027");
   });

@@ -23,6 +23,7 @@
   const viewer = $derived(match("/z/:spiel"));
   const screen = $derived(match("/g/:spiel"));
   const archiveRun = $derived(match("/archiv/:lauf"));
+  const posten = $derived(match("/posten/:spiel/:code"));
 
   // Seitenwechsel blendet weich ein. Nur die Deckkraft: nichts verschiebt sich, feste Leisten bleiben an ihrem Platz.
   const seite = $derived(p === "/spiel" ? p : router.path);
@@ -60,6 +61,11 @@
         />
       {/await}
     {:else}<GamePage />{/if}
+  {:else if posten}
+    {#await import("./pages/PostenPage.svelte") then { default: PostenPage }}<PostenPage
+        gameId={posten.spiel!}
+        code={posten.code!}
+      />{/await}
   {:else if p === "/verwaltung"}{#await import("./pages/VerwaltungPage.svelte") then { default: VerwaltungPage }}<VerwaltungPage />{/await}
   {:else}<StartPage />
   {/if}

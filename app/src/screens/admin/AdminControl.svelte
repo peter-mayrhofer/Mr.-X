@@ -24,6 +24,7 @@
   import { ENDE_MAX_MIN_H, ENDE_MIN_H, LIMITS, nextReportAfterIntervalChange, type Config } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
+  import Checkliste from "./Checkliste.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import Stepper from "../../ui/Stepper.svelte";
@@ -221,6 +222,7 @@
         onclick={() => (ask = "start")}>{T.admin.spielStarten}</Button
       >
     </Card>
+    <Checkliste {view} />
   {:else if running}
     <Card label={T.admin.spielstatus} icon={Timer}>
       <div class="status">

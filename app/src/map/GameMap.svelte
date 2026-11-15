@@ -39,6 +39,8 @@
     ondrag?: () => void;
     /** Teamnamen immer zeigen (Großbild) */
     alwaysNames?: boolean;
+    /** Wärmekarte: Punkte der Wege aller Teams (Wiederholung) */
+    heat?: GeoJSON.FeatureCollection;
   }
 
   let {
@@ -55,6 +57,7 @@
     onready,
     ondrag,
     alwaysNames = false,
+    heat = EMPTY,
   }: Props = $props();
 
   let el: HTMLDivElement;
@@ -70,6 +73,7 @@
     trail: trailOverlay(trail),
     accuracy: accuracyOverlay(accuracy),
     edit,
+    heat,
   });
 
   /** Linzer Innenstadt, solange es noch kein Spielfeld gibt */

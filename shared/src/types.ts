@@ -41,6 +41,16 @@ export interface Field {
   spots?: Spot[];
   /** Treffpunkt für den Sammelruf (fehlt = Mitte des Spielfelds) */
   meet?: MeetPoint;
+  /** Bonus-Posten mit QR-Code (E-75): Jäger scannen vor Ort und bekommen einen Hinweis auf Mister X */
+  posten?: Posten[];
+}
+
+export interface Posten {
+  /** feste Kennung (steht im QR-Code) */
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
 }
 
 export interface Config {

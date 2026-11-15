@@ -1,8 +1,8 @@
-// Was ein gescannter QR-Code bedeutet: Mister-X-Links (Beitritt, Schiri/Spielleitung, Großbild, Zuschauer) oder ein
+// Was ein gescannter QR-Code bedeutet: Mister-X-Links (Beitritt, Schiri/Spielleitung, Großbild, Zuschauer, Bonus-Posten) oder ein
 // reiner Spiel-Code → Seite in der App. Fremde Codes → null. Egal von welcher Adresse der Link kommt (Web, App, eigene
 // Domain): zählt nur der Teil nach „#“.
 const ROUTE =
-  /^\/(beitreten\/[a-z0-9-]{3,30}|staff\/(schiri|admin)|s\/[a-z0-9-]{3,30}|g\/[a-z0-9-]{3,30}|z\/[a-z0-9-]{3,30})(\?[\w=&%.-]*)?$/;
+  /^\/(beitreten\/[a-z0-9-]{3,30}|staff\/(schiri|admin)|s\/[a-z0-9-]{3,30}|g\/[a-z0-9-]{3,30}|z\/[a-z0-9-]{3,30}|posten\/[a-z0-9-]{3,30}\/[a-z0-9]{4,12}\.[\w-]{12})(\?[\w=&%.-]*)?$/;
 const CODE = /^[a-z0-9-]{3,30}$/;
 
 export function routeFromQr(text: string): string | null {

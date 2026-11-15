@@ -111,6 +111,7 @@ export default {
     notfallZurueck: "Emergenza ritirata",
     notfallErledigt: "Emergenza risolta",
     sammelrufStart: "Chiamata di raduno avviata",
+    postenEingeloest: "Postazione bonus riscattata",
     sammelrufEnde: "Chiamata di raduno terminata",
     vorlageGespeichert: "Modello salvato",
     vorlageGeladen: "Modello caricato",

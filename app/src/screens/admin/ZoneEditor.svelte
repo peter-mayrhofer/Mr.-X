@@ -18,9 +18,14 @@
     Upload,
     Utensils,
     MapPinCheck,
+    Printer,
+    QrCode,
   } from "@lucide/svelte";
+  import { tick } from "svelte";
   import { fieldFromGeoJson, fieldProblems, VORLAGEN, type Field, type LngLat, type Polygon, type VorlageId } from "@mrx/shared";
   import GameMap from "../../map/GameMap.svelte";
+  import { POSTEN_FARBE } from "../../map/style.ts";
+  import PostenBlaetter from "../parts/PostenBlaetter.svelte";
   import Button from "../../ui/Button.svelte";
   import Banner from "../../ui/Banner.svelte";
   import Stepper from "../../ui/Stepper.svelte";
@@ -35,8 +40,11 @@
     /** im laufenden Spiel nur ansehen */
     readonly?: boolean;
     onsave: (f: Field) => Promise<void>;
+    /** Bonus-Posten drucken: Links für die QR-Codes je Posten (vom Server unterschrieben) */
+    postenLinks?: () => Promise<Record<string, string>>;
+    gameName?: string;
   }
-  let { initial, readonly = false, onsave }: Props = $props();
+  let { initial, readonly = false, onsave, postenLinks, gameName = "" }: Props = $props();
 
   // svelte-ignore state_referenced_locally
   let field = $state<Field>({ ...($state.snapshot(initial) as Field), cuts: { ...$state.snapshot(initial.cuts ?? {}) } });
@@ -51,20 +59,21 @@
   let history: string[] = [];
   let file: HTMLInputElement;
 
-  const COLORS: Record<string, string> = { base: "#ff4636", spots: "#ffc531", meet: "#2fbf71" };
-  // „spots“ = Essens-Orte: keine Fläche, sondern einzelne Punkte (jeder ein ziehbarer Punkt auf der Karte)
+  const COLORS: Record<string, string> = { base: "#ff4636", spots: "#ffc531", meet: "#2fbf71", posten: POSTEN_FARBE };
+  // „spots“ = Essens-Orte, „posten“ = Bonus-Posten (E-75): keine Fläche, sondern einzelne Punkte (jeder ziehbar)
   const spotsMode = $derived(sel === "spots");
+  const postenMode = $derived(sel === "posten");
   // „meet“ = Treffpunkt für den Sammelruf: ein einzelner ziehbarer Punkt
   const meetMode = $derived(sel === "meet");
-  const pointMode = $derived(spotsMode || meetMode);
+  const pointMode = $derived(spotsMode || postenMode || meetMode);
   const poly = $derived(sel === "base" ? field.base : pointMode ? [] : (field.cuts[sel]?.poly ?? []));
   const cut = $derived(sel === "base" ? undefined : field.cuts[sel]);
   const color = $derived(COLORS[sel] ?? field.cuts[sel]?.color ?? "#fff");
   // geschlossene Ringe: letzter Punkt = erster → beim Bearbeiten ignorieren
   const closed = (p: Polygon) => p.length > 1 && p[0]![0] === p.at(-1)![0] && p[0]![1] === p.at(-1)![1];
   const pts = $derived<LngLat[]>(
-    spotsMode
-      ? (field.spots ?? []).map((s): LngLat => [s.lng, s.lat])
+    spotsMode || postenMode
+      ? (spotsMode ? (field.spots ?? []) : (field.posten ?? [])).map((s): LngLat => [s.lng, s.lat])
       : meetMode
         ? field.meet
           ? [[field.meet.lng, field.meet.lat]]
@@ -153,6 +162,10 @@
       field.spots = (field.spots ?? []).map((s, i) => ({ ...s, lng: next[i]![0], lat: next[i]![1] }));
       return;
     }
+    if (postenMode) {
+      field.posten = (field.posten ?? []).map((s, i) => ({ ...s, lng: next[i]![0], lat: next[i]![1] }));
+      return;
+    }
     if (meetMode) {
       if (field.meet && next[0]) field.meet = { ...field.meet, lng: next[0][0], lat: next[0][1] };
       return;
@@ -174,6 +187,12 @@
     if (spotsMode) {
       snapshot();
       field.spots = (field.spots ?? []).filter((_, i) => i !== vtx);
+      vtx = null;
+      return;
+    }
+    if (postenMode) {
+      snapshot();
+      field.posten = (field.posten ?? []).filter((_, i) => i !== vtx);
       vtx = null;
       return;
     }
@@ -209,6 +228,38 @@
     const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
     field.spots = [...(field.spots ?? []), { name: T.zonen.neuerOrt, lat: c.lat, lng: c.lng, radiusM: 40 }];
     vtx = field.spots.length - 1;
+  }
+
+  function addPosten(map: MLMap | undefined) {
+    snapshot();
+    const c = map?.getCenter() ?? { lng: 14.2895, lat: 48.301 };
+    // feste Kennung für den QR-Code: 8 Zeichen a–z, 0–9
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => (b % 36).toString(36)).join("");
+    field.posten = [...(field.posten ?? []), { id, name: T.zonen.neuerPosten, lat: c.lat, lng: c.lng }];
+    vtx = field.posten.length - 1;
+  }
+
+  // QR-Blätter: Links holen, Blätter einhängen, drucken, nach dem Druckdialog wieder weg
+  let blaetter = $state<{ name: string; url: string }[] | null>(null);
+  async function postenDrucken() {
+    try {
+      const links = await postenLinks!();
+      blaetter = (field.posten ?? []).flatMap((x) => (links[x.id] ? [{ name: x.name, url: links[x.id]! }] : []));
+    } catch (e) {
+      toast(e instanceof Error ? e.message : T.apiFehler.network, "warn");
+      return;
+    }
+    document.documentElement.dataset.druck = "posten";
+    await tick();
+    addEventListener(
+      "afterprint",
+      () => {
+        delete document.documentElement.dataset.druck;
+        blaetter = null;
+      },
+      { once: true },
+    );
+    print();
   }
 
   function setMeet(map: MLMap | undefined) {
@@ -383,6 +434,15 @@
       </li>
     </ul>
     <ul class="areas">
+      <li class:on={postenMode}>
+        <button class="pick" onclick={() => ((sel = "posten"), (vtx = null))}
+          ><span class="sw" style:background={COLORS.posten}></span><QrCode size={16} aria-hidden="true" />{T.zonen.posten}<small
+            class="num">{field.posten?.length ?? 0}</small
+          ></button
+        >
+      </li>
+    </ul>
+    <ul class="areas">
       <li class:on={meetMode}>
         <button class="pick" onclick={() => ((sel = "meet"), (vtx = field.meet ? 0 : null))}
           ><span class="sw" style:background={COLORS.meet}></span><MapPinCheck size={16} aria-hidden="true" />{T.zonen.treffpunkt}<small
@@ -429,6 +489,31 @@
       </div>
     {/if}
 
+    {#if postenMode}
+      <div class="props">
+        <p class="muted">{T.zonen.postenHinweis}</p>
+        <ul class="areas">
+          {#each field.posten ?? [] as x, i (x.id)}
+            <li class:on={vtx === i}><button class="pick" onclick={() => (vtx = i)}>{x.name}</button></li>
+          {/each}
+        </ul>
+        {#if vtx !== null && field.posten?.[vtx]}
+          {@const x = field.posten[vtx]!}
+          <TextField label={T.zonen.name} bind:value={x.name} disabled={readonly} />
+        {/if}
+        <div class="row">
+          {#if !readonly}
+            <Button variant="secondary" size="m" icon={Plus} onclick={() => addPosten(mapRef)}>{T.zonen.postenHinzu}</Button>
+            <Button variant="danger" size="m" icon={Trash} disabled={vtx === null} onclick={removeVertex}>{T.zonen.postenWeg}</Button>
+          {/if}
+          {#if postenLinks && field.posten?.length}
+            <Button variant="secondary" size="m" icon={Printer} disabled={dirty} onclick={postenDrucken}>{T.zonen.postenDrucken}</Button>
+          {/if}
+        </div>
+        {#if dirty && field.posten?.length}<p class="muted">{T.zonen.postenErstSpeichern}</p>{/if}
+      </div>
+    {/if}
+
     {#if cut}
       <div class="props">
         <TextField label={T.zonen.name} bind:value={cut.name} disabled={readonly} />
@@ -468,6 +553,8 @@
     {/if}
   </aside>
 </div>
+
+{#if blaetter}<PostenBlaetter {gameName} posten={blaetter} />{/if}
 
 <style>
   .editor {

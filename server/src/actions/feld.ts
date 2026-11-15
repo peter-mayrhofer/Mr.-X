@@ -1,7 +1,17 @@
 // Spielfeld speichern (Zonen-Editor, Abschnitt 7.8) und Spiele archivieren/löschen (Super-Admin). Spielfeld nur vor dem
 // Start oder nach dem Ende – im laufenden Spiel hängen Sperren und Warnungen daran. Alles wird hier noch einmal geprüft,
 // der Client ist nicht vertrauenswürdig.
-import { fieldProblems, type ApiResults, type Cut, type Field, type LngLat, type MeetPoint, type Polygon, type Spot } from "@mrx/shared";
+import {
+  fieldProblems,
+  type ApiResults,
+  type Cut,
+  type Field,
+  type LngLat,
+  type MeetPoint,
+  type Polygon,
+  type Posten,
+  type Spot,
+} from "@mrx/shared";
 import { fail, str } from "../util.ts";
 import type { Auth, GameRoom } from "../room.ts";
 import { PROTOKOLL as P } from "@mrx/shared";
@@ -10,6 +20,8 @@ type D = Record<string, unknown>;
 const MAX_POINTS = 2000;
 const MAX_CUTS = 12;
 const MAX_SPOTS = 30;
+const MAX_POSTEN = 20;
+const POSTEN_ID = /^[a-z0-9]{4,12}$/;
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const CUT_ID = /^[a-z0-9-]{1,30}$/;
 
@@ -64,6 +76,16 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
       fail("invalid", "Essens-Ort: Umkreis 15–100 m");
     return { name: str(s.name, [1, 60], "Name des Essens-Orts"), lat, lng, radiusM };
   });
+  const postenIn = f.posten ?? [];
+  if (!Array.isArray(postenIn) || postenIn.length > MAX_POSTEN) fail("invalid", `Höchstens ${MAX_POSTEN} Bonus-Posten`);
+  const posten: Posten[] = postenIn.map((x: Record<string, unknown>) => {
+    const { id, lat, lng } = x ?? {};
+    if (typeof id !== "string" || !POSTEN_ID.test(id)) fail("invalid", "Bonus-Posten: ungültige Kennung");
+    if (typeof lat !== "number" || typeof lng !== "number" || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+      fail("invalid", "Bonus-Posten: ungültiger Punkt");
+    return { id, name: str(x.name, [1, 60], "Name des Bonus-Postens"), lat, lng };
+  });
+  if (new Set(posten.map((x) => x.id)).size !== posten.length) fail("invalid", "Bonus-Posten: Kennung doppelt");
   let meet: MeetPoint | undefined;
   if (f.meet !== undefined && f.meet !== null) {
     const m = f.meet as Record<string, unknown>;
@@ -78,6 +100,7 @@ export function setField(room: GameRoom, d: D, a: Auth): ApiResults["setField"] 
     cuts,
     ...(spots.length ? { spots } : {}),
     ...(meet ? { meet } : {}),
+    ...(posten.length ? { posten } : {}),
   };
   const p = fieldProblems(field)[0];
   if (p) fail("invalid", `${p.id === "base" ? "Spielfeld" : cuts[p.id]!.short}: ${TEXT[p.kind]}`);

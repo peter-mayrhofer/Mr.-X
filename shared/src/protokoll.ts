@@ -49,6 +49,7 @@ export const P = {
   notfallZurueck: "Notfall zurückgenommen",
   notfallErledigt: "Notfall erledigt",
   sammelrufStart: "Sammelruf gestartet",
+  postenEingeloest: "Bonus-Posten eingelöst",
   sammelrufEnde: "Sammelruf beendet",
   vorlageGespeichert: "Vorlage gespeichert",
   vorlageGeladen: "Vorlage geladen",

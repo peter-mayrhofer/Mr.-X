@@ -111,6 +111,7 @@ export default {
     notfallZurueck: "Acil durum geri alındı",
     notfallErledigt: "Acil durum çözüldü",
     sammelrufStart: "Toplanma çağrısı başladı",
+    postenEingeloest: "Bonus noktası kullanıldı",
     sammelrufEnde: "Toplanma çağrısı bitti",
     vorlageGespeichert: "Şablon kaydedildi",
     vorlageGeladen: "Şablon yüklendi",

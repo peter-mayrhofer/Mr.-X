@@ -3,7 +3,7 @@
      3× = wieder Norden oben. Karte mit dem Finger verschieben = frei (`frei()`). -->
 <script lang="ts">
   import { onDestroy, untrack } from "svelte";
-  import { Flag, LocateFixed, Maximize2, Navigation, Sun } from "@lucide/svelte";
+  import { Flag, LocateFixed, Maximize2, Navigation, ScanQrCode, Sun } from "@lucide/svelte";
   import IconButton from "../../ui/IconButton.svelte";
   import type GameMap from "../../map/GameMap.svelte";
   import { Heading } from "../../lib/kompass.svelte.ts";
@@ -19,9 +19,11 @@
     /** eigener Standort (mit Richtung, falls das GPS eine liefert) */
     me?: { lat: number; lng: number; heading?: number } | null | undefined;
     map?: GameMap | undefined;
+    /** Bonus-Posten scannen (nur Jäger im laufenden Spiel, E-75) */
+    onscan?: (() => void) | undefined;
   }
 
-  let { onmrx, onfield, zentrieren = false, me, map }: Props = $props();
+  let { onmrx, onfield, zentrieren = false, me, map, onscan }: Props = $props();
 
   let modus = $state<"frei" | "folgen" | "drehen">("frei");
   const heading = new Heading();
@@ -84,6 +86,7 @@
     <IconButton icon={modus === "drehen" ? Navigation : LocateFixed} label={zentrierLabel} active={modus !== "frei"} onclick={tippen} />
   {/if}
   <IconButton icon={Maximize2} label={T.karte.ganzesFeld} onclick={() => (frei(), onfield())} />
+  {#if onscan}<IconButton icon={ScanQrCode} label={T.posten.scannen} onclick={onscan} />{/if}
   <IconButton icon={Sun} label={T.karte.sonne} active={theme.active === "sonne"} onclick={() => theme.toggleSun()} />
 </div>
 
