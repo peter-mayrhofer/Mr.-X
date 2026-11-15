@@ -169,6 +169,8 @@ export const T = {
     titel: "Karte des Spielfelds",
     daten: "Daten von",
     aufMich: "Auf mich zentrieren",
+    mitdrehen: "Karte mitdrehen",
+    nordenOben: "Norden oben",
     misterXZeigen: "Mister X zeigen",
     ganzesFeld: "Ganzes Spielfeld",
     sonne: "Sonnen-Modus",

@@ -146,6 +146,8 @@ export default {
     titel: "Mapa del campo de juego",
     daten: "Datos de",
     aufMich: "Centrar en mí",
+    mitdrehen: "Girar el mapa conmigo",
+    nordenOben: "Norte arriba",
     misterXZeigen: "Mostrar a Mister X",
     ganzesFeld: "Todo el campo de juego",
     sonne: "Modo sol",

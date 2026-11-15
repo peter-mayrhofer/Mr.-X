@@ -42,6 +42,7 @@
   type Tab = "karte" | "chat" | "regeln" | "mehr";
   let tab = $state<Tab>("karte");
   let map: GameMap | undefined = $state();
+  let controls: MapControls | undefined = $state();
   /** Höhe der unteren Leiste (nächste Jäger + Übergabe): der Karten-Hinweis (i) rückt darüber */
   let fuss = $state(0);
   // svelte-ignore state_referenced_locally
@@ -113,6 +114,7 @@
   <div class="mapzone" style:--karten-fuss="{fuss + 12}px">
     <GameMap
       bind:this={map}
+      ondrag={() => controls?.frei()}
       field={view.field}
       locked={Object.keys(view.state.cuts ?? {})}
       preview={Object.keys(view.state.warnCuts ?? {})}
@@ -138,8 +140,11 @@
     <div class="side">
       <MapControls
         onmrx={mrxPos ? () => map?.flyTo(mrxPos) : undefined}
-        onme={view.me ? () => map?.flyTo(view.me!) : undefined}
+        zentrieren
+        me={view.me}
+        {map}
         onfield={() => map?.fitField()}
+        bind:this={controls}
       />
     </div>
 

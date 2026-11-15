@@ -129,6 +129,7 @@
   let sub = $state<"menu" | "einstellungen" | "team">("menu");
   let ruleHint = $state(true);
   let map: GameMap | undefined = $state();
+  let controls: MapControls | undefined = $state();
   let seen = $state(clock.now);
 
   const st = $derived(view.state);
@@ -213,6 +214,7 @@
   <div class="mapzone">
     <GameMap
       bind:this={map}
+      ondrag={() => controls?.frei()}
       field={view.field}
       {locked}
       preview={[...(shrinking ? [shrinking] : []), ...warned.map(([id]) => id)]}
@@ -293,8 +295,11 @@
     <div class="side">
       <MapControls
         onmrx={last ? () => map?.flyTo(last) : undefined}
-        onme={me ? () => map?.flyTo(me) : undefined}
+        zentrieren
+        {me}
+        {map}
         onfield={() => map?.fitField()}
+        bind:this={controls}
       />
       {#if onsos && !openAlert}
         <button class="sos" aria-label={T.notfall.melden} onclick={() => (askSos = true)}>SOS</button>

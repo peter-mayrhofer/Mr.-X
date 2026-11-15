@@ -144,6 +144,8 @@ export default {
     titel: "Oyun alanının haritası",
     daten: "Veriler:",
     aufMich: "Beni ortala",
+    mitdrehen: "Haritayı benimle döndür",
+    nordenOben: "Kuzey yukarıda",
     misterXZeigen: "Mister X'i göster",
     ganzesFeld: "Tüm oyun alanı",
     sonne: "Güneş modu",

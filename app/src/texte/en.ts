@@ -144,6 +144,8 @@ export default {
     titel: "Map of the playing area",
     daten: "Data from",
     aufMich: "Centre on me",
+    mitdrehen: "Rotate map with me",
+    nordenOben: "North up",
     misterXZeigen: "Show Mister X",
     ganzesFeld: "Whole playing area",
     sonne: "Sun mode",
