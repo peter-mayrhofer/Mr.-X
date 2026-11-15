@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { replayAt, replayMarks, type ReplayInput } from "../src/index.ts";
+import { replayAt, replayMarks, replayTeams, type ReplayInput } from "../src/index.ts";
 
 const MIN = 60_000;
 const r = (teamId: string, t: number, extra = {}) => ({
@@ -61,4 +61,24 @@ describe("Wiederholung", () => {
       { t: 25 * MIN, kind: "uebergabe", teamId: "B" },
       { t: 30 * MIN, kind: "sperre", cut: "norden" },
     ]));
+});
+
+describe("replayTeams (E-72)", () => {
+  const tracks = {
+    A: [
+      [0, 4830000, 1428000],
+      [20, 4830100, 1428200],
+      [400, 4830500, 1428500], // nach 6 Min Pause: kein Gleiten, Team steht
+    ] as [number, number, number][],
+    B: [[100, 4831000, 1429000]] as [number, number, number][],
+  };
+  const at = (sek: number) => Object.fromEntries(replayTeams({ startedAt: 1000, tracks }, 1000 + sek * 1000).map((x) => [x.teamId, x]));
+  it("zwischen nahen Punkten geradlinig", () => expect(at(10).A).toEqual({ teamId: "A", lat: 48.3005, lng: 14.281 }));
+  it("vor dem ersten Punkt nicht zu sehen", () => expect(at(50).B).toBeUndefined());
+  it("große Lücke: steht am letzten Punkt, nach 10 Min weg", () => {
+    expect(at(200).A).toMatchObject({ lat: 48.301, lng: 14.282 });
+    expect(at(100 + 601).B).toBeUndefined();
+    expect(at(100 + 599).B).toMatchObject({ lat: 48.31, lng: 14.29 });
+  });
+  it("ohne Spuren (älter als 30 Tage) leer", () => expect(replayTeams({ startedAt: 0 }, 5000)).toEqual([]));
 });

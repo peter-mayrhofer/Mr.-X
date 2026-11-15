@@ -169,6 +169,8 @@ export const T = {
     titel: "Karte des Spielfelds",
     daten: "Daten von",
     aufMich: "Auf mich zentrieren",
+    mitdrehen: "Karte mitdrehen",
+    nordenOben: "Norden oben",
     misterXZeigen: "Mister X zeigen",
     ganzesFeld: "Ganzes Spielfeld",
     sonne: "Sonnen-Modus",
@@ -833,6 +835,18 @@ export const T = {
     chatGeloescht: "Kein Chat (nach 30 Tagen automatisch gelöscht).",
     nichtGefunden: "Dieser Lauf ist nicht (mehr) im Archiv.",
     teams: (n: number) => `${n} Teams`,
+    video: "Video",
+    videoTitel: "Video speichern",
+    format: "Format",
+    hochformat: "Hochformat",
+    querformat: "Querformat",
+    videoHinweis:
+      "Das ganze Spiel als 40-Sekunden-Video mit allen Teams. Hochformat passt fürs Handy und Storys, Querformat für Bildschirm und YouTube. Das Erstellen dauert je nach Gerät 1–3 Minuten.",
+    videoErstellen: "Video erstellen",
+    videoLaeuft: "Video wird erstellt",
+    videoFertig: "Video ist fertig.",
+    videoGehtNicht: "Dieses Gerät kann keine Videos erstellen. Bitte in Chrome, Edge oder Safari am Computer oder Handy probieren.",
+    videoFehler: "Das Video konnte nicht erstellt werden.",
   },
 
   tracker: {
@@ -1013,7 +1027,7 @@ export const T = {
   },
 
   datenschutz: {
-    kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung, sie werden nach Spielende gelöscht. Kein Tracking, keine Werbung.",
+    kurz: "Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sieht nur die Spielleitung; nach Spielende bleiben nur die Wege der Teams für die Wiederholung, 30 Tage lang. Kein Tracking, keine Werbung.",
     voll: "Vollständiger Datenschutzhinweis",
     kontakt: "petermayrhofer08@gmail.com",
     /** DSGVO Art. 13 – kurz und verständlich; Fristen wie im Server umgesetzt (docs/KONZEPT.md, Löschfristen) */
@@ -1032,11 +1046,11 @@ export const T = {
       },
       {
         titel: "Wer sieht was?",
-        text: "Die Standorte der Jäger-Teams sehen nur Spielleitung, Schiris (solange die Spielleitung das nicht ausschaltet) und das Großbild in der Zentrale – andere Teams und Zuschauer nicht. Den gemeldeten Standort von Mister X sehen alle Mitspielenden.",
+        text: "Die Standorte der Jäger-Teams sehen nur Spielleitung, Schiris (solange die Spielleitung das nicht ausschaltet) und das Großbild in der Zentrale – andere Teams und Zuschauer nicht. Den gemeldeten Standort von Mister X sehen alle Mitspielenden. Nach Spielende zeigt die Wiederholung allen Mitspielenden die Wege aller Teams (ein Punkt alle 20 Sekunden) – 30 Tage lang, dann werden sie gelöscht. Wer daraus ein Video speichert, hat es auch danach noch.",
       },
       {
         titel: "Wie lange?",
-        text: "Live-Standorte bis zum Spielende, dann werden sie sofort gelöscht. Chat und Protokoll der Spielleitung: 30 Tage nach Spielende. Auswertung mit Meldungen von Mister X und Übergaben: 1 Jahr. Die Anmeldung auf eurem Handy gilt 7 Tage oder bis ihr euch abmeldet.",
+        text: "Live-Standorte bis zum Spielende, dann werden sie sofort gelöscht. Die Wege der Teams für die Wiederholung (ein Punkt alle 20 Sekunden): 30 Tage nach Spielende. Chat und Protokoll der Spielleitung: 30 Tage nach Spielende. Auswertung mit Meldungen von Mister X und Übergaben: 1 Jahr. Die Anmeldung auf eurem Handy gilt 7 Tage oder bis ihr euch abmeldet.",
       },
       {
         titel: "Wo werden die Daten verarbeitet?",

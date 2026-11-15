@@ -180,6 +180,7 @@ export default {
     const now = Date.now();
     await env.DB.batch([
       env.DB.prepare("UPDATE archive SET chat = NULL WHERE chat IS NOT NULL AND endedAt < ?1").bind(now - 30 * DAY),
+      env.DB.prepare("DELETE FROM archive_tracks WHERE endedAt < ?1").bind(now - 30 * DAY),
       env.DB.prepare("DELETE FROM archive WHERE endedAt < ?1").bind(now - 365 * DAY),
     ]);
   },

@@ -742,3 +742,33 @@ angezeigt wird „20 Min“ bzw. „1,5 h“. Grenzen an einer Stelle (`ENDE_MIN
 `shared/src/defaults.ts`), Server und App nutzen dieselben Werte. Der Stepper kann dafür feste Stufen (`stufen`)
 und eine eigene Anzeige (`format`).
 **Warum so:** Wunsch des Organisators (kurze Runden, z. B. zum Ausprobieren oder für Kinder).
+
+### E-71 Chat ohne falsches „neu“, Karte zentrieren und mitdrehen
+**Entscheidung:** (1) Eigene Nachrichten zählen nie als ungelesen. Der Fehler war der Hinweis „Neue Nachrichten (1)“ im
+Chat: er zählte auch die eigene Nachricht, wenn die Liste gerade nicht ganz unten stand (Tastatur schließt) oder der
+Kanal gewechselt wurde. Jetzt zählen nur fremde Nachrichten im selben Kanal. (2) Der Zentrier-Knopf ist immer da
+(Team und Schiri) und arbeitet wie bei Navi-Apps: 1× = Karte folgt mir, 2× = Karte dreht mit der Blickrichtung
+(Kompass, sonst Gehrichtung vom GPS), 3× = Norden oben. Mit dem Finger verschieben beendet das Folgen. Richtungspfeile
+der Marker drehen mit (`--peilung`). Mitgehen höchstens alle 250 ms (Akku).
+**Warum so:** Rückmeldung eines Teams („Karte soll sich selbst ausrichten“) und Wunsch des Organisators. Am iPhone
+wird der Kompass erst beim Tippen erlaubt (Apple verlangt das).
+**Getestet:** `tests/e2e-ungelesen.test.ts`, `tests/e2e-karte.test.ts` (mit künstlichem Kompass).
+
+### E-72 Wiederholung mit allen Teams (30 Tage) und als Video
+**Entscheidung:** Der Spielraum merkt sich während des Spiels je Team höchstens einen Punkt alle 20 s
+(`spuren`, nur unverdächtige Punkte, nur in der Phase „läuft“; geht nie an die Handys). Bei Spielende kommen die
+Spuren in die D1-Tabelle `archive_tracks` (eine Zeile pro Lauf) und werden im Spielraum gelöscht. Der tägliche Cron
+löscht sie nach **30 Tagen**; wird ein Archiv-Eintrag gelöscht (Spiel gelöscht, Probelauf weg), löscht ein
+Datenbank-Trigger die Spuren mit. Die Wiederholung zeigt alle Teams für **alle Mitspielenden** (wer das Archiv sehen
+darf), zwischen nahen Punkten geradlinig (`replayTeams`). **Video:** die Wiederholung als MP4 (40 s, 30 Bilder/s,
+H.264, sonst VP9) im Hochformat 1080 × 1920 oder Querformat 1920 × 1080 – erstellt im Gerät (WebCodecs + `mp4-muxer`),
+ohne Server. In der Android-App gibt es keine Downloads in der WebView, deshalb geht die Datei über ein kleines
+Plugin („Datei“) an „Teilen“.
+**Warum so:** Wunsch des Organisators („nicht nur Mister X, das ganze Spiel und alle Teams“, 30 Tage, MP4 hoch und
+quer, sichtbar für alle). Lockert E-09 bewusst: ausgedünnt (20 s), befristet (30 Tage), im Datenschutzhinweis in allen
+Sprachen erklärt. 20 s reichen für eine flüssige Wiedergabe und halten die Daten klein (≈ 13 KB pro Team und 3 h);
+gespeichert wird mit den übrigen Standorten, also ohne zusätzliche Schreibvorgänge pro Punkt.
+**Verworfen:** Video am Server rendern (kostet Laufzeit, Gratis-Tarif), eigene MP4-Erzeugung (zu viel Code),
+GIF (riesig, schlechte Qualität).
+**Getestet:** `shared/test/replay.test.ts`, `tests/spiel.test.ts` (Spuren im Archiv, danach gelöscht),
+`tests/e2e-video.test.ts` (Teams auf der Karte, MP4-Datei).

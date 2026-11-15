@@ -443,10 +443,11 @@ describe("Spielende (Regel 12, Abschnitt 6.3)", () => {
     expect(arch.handovers[Object.keys(arch.handovers)[0]!].prev).toBeUndefined();
     expect(Object.keys(arch.teams)).toHaveLength(4);
     expect(arch.results.farthest).toEqual({ teamId: team.d!.id, m: 111 });
+    expect(arch.tracks[team.d!.id].length).toBeGreaterThan(0); // Spuren fürs Nachspielen (E-72)
     expect(arch.results.food).toEqual({ teamId: team.c!.id, visits: 1, ms: 700_000 }); // Futter-Profi
     expect(await val(`secrets/${G}/food`)).toBeNull(); // Zählerstände nach der Auswertung gelöscht
     expect(Object.values(arch.chat as Record<string, { text: string }>).at(-1)!.text).toMatch(/^Spielende!/);
-    for (const p of ["positions", "staff", "track", "locks"]) expect(await val(`games/${G}/${p}`)).toEqual({});
+    for (const p of ["positions", "staff", "track", "spuren", "locks"]) expect(await val(`games/${G}/${p}`)).toEqual({});
     expect(await val(`secrets/${G}/endAt`)).toBeNull();
     expect(await val(`games/${G}/info/phase`)).toBe("beendet");
     expect((await lastChat()).text).toMatch(/^Spielende! .* hat gewonnen!$/);

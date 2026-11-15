@@ -82,7 +82,7 @@ noch unter dem Limit, aber ohne Reserve. Deshalb die 30 s (Meldungen brauchen ei
 | Laufzeit vor/nach dem Spiel | Verbindungen schlafen (Hibernation) | ≈ 0 |
 | Zeilen geschrieben | Befehle ≈ 630 × ≈ 4 Teile + Standorte gespeichert alle 30 s: 480 × 4 + Alarme stellen ≈ 600 | **≈ 5 000 (5 %)** |
 | Zeilen gelesen | Aufwachen (23 Teile) + Alarm-Abfragen | **< 10 000 (0,2 %)** |
-| Speicher Spielraum | Zustand + Chat + Protokoll; **keine Bewegungsprofile** (nur letzter Punkt je Team) | **< 2 MB** |
+| Speicher Spielraum | Zustand + Chat + Protokoll + Wege fürs Nachspielen (1 Punkt / 20 s je Team ≈ 13 KB pro Team und 3 h) | **< 2 MB** |
 | D1 | Spiel anlegen 1, Spieleliste aktualisieren ≈ 40, Archiv 1 Zeile, Verwaltung ≈ 50 Lesevorgänge | **< 0,1 %** |
 | Unteranfragen (Web Push) | 55 Ereignisse für alle × ≤ 49 Geräte, je höchstens 40 pro Aufruf | passt (in mehreren Alarmen) |
 
@@ -98,8 +98,10 @@ alle Android-Handys im Hintergrund), meist unter 5 %. Zwei Spiele am selben Tag 
 - **Hibernation:** schlafende Verbindungen kosten keine Laufzeit; Herzschlag ohne Aufwecken (Auto-Antwort).
 - **Standorte gesammelt:** an Spielleitung/Schiri/Großbild höchstens alle 2 s verteilt, gespeichert höchstens alle 30 s
   (ein Neustart verliert höchstens 30 s alte Standorte – die nächsten kommen ohnehin in Sekunden).
-- **Nie Positionen in die Datenbank (D1)**: nur der Spielraum hält den letzten Punkt je Team; ins Archiv kommen nur
-  Meldungen, Übergaben, Strecke.
+- **Positionen nur ausgedünnt in die Datenbank (D1)**: live hält der Spielraum den letzten Punkt je Team; für die
+  Wiederholung (E-72) höchstens einen Punkt alle 20 s je Team – gespeichert mit den übrigen Standorten (höchstens alle
+  30 s, keine zusätzlichen Schreibvorgänge pro Punkt) und bei Spielende **eine** Zeile in `archive_tracks`, die nach
+  30 Tagen gelöscht wird.
 - **Ein Alarm pro Spielraum** für alles Zeitgesteuerte; gestellt wird er nur, wenn sich der Termin ändert.
 - **Android im Hintergrund nur alle 30 s**, im Vordergrund über die ohnehin offene Verbindung.
 - **Push nur an Geräte, deren App nicht sichtbar ist** – sichtbare Apps zeigen es selbst an.

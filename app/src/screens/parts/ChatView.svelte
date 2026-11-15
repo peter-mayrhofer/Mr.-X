@@ -74,13 +74,23 @@
     unseen = 0;
   }
 
+  // „Neue Nachrichten (n)“ nur für Nachrichten der anderen im selben Kanal. Eigene Nachricht oder Kanalwechsel:
+  // einfach nach unten (vorher erschien z. B. „(1)“ für die eigene Nachricht, wenn die Tastatur die Liste verschob)
   let prev = 0;
+  let prevKanal = "";
   $effect(() => {
     const n = list.length;
+    const kanal = `${tab}/${dmTeam ?? ""}`;
     void tick().then(() => {
-      if (n > prev && prev > 0 && !atBottom) unseen += n - prev;
-      else box?.scrollTo({ top: box.scrollHeight });
+      const neu = kanal === prevKanal && prev > 0 && n > prev ? list.slice(prev) : [];
+      const fremd = neu.filter((m) => m.uid !== myUid).length;
+      if (fremd && !atBottom && neu.every((m) => m.uid !== myUid)) unseen += fremd;
+      else {
+        box?.scrollTo({ top: box.scrollHeight });
+        unseen = 0;
+      }
       prev = n;
+      prevKanal = kanal;
     });
   });
 

@@ -36,7 +36,7 @@
 {:else if p.kind === "me"}
   <div class="me" role="img" aria-label={p.label}>
     {#if p.heading !== undefined}
-      <span class="heading" style:rotate="{p.heading}deg"
+      <span class="heading" style:rotate="calc({p.heading}deg - var(--peilung, 0deg))"
         ><Navigation2 size={30} fill="currentColor" strokeWidth={1} aria-hidden="true" /></span
       >
     {/if}

@@ -35,6 +35,8 @@
     label?: string;
     edit?: GeoJSON.FeatureCollection;
     onready?: (map: MLMap) => void;
+    /** jemand verschiebt die Karte mit dem Finger (beendet „folgen“) */
+    ondrag?: () => void;
     /** Teamnamen immer zeigen (Großbild) */
     alwaysNames?: boolean;
   }
@@ -51,6 +53,7 @@
     label = T.karte.titel,
     edit = EMPTY,
     onready,
+    ondrag,
     alwaysNames = false,
   }: Props = $props();
 
@@ -84,6 +87,17 @@
     map?.flyTo({ center: [p.lng, p.lat], zoom, padding, duration: 700 });
   }
 
+  /** mitgehen: Mitte auf `p`, gedreht nach `bearing` (0 = Norden oben); beim ersten Mal auch heranzoomen */
+  export function follow(p: Point, bearing = 0, first = false) {
+    if (!map) return;
+    const zoom = first ? Math.max(map.getZoom(), 16.5) : map.getZoom();
+    map.easeTo({ center: [p.lng, p.lat], zoom, bearing, padding, duration: first ? 700 : 300 });
+  }
+
+  export function north() {
+    map?.easeTo({ bearing: 0, duration: 400 });
+  }
+
   onMount(() => {
     let alive = true;
     // die Karte gibt es schon vor „load“ – wird die Ansicht vorher verlassen, muss sie trotzdem weg (WebGL-Kontexte sind knapp)
@@ -109,6 +123,9 @@
         maxZoom: 19,
       }));
       m.touchZoomRotate.disableRotation();
+      m.on("dragstart", () => ondrag?.());
+      // gedrehte Karte: Richtungspfeile der Marker (Himmelsrichtung) mitdrehen
+      m.on("rotate", () => el.style.setProperty("--peilung", `${m.getBearing()}deg`));
       markerMap = m;
       m.setMissingStyleImageResolver((id) => {
         if (id.startsWith("hatch-") && !m.hasImage(id)) m.addImage(id, hatchImage(id.slice(6) as typeof theme.active), { pixelRatio: 2 });
