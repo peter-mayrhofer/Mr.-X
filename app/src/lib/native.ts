@@ -4,6 +4,7 @@
 //   Benachrichtigungen mit
 // - Benachrichtigungen lokal anzeigen (kein Firebase): Ereignisse kommen über die Live-Verbindung oder POST /api/pos
 // - Akku-Optimierung abschalten (eigenes kleines Plugin „Akku“)
+// - Dateien (Video der Wiederholung) über „Teilen“ weitergeben – die WebView kann nichts herunterladen (Plugin „Datei“)
 import { Capacitor, CapacitorHttp, registerPlugin } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community/background-geolocation";
 import { uebersetze, type ApiReply, type Note, type PositionIn } from "@mrx/shared";
@@ -22,6 +23,34 @@ export const INSTALLIERT = NATIVE || DESKTOP;
 
 const BG = registerPlugin<BackgroundGeolocationPlugin>("BackgroundGeolocation");
 const Akku = registerPlugin<{ status(): Promise<{ ignoring: boolean }>; request(): Promise<void> }>("Akku");
+const Datei = registerPlugin<{
+  start(o: { name: string }): Promise<void>;
+  append(o: { data: string }): Promise<void>;
+  teilen(o: { typ: string }): Promise<void>;
+}>("Datei");
+
+const base64 = (b: Blob) =>
+  new Promise<string>((ok, no) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result).split(",")[1] ?? "");
+    r.onerror = () => no(r.error);
+    r.readAsDataURL(b);
+  });
+
+/** Datei speichern: im Browser herunterladen; in der Android-App in Stücken an Android und dann „Teilen“ */
+export async function herunterladen(blob: Blob, name: string) {
+  if (!NATIVE) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+    return;
+  }
+  await Datei.start({ name });
+  for (let i = 0; i < blob.size; i += 1 << 20) await Datei.append({ data: await base64(blob.slice(i, i + (1 << 20))) });
+  await Datei.teilen({ typ: blob.type });
+}
 
 let watcher: string | null = null;
 

@@ -89,17 +89,26 @@ wichtigsten Regeln.
 - **Regeln**: alle Spielregeln zum Nachlesen, mit Suche.
 - **Mehr**: Einstellungen (Ton, Vibration, Benachrichtigungen), **Sonnen-Modus** für grelles Licht, Abmelden.
 - Das ☀-Symbol auf der Karte schaltet schnell auf den Sonnen-Modus (sehr starker Kontrast).
+- Der **Zentrier-Knopf** (Fadenkreuz) auf der Karte: 1× tippen = die Karte folgt euch, 2× tippen = die Karte dreht sich
+  mit, wohin ihr schaut (Kompass, wie beim Navi), 3× tippen = wieder Norden oben. Verschiebt ihr die Karte mit dem
+  Finger, hört sie auf zu folgen.
 
 ## 5. Spielende
 
 Das Spiel endet zu einem geheimen Zeitpunkt. Alle sehen die **Auswertung**: Wer am Ende Mister X ist, **gewinnt**.
 Ab dann sendet die App **keinen Standort mehr**.
 
+Unter **Archiv** könnt ihr das Spiel noch einmal ansehen: die **Wiederholung** zeigt die Meldungen von Mister X und
+die Wege **aller Teams** im Zeitraffer. Mit **Video** speichert ihr das ganze Spiel als 40-Sekunden-Video – im
+**Hochformat** (Handy, Story) oder **Querformat** (Bildschirm, YouTube). In der Android-App öffnet sich dafür
+„Teilen“ (z. B. in die Galerie oder an WhatsApp).
+
 ## 6. Datenschutz in Kürze
 
 Wir speichern nur, was das Spiel braucht: Teamname, Chat und euren Standort während des Spiels. Live-Standorte sehen
-nur Spielleitung und Schiris; sie werden bei Spielende gelöscht. Der Chat wird nach 30 Tagen gelöscht, die Auswertung
-nach einem Jahr. Kein Tracking, keine Werbung. Den vollständigen Hinweis findet ihr in der App unter
+nur Spielleitung und Schiris; sie werden bei Spielende gelöscht. Für die Wiederholung bleiben die Wege der Teams (ein
+Punkt alle 20 Sekunden) 30 Tage gespeichert – die sehen nach dem Spiel alle Mitspielenden. Der Chat wird nach 30 Tagen
+gelöscht, die Auswertung nach einem Jahr. Kein Tracking, keine Werbung. Den vollständigen Hinweis findet ihr in der App unter
 **Regeln → Datenschutz**.
 
 ## 7. Wenn etwas nicht klappt

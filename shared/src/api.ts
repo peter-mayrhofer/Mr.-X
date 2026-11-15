@@ -134,6 +134,8 @@ export interface ArchiveData {
   field: Field;
   /** nach 30 Tagen leer (Löschfrist) */
   chat: Record<string, ChatMessage>;
+  /** Spur je Team: [Sekunden seit Start, Breite·1e5, Länge·1e5] alle 20 s – nach 30 Tagen weg (E-72) */
+  tracks?: Record<string, [number, number, number][]>;
 }
 
 export interface ApiResults {

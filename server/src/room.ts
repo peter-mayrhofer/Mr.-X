@@ -73,6 +73,9 @@ export interface Data {
   devices: Record<string, Device>;
   /** letzter angenommener Punkt je Team (nur am Server, für Strecke und Plausibilität – kein Bewegungsprofil) */
   track: Record<string, Position>;
+  /** Spur je Team fürs Nachspielen (E-72): [Sekunden seit Start, Breite·1e5, Länge·1e5], höchstens alle 20 s.
+   *  Bei Spielende ins Archiv (30 Tage), hier gelöscht. Geht nie an die Handys. */
+  spuren: Record<string, [number, number, number][]>;
   push: Record<string, PushReg>;
   secrets: {
     teamPw?: string;
@@ -114,6 +117,7 @@ const KEYS: Key[] = [
   "alerts",
   "devices",
   "track",
+  "spuren",
   "push",
   "secrets",
   "rate",
@@ -122,7 +126,9 @@ const KEYS: Key[] = [
 /** Teile, die jedes Mitglied sieht */
 const PUBLIC = new Set<string>(["info", "config", "field", "state", "teams", "reports", "handovers", "locks", "pauses", "cutLog", "stats"]);
 /** Standorte, die nur gesammelt alle 2 s verteilt und höchstens alle 30 s gespeichert werden */
-const LIVE_KEYS: Key[] = ["positions", "staff", "devices", "track", "stats"];
+const LIVE_KEYS: Key[] = ["positions", "staff", "devices", "track", "stats", "spuren"];
+/** Abstand der Punkte in der Spur fürs Nachspielen */
+const SPUR_S = 20;
 /** Tracker senden oft – mehr als ein Punkt alle 5 s bringt nichts */
 const TRACKER_MIN_GAP_MS = 5000;
 const POS_BATCH_MS = 2000;
@@ -176,6 +182,7 @@ const empty = (): Data => ({
   alerts: {},
   devices: {},
   track: {},
+  spuren: {},
   push: {},
   secrets: {},
   rate: {},
@@ -659,6 +666,11 @@ export class GameRoom extends DurableObject<Env> {
         }
       }
       foodStep(this, t, p);
+      if (!p.suspect) {
+        const spur = (this.d.spuren[t] ??= []);
+        const sek = Math.round((p.t - (this.d.state.startedAt ?? p.t)) / 1000);
+        if (!spur.length || sek - spur.at(-1)![0] >= SPUR_S) spur.push([sek, Math.round(p.lat * 1e5), Math.round(p.lng * 1e5)]);
+      }
     }
     // Sammelruf: wer im Umkreis des Treffpunkts ist, gilt als angekommen
     const g = this.d.state.gather;

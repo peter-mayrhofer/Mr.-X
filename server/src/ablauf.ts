@@ -13,6 +13,7 @@ import {
   type ReportSource,
 } from "@mrx/shared";
 import { DAY, MIN, newKey } from "./util.ts";
+import { ensureSchema } from "./d1.ts";
 import type { Data, GameRoom } from "./room.ts";
 
 /** Chat-Aufbewahrung nach Spielende (F3) */
@@ -225,21 +226,41 @@ export function finish(room: GameRoom, endedAt: number, reason: "zufall" | "nots
     field: d.field,
   };
   const chat = d.chat;
+  const spuren = d.spuren;
   // Datenschutz (Abschnitt 9.2): Live-Standorte sofort löschen, Chat nach der Frist
   room.set("positions", {});
   room.set("staff", {});
   room.set("devices", Object.fromEntries(Object.entries(d.devices).map(([id, { pos: _p, ...dev }]) => [id, dev])));
   room.set("track", {});
+  room.set("spuren", {});
   room.set("locks", {});
   // Zählerstände für „Futter-Profi“ stehen jetzt in der Auswertung, hier nicht mehr nötig
   room.set("secrets", { ...room.d.secrets, endAt: undefined, food: undefined });
   room.set("purgeAt", endedAt + CHAT_KEEP_MS);
   room.notify("spiel", { all: true }, PUSH_TITLE.ende, res.winner ? MELDUNG.ende(d.teams[res.winner]?.name ?? "?") : MELDUNG.endeOhne);
-  void room.env.DB.prepare(
-    "INSERT INTO archive (game, run, name, startedAt, endedAt, winner, data, chat) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-  )
-    .bind(d.gid, run, archive.name, archive.startedAt ?? null, endedAt, res.winner ?? null, JSON.stringify(archive), JSON.stringify(chat))
-    .run()
+  const db = room.env.DB;
+  // Tabellen anlegen, falls dieser Server-Teil sie noch nicht kennt (neue Tabelle archive_tracks)
+  void ensureSchema(db)
+    .then(() =>
+      db.batch([
+        db
+          .prepare("INSERT INTO archive (game, run, name, startedAt, endedAt, winner, data, chat) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
+          .bind(
+            d.gid,
+            run,
+            archive.name,
+            archive.startedAt ?? null,
+            endedAt,
+            res.winner ?? null,
+            JSON.stringify(archive),
+            JSON.stringify(chat),
+          ),
+        // Spuren der Teams fürs Nachspielen – eigene Tabelle, nach 30 Tagen gelöscht (E-72)
+        db
+          .prepare("INSERT INTO archive_tracks (game, run, endedAt, tracks) VALUES (?1, ?2, ?3, ?4)")
+          .bind(d.gid, run, endedAt, JSON.stringify(spuren)),
+      ]),
+    )
     .catch((e: unknown) => console.error("Archiv", String(e)));
   return true;
 }

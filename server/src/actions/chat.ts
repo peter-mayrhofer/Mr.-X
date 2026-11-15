@@ -13,6 +13,7 @@ import {
   type PushSub,
 } from "@mrx/shared";
 import { fail, newKey, str } from "../util.ts";
+import { ensureSchema } from "../d1.ts";
 import type { Auth, GameRoom } from "../room.ts";
 import { PROTOKOLL as P } from "@mrx/shared";
 
@@ -109,14 +110,18 @@ export async function archiveList(room: GameRoom, _d: D, a: Auth): Promise<ApiRe
 
 export async function archiveGet(room: GameRoom, d: D, a: Auth): Promise<ApiResults["archiveGet"]> {
   room.who(a, ["team", "schiri", "admin", "screen"]);
-  const row = await room.env.DB.prepare("SELECT data, chat FROM archive WHERE game = ?1 AND run = ?2")
+  await ensureSchema(room.env.DB);
+  const row = await room.env.DB.prepare(
+    "SELECT a.data, a.chat, t.tracks FROM archive a LEFT JOIN archive_tracks t USING (game, run) WHERE a.game = ?1 AND a.run = ?2",
+  )
     .bind(room.d.gid, String(d.run ?? ""))
-    .first<{ data: string; chat: string | null }>();
+    .first<{ data: string; chat: string | null; tracks: string | null }>();
   if (!row) fail("notFound", "Kein Archiv-Eintrag");
   return {
     archive: {
       ...(JSON.parse(row.data) as Omit<ArchiveData, "chat">),
       chat: row.chat ? (JSON.parse(row.chat) as ArchiveData["chat"]) : {},
+      ...(row.tracks ? { tracks: JSON.parse(row.tracks) as ArchiveData["tracks"] } : {}),
     },
   };
 }

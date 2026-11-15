@@ -226,7 +226,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
    (z. B. „1:12 h als Mister X · 2× die Fahne getragen“). Jedes Team bekommt den Stempel „Mission erfüllt“. Im
    Druckdialog **Hintergrundgrafiken** einschalten (falls angeboten), damit Kopf und Stadtplan mitgedruckt werden.
 2. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
-   gemeldet und gefangen), Chat-Verlauf, **Als Datei sichern** (JSON) und **Drucken**.
+   gemeldet und gefangen, wo waren alle Teams), Chat-Verlauf, **Video** (MP4, Hoch- oder Querformat, 40 Sekunden),
+   **Als Datei sichern** (JSON) und **Drucken**. Die Wege der Teams gibt es 30 Tage lang, danach nur noch Mister X.
 3. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
    und Schiris werden abgemeldet, das Team-Passwort wird gelöscht, Chat und Standorte werden geleert. Das Archiv
    bleibt. Danach ein neues Team-Passwort festlegen (Schritt 1.4).
@@ -235,7 +236,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
 
 ![Archiv & Wiederholung](screens/hell/20-handy.jpg)
 
-**Löschfristen** (automatisch): Live-Standorte sofort bei Spielende, Chat nach 30 Tagen, Archiv nach einem Jahr.
+**Löschfristen** (automatisch): Live-Standorte sofort bei Spielende, Wege der Teams und Chat nach 30 Tagen, Archiv
+nach einem Jahr.
 
 ## 7. Hilfe bei Problemen
 

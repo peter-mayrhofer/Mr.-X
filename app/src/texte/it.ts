@@ -375,6 +375,17 @@ export default {
     chatGeloescht: "Nessuna chat (cancellata automaticamente dopo 30 giorni).",
     nichtGefunden: "Questa partita non è (più) nell'archivio.",
     teams: (n: number) => `${n} squadre`,
+    video: "Video",
+    videoTitel: "Salva video",
+    format: "Formato",
+    hochformat: "Verticale (telefono, storia)",
+    querformat: "Orizzontale (schermo, YouTube)",
+    videoHinweis: "Tutta la partita in un video di 40 secondi con tutte le squadre. A seconda del dispositivo ci vogliono 1–3 minuti.",
+    videoErstellen: "Crea video",
+    videoLaeuft: "Creazione del video",
+    videoFertig: "Il video è pronto.",
+    videoGehtNicht: "Questo dispositivo non può creare video. Prova con Chrome, Edge o Safari su computer o telefono.",
+    videoFehler: "Impossibile creare il video.",
   },
   staffLogin: {
     titel: "Arbitri e organizzazione",
@@ -970,7 +981,7 @@ export default {
     zugaenge: "Accessi per questo gioco",
   },
   datenschutz: {
-    kurz: "Salviamo solo ciò che serve al gioco: nome della squadra, chat e la vostra posizione durante il gioco. Le posizioni in tempo reale le vede solo l'organizzazione e vengono cancellate a fine gioco. Niente tracciamento, niente pubblicità.",
+    kurz: "Salviamo solo ciò che serve al gioco: nome della squadra, chat e la vostra posizione durante il gioco. Le posizioni in tempo reale le vede solo l'organizzazione; a fine gioco restano solo i percorsi delle squadre per il replay, per 30 giorni. Niente tracciamento, niente pubblicità.",
     voll: "Informativa privacy completa",
     abschnitte: [
       {
@@ -987,11 +998,11 @@ export default {
       },
       {
         titel: "Chi vede cosa?",
-        text: "Le posizioni delle squadre cacciatrici le vedono solo l'organizzazione, gli arbitri (finché l'organizzazione non lo disattiva) e lo schermo grande nella centrale – non le altre squadre né gli spettatori. La posizione segnalata di Mister X la vedono tutti i partecipanti.",
+        text: "Le posizioni delle squadre cacciatrici le vedono solo l'organizzazione, gli arbitri (finché l'organizzazione non lo disattiva) e lo schermo grande nella centrale – non le altre squadre né gli spettatori. La posizione segnalata di Mister X la vedono tutti i partecipanti. A fine gioco il replay mostra a tutti i partecipanti i percorsi di tutte le squadre (un punto ogni 20 secondi), per 30 giorni; poi vengono cancellati. Chi ne salva un video lo conserva anche dopo.",
       },
       {
         titel: "Per quanto tempo?",
-        text: "Posizioni in tempo reale fino alla fine del gioco, poi vengono cancellate subito. Chat e registro dell'organizzazione: 30 giorni dopo la fine del gioco. Risultati con le segnalazioni di Mister X e i passaggi: 1 anno. L'accesso sul vostro telefono vale 7 giorni o finché non uscite.",
+        text: "Posizioni in tempo reale fino alla fine del gioco, poi vengono cancellate subito. Percorsi delle squadre per il replay (un punto ogni 20 secondi): 30 giorni dopo la fine del gioco. Chat e registro dell'organizzazione: 30 giorni dopo la fine del gioco. Risultati con le segnalazioni di Mister X e i passaggi: 1 anno. L'accesso sul vostro telefono vale 7 giorni o finché non uscite.",
       },
       {
         titel: "Dove vengono trattati i dati?",

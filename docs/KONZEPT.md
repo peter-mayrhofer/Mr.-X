@@ -158,9 +158,11 @@ Jedes Spiel ist ein Spielraum mit diesen Teilen (gespeichert je Teil im SQLite-S
 `archive` (je beendetem Lauf: Auswertung, Meldungen, Übergaben, Verkleinerungen, Pausen, Spielfeld, Teamnamen;
 Chat getrennt, damit er nach 30 Tagen gelöscht werden kann).
 
-**Bewusst nicht gespeichert:** lückenlose Bewegungsprofile. Es gibt immer nur den **letzten** Standort pro Team; die
-Strecke wird beim Eintreffen jedes Punkts aufsummiert, ohne die Spur zu speichern. Nur Mister-X-*Meldungen* (die ohnehin
-alle gesehen haben) kommen ins Archiv. Bei Spielende werden alle Live-Standorte sofort gelöscht.
+**Sparsam gespeichert:** Live gibt es nur den **letzten** Standort pro Team; die Strecke wird beim Eintreffen jedes
+Punkts aufsummiert. Für die Wiederholung (E-72) merkt sich der Spielraum je Team höchstens einen Punkt alle 20 s
+(`spuren`, nie an die Handys); bei Spielende kommen sie in die D1-Tabelle `archive_tracks` und werden nach **30 Tagen**
+gelöscht – danach zeigt die Wiederholung nur noch Mister-X-*Meldungen*. Bei Spielende werden alle Live-Standorte sofort
+gelöscht.
 
 **Löschfristen** (im Server umgesetzt und getestet, Datenschutzhinweis in der App unter Regeln → Datenschutz):
 
@@ -170,6 +172,7 @@ alle gesehen haben) kommen ins Archiv. Bei Spielende werden alle Live-Standorte 
 | Chat, Direktnachrichten, Protokoll der Spielleitung | 30 Tage nach Spielende (bzw. sofort bei „Neue Runde“) |
 | Archiv (Auswertung, Meldungen von Mister X, Übergaben, Teamnamen) | 1 Jahr (täglicher Cron) |
 | Chat im Archiv | 30 Tage (täglicher Cron) |
+| Wege der Teams fürs Nachspielen (`archive_tracks`, ein Punkt alle 20 s) | 30 Tage (täglicher Cron) |
 | Prüfsumme der IP-Adresse nach falschem Passwort | 10 Minuten |
 | Anmeldung auf dem Gerät (Sitzungs-Token) | 7 Tage, Abmelden/„Neue Runde“/Entfernen sofort |
 | alles eines Spiels | „Löschen“ in der Verwaltung |

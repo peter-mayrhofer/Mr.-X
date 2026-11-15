@@ -33,6 +33,7 @@ export function resetRound(room: GameRoom, _d: D, a: Auth): ApiResults["resetRou
     "positions",
     "staff",
     "track",
+    "spuren",
     "audit",
     "alerts",
   ] as const)
@@ -79,6 +80,7 @@ export function removeTeam(room: GameRoom, d: D, a: Auth): ApiResults["removeTea
   room.put("positions", t, null);
   room.put("locks", t, null);
   room.put("track", t, null);
+  room.put("spuren", t, null);
   for (const [uid, m] of Object.entries(room.d.members)) if (m.teamId === t) room.removeMember(uid, "removed");
   for (const [id, dev] of Object.entries(room.d.devices)) if (dev.assign === t) room.put("devices", id, { ...dev, assign: null });
   room.audit(who, P.teamEntfernt, team.name);

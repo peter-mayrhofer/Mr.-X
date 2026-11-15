@@ -369,6 +369,17 @@ export default {
     chatGeloescht: "Sin chat (se borra automáticamente a los 30 días).",
     nichtGefunden: "Esta partida no está (o ya no está) en el archivo.",
     teams: (n: number) => `${n} equipos`,
+    video: "Vídeo",
+    videoTitel: "Guardar vídeo",
+    format: "Formato",
+    hochformat: "Vertical (móvil, historia)",
+    querformat: "Horizontal (pantalla, YouTube)",
+    videoHinweis: "Toda la partida en un vídeo de 40 segundos con todos los equipos. Según el dispositivo tarda 1–3 minutos.",
+    videoErstellen: "Crear vídeo",
+    videoLaeuft: "Creando vídeo",
+    videoFertig: "El vídeo está listo.",
+    videoGehtNicht: "Este dispositivo no puede crear vídeos. Prueba con Chrome, Edge o Safari en un ordenador o móvil.",
+    videoFehler: "No se pudo crear el vídeo.",
   },
   staffLogin: {
     titel: "Árbitros y organización",
@@ -968,7 +979,7 @@ export default {
     zugaenge: "Accesos para este juego",
   },
   datenschutz: {
-    kurz: "Solo guardamos lo que el juego necesita: nombre del equipo, chat y su ubicación durante el juego. Las ubicaciones en vivo solo las ve la organización y se borran al terminar el juego. Sin rastreo, sin publicidad.",
+    kurz: "Solo guardamos lo que el juego necesita: nombre del equipo, chat y su ubicación durante el juego. Las ubicaciones en vivo solo las ve la organización; al terminar el juego solo se guardan los recorridos de los equipos para la repetición, durante 30 días. Sin rastreo, sin publicidad.",
     voll: "Aviso de privacidad completo",
     abschnitte: [
       {
@@ -985,11 +996,11 @@ export default {
       },
       {
         titel: "¿Quién ve qué?",
-        text: "Las ubicaciones de los equipos cazadores solo las ven la organización, los árbitros (salvo que la organización lo desactive) y la pantalla grande de la central, no los demás equipos ni los espectadores. La ubicación avisada de Mister X la ven todos los que juegan.",
+        text: "Las ubicaciones de los equipos cazadores solo las ven la organización, los árbitros (salvo que la organización lo desactive) y la pantalla grande de la central, no los demás equipos ni los espectadores. La ubicación avisada de Mister X la ven todos los que juegan. Al terminar el juego, la repetición muestra a todos los que juegan los recorridos de todos los equipos (un punto cada 20 segundos), durante 30 días; después se borran. Quien guarde un vídeo lo conserva también después.",
       },
       {
         titel: "¿Durante cuánto tiempo?",
-        text: "Ubicaciones en vivo hasta el final del juego; después se borran de inmediato. Chat y registro de la organización: 30 días después del final del juego. Resultados con los avisos de Mister X y los relevos: 1 año. El inicio de sesión en su móvil vale 7 días o hasta que cierren la sesión.",
+        text: "Ubicaciones en vivo hasta el final del juego; después se borran de inmediato. Recorridos de los equipos para la repetición (un punto cada 20 segundos): 30 días después del final del juego. Chat y registro de la organización: 30 días después del final del juego. Resultados con los avisos de Mister X y los relevos: 1 año. El inicio de sesión en su móvil vale 7 días o hasta que cierren la sesión.",
       },
       {
         titel: "¿Dónde se tratan los datos?",

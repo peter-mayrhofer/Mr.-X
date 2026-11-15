@@ -1,17 +1,21 @@
 <!--
   Screen 20 (Wiederholung): ein beendeter Lauf auf der Karte, mit Zeitschieberegler. Mister-X-Meldungen (Spur seit der
-  letzten Übergabe), Fangorte und Verkleinerungen erscheinen im Zeitverlauf; darunter Auswertung und Chat-Verlauf.
+  letzten Übergabe), Fangorte, Verkleinerungen und alle Teams (30 Tage lang, E-72) erscheinen im Zeitverlauf; darunter
+  Auswertung und Chat-Verlauf. „Video“ speichert das ganze Spiel als MP4 (hoch oder quer).
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { Download, Flag, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils } from "@lucide/svelte";
-  import { replayAt, replayMarks, type ArchiveData, type Team } from "@mrx/shared";
+  import { Download, Film, Flag, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils, X } from "@lucide/svelte";
+  import { replayAt, replayMarks, replayTeams, type ArchiveData, type Team } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import AppBar from "../ui/AppBar.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import IconButton from "../ui/IconButton.svelte";
   import Button from "../ui/Button.svelte";
   import Pill from "../ui/Pill.svelte";
+  import Modal from "../ui/Modal.svelte";
+  import { toast } from "../ui/toast.svelte.ts";
+  import { herunterladen } from "../lib/native.ts";
   import { dauer, km, uhr } from "../lib/format.ts";
   import { T } from "../texte.ts";
 
@@ -47,7 +51,18 @@
   const pins = $derived<MapPin[]>([
     ...frame.catches.map((h) => {
       const t = team(h.to);
-      return { key: `h${h.id}`, lat: h.lat, lng: h.lng, props: { kind: "team" as const, short: t.short, color: t.color, name: t.name } };
+      // mit Team-Wegen ohne Namen – sonst sieht der Fangort aus wie ein Team
+      const name = data.tracks ? undefined : t.name;
+      return { key: `h${h.id}`, lat: h.lat, lng: h.lng, props: { kind: "team" as const, short: t.short, color: t.color, name } };
+    }),
+    ...replayTeams(data, pos).map((p) => {
+      const t = team(p.teamId);
+      return {
+        key: `t${p.teamId}`,
+        lat: p.lat,
+        lng: p.lng,
+        props: { kind: "team" as const, short: t.short, color: t.color, name: t.name, mrx: p.teamId === frame.mrx },
+      };
     }),
     ...(frame.trail.length
       ? [
@@ -63,15 +78,37 @@
   const chat = $derived(Object.entries(data.chat ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)));
   const R = $derived(data.results);
 
-  /** Sicherung als Datei (Backup, Vereinszeitung) – ohne Live-Standorte, die gibt es im Archiv nicht */
+  const dateiname = $derived(`${data.name.replace(/[^\wäöüÄÖÜß-]+/g, "-")}-${new Date(start).toISOString().slice(0, 10)}`);
+
+  /** Sicherung als Datei (Backup, Vereinszeitung) */
   function save() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${data.name.replace(/[^\wäöüÄÖÜß-]+/g, "-")}-${new Date(start).toISOString().slice(0, 10)}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    void herunterladen(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `${dateiname}.json`);
   }
+
+  // ---------- Video (E-72) ----------
+  let videoWahl = $state(false);
+  let format = $state<"hoch" | "quer">("hoch");
+  let fortschritt = $state<number | null>(null);
+  let abbruch: AbortController | undefined;
+
+  async function video() {
+    const { kannVideo, replayVideo } = await import("../map/video.ts");
+    if (!kannVideo()) return toast(T.archiv.videoGehtNicht, "warn");
+    abbruch = new AbortController();
+    fortschritt = 0;
+    try {
+      const blob = await replayVideo($state.snapshot(data) as ArchiveData, format, (f) => (fortschritt = f), abbruch.signal);
+      await herunterladen(blob, `${dateiname}-${format}.mp4`);
+      toast(T.archiv.videoFertig, "ok");
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      console.error("Video", e);
+      toast((e as Error).message === "unsupported" ? T.archiv.videoGehtNicht : T.archiv.videoFehler, "warn");
+    } finally {
+      fortschritt = null;
+    }
+  }
+  onDestroy(() => abbruch?.abort());
 </script>
 
 <main class="replay">
@@ -129,6 +166,15 @@
         ]}
       />
       <span class="acts">
+        {#if fortschritt === null}
+          <Button size="m" variant="secondary" icon={Film} onclick={() => (videoWahl = true)}>{T.archiv.video}</Button>
+        {:else}
+          <span class="fortschritt">
+            <progress max="1" value={fortschritt} aria-label={T.archiv.videoLaeuft}></progress>
+            <span class="num">{Math.round(fortschritt * 100)} %</span>
+            <IconButton icon={X} label={T.allgemein.abbrechen} onclick={() => abbruch?.abort()} />
+          </span>
+        {/if}
         <Button size="m" variant="secondary" icon={Download} onclick={save}>{T.archiv.sichern}</Button>
         <Button size="m" variant="secondary" icon={Printer} onclick={() => window.print()}>{T.archiv.drucken}</Button>
       </span>
@@ -156,6 +202,24 @@
     {/if}
   </div>
 </main>
+
+<Modal
+  open={videoWahl}
+  title={T.archiv.videoTitel}
+  confirm={T.archiv.videoErstellen}
+  onconfirm={() => void video()}
+  onclose={() => (videoWahl = false)}
+>
+  <Segmented
+    label={T.archiv.format}
+    bind:value={format}
+    options={[
+      { value: "hoch", label: T.archiv.hochformat },
+      { value: "quer", label: T.archiv.querformat },
+    ]}
+  />
+  <p class="muted">{T.archiv.videoHinweis}</p>
+</Modal>
 
 <style>
   .replay {
@@ -239,7 +303,18 @@
   }
   .acts {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--sp-2);
+  }
+  .fortschritt {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .fortschritt progress {
+    width: 120px;
+    accent-color: var(--accent);
   }
   .sum {
     display: flex;

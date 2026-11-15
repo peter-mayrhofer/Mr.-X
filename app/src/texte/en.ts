@@ -366,6 +366,17 @@ export default {
     chatGeloescht: "No chat (deleted automatically after 30 days).",
     nichtGefunden: "This round is not (or no longer) in the archive.",
     teams: (n: number) => `${n} teams`,
+    video: "Video",
+    videoTitel: "Save video",
+    format: "Format",
+    hochformat: "Portrait (phone, story)",
+    querformat: "Landscape (screen, YouTube)",
+    videoHinweis: "The whole game as a 40-second video with all teams. Depending on the device, this takes 1–3 minutes.",
+    videoErstellen: "Create video",
+    videoLaeuft: "Creating video",
+    videoFertig: "Video is ready.",
+    videoGehtNicht: "This device can't create videos. Please try Chrome, Edge or Safari on a computer or phone.",
+    videoFehler: "The video could not be created.",
   },
   staffLogin: {
     titel: "Referees & organisers",
@@ -957,7 +968,7 @@ export default {
     zugaenge: "Access for this game",
   },
   datenschutz: {
-    kurz: "We only store what the game needs: team name, chat and your location during the game. Only the organisers see live locations, and they are deleted after the game. No tracking, no advertising.",
+    kurz: "We only store what the game needs: team name, chat and your location during the game. Only the organisers see live locations; after the game only the teams' routes are kept for the replay, for 30 days. No tracking, no advertising.",
     voll: "Full privacy notice",
     abschnitte: [
       {
@@ -974,11 +985,11 @@ export default {
       },
       {
         titel: "Who sees what?",
-        text: "The locations of the hunter teams are only seen by the organisers, the referees (unless the organisers switch this off) and the big screen at headquarters – not by other teams or spectators. Everyone playing sees the reported location of Mister X.",
+        text: "The locations of the hunter teams are only seen by the organisers, the referees (unless the organisers switch this off) and the big screen at headquarters – not by other teams or spectators. Everyone playing sees the reported location of Mister X. After the game, the replay shows everyone playing the routes of all teams (one point every 20 seconds) – for 30 days, then they are deleted. Anyone who saves a video of it keeps it after that.",
       },
       {
         titel: "How long?",
-        text: "Live locations until the end of the game, then they are deleted immediately. Chat and the organisers' log: 30 days after the end of the game. Results with Mister X reports and handovers: 1 year. The login on your phone is valid for 7 days or until you log out.",
+        text: "Live locations until the end of the game, then they are deleted immediately. The teams' routes for the replay (one point every 20 seconds): 30 days after the end of the game. Chat and the organisers' log: 30 days after the end of the game. Results with Mister X reports and handovers: 1 year. The login on your phone is valid for 7 days or until you log out.",
       },
       {
         titel: "Where is the data processed?",

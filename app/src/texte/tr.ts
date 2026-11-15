@@ -362,6 +362,17 @@ export default {
     chatGeloescht: "Sohbet yok (30 gün sonra otomatik silinir).",
     nichtGefunden: "Bu tur arşivde yok (artık yok).",
     teams: (n: number) => `${n} takım`,
+    video: "Video",
+    videoTitel: "Videoyu kaydet",
+    format: "Biçim",
+    hochformat: "Dikey (telefon, hikâye)",
+    querformat: "Yatay (ekran, YouTube)",
+    videoHinweis: "Tüm oyun, tüm takımlarla 40 saniyelik bir video olarak. Cihaza göre 1–3 dakika sürer.",
+    videoErstellen: "Video oluştur",
+    videoLaeuft: "Video oluşturuluyor",
+    videoFertig: "Video hazır.",
+    videoGehtNicht: "Bu cihaz video oluşturamıyor. Lütfen bilgisayarda veya telefonda Chrome, Edge ya da Safari deneyin.",
+    videoFehler: "Video oluşturulamadı.",
   },
   staffLogin: {
     titel: "Hakemler ve oyun yönetimi",
@@ -952,7 +963,7 @@ export default {
     zugaenge: "Bu oyun için erişimler",
   },
   datenschutz: {
-    kurz: "Sadece oyunun ihtiyaç duyduğunu kaydediyoruz: takım adı, sohbet ve oyun sırasında konumunuz. Canlı konumları sadece oyun yönetimi görür ve oyun bitince silinir. Takip yok, reklam yok.",
+    kurz: "Sadece oyunun ihtiyaç duyduğunu kaydediyoruz: takım adı, sohbet ve oyun sırasında konumunuz. Canlı konumları sadece oyun yönetimi görür; oyun bitince sadece tekrar için takımların yolları 30 gün saklanır. Takip yok, reklam yok.",
     voll: "Gizlilik bildiriminin tamamı",
     abschnitte: [
       {
@@ -969,11 +980,11 @@ export default {
       },
       {
         titel: "Kim neyi görür?",
-        text: "Avcı takımların konumlarını sadece oyun yönetimi, hakemler (oyun yönetimi bunu kapatmadıkça) ve merkezdeki büyük ekran görür – diğer takımlar ve izleyiciler görmez. Mister X'in bildirilen konumunu tüm oyuncular görür.",
+        text: "Avcı takımların konumlarını sadece oyun yönetimi, hakemler (oyun yönetimi bunu kapatmadıkça) ve merkezdeki büyük ekran görür – diğer takımlar ve izleyiciler görmez. Mister X'in bildirilen konumunu tüm oyuncular görür. Oyun bittikten sonra tekrarda tüm oyuncular bütün takımların yollarını görür (her 20 saniyede bir nokta) – 30 gün boyunca, sonra silinir. Bundan video kaydeden, videoyu sonra da saklar.",
       },
       {
         titel: "Ne kadar süre?",
-        text: "Canlı konumlar oyunun sonuna kadar, sonra hemen silinir. Sohbet ve oyun yönetiminin kaydı: oyun bittikten 30 gün sonra. Mister X bildirimleri ve devir teslimlerle sonuçlar: 1 yıl. Telefonunuzdaki oturum 7 gün ya da çıkış yapana kadar geçerlidir.",
+        text: "Canlı konumlar oyunun sonuna kadar, sonra hemen silinir. Tekrar için takımların yolları (her 20 saniyede bir nokta): oyun bittikten 30 gün sonra. Sohbet ve oyun yönetiminin kaydı: oyun bittikten 30 gün sonra. Mister X bildirimleri ve devir teslimlerle sonuçlar: 1 yıl. Telefonunuzdaki oturum 7 gün ya da çıkış yapana kadar geçerlidir.",
       },
       {
         titel: "Veriler nerede işlenir?",
