@@ -5,7 +5,23 @@
 -->
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { Download, Film, Flag, Flame, Footprints, Pause, Play, Printer, Repeat, Timer, Trophy, Users, Utensils, X } from "@lucide/svelte";
+  import {
+    Download,
+    FileSpreadsheet,
+    Film,
+    Flag,
+    Flame,
+    Footprints,
+    Pause,
+    Play,
+    Printer,
+    Repeat,
+    Timer,
+    Trophy,
+    Users,
+    Utensils,
+    X,
+  } from "@lucide/svelte";
   import { replayAt, replayMarks, replayTeams, type ArchiveData, type Team } from "@mrx/shared";
   import GameMap, { type MapPin } from "../map/GameMap.svelte";
   import { EMPTY } from "../map/style.ts";
@@ -17,6 +33,8 @@
   import Modal from "../ui/Modal.svelte";
   import { toast } from "../ui/toast.svelte.ts";
   import { herunterladen } from "../lib/native.ts";
+  import { tabelleHerunterladen } from "../lib/tabelle.ts";
+  import { session } from "../lib/session.svelte.ts";
   import { dauer, km, uhr } from "../lib/format.ts";
   import { T } from "../texte.ts";
 
@@ -197,6 +215,9 @@
             <span class="num">{Math.round(fortschritt * 100)} %</span>
             <IconButton icon={X} label={T.allgemein.abbrechen} onclick={() => abbruch?.abort()} />
           </span>
+        {/if}
+        {#if session.role === "admin"}
+          <Button size="m" variant="secondary" icon={FileSpreadsheet} onclick={() => tabelleHerunterladen(data)}>{T.tabelle.knopf}</Button>
         {/if}
         <Button size="m" variant="secondary" icon={Download} onclick={save}>{T.archiv.sichern}</Button>
         <Button size="m" variant="secondary" icon={Printer} onclick={() => window.print()}>{T.archiv.drucken}</Button>

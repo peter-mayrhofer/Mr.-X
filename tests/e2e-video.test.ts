@@ -83,6 +83,19 @@ describe("Wiederholung mit allen Teams", { timeout: 300_000 }, () => {
     await expect.poll(() => knopf.getAttribute("aria-pressed")).toBe("true");
   });
 
+  it("Tabelle der Teams (E-76): CSV für die Spielleitung", async () => {
+    const download = p.waitForEvent("download");
+    await p.getByRole("button", { name: T.tabelle.knopf }).click();
+    const d = await download;
+    expect(d.suggestedFilename()).toMatch(/^Video-Test-\d{4}-\d\d-\d\d-teams\.csv$/);
+    const csv = readFileSync((await d.path())!, "utf8");
+    expect(csv.startsWith("\ufeff")).toBe(true); // Excel erkennt so die Umlaute
+    const zeilen = csv.slice(1).split("\r\n");
+    expect(zeilen[0]).toContain(`"${T.tabelle.strecke}"`);
+    expect(zeilen).toHaveLength(3); // Kopf + 2 Teams
+    expect(zeilen[1]).toMatch(/^"Urfahr";"";"\d*";"1";"10";"10";"0";"0";"0";"ja"$/);
+  });
+
   it("Video im Querformat: MP4 in 1920 × 1080", async () => {
     await p.getByRole("button", { name: T.archiv.video, exact: true }).click();
     await p.getByRole("tab", { name: T.archiv.querformat }).click();

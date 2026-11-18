@@ -1,6 +1,6 @@
 // Spiel-Logik als reine Funktionen (KONZEPT Abschnitt 5). Der Server rechnet damit, die App zeigt dieselben Werte.
 import { distanceM } from "./geo.ts";
-import type { Handover, Point, Position, ReportSource } from "./types.ts";
+import type { Handover, Point, Position, ReportSource, Team } from "./types.ts";
 
 const MIN = 60_000;
 /** Standort gilt als frisch, wenn jünger als 2 Min */
@@ -79,6 +79,8 @@ export interface Results {
   food?: { teamId: string; visits: number; ms: number } | null;
   handovers: number;
   totalDistM: number;
+  /** gelaufene Strecke pro Team (fehlt in Archiven vor E-76) */
+  distM?: Record<string, number>;
   /** Zeitstrahl: wer war wie lange Mister X, in Reihenfolge */
   timeline: [string, number][];
 }
@@ -129,8 +131,47 @@ export function results(o: {
     food: bestFood(o.food ?? {}),
     handovers: hs.filter((h) => h.type !== "start").length,
     totalDistM: Object.values(o.distM).reduce((s, d) => s + d, 0),
+    distM: o.distM,
     timeline,
   };
+}
+
+export interface TeamZeile {
+  teamId: string;
+  name: string;
+  size?: number | undefined;
+  /** null = unbekannt (altes Archiv) */
+  distM: number | null;
+  mrxCount: number;
+  mrxMs: number;
+  /** längste Zeit am Stück als Mister X */
+  mrxLaengsteMs: number;
+  faenge: number;
+  gefangen: number;
+  strafen: number;
+  sieger: boolean;
+}
+
+/** Tabelle pro Team für die Spielleitung (E-76): Strecke, wie oft und wie lange Mister X, Fänge … – meiste Zeit als Mister X zuerst */
+export function teamTabelle(a: { teams: Record<string, Team>; results: Results; handovers: Handover[] }): TeamZeile[] {
+  const hs = a.handovers.filter((h) => !h.undoneAt);
+  const zahl = (f: (h: Handover) => boolean) => hs.filter(f).length;
+  const R = a.results;
+  return Object.entries(a.teams)
+    .map(([id, t]) => ({
+      teamId: id,
+      name: t.name,
+      size: t.size,
+      distM: R.distM ? Math.round(R.distM[id] ?? 0) : null,
+      mrxCount: R.mrxCount[id] ?? 0,
+      mrxMs: R.mrxMs[id] ?? 0,
+      mrxLaengsteMs: Math.max(0, ...R.timeline.filter(([t2]) => t2 === id).map(([, ms]) => ms)),
+      faenge: zahl((h) => h.type === "fang" && h.to === id),
+      gefangen: zahl((h) => h.type === "fang" && h.from === id),
+      strafen: zahl((h) => h.type === "strafe" && h.to === id),
+      sieger: R.winner === id,
+    }))
+    .sort((x, y) => y.mrxMs - x.mrxMs || x.name.localeCompare(y.name, "de"));
 }
 
 /**

@@ -3,7 +3,8 @@
   Namen) → Auswertung. Spielleitung: Bereiche Live, Steuerung, Teams & Zugänge, Chat, Protokoll (Adresse #/spiel?b=…).
 -->
 <script lang="ts">
-  import type { Member, Results as ResultsT, Team } from "@mrx/shared";
+  import { tabelleHerunterladen } from "../lib/tabelle.ts";
+  import type { Member } from "@mrx/shared";
   import Referee from "../screens/Referee.svelte";
   import Lobby from "../screens/Lobby.svelte";
   import Results from "../screens/Results.svelte";
@@ -170,7 +171,7 @@
 
   const archive = remote(
     () => (phase === "beendet" && game.state?.run ? game.state.run : null),
-    async (run) => (await call({ action: "archiveGet", gameId: g, run })).archive as { results: ResultsT; teams: Record<string, Team> },
+    async (run) => (await call({ action: "archiveGet", gameId: g, run })).archive,
   );
 
   const SECTIONS: Section[] = ["live", "steuerung", "teams", "zonen", "chat", "protokoll"];
@@ -230,6 +231,7 @@
         onarchive={() => go("/archiv")}
         onscreen={() => go("/grossbild")}
         urkunden={gameName}
+        ontabelle={() => archive.value && tabelleHerunterladen(archive.value)}
       />
     {:else if section === "live"}
       <AdminLive {view} api={call} />

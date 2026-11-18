@@ -1,6 +1,19 @@
 <!-- Screen 19: Spielende & Auswertung – Feier für den Gewinner, Auszeichnungen, Statistik, Zeitstrahl. -->
 <script lang="ts">
-  import { Archive, Compass, Footprints, LogOut, MapPinCheck, Medal, Printer, Repeat, Route, Timer, Utensils } from "@lucide/svelte";
+  import {
+    Archive,
+    Compass,
+    FileSpreadsheet,
+    Footprints,
+    LogOut,
+    MapPinCheck,
+    Medal,
+    Printer,
+    Repeat,
+    Route,
+    Timer,
+    Utensils,
+  } from "@lucide/svelte";
   import { tick } from "svelte";
   import Urkunden from "./parts/Urkunden.svelte";
   import { druckeUrkunden } from "../lib/druck.svelte.ts";
@@ -30,8 +43,10 @@
     gather?: { name: string; arrived: boolean; onarrived: () => void; oncompass: () => void };
     /** Spielleitung: Urkunden (ein Blatt pro Team, mit Sieger) drucken – Spielname fürs Blatt */
     urkunden?: string;
+    /** Spielleitung: Tabelle pro Team herunterladen (E-76) */
+    ontabelle?: () => void;
   }
-  let { results: R, teams, onarchive, onscreen, done, onleave, trial = false, gather, urkunden }: Props = $props();
+  let { results: R, teams, onarchive, onscreen, done, onleave, trial = false, gather, urkunden, ontabelle }: Props = $props();
   let drucke = $state(false);
 
   const team = (id: string | null | undefined): Team => (id && teams[id]) || { name: "–", short: "?", color: "#888" };
@@ -123,6 +138,7 @@
           )}>{T.urkunde.knopf}</Button
       >
     {/if}
+    {#if ontabelle}<Button variant="secondary" icon={FileSpreadsheet} onclick={ontabelle}>{T.tabelle.knopf}</Button>{/if}
     {#if done}<Button size="xl" variant={onarchive ? "secondary" : "primary"} onclick={done.onclick}>{done.label}</Button>{/if}
     {#if onleave}<Button variant="ghost" icon={LogOut} onclick={onleave}>{T.warten.abmelden}</Button>{/if}
   </div>

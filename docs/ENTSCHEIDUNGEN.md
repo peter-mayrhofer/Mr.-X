@@ -805,3 +805,13 @@ hilft, aber das Spiel nicht entscheidet. Die Unterschrift kommt ohne gespeichert
 greifen sie nur, wenn kein anderer Druck (Urkunden, Posten) läuft.
 **Getestet:** `tests/posten.test.ts` (alle Fälle am Server), `tests/e2e-posten.test.ts` (Editor, Druckblätter,
 Scan-Knopf, Hinweis), `shared/test/qr.test.ts`.
+
+### E-76 Tabelle der Teams für die Spielleitung
+**Entscheidung:** In der Auswertung nach dem Spiel und in der Wiederholung im Archiv gibt es für die Spielleitung den
+Knopf **Tabelle der Teams (Excel)**: eine CSV-Datei (Strichpunkt, UTF-8 mit BOM – öffnet sich direkt in Excel) mit
+einer Zeile pro Team: Personen, gelaufene Strecke (m), wie oft und wie lange Mister X (Min), längste Zeit am Stück,
+Fänge, gefangen worden, Strafübergaben, Sieger. Ganze Zahlen, damit Komma/Punkt egal ist. Die Strecke pro Team steht
+dafür jetzt in der Auswertung (`results.distM`); bei älteren Spielen bleibt die Spalte leer.
+**Warum so:** Wunsch des Organisators. Teams sehen den Knopf nicht; die Werte selbst sind keine Geheimnisse (die
+Auswertung sehen alle).
+**Getestet:** `shared/test/spiel.test.ts` (`teamTabelle`), `tests/spiel.test.ts`, `tests/e2e-video.test.ts` (Download).
