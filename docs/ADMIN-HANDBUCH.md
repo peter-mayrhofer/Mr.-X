@@ -234,7 +234,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
    Druckdialog **Hintergrundgrafiken** einschalten (falls angeboten), damit Kopf und Stadtplan mitgedruckt werden.
 2. **Archiv** (Menü): jeder Lauf mit Sieger. **Wiederholung** mit Zeitschieberegler (wer war wann Mister X, wo wurde
    gemeldet und gefangen, wo waren alle Teams), **Wärmekarte** (Knopf oben rechts: wo am meisten gelaufen wurde),
-   Chat-Verlauf, **Video** (MP4, Hoch- oder Querformat, 40 Sekunden),
+   Chat-Verlauf, **Video** (MP4, Hoch- oder Querformat, 40 Sekunden), **Tabelle der Teams (Excel)** (Strecke, wie oft und
+   wie lange Mister X, Fänge … pro Team – auch gleich in der Auswertung),
    **Als Datei sichern** (JSON) und **Drucken**. Die Wege der Teams gibt es 30 Tage lang, danach nur noch Mister X.
 3. Für ein neues Spiel mit denselben Einstellungen: **Teams & Zugänge → Zugänge → Neue Runde vorbereiten**. Alle Teams
    und Schiris werden abgemeldet, das Team-Passwort wird gelöscht, Chat und Standorte werden geleert. Das Archiv

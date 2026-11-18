@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { activeMs, bestPosition, randomEnd, results, stepCheck, teamsToLock, type Handover, type Position } from "../src/index.ts";
+import {
+  activeMs,
+  bestPosition,
+  randomEnd,
+  results,
+  stepCheck,
+  teamTabelle,
+  teamsToLock,
+  type Handover,
+  type Position,
+} from "../src/index.ts";
 
 const MIN = 60_000;
 const now = 1_800_000_000_000;
@@ -84,6 +94,39 @@ describe("Auswertung (Abschnitt 7.10)", () => {
     expect(r.totalDistM).toBe(12_100);
   });
   it("Zeitstrahl in Reihenfolge", () => expect(r.timeline.map(([t]) => t)).toEqual(["A", "B", "A", "B"]));
+  it("Tabelle pro Team (E-76): Strecke, wie oft/lange Mister X, Fänge", () => {
+    const hs = [
+      h("A", 0, "start"),
+      h("B", 30, "fang", { from: "A" }),
+      h("C", 40, "fang", { from: "B", undoneAt: 41 * MIN }),
+      h("A", 90, "fang", { from: "B" }),
+      h("B", 150, "strafe", { from: "A" }),
+    ];
+    const teams = {
+      A: { name: "Urfahr", short: "UR", color: "#f00", size: 5 },
+      B: { name: "Traun", short: "TR", color: "#0f0" },
+      C: { name: "Enns", short: "EN", color: "#00f" },
+    };
+    const rows = teamTabelle({ teams, results: r, handovers: hs });
+    expect(rows.map((x) => x.name)).toEqual(["Traun", "Urfahr", "Enns"]);
+    expect(rows[0]).toEqual({
+      teamId: "B",
+      name: "Traun",
+      size: undefined,
+      distM: 7000,
+      mrxCount: 2,
+      mrxMs: 90 * MIN,
+      mrxLaengsteMs: 60 * MIN,
+      faenge: 1,
+      gefangen: 1,
+      strafen: 1,
+      sieger: true,
+    });
+    expect(rows[1]).toMatchObject({ size: 5, distM: 5000, mrxCount: 2, faenge: 1, gefangen: 1, strafen: 0, sieger: false });
+    expect(rows[2]).toMatchObject({ distM: 100, mrxCount: 0, mrxMs: 0, mrxLaengsteMs: 0, faenge: 0 });
+    // Archiv von vor E-76: Strecke unbekannt
+    expect(teamTabelle({ teams, results: { ...r, distM: undefined }, handovers: hs })[0]!.distM).toBeNull();
+  });
   it("leeres Spiel", () => expect(results({ handovers: [], startedAt: 0, endedAt: 1, pauses: [], distM: {} }).winner).toBeNull());
   it("Futter-Profi: meiste Besuche, bei Gleichstand längere Zeit; ohne Besuch kein Preis", () => {
     const base = { handovers: [], startedAt: 0, endedAt: 1, pauses: [], distM: {} };
