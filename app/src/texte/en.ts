@@ -932,6 +932,9 @@ export default {
     nichtKopiert: "Copying not possible – please select the link",
     grossbildHinweis: "The link contains a key – only open it on the laptop at headquarters.",
     grossbildZeigen: "Show link",
+    android: "Android app",
+    androidHinweis:
+      "Scan with the phone camera – downloads the Android app directly. There is no app for iPhone: just use the QR code for teams there.",
   },
   verwaltung: {
     anmelden: "Log in",

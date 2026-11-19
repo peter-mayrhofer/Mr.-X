@@ -71,6 +71,16 @@ describe("Spieltag-Checkliste", { timeout: 60_000 }, () => {
     hb.close();
   });
 
+  it("Zugänge: QR-Code zum Download der Android-App (E-77)", async () => {
+    await p.getByRole("link", { name: T.admin.nav.teams }).click();
+    await p.getByRole("tab", { name: T.admin.zugaenge }).click();
+    const karte = p.locator("section.card", { has: p.getByRole("heading", { name: T.zugang.android }) });
+    await karte.waitFor();
+    expect(await karte.locator("code").innerText()).toBe(`http://127.0.0.1:${PORT}/mister-x.apk`);
+    expect(await karte.locator("svg").count()).toBeGreaterThan(0);
+    await p.getByRole("link", { name: T.admin.nav.steuerung }).click();
+  });
+
   it("von Hand abgehakt bleibt nach dem Neuladen", async () => {
     await p.getByRole("checkbox", { name: C.manuell[0] }).check();
     await p.reload();

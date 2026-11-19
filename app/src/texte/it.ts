@@ -943,6 +943,9 @@ export default {
     nichtKopiert: "Impossibile copiare – seleziona il link",
     grossbildHinweis: "Il link contiene una chiave – aprilo solo sul portatile della centrale.",
     grossbildZeigen: "Mostra link",
+    android: "App Android",
+    androidHinweis:
+      "Scansionate con la fotocamera del telefono: scarica subito l'app Android. Per iPhone non c'è un'app: lì basta usare il codice QR per le squadre.",
   },
   verwaltung: {
     anmelden: "Accedi",
