@@ -86,6 +86,8 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
    beim Drucken danach und prüft, ob es stimmt. Gespeichert wird es dafür nirgends – nur auf dem Papier.
    Das Blatt für die Spielleitung ist **vertraulich** (nicht aushängen, nach dem Spiel vernichten).
 5. **Großbild-Link** nur auf dem Laptop für den Beamer öffnen (der Link enthält einen Schlüssel).
+   **Android-App:** QR-Code zum direkten Herunterladen der App – am Treffpunkt herzeigen, Android-Teams scannen ihn mit
+   der Handy-Kamera. Fürs iPhone gibt es keine App, dort reicht der QR-Code für Teams.
 6. **Urkunden drucken:** ein A4-Blatt pro Team – Teamname, Glückwunsch zur Teilnahme, Spielname, Datum und eine
    Linie für die Unterschrift der Spielleitung. Geht schon vor dem Spiel; nach dem Spiel lieber aus der Auswertung
    drucken (Schritt 6), dann steht auch der Sieger drauf.

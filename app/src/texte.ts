@@ -1046,6 +1046,9 @@ export const T = {
     nichtKopiert: "Kopieren nicht möglich – Link bitte markieren",
     grossbildHinweis: "Der Link enthält einen Schlüssel – nur auf dem Laptop in der Zentrale öffnen.",
     grossbildZeigen: "Link anzeigen",
+    android: "Android-App",
+    androidHinweis:
+      "Mit der Handy-Kamera scannen – lädt die Android-App direkt herunter. Fürs iPhone gibt es keine App: dort einfach den QR-Code für Teams verwenden.",
     /** A4-Flyer zum Drucken (QR-Code für Teams → Drucken) */
   },
 

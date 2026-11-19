@@ -815,3 +815,11 @@ dafür jetzt in der Auswertung (`results.distM`); bei älteren Spielen bleibt di
 **Warum so:** Wunsch des Organisators. Teams sehen den Knopf nicht; die Werte selbst sind keine Geheimnisse (die
 Auswertung sehen alle).
 **Getestet:** `shared/test/spiel.test.ts` (`teamTabelle`), `tests/spiel.test.ts`, `tests/e2e-video.test.ts` (Download).
+
+### E-77 QR-Code für die Android-App unter Zugänge
+**Entscheidung:** Unter **Teams & Zugänge → Zugänge** zeigt eine Karte **Android-App** einen QR-Code auf die APK
+(`<Adresse>/mister-x.apk`, dieselbe Datei wie der Download-Knopf der Startseite), dazu den Link zum Kopieren. Die
+Adresse ist immer die öffentliche, auch wenn die Spielleitung selbst in der App arbeitet.
+**Warum so:** Wunsch des Organisators – am Treffpunkt kann die Spielleitung den Code herzeigen, Android-Teams laden die
+App ohne Umweg über die Startseite.
+**Getestet:** `tests/e2e-checkliste.test.ts`.

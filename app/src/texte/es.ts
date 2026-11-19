@@ -937,6 +937,9 @@ export default {
     nichtKopiert: "No se puede copiar: selecciona el enlace",
     grossbildHinweis: "El enlace contiene una clave: ábrelo solo en el portátil de la central.",
     grossbildZeigen: "Mostrar enlace",
+    android: "App de Android",
+    androidHinweis:
+      "Escanear con la cámara del móvil: descarga directamente la app de Android. Para iPhone no hay app: allí basta con el código QR para equipos.",
   },
   verwaltung: {
     anmelden: "Iniciar sesión",

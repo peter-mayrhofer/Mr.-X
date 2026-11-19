@@ -8,7 +8,19 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { renderSVG } from "uqr";
-  import { Award, CircleCheck, Copy, KeyRound, Monitor, Printer, RefreshCw, ShieldCheck, Trash, TriangleAlert } from "@lucide/svelte";
+  import {
+    Award,
+    CircleCheck,
+    Copy,
+    KeyRound,
+    Monitor,
+    Printer,
+    RefreshCw,
+    ShieldCheck,
+    Smartphone,
+    Trash,
+    TriangleAlert,
+  } from "@lucide/svelte";
   import { LIMITS, type SecretKind, type Team } from "@mrx/shared";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
@@ -73,6 +85,8 @@
     admin: `${base}#/staff/admin?g=${code}`,
   });
   const known = $derived(druck.pw[code] ?? {});
+  // Android-App direkt laden (E-77): die APK liegt neben der Web-App am Server
+  const apkUrl = $derived(`${base}mister-x.apk`);
   const qr = (s: string) => renderSVG(s, { border: 2, whiteColor: "#fff", blackColor: "#000" });
 
   async function save(kind: SecretKind, value: string | null) {
@@ -171,6 +185,20 @@
     </ul>
     <div class="row">
       <Button size="m" variant="ghost" icon={Copy} onclick={() => copy(urls.team)}>{T.zugang.kopieren}</Button>
+    </div>
+  </Card>
+
+  <Card label={T.zugang.android} icon={Smartphone}>
+    <div class="qr">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
+      <div class="code">{@html qr(apkUrl)}</div>
+      <div class="qrtext">
+        <p class="muted small">{T.zugang.androidHinweis}</p>
+        <code>{apkUrl}</code>
+        <div class="row">
+          <Button size="m" variant="secondary" icon={Copy} onclick={() => copy(apkUrl)}>{T.zugang.kopieren}</Button>
+        </div>
+      </div>
     </div>
   </Card>
 

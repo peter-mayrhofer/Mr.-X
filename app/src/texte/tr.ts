@@ -923,6 +923,9 @@ export default {
     nichtKopiert: "Kopyalanamadı – lütfen bağlantıyı seç",
     grossbildHinweis: "Bağlantı bir anahtar içerir – sadece merkezdeki dizüstünde aç.",
     grossbildZeigen: "Bağlantıyı göster",
+    android: "Android uygulaması",
+    androidHinweis:
+      "Telefon kamerasıyla tarayın – Android uygulamasını doğrudan indirir. iPhone için uygulama yok: orada takımlar için olan QR kodunu kullanın.",
   },
   verwaltung: {
     anmelden: "Giriş yap",
