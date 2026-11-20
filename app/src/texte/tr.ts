@@ -405,6 +405,9 @@ export default {
     spielCode: "Oyun kodu",
     notfall: "Oyun yönetiminin acil durum telefonu",
     scannen: "Telefon kamerasıyla ya da uygulamada „QR kodu tara“ ile",
+    android: "Android uygulaması",
+    androidText:
+      "Telefon kamerasıyla tarayıp yükleyin – böylece ekran kilitliyken de konumunuz ulaşır. iPhone: yukarıdaki büyük QR kodunu kullanın.",
     adresse: "Adres",
     schritte: {
       team: [
@@ -546,6 +549,18 @@ export default {
     strafen: "Alınan ceza devirleri",
     sieger: "Kazanan",
     ja: "evet",
+  },
+  uebung: {
+    titel: "Bilgisayar takımlarıyla alıştırma oyunu",
+    hinweis:
+      "Sadece deneme oyununda: bilgisayar takımları haritada kendi kendine yürür – avcılar son bildirime doğru, Mister X avcılardan uzağa. Böylece devir teslimleri, kapatmaları ve bonus noktalarını gerçek kişiler olmadan deneyebilirsiniz. Bu sayfa açık olduğu sürece yürürler.",
+    anzahl: "Bilgisayar takımları",
+    anlegen: "Bilgisayar takımları oluştur",
+    angelegt: (n) => (n ? `${n} bilgisayar takımı oluşturuldu` : "Zaten yeterince bilgisayar takımı var"),
+    vorhanden: (namen) => `Oyunda: ${namen}`,
+    loslaufen: "Yürümeye başlat",
+    anhalten: "Durdur",
+    laeuft: "Bilgisayar takımları yürüyor – her 5 saniyede bir adım.",
   },
   checkliste: {
     titel: "Oyun günü kontrol listesi",
@@ -1046,7 +1061,7 @@ export default {
       },
       {
         titel: "Hangi veriler?",
-        text: "Takım adınız, hakemler ve oyun yönetimi için ise ön ad; oyun sırasında telefonun konumu (konum, doğruluk, yön, pil seviyesi); sohbet mesajları; hangi bildirimleri istediğiniz. E-posta adresi yok, telefon numarası yok, hesap yok. Yanlış bir şifreden sonra, şifre tahminine karşı korumak için IP adresinin bir sağlama toplamı en fazla 10 dakika saklanır.",
+        text: "Takım adınız, hakemler ve oyun yönetimi için ise ön ad; oyun sırasında telefonun konumu (konum, doğruluk, yön, pil seviyesi); sohbet mesajları; hangi bildirimleri istediğiniz. E-posta adresi yok, telefon numarası yok, hesap yok. Yanlış bir şifreden sonra, şifre tahminine karşı korumak için IP adresinin bir sağlama toplamı en fazla 10 dakika saklanır. Uygulamada bir şey ters giderse, teknik bir hata mesajı (cihaz türü ve uygulama sürümüyle) oyun yönetiminin kaydına gider.",
       },
       {
         titel: "Ne için?",

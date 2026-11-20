@@ -112,6 +112,8 @@ export default {
     notfallErledigt: "Acil durum çözüldü",
     sammelrufStart: "Toplanma çağrısı başladı",
     postenEingeloest: "Bonus noktası kullanıldı",
+    uebungTeams: "Bilgisayar takımları oluşturuldu",
+    appFehler: "Uygulamada hata",
     sammelrufEnde: "Toplanma çağrısı bitti",
     vorlageGespeichert: "Şablon kaydedildi",
     vorlageGeladen: "Şablon yüklendi",

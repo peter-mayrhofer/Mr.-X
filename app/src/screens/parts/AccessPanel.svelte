@@ -263,6 +263,7 @@
   url={urls[printing ?? "team"]}
   secret={known[KIND[printing ?? "team"]] ?? ""}
   tel={druck.tel.trim()}
+  {apkUrl}
 />
 
 <Modal

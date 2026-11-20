@@ -90,6 +90,9 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 | `resetRound`, `removeMember`, `removeTeam`, `renameTeam` | Spielleitung | `uid` / `teamId` / `name` | `{}` |
 | `setField` | Spielleitung | `field` (Spielfeld + Sperrbereiche, Essens-Orte, Treffpunkt, Bonus-Posten) | `{}` |
 | `postenCodes` | Spielleitung | – | `{ codes: { [postenId]: "id.unterschrift" } }` – Inhalt der QR-Codes `#/posten/{spiel}/{code}` (E-75) |
+| `uebungTeams` | Spielleitung (nur Probelauf, vor dem Start) | `anzahl` (1–8) | `{ neu }` – Computer-Teams „Übung n“ (E-78) |
+| `uebungZug` | Spielleitung (nur Probelauf) | `pos` (`{ [teamId]: { lat, lng } }`, nur Computer-Teams) | `{}` |
+| `appFehler` | jedes Mitglied | `text` (≤ 300 Zeichen) | `{}` – Protokoll-Eintrag „Fehler in der App“, höchstens 5 in 10 Min pro Gerät (E-79) |
 | `posten` | Team | `code` | `{ status, name, m?, richtung? }` – `hinweis` (Entfernung zu Mister X auf 50 m, 0 = unter 100 m; Richtung 0–7 ab Norden), `schon`, `weit`, `keinStandort`, `mrx`, `keinMrx` |
 | `chat` | Team, Schiri, Spielleitung | `text`, `dm?` (Team-Id = Direktkanal) | `{ id }` |
 | `deleteChat` | Spielleitung | `id`, `dm?` | `{}` |

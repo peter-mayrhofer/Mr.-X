@@ -17,8 +17,10 @@
     /** Passwort bzw. Code; leer = Linie zum Handschreiben */
     secret: string;
     tel: string;
+    /** Team-Blatt: kleiner QR-Code zum Download der Android-App (E-77) */
+    apkUrl?: string;
   }
-  let { role, gameName, code, url, secret, tel }: Props = $props();
+  let { role, gameName, code, url, secret, tel, apkUrl }: Props = $props();
   const D = T.druck;
   const qr = $derived(renderSVG(url, { border: 1, whiteColor: "#fff", blackColor: "#000" }));
   const address = $derived(url.split("#")[0]);
@@ -66,6 +68,14 @@
       </li>
     {/each}
   </ol>
+
+  {#if role === "team" && apkUrl}
+    <div class="apk">
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- SVG aus eigenem Link (uqr) -->
+      <div class="apkqr">{@html renderSVG(apkUrl, { border: 1, whiteColor: "#fff", blackColor: "#000" })}</div>
+      <p><b>{D.android}</b> {D.androidText}</p>
+    </div>
+  {/if}
 
   <footer class="foot">
     <p>{D.fuss[role]}</p>
@@ -247,6 +257,35 @@
       font-size: 13pt;
       text-transform: uppercase;
       letter-spacing: 0.03em;
+    }
+    .apk {
+      display: flex;
+      gap: 4mm;
+      align-items: center;
+      padding: 3mm 4mm;
+      border-radius: 4mm;
+      background: #f1f4f7;
+    }
+    .apkqr {
+      flex: none;
+      width: 24mm;
+      height: 24mm;
+    }
+    .apkqr :global(svg) {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .apk p {
+      margin: 0;
+    }
+    .apk b {
+      font-family: var(--font-display);
+      font-size: 13pt;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--c);
+      margin-right: 2mm;
     }
     .foot {
       margin-top: auto;

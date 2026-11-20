@@ -255,6 +255,9 @@ export const T = {
     spielCode: "Spiel-Code",
     notfall: "Notfall-Telefon Spielleitung",
     scannen: "Mit der Handy-Kamera oder in der App „QR-Code scannen“",
+    android: "Android-App",
+    androidText:
+      "Mit der Handy-Kamera scannen und installieren – dann kommt euer Standort auch bei gesperrtem Bildschirm an. iPhone: einfach den großen QR-Code oben verwenden.",
     adresse: "Adresse",
     schritte: {
       team: [
@@ -541,6 +544,18 @@ export const T = {
     strafen: "Strafübergaben bekommen",
     sieger: "Sieger",
     ja: "ja",
+  },
+  uebung: {
+    titel: "Übungsspiel mit Computer-Teams",
+    hinweis:
+      "Nur im Probelauf: Computer-Teams laufen von selbst über die Karte – die Jäger zur letzten Meldung, Mister X weg von den Jägern. So könnt ihr Übergaben, Sperren und Bonus-Posten ohne echte Leute üben. Sie laufen, solange diese Seite offen ist.",
+    anzahl: "Computer-Teams",
+    anlegen: "Computer-Teams anlegen",
+    angelegt: (n: number) => (n ? `${n} Computer-Teams angelegt` : "Es gibt schon genug Computer-Teams"),
+    vorhanden: (namen: string) => `Dabei: ${namen}`,
+    loslaufen: "Loslaufen lassen",
+    anhalten: "Anhalten",
+    laeuft: "Die Computer-Teams laufen – alle 5 Sekunden ein Schritt.",
   },
   checkliste: {
     titel: "Spieltag-Checkliste",
@@ -1111,7 +1126,7 @@ export const T = {
       },
       {
         titel: "Welche Daten?",
-        text: "Euer Teamname bzw. bei Schiris und Spielleitung der Vorname; während des Spiels der Standort des Handys (Position, Genauigkeit, Richtung, Akkustand); Chat-Nachrichten; welche Benachrichtigungen ihr wollt. Keine E-Mail-Adresse, keine Telefonnummer, kein Konto. Nach einem falschen Passwort wird zum Schutz vor Passwort-Raten eine Prüfsumme der IP-Adresse höchstens 10 Minuten lang gespeichert.",
+        text: "Euer Teamname bzw. bei Schiris und Spielleitung der Vorname; während des Spiels der Standort des Handys (Position, Genauigkeit, Richtung, Akkustand); Chat-Nachrichten; welche Benachrichtigungen ihr wollt. Keine E-Mail-Adresse, keine Telefonnummer, kein Konto. Nach einem falschen Passwort wird zum Schutz vor Passwort-Raten eine Prüfsumme der IP-Adresse höchstens 10 Minuten lang gespeichert. Läuft in der App etwas schief, geht eine technische Fehlermeldung (mit Gerätetyp und App-Version) ins Protokoll der Spielleitung.",
       },
       {
         titel: "Wofür?",
