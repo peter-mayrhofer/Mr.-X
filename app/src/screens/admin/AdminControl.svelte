@@ -25,6 +25,7 @@
   import GameMap from "../../map/GameMap.svelte";
   import StartCountdown from "../parts/StartCountdown.svelte";
   import Checkliste from "./Checkliste.svelte";
+  import Uebung from "./Uebung.svelte";
   import Card from "../../ui/Card.svelte";
   import Button from "../../ui/Button.svelte";
   import Stepper from "../../ui/Stepper.svelte";
@@ -267,6 +268,8 @@
       {/if}
     </Card>
   {/if}
+
+  {#if view.config.trial && (before || running)}<Uebung {view} {api} />{/if}
 
   {#if running || ended}
     <Card label={T.admin.sammelruf} icon={MapPinCheck} tone={gather ? "accent" : undefined}>

@@ -112,6 +112,8 @@ export default {
     notfallErledigt: "Emergenza risolta",
     sammelrufStart: "Chiamata di raduno avviata",
     postenEingeloest: "Postazione bonus riscattata",
+    uebungTeams: "Squadre computer create",
+    appFehler: "Errore nell'app",
     sammelrufEnde: "Chiamata di raduno terminata",
     vorlageGespeichert: "Modello salvato",
     vorlageGeladen: "Modello caricato",

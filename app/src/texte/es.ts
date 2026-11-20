@@ -413,6 +413,9 @@ export default {
     spielCode: "Código del juego",
     notfall: "Teléfono de emergencia de la organización",
     scannen: "Con la cámara del móvil o en la app con «Escanear código QR»",
+    android: "App de Android",
+    androidText:
+      "Escanear con la cámara del móvil e instalar: así vuestra ubicación llega también con la pantalla bloqueada. iPhone: usad el código QR grande de arriba.",
     adresse: "Dirección",
     schritte: {
       team: [
@@ -555,6 +558,18 @@ export default {
     strafen: "Entregas de castigo recibidas",
     sieger: "Ganador",
     ja: "sí",
+  },
+  uebung: {
+    titel: "Partida de práctica con equipos de ordenador",
+    hinweis:
+      "Solo en la partida de prueba: los equipos de ordenador recorren el mapa solos; los cazadores hacia el último aviso, Mister X lejos de los cazadores. Así podéis practicar entregas, cierres y puestos de bonificación sin gente real. Se mueven mientras esta página esté abierta.",
+    anzahl: "Equipos de ordenador",
+    anlegen: "Crear equipos de ordenador",
+    angelegt: (n) => (n ? `${n} equipos de ordenador creados` : "Ya hay suficientes equipos de ordenador"),
+    vorhanden: (namen) => `Participan: ${namen}`,
+    loslaufen: "Ponerlos en marcha",
+    anhalten: "Detener",
+    laeuft: "Los equipos de ordenador se mueven: un paso cada 5 segundos.",
   },
   checkliste: {
     titel: "Lista del día de juego",
@@ -1062,7 +1077,7 @@ export default {
       },
       {
         titel: "¿Qué datos?",
-        text: "El nombre de su equipo o, en el caso de árbitros y organización, el nombre de pila; durante el juego, la ubicación del móvil (posición, precisión, dirección, nivel de batería); los mensajes del chat; qué notificaciones quieren. Sin correo electrónico, sin número de teléfono, sin cuenta. Tras una contraseña incorrecta se guarda como máximo 10 minutos una suma de comprobación de la dirección IP para proteger contra la adivinación de contraseñas.",
+        text: "El nombre de su equipo o, en el caso de árbitros y organización, el nombre de pila; durante el juego, la ubicación del móvil (posición, precisión, dirección, nivel de batería); los mensajes del chat; qué notificaciones quieren. Sin correo electrónico, sin número de teléfono, sin cuenta. Tras una contraseña incorrecta se guarda como máximo 10 minutos una suma de comprobación de la dirección IP para proteger contra la adivinación de contraseñas. Si algo falla en la app, se envía un mensaje de error técnico (con tipo de dispositivo y versión de la app) al registro de la organización.",
       },
       {
         titel: "¿Para qué?",

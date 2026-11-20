@@ -93,8 +93,9 @@ Der Test fand vier Fehler, die nur auf Android auftreten – alle behoben ([E-47
 
 **Braucht das echte Cloudflare-Konto:**
 
-5. **Veröffentlicht ist noch nichts** – das macht der Organisator mit [`BETRIEB.md`](BETRIEB.md) (ca. 30 Minuten).
-   Der Lasttest lief in der lokalen Cloudflare-Laufzeit; die echten Zahlen zeigt danach das Dashboard.
+5. **Veröffentlicht und im Einsatz** (https://mister-x.mr-x-ooe.workers.dev): jeder Merge auf den Standard-Branch geht
+   automatisch live (Workflow „Deploy“, Web-App und Android-App). Der Lasttest lief in der lokalen Cloudflare-Laufzeit;
+   die echten Zahlen zeigt das Dashboard.
 6. **CPU-Limit:** Die Cloudflare-Doku nennt für den Gratis-Tarif 10 ms (Workers) bzw. 30 s (Durable Objects). Die
    Passwort-Prüfung (≈ 12 ms) läuft deshalb im Spielraum; falls nötig, lässt sich die Rundenzahl halbieren
    ([`CLOUDFLARE-LIMITS.md`](CLOUDFLARE-LIMITS.md) Abschnitt 2).

@@ -8,5 +8,8 @@ import "./ui/base.css";
 import "./lib/theme.svelte.ts";
 import { mount } from "svelte";
 import App from "./App.svelte";
+import { fehlerMeldenEinschalten } from "./lib/fehler.ts";
+
+fehlerMeldenEinschalten();
 
 mount(App, { target: document.getElementById("app")! });

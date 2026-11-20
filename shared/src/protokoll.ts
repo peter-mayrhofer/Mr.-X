@@ -50,6 +50,8 @@ export const P = {
   notfallErledigt: "Notfall erledigt",
   sammelrufStart: "Sammelruf gestartet",
   postenEingeloest: "Bonus-Posten eingelöst",
+  uebungTeams: "Computer-Teams angelegt",
+  appFehler: "Fehler in der App",
   sammelrufEnde: "Sammelruf beendet",
   vorlageGespeichert: "Vorlage gespeichert",
   vorlageGeladen: "Vorlage geladen",

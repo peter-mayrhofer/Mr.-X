@@ -113,6 +113,8 @@ export default {
     notfallErledigt: "Emergencia resuelta",
     sammelrufStart: "Llamada de reunión iniciada",
     postenEingeloest: "Puesto de bonificación canjeado",
+    uebungTeams: "Equipos de ordenador creados",
+    appFehler: "Error en la app",
     sammelrufEnde: "Llamada de reunión terminada",
     vorlageGespeichert: "Plantilla guardada",
     vorlageGeladen: "Plantilla cargada",

@@ -821,5 +821,27 @@ Auswertung sehen alle).
 (`<Adresse>/mister-x.apk`, dieselbe Datei wie der Download-Knopf der Startseite), dazu den Link zum Kopieren. Die
 Adresse ist immer die öffentliche, auch wenn die Spielleitung selbst in der App arbeitet.
 **Warum so:** Wunsch des Organisators – am Treffpunkt kann die Spielleitung den Code herzeigen, Android-Teams laden die
-App ohne Umweg über die Startseite.
-**Getestet:** `tests/e2e-checkliste.test.ts`.
+App ohne Umweg über die Startseite. Später ergänzt: ein kleiner QR-Code dafür steht auch unten auf dem
+Team-Flyer (Druckblatt für Teams).
+**Getestet:** `tests/e2e-checkliste.test.ts`, `tests/e2e-uebung.test.ts` (Flyer).
+
+### E-78 Übungsspiel mit Computer-Teams
+**Entscheidung:** Im **Probelauf** kann die Spielleitung in der Steuerung 1–8 Computer-Teams („Übung 1“ …) anlegen
+und loslaufen lassen. Es sind normale Teams mit einem Mitglied ohne Gerät (`Team.uebung`). Die Schritte rechnet der
+Browser der Spielleitung (`shared/uebung.ts`: Jäger zur letzten Meldung, Mister X weg vom nächsten Jäger unter 400 m,
+sonst bummeln; wer das erlaubte Spielfeld verlassen würde, dreht zur Mitte; Wartezeiten werden eingehalten) und
+schickt alle 5 s **eine** Anfrage mit allen Standorten (`uebungZug`). Der Server nimmt sie wie Handy-Standorte an
+(gleiche Prüfungen), nur für Computer-Teams und nur im Probelauf.
+**Warum so:** Wunsch des Organisators – Spielleitung und Schiris können Übergaben, Sperren und Bonus-Posten ohne echte
+Leute üben. Ohne Zeitgeber am Server (keine Kosten, wenn niemand übt); Probeläufe kommen nicht ins Archiv.
+**Verworfen:** Computer-Teams, die sich selbst fangen – Übergaben trägt die Spielleitung ein, das ist ja die Übung.
+**Getestet:** `shared/test/uebung.test.ts`, `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts`.
+
+### E-79 Fehler der App im Protokoll
+**Entscheidung:** Unbehandelte Fehler in der App (`error`, `unhandledrejection`) meldet ein angemeldetes Gerät an den
+Server (`appFehler`): Fehlermeldung, Datei:Zeile, Bereich der App (z. B. `#/spiel`, ohne Codes aus der Adresse), App-
+oder Browser-Art, System und App-Stand. Der Server schreibt sie als „Fehler in der App“ ins Protokoll. Begrenzung:
+höchstens 3 pro Seitenaufruf, am Server 5 in 10 Minuten pro Gerät und dieselbe Meldung nur einmal. Ohne Netz und
+harmlose Browser-Meldungen werden nicht gemeldet. Im Datenschutzhinweis erwähnt (Frist wie das Protokoll: 30 Tage).
+**Warum so:** Wunsch des Organisators – beim Feldtest sieht man sofort, welches Gerät Probleme hat.
+**Getestet:** `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts`.

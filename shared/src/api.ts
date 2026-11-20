@@ -61,6 +61,11 @@ export type ApiRequest =
   // Bonus-Posten (E-75): Team löst einen gescannten Code ein; Spielleitung holt die Codes zum Drucken
   | { action: "posten"; gameId: string; code: string }
   | { action: "postenCodes"; gameId: string }
+  // Übungsspiel (E-78, nur im Probelauf): Computer-Teams anlegen und ihre Standorte setzen
+  | { action: "uebungTeams"; gameId: string; anzahl: number }
+  | { action: "uebungZug"; gameId: string; pos: Record<string, { lat: number; lng: number }> }
+  // Fehler in der App (E-79): landet im Protokoll der Spielleitung
+  | { action: "appFehler"; gameId: string; text: string }
   // Vorlagen (Regeln, Spielfeld, Durchsagen) für alle Spiele des Organisators
   | { action: "templateList"; gameId: string }
   | { action: "templateSave"; gameId: string; name: string }
@@ -178,6 +183,9 @@ export interface ApiResults {
   arrived: Record<string, never>;
   posten: PostenErgebnis;
   postenCodes: { codes: Record<string, string> };
+  uebungTeams: { neu: number };
+  uebungZug: Record<string, never>;
+  appFehler: Record<string, never>;
   templateList: { templates: TemplateEntry[] };
   templateSave: { id: string };
   templateLoad: Record<string, never>;

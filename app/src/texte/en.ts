@@ -410,6 +410,9 @@ export default {
     spielCode: "Game code",
     notfall: "Organisers' emergency phone",
     scannen: "With the phone camera or in the app via “Scan QR code”",
+    android: "Android app",
+    androidText:
+      "Scan with the phone camera and install – then your location keeps arriving even with the screen locked. iPhone: just use the big QR code above.",
     adresse: "Address",
     schritte: {
       team: [
@@ -552,6 +555,18 @@ export default {
     strafen: "Penalty handovers received",
     sieger: "Winner",
     ja: "yes",
+  },
+  uebung: {
+    titel: "Practice game with computer teams",
+    hinweis:
+      "Trial run only: computer teams walk across the map on their own – hunters towards the last report, Mister X away from the hunters. Practise handovers, closures and bonus posts without real people. They move while this page is open.",
+    anzahl: "Computer teams",
+    anlegen: "Create computer teams",
+    angelegt: (n) => (n ? `${n} computer teams created` : "There are already enough computer teams"),
+    vorhanden: (namen) => `Playing: ${namen}`,
+    loslaufen: "Let them walk",
+    anhalten: "Stop",
+    laeuft: "The computer teams are walking – one step every 5 seconds.",
   },
   checkliste: {
     titel: "Game-day checklist",
@@ -1051,7 +1066,7 @@ export default {
       },
       {
         titel: "Which data?",
-        text: "Your team name, or the first name for referees and organisers; during the game your phone's location (position, accuracy, direction, battery level); chat messages; which notifications you want. No email address, no phone number, no account. After a wrong password, a checksum of the IP address is stored for at most 10 minutes to protect against password guessing.",
+        text: "Your team name, or the first name for referees and organisers; during the game your phone's location (position, accuracy, direction, battery level); chat messages; which notifications you want. No email address, no phone number, no account. After a wrong password, a checksum of the IP address is stored for at most 10 minutes to protect against password guessing. If something goes wrong in the app, a technical error message (with device type and app version) goes into the organisers' log.",
       },
       {
         titel: "What for?",

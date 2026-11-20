@@ -81,6 +81,8 @@ export interface Team {
   size?: number;
   /** von der Spielleitung freigegeben: ist das Team Mister X, bestätigt es seinen Fang selbst (ohne Schiri) */
   handover?: boolean;
+  /** Computer-Team fürs Übungsspiel (E-78): läuft von selbst, gesteuert vom Browser der Spielleitung */
+  uebung?: boolean;
 }
 
 /** Treffpunkt für den Sammelruf (im Spielfeld-Editor gesetzt) */

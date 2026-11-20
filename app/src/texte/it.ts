@@ -419,6 +419,9 @@ export default {
     spielCode: "Codice del gioco",
     notfall: "Telefono d'emergenza dell'organizzazione",
     scannen: "Con la fotocamera del telefono o nell'app con «Scansiona codice QR»",
+    android: "App Android",
+    androidText:
+      "Scansionate con la fotocamera del telefono e installate: così la vostra posizione arriva anche a schermo bloccato. iPhone: usate il codice QR grande qui sopra.",
     adresse: "Indirizzo",
     schritte: {
       team: [
@@ -561,6 +564,18 @@ export default {
     strafen: "Passaggi di penalità ricevuti",
     sieger: "Vincitore",
     ja: "sì",
+  },
+  uebung: {
+    titel: "Partita di prova con squadre computer",
+    hinweis:
+      "Solo nella partita di prova: le squadre computer si muovono da sole sulla mappa – i cacciatori verso l'ultima segnalazione, Mister X lontano dai cacciatori. Così potete esercitarvi con passaggi, chiusure e postazioni bonus senza persone vere. Si muovono finché questa pagina è aperta.",
+    anzahl: "Squadre computer",
+    anlegen: "Crea squadre computer",
+    angelegt: (n) => (n ? `${n} squadre computer create` : "Ci sono già abbastanza squadre computer"),
+    vorhanden: (namen) => `In gioco: ${namen}`,
+    loslaufen: "Falle partire",
+    anhalten: "Ferma",
+    laeuft: "Le squadre computer si muovono: un passo ogni 5 secondi.",
   },
   checkliste: {
     titel: "Checklist del giorno di gioco",
@@ -1064,7 +1079,7 @@ export default {
       },
       {
         titel: "Quali dati?",
-        text: "Il nome della vostra squadra oppure, per arbitri e organizzazione, il nome; durante il gioco la posizione del telefono (posizione, precisione, direzione, livello della batteria); i messaggi della chat; quali notifiche volete. Niente indirizzo e-mail, niente numero di telefono, nessun account. Dopo una password sbagliata viene salvata per al massimo 10 minuti una somma di controllo dell'indirizzo IP, per proteggere dai tentativi di indovinare la password.",
+        text: "Il nome della vostra squadra oppure, per arbitri e organizzazione, il nome; durante il gioco la posizione del telefono (posizione, precisione, direzione, livello della batteria); i messaggi della chat; quali notifiche volete. Niente indirizzo e-mail, niente numero di telefono, nessun account. Dopo una password sbagliata viene salvata per al massimo 10 minuti una somma di controllo dell'indirizzo IP, per proteggere dai tentativi di indovinare la password. Se nell'app qualcosa va storto, un messaggio di errore tecnico (con tipo di dispositivo e versione dell'app) finisce nel registro dell'organizzazione.",
       },
       {
         titel: "Per cosa?",

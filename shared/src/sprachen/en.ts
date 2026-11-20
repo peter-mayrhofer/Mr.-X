@@ -112,6 +112,8 @@ export default {
     notfallErledigt: "Emergency resolved",
     sammelrufStart: "Gathering call started",
     postenEingeloest: "Bonus post redeemed",
+    uebungTeams: "Computer teams created",
+    appFehler: "Error in the app",
     sammelrufEnde: "Gathering call ended",
     vorlageGespeichert: "Template saved",
     vorlageGeladen: "Template loaded",

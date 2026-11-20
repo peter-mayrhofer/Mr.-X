@@ -13,6 +13,7 @@ export * from "./regeltext.ts";
 export * from "./qr.ts";
 export * from "./version.ts";
 export * from "./geraet.ts";
+export * from "./uebung.ts";
 export { M as MELDUNG, uhr } from "./meldungen.ts";
 export { SPRACH_CODES, istSprache, uebersetze, uebersetzeProtokoll, type SprachCode } from "./sprachen.ts";
 export { P as PROTOKOLL, P_ROLLE as PROTOKOLL_ROLLE } from "./protokoll.ts";

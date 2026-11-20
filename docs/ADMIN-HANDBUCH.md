@@ -122,6 +122,12 @@ eintragen. Details: [`API.md`](API.md) Abschnitt 5a.
 
 Spätestens eine Woche vorher mit 3–5 Handys in der Innenstadt testen: [`FELDTEST.md`](FELDTEST.md).
 
+**Üben ohne Leute:** In der **Steuerung** den **Probelauf** einschalten. Dann erscheint die Karte **Übungsspiel mit
+Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen**. Die Computer-Teams laufen von selbst
+über die Karte – die Jäger zur letzten Meldung von Mister X, Mister X weg von den Jägern. Übergaben, Sperren,
+Sofort-Meldung und Bonus-Posten übst du wie im echten Spiel. Sie laufen nur, solange die Seite der Spielleitung offen
+ist. **Neue Runde vorbereiten** entfernt sie wieder.
+
 ---
 
 ## 2. Am Spieltag – vor dem Start
@@ -214,6 +220,8 @@ dieses Team. Unpassende Nachrichten kannst du löschen.
 ### 4.7 Protokoll
 
 **Protokoll** zeigt, wer wann was ausgelöst hat (Start, Übergaben, Rückgängig, Regeln, Zugänge) – mit Filter.
+Läuft auf einem Handy in der App etwas schief, steht dort auch **„Fehler in der App“** mit Gerät, App-Stand und der
+Fehlermeldung – hilfreich beim Feldtest, schick sie bei Bedarf an den, der die App betreut.
 
 ![Protokoll](screens/hell/17-laptop.jpg)
 
