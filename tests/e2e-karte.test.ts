@@ -63,6 +63,13 @@ describe("Karte zentrieren und mitdrehen", { timeout: 60_000 }, () => {
     await knopf().click();
     await kompass(270);
     await expect.poll(peilung).toBe("90deg");
+    // „Mister X zeigen“ beendet das Mitdrehen: Norden wieder oben (vorher blieb die Karte schief stehen)
+    await p.getByRole("button", { name: T.karte.misterXZeigen }).click();
+    await expect.poll(peilung).toBe("0deg");
+    await knopf().click();
+    await knopf().click();
+    await kompass(270);
+    await expect.poll(peilung).toBe("90deg");
     await p.mouse.move(200, 600);
     await p.mouse.down();
     await p.mouse.move(120, 500, { steps: 8 });

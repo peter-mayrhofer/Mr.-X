@@ -70,6 +70,10 @@ describe("Fehler der App im Protokoll", () => {
     expect(f).toHaveLength(5);
     expect(f[0]).toMatchObject({ name: "Urfahr", details: "TypeError: x is undefined @ map.js:1:2 – #/spiel – Browser, Android" });
   });
+  it("Zuschauer (ohne Passwort) nicht – sonst könnte jeder das Protokoll füllen", async () => {
+    const zuschauer = await join(G, "viewer", "", "");
+    expect(reason(await run(zuschauer, "appFehler", { text: "Unsinn" }))).toBe("forbidden");
+  });
   it("ohne Anmeldung nicht", async () =>
     expect(reason(await call(null, { action: "appFehler", gameId: G, text: "x" }))).toBe("unauthenticated"));
 });

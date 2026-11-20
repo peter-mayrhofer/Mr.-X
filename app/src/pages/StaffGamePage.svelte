@@ -3,7 +3,9 @@
   Namen) → Auswertung. Spielleitung: Bereiche Live, Steuerung, Teams & Zugänge, Chat, Protokoll (Adresse #/spiel?b=…).
 -->
 <script lang="ts">
+  import { onDestroy, untrack } from "svelte";
   import { tabelleHerunterladen } from "../lib/tabelle.ts";
+  import { TAKT_MS, uebung, uebungTakt } from "../lib/uebung.svelte.ts";
   import type { Member } from "@mrx/shared";
   import Referee from "../screens/Referee.svelte";
   import Lobby from "../screens/Lobby.svelte";
@@ -142,6 +144,20 @@
         }
       : null,
   );
+
+  // Übungsspiel (E-78): Computer-Teams laufen, solange die Spielleitung angemeldet ist – egal welcher Bereich offen ist.
+  // Nur von „laeuft“ abhängig: sonst würde jede neue Sicht den Takt neu starten (und sofort einen Schritt schicken).
+  $effect(() => {
+    if (!uebung.laeuft) return;
+    const takt = () => {
+      const v = untrack(() => view);
+      if (v && isAdmin && v.config.trial) uebungTakt(v, call);
+    };
+    takt();
+    const t = setInterval(takt, TAKT_MS);
+    return () => clearInterval(t);
+  });
+  onDestroy(() => (uebung.laeuft = false));
 
   // Spielleitung: neue Warnungen (Funkstille, Akku, Sperrgebiet, Mister X an der Grenze) einmal melden
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- reine Buchführung

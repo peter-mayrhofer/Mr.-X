@@ -51,6 +51,11 @@ describe("Übungsspiel", { timeout: 60_000 }, () => {
     const vorher = await val(`games/${G}/positions/${ids[0]}`);
     // nach dem nächsten Takt (5 s) ein Stück weiter
     await expect.poll(async () => (await val(`games/${G}/positions/${ids[0]}`)).t, { timeout: 12_000 }).toBeGreaterThan(vorher.t);
+    // weiter, während die Spielleitung in „Live“ zuschaut (der Treiber hängt nicht an der Steuerung)
+    await p.getByRole("link", { name: T.admin.nav.live }).first().click();
+    const inLive = (await val(`games/${G}/positions/${ids[0]}`)).t;
+    await expect.poll(async () => (await val(`games/${G}/positions/${ids[0]}`)).t, { timeout: 12_000 }).toBeGreaterThan(inLive);
+    await p.getByRole("link", { name: T.admin.nav.steuerung }).first().click();
     await p.getByRole("button", { name: T.uebung.anhalten }).click();
   });
 

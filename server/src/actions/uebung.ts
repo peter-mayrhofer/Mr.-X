@@ -59,10 +59,13 @@ export function uebungZug(room: GameRoom, d: D, a: Auth): ApiResults["uebungZug"
 /** pro Gerät höchstens 5 Meldungen in 10 Min, dieselbe Meldung nur einmal – sonst füllt eine Schleife das Protokoll */
 const FEHLER_FENSTER = 10 * 60_000;
 const FEHLER_MAX = 5;
+/** höchstens so viele Fehler-Einträge im Protokoll – das Protokoll ist ein Wert im Speicher des Spielraums */
+const FEHLER_GESAMT = 100;
 const gemeldet = new Map<string, { t: number; text: string }[]>();
 
 export function appFehler(room: GameRoom, d: D, a: Auth): ApiResults["appFehler"] {
-  const who = room.who(a, ["team", "schiri", "admin", "screen", "viewer"]);
+  // nur wer mit Passwort beigetreten ist – Zuschauer brauchen keins und könnten sonst das Protokoll füllen
+  const who = room.who(a, ["team", "schiri", "admin"]);
   const text = String(d.text ?? "")
     .replace(/\s+/g, " ")
     .trim()
@@ -72,6 +75,7 @@ export function appFehler(room: GameRoom, d: D, a: Auth): ApiResults["appFehler"
   const key = `${room.d.gid}/${who.uid}`;
   const alt = (gemeldet.get(key) ?? []).filter((x) => now - x.t < FEHLER_FENSTER);
   if (alt.length >= FEHLER_MAX || alt.some((x) => x.text === text)) return {};
+  if (Object.values(room.d.audit).filter((e) => e.action === P.appFehler).length >= FEHLER_GESAMT) return {};
   gemeldet.set(key, [...alt, { t: now, text }]);
   room.audit(who, P.appFehler, text);
   return {};

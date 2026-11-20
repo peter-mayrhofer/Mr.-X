@@ -7,6 +7,7 @@
   import Button from "../../ui/Button.svelte";
   import Pill from "../../ui/Pill.svelte";
   import { uhr } from "../../lib/format.ts";
+  import { zelle } from "../../lib/tabelle.ts";
   import type { Keyed } from "../../lib/game.svelte.ts";
   import { T } from "../../texte.ts";
 
@@ -41,7 +42,7 @@
       [T.admin.csv.zeit, T.admin.csv.wer, T.admin.csv.rolle, T.admin.csv.aktion, T.admin.csv.details],
       ...audit.map((a) => [new Date(a.t).toISOString(), ue(a.name), ROLE[a.role] ?? a.role, ue(a.action), details(a)]),
     ];
-    const text = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(";")).join("\n");
+    const text = rows.map((r) => r.map(zelle).join(";")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\ufeff" + text], { type: "text/csv" }));
     a.download = "protokoll.csv";

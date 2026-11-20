@@ -96,6 +96,10 @@ wichtigsten Regeln.
   mit, wohin ihr schaut (Kompass, wie beim Navi), 3× tippen = wieder Norden oben. Verschiebt ihr die Karte mit dem
   Finger, hört sie auf zu folgen.
 
+| QR-Knopf auf der Karte (unter dem Zentrier-Knopf) | Hinweis nach dem Scannen |
+|---|---|
+| ![Karte mit QR-Knopf](screens/neu/team-karte-scan.jpg) | ![Hinweis vom Bonus-Posten](screens/neu/posten-hinweis.jpg) |
+
 ## 5. Spielende
 
 Das Spiel endet zu einem geheimen Zeitpunkt. Alle sehen die **Auswertung**: Wer am Ende Mister X ist, **gewinnt**.
@@ -105,6 +109,8 @@ Unter **Archiv** könnt ihr das Spiel noch einmal ansehen: die **Wiederholung** 
 die Wege **aller Teams** im Zeitraffer; die **Wärmekarte** (Knopf oben rechts) zeigt, wo am meisten gelaufen wurde. Mit **Video** speichert ihr das ganze Spiel als 40-Sekunden-Video – im
 **Hochformat** (Handy, Story) oder **Querformat** (Bildschirm, YouTube). In der Android-App öffnet sich dafür
 „Teilen“ (z. B. in die Galerie oder an WhatsApp).
+
+![Video speichern](screens/neu/video-dialog.jpg)
 
 ## 6. Datenschutz in Kürze
 

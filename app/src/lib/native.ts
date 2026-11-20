@@ -37,8 +37,15 @@ const base64 = (b: Blob) =>
     r.readAsDataURL(b);
   });
 
-/** Datei speichern: im Browser herunterladen; in der Android-App in Stücken an Android und dann „Teilen“ */
-export async function herunterladen(blob: Blob, name: string) {
+/** Datei speichern: im Browser herunterladen; in der Android-App in Stücken an Android und dann „Teilen“.
+ *  Nacheinander – das Plugin schreibt immer nur eine Datei (sonst mischt ein zweiter Download die Stücke) */
+let kette: Promise<unknown> = Promise.resolve();
+export function herunterladen(blob: Blob, name: string): Promise<void> {
+  const r = kette.then(() => laden(blob, name));
+  kette = r.catch(() => {});
+  return r;
+}
+async function laden(blob: Blob, name: string) {
   if (!NATIVE) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);

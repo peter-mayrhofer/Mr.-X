@@ -4,6 +4,10 @@ import { teamTabelle, type ArchiveData } from "@mrx/shared";
 import { herunterladen } from "./native.ts";
 import { T } from "../texte.ts";
 
+/** Zelle für Excel: in Anführungszeichen, und was wie eine Formel beginnt (= + - @), als Text – sonst führt Excel
+ *  einen Teamnamen wie „=HYPERLINK(…)“ aus */
+export const zelle = (c: string | number) => `"${(/^[=+\-@\t\r]/.test(String(c)) ? "'" : "") + String(c).replaceAll('"', '""')}"`;
+
 export function teamTabelleCsv(a: Pick<ArchiveData, "teams" | "results" | "handovers">): string {
   const S = T.tabelle;
   const min = (ms: number) => Math.round(ms / 60_000);
@@ -22,10 +26,10 @@ export function teamTabelleCsv(a: Pick<ArchiveData, "teams" | "results" | "hando
       z.sieger ? S.ja : "",
     ]),
   ];
-  return rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(";")).join("\r\n");
+  return rows.map((r) => r.map(zelle).join(";")).join("\r\n");
 }
 
 export function tabelleHerunterladen(a: Pick<ArchiveData, "teams" | "results" | "handovers" | "name" | "startedAt">) {
   const datei = `${a.name.replace(/[^\wäöüÄÖÜß-]+/g, "-")}-${new Date(a.startedAt).toISOString().slice(0, 10)}-teams.csv`;
-  void herunterladen(new Blob(["﻿" + teamTabelleCsv(a)], { type: "text/csv" }), datei);
+  void herunterladen(new Blob(["\ufeff" + teamTabelleCsv(a)], { type: "text/csv" }), datei);
 }

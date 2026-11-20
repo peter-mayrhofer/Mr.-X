@@ -72,6 +72,8 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
 
 ![Spielfeld-Editor](screens/hell/16-laptop.jpg)
 
+![Bonus-Posten: Druckblatt zum Aufhängen](screens/neu/posten-blatt.jpg)
+
 ### 1.4 Zugänge festlegen und Blätter drucken
 
 **Teams & Zugänge → Zugänge**:
@@ -93,6 +95,8 @@ einmal. Nach dem Start lässt sich das Spielfeld nicht mehr ändern; verkleinert
    drucken (Schritt 6), dann steht auch der Sieger drauf.
 
 ![Teams & Zugänge](screens/hell/15-laptop.jpg)
+
+![QR-Code für die Android-App](screens/neu/android-qr.jpg)
 
 ### 1.5 Regeln einstellen
 
@@ -128,6 +132,10 @@ Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen
 Sofort-Meldung und Bonus-Posten übst du wie im echten Spiel. Sie laufen nur, solange die Seite der Spielleitung offen
 ist. **Neue Runde vorbereiten** entfernt sie wieder.
 
+![Übungsspiel in der Steuerung](screens/neu/uebung-steuerung.jpg)
+
+![Computer-Teams laufen über die Karte](screens/neu/uebung-karte.jpg)
+
 ---
 
 ## 2. Am Spieltag – vor dem Start
@@ -144,6 +152,8 @@ ist. **Neue Runde vorbereiten** entfernt sie wieder.
 6. **Steuerung → Spieltag-Checkliste:** Was die App selbst sieht, hakt sie ab (Spielfeld, Team-Passwort, Teams,
    Standorte, Akku, Schiri, Begleitung von Mister X, Fahnen-Tracker). Großbild, Regeln erklärt usw. hakst du selbst
    ab. Starten geht auch, wenn nicht alles grün ist.
+
+![Spieltag-Checkliste in der Steuerung](screens/neu/checkliste.jpg)
 
 ![Warteraum eines Teams](screens/hell/05-handy.jpg)
 
@@ -254,6 +264,8 @@ Zum geheimen Zeitpunkt (oder per Notstopp) endet das Spiel **automatisch**:
    beitreten) oder **löschen** (alles weg, auch das Archiv).
 
 ![Archiv & Wiederholung](screens/hell/20-handy.jpg)
+
+![Wärmekarte in der Wiederholung](screens/neu/waermekarte.jpg)
 
 **Löschfristen** (automatisch): Live-Standorte sofort bei Spielende, Wege der Teams und Chat nach 30 Tagen, Archiv
 nach einem Jahr.
