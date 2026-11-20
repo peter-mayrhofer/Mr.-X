@@ -6,7 +6,7 @@ import { session } from "./session.svelte.ts";
 import { DESKTOP, NATIVE } from "./native.ts";
 
 /** harmlose Meldungen der Browser, die nichts kaputt machen */
-const HARMLOS = /ResizeObserver loop|Script error\.?$|AbortError|The play\(\) request was interrupted/i;
+const HARMLOS = /ResizeObserver loop|Script error|AbortError|The play\(\) request was interrupted/i;
 let gesendet = 0;
 
 function geraet(): string {

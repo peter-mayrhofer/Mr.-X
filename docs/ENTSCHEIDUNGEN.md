@@ -838,10 +838,30 @@ Leute üben. Ohne Zeitgeber am Server (keine Kosten, wenn niemand übt); Probel�
 **Getestet:** `shared/test/uebung.test.ts`, `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts`.
 
 ### E-79 Fehler der App im Protokoll
-**Entscheidung:** Unbehandelte Fehler in der App (`error`, `unhandledrejection`) meldet ein angemeldetes Gerät an den
+**Entscheidung:** Unbehandelte Fehler in der App (`error`, `unhandledrejection`) meldet ein angemeldetes Gerät (Team,
+Schiri, Spielleitung – nicht Zuschauer und Großbild, die kein Passwort brauchen) an den
 Server (`appFehler`): Fehlermeldung, Datei:Zeile, Bereich der App (z. B. `#/spiel`, ohne Codes aus der Adresse), App-
 oder Browser-Art, System und App-Stand. Der Server schreibt sie als „Fehler in der App“ ins Protokoll. Begrenzung:
-höchstens 3 pro Seitenaufruf, am Server 5 in 10 Minuten pro Gerät und dieselbe Meldung nur einmal. Ohne Netz und
+höchstens 3 pro Seitenaufruf, am Server 5 in 10 Minuten pro Gerät, dieselbe Meldung nur einmal und insgesamt höchstens
+100 im Protokoll. Ohne Netz und
 harmlose Browser-Meldungen werden nicht gemeldet. Im Datenschutzhinweis erwähnt (Frist wie das Protokoll: 30 Tage).
 **Warum so:** Wunsch des Organisators – beim Feldtest sieht man sofort, welches Gerät Probleme hat.
 **Getestet:** `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts`.
+
+### E-80 Zweite Fehlersuche (nach E-71 bis E-79)
+**Entscheidung:** Alles seit E-70 noch einmal gezielt auf Fehler durchgesehen. Behoben:
+- **Übungsspiel:** Die Computer-Teams liefen nur, solange die Steuerung offen war, und bei jeder neuen Sicht ging
+  sofort ein Schritt hinaus (zu schnell). Der Treiber hängt jetzt an der Seite der Spielleitung
+  (`lib/uebung.svelte.ts`), läuft auch in „Live“ weiter und schickt genau alle 5 s einen Schritt.
+- **Fehler der App:** Zuschauer (ohne Passwort, bis 300 pro Spiel) hätten das Protokoll mit erfundenen Meldungen füllen
+  können – jetzt nur Teams, Schiris und Spielleitung, insgesamt höchstens 100 Einträge. „Script error“ von fremden
+  Seiten wird wie gedacht nicht gemeldet.
+- **Karte:** Das erste Tippen auf „Zentrieren“ zoomt jetzt wirklich heran (das Mitgehen brach das Heranzoomen ab);
+  „Mister X zeigen“ stellt Norden wieder nach oben (vorher blieb eine mitgedrehte Karte schief).
+- **Tabellen (Teams, Protokoll):** Zellen, die mit `= + - @` beginnen, werden als Text gespeichert – sonst führt
+  Excel einen Teamnamen wie „=HYPERLINK(…)“ als Formel aus.
+- **Wiederholung:** Die Karte schickt nur geänderte Ebenen neu – die Wärmekarte (tausende Punkte) ruckelte beim
+  Abspielen.
+- **Android-App:** Mehrere Dateien gleichzeitig weitergeben (Video und Tabelle) mischte die Stücke – jetzt
+  nacheinander.
+**Getestet:** `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts` (läuft in „Live“ weiter), `tests/e2e-karte.test.ts`.

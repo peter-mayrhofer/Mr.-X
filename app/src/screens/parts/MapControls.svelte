@@ -42,6 +42,8 @@
     if (modus === "frei") {
       modus = "folgen";
       map?.follow(me, 0, true);
+      // das Heranzoomen (700 ms) nicht gleich mit dem ersten Mitgehen abbrechen
+      zuletzt = performance.now() + 450;
     } else if (modus === "folgen") {
       modus = "drehen";
       heading.start();

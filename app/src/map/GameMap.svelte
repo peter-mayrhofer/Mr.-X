@@ -88,7 +88,8 @@
   }
 
   export function flyTo(p: Point, zoom = 16.5) {
-    map?.flyTo({ center: [p.lng, p.lat], zoom, padding, duration: 700 });
+    // Norden oben – sonst bliebe eine mitgedrehte Karte schief stehen (drehen mit dem Finger geht nicht)
+    map?.flyTo({ center: [p.lng, p.lat], zoom, bearing: 0, padding, duration: 700 });
   }
 
   /** mitgehen: Mitte auf `p`, gedreht nach `bearing` (0 = Norden oben); beim ersten Mal auch heranzoomen */
@@ -169,11 +170,15 @@
     map?.setStyle(mapStyle(t, untrack(() => $state.snapshot(overlays)) as Overlays, raster));
   });
 
-  // Daten-Änderung: nur die Quellen aktualisieren
+  // Daten-Änderung: nur geänderte Quellen aktualisieren (die Wärmekarte hat tausende Punkte – nicht bei jedem
+  // Bild der Wiederholung neu schicken)
+  const gesendet: Partial<Overlays> = {};
   $effect(() => {
     if (!map) return;
     const o = overlays;
     for (const k of Object.keys(o) as (keyof Overlays)[]) {
+      if (gesendet[k] === o[k]) continue;
+      gesendet[k] = o[k];
       const src = map.getSource(k) as { setData?: (d: GeoJSON.FeatureCollection) => void } | undefined;
       src?.setData?.(o[k] ?? EMPTY);
     }

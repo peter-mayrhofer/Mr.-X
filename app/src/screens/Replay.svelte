@@ -117,7 +117,9 @@
 
   /** Sicherung als Datei (Backup, Vereinszeitung) */
   function save() {
-    void herunterladen(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `${dateiname}.json`);
+    herunterladen(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `${dateiname}.json`).catch(() =>
+      toast(T.archiv.videoFehler, "warn"),
+    );
   }
 
   // ---------- Video (E-72) ----------
