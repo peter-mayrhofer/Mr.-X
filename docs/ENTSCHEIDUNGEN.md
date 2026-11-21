@@ -865,3 +865,13 @@ harmlose Browser-Meldungen werden nicht gemeldet. Im Datenschutzhinweis erwähnt
 - **Android-App:** Mehrere Dateien gleichzeitig weitergeben (Video und Tabelle) mischte die Stücke – jetzt
   nacheinander.
 **Getestet:** `tests/uebung.test.ts`, `tests/e2e-uebung.test.ts` (läuft in „Live“ weiter), `tests/e2e-karte.test.ts`.
+
+### E-81 Übungsspiel am Handy: Bildschirm bleibt an
+**Entscheidung:** Solange die Computer-Teams laufen, hält die Seite der Spielleitung den Bildschirm an (wie bei den
+Teams im Spiel). Der Hinweis „Die Computer-Teams laufen …“ sagt, dass die App offen bleiben muss.
+**Warum so:** Frage des Organisators, ob man das Übungsspiel vom Handy steuern kann. Die Bedienung passte schon
+(Steuerung und Live unten in der Leiste), aber das Handy schaltete den Bildschirm nach kurzer Zeit ab – dann rechnet
+der Browser keine Schritte mehr und die Computer-Teams bleiben stehen. Im Hintergrund weiterlaufen geht im Browser
+nicht; dafür müsste der Server die Teams bewegen (mehr Last im Spielraum) – nicht nötig, solange die Spielleitung
+ohnehin auf die Karte schaut.
+**Getestet:** `tests/e2e-uebung.test.ts` (Bildschirm-Sperre beim Loslaufen an, beim Anhalten wieder frei).

@@ -37,6 +37,15 @@ afterAll(async () => {
 describe("Übungsspiel", { timeout: 60_000 }, () => {
   it("Computer-Teams anlegen und loslaufen lassen", async () => {
     p = await (await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" })).newPage();
+    // Bildschirm-Sperre mitzählen: aktiv = angefordert und nicht wieder freigegeben
+    await p.addInitScript(() => {
+      const w = window as unknown as { wachAn: number };
+      w.wachAn = 0;
+      Object.defineProperty(navigator, "wakeLock", {
+        value: { request: async () => (w.wachAn++, { release: async () => void w.wachAn-- }) },
+      });
+    });
+    const wach = () => p.evaluate(() => (window as unknown as { wachAn: number }).wachAn);
     await p.goto(`http://127.0.0.1:${PORT}/#/staff/admin?g=${G}`);
     await p.getByLabel(T.staffLogin.name).fill("Peter");
     await p.getByLabel(T.staffLogin.adminPasswort).fill("admin1234");
@@ -45,7 +54,10 @@ describe("Übungsspiel", { timeout: 60_000 }, () => {
     await p.getByRole("heading", { name: T.uebung.titel }).waitFor();
     await p.getByRole("button", { name: T.uebung.anlegen }).click();
     await expect.poll(async () => (await botIds()).length).toBe(4);
+    expect(await wach()).toBe(0);
     await p.getByRole("button", { name: T.uebung.loslaufen }).click();
+    // am Handy würde der Bildschirm sonst ausgehen und die Computer-Teams blieben stehen
+    await expect.poll(wach).toBe(1);
     const ids = await botIds();
     await expect.poll(async () => (await Promise.all(ids.map((id) => val(`games/${G}/positions/${id}`)))).every(Boolean)).toBe(true);
     const vorher = await val(`games/${G}/positions/${ids[0]}`);
@@ -57,6 +69,7 @@ describe("Übungsspiel", { timeout: 60_000 }, () => {
     await expect.poll(async () => (await val(`games/${G}/positions/${ids[0]}`)).t, { timeout: 12_000 }).toBeGreaterThan(inLive);
     await p.getByRole("link", { name: T.admin.nav.steuerung }).first().click();
     await p.getByRole("button", { name: T.uebung.anhalten }).click();
+    await expect.poll(wach).toBe(0);
   });
 
   it("Team-Flyer: kleiner QR-Code für die Android-App", async () => {
