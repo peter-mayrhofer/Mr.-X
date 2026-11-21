@@ -1,5 +1,7 @@
 // Übungsspiel (E-78): Treiber der Computer-Teams. Er hängt an der Seite der Spielleitung (StaffGamePage), nicht an
 // der Karte „Übungsspiel“ – so laufen die Teams weiter, während man in „Live“ zuschaut.
+// Fang (E-83): Kommt ein Computer-Team auf FANG_M an Mister X heran, macht diese Seite die Übergabe – wie die
+// Spielleitung von Hand, mit Wartezeit und Meldung.
 // Straßennetz (E-82): aus denselben Kartenkacheln wie die Karte (OpenFreeMap), einmal pro Spielfeld geladen. Bis es da
 // ist (oder ohne Netz) gehen die Teams gerade Schritte.
 import { VectorTile } from "@mapbox/vector-tile";
@@ -7,18 +9,20 @@ import { PbfReader } from "pbf";
 import {
   botSchritt,
   feldMitte,
+  FRESH_MS,
   kachel,
   kachelPunkt,
   netzSchritt,
   strassenNetz,
   versetzt,
+  werFaengt,
   zoneStatus,
   type Field,
   type Netz,
   type NetzBot,
   type Point,
 } from "@mrx/shared";
-import { trailOf, type Api, type StaffView } from "./staff.ts";
+import { requestId, trailOf, type Api, type StaffView } from "./staff.ts";
 
 export const uebung = $state({ laeuft: false });
 export const TAKT_MS = 5000;
@@ -81,21 +85,30 @@ function netzFuer(field: Field, locked: string[]): { netz: Netz; gesperrt: Set<n
   return { netz: netz.netz, gesperrt: netz.gesperrt.set };
 }
 
-/** ein Schritt für alle Computer-Teams, eine Anfrage an den Server */
+/** so nah muss ein Computer-Team an Mister X sein, damit es ihn fängt */
+const FANG_M = 20;
+/** läuft gerade eine Übergabe? Dann nicht gleich die nächste (die Sicht kommt erst danach neu) */
+let fangt = false;
+
+/** ein Schritt für alle Computer-Teams, eine Anfrage an den Server; ist ein Jäger nah genug, fängt er Mister X */
 export function uebungTakt(view: StaffView, api: Api) {
   const st = view.state;
   if (st.phase === "pause" || st.phase === "beendet") return;
   const now = Date.now();
   const locked = Object.keys(st.cuts ?? {});
+  const wartet = (id: string) => (view.locks[id]?.until ?? 0) > now;
   const ziel = trailOf(view).at(-1) ?? null;
+  // Mister X schaut nur auf Jäger, die laufen dürfen – wer nach einem Fang wartet, kann ihn nicht verfolgen
   const jaeger = Object.entries(view.positions)
-    .filter(([id]) => id !== st.mrx)
+    .filter(([id]) => id !== st.mrx && !wartet(id))
     .map(([, p]) => p);
+  const mrxPos = st.mrx ? view.positions[st.mrx] : undefined;
+  const mrxJetzt = mrxPos && now - mrxPos.t <= FRESH_MS ? mrxPos : null;
   const n = netzFuer(view.field, locked);
   const pos: Record<string, { lat: number; lng: number }> = {};
   for (const id of Object.keys(view.teams).filter((t) => view.teams[t]!.uebung)) {
     // Wartezeit (Start, nach einem Fang): stehen bleiben wie echte Teams
-    if ((view.locks[id]?.until ?? 0) > now) continue;
+    if (wartet(id)) continue;
     const z = zustand.get(id) ?? {
       p: view.positions[id] ?? versetzt(view.field.meet ?? feldMitte(view.field), Math.random() * 360, 50 + Math.random() * 150),
       richtung: Math.random() * 360,
@@ -103,10 +116,25 @@ export function uebungTakt(view: StaffView, api: Api) {
       zweck: "",
       alter: 0,
     };
-    const lage = { ...z, mrx: id === st.mrx, ziel, jaeger, field: view.field, locked, schritt: SCHRITT, zufall: Math.random };
+    const mrx = id === st.mrx;
+    const lage = { ...z, mrx, ziel, mrxJetzt, jetzt: now, jaeger, field: view.field, locked, schritt: SCHRITT, zufall: Math.random };
     const r: NetzBot = n ? netzSchritt({ ...lage, ...n }) : { ...z, ...botSchritt(lage) };
     zustand.set(id, r);
     pos[id] = { lat: r.p.lat, lng: r.p.lng };
   }
-  if (Object.keys(pos).length) api({ action: "uebungZug", gameId: view.gameId, pos }).catch(() => {});
+  if (!Object.keys(pos).length) return;
+  const zug = api({ action: "uebungZug", gameId: view.gameId, pos });
+  // Fang: nur Computer-Teams als Jäger, nur im laufenden Spiel; erst die neuen Standorte, dann die Übergabe (der
+  // Server nimmt sie für Übergabeort und Wartezeiten)
+  const alt = st.mrx;
+  const faenger = st.phase === "laeuft" && alt && !fangt ? werFaengt(pos[alt] ?? mrxJetzt, jaegerBots(pos, alt), FANG_M) : null;
+  if (!faenger || !alt) return void zug.catch(() => {});
+  fangt = true;
+  zug
+    .then(() => api({ action: "handover", gameId: view.gameId, to: faenger, type: "fang", expectedMrx: alt, requestId: requestId() }))
+    .catch(() => {}) // z. B. Mister X hat inzwischen gewechselt – dann eben nicht
+    .finally(() => (fangt = false));
 }
+
+const jaegerBots = (pos: Record<string, { lat: number; lng: number }>, mrx: string) =>
+  Object.fromEntries(Object.entries(pos).filter(([id]) => id !== mrx));

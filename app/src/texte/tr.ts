@@ -553,7 +553,7 @@ export default {
   uebung: {
     titel: "Bilgisayar takımlarıyla alıştırma oyunu",
     hinweis:
-      "Sadece deneme oyununda: bilgisayar takımları sokaklarda kendi kendine yürür – avcılar son bildirime doğru, Mister X avcılardan uzağa. Böylece devir teslimleri, kapatmaları ve bonus noktalarını gerçek kişiler olmadan deneyebilirsiniz. Bu sayfa açık olduğu sürece yürürler.",
+      "Sadece deneme oyununda: bilgisayar takımları sokaklarda kendi kendine yürür – avcılar son bildirime doğru ve oradan aramaya devam eder, Mister X avcılardan uzağa. Mister X’i gören (150 m içinde) peşinden koşar; 20 m içinde yakalanır – oyundaki gibi devir teslim. Böylece devir teslimleri, kapatmaları ve bonus noktalarını gerçek kişiler olmadan deneyebilirsiniz. Bu sayfa açık olduğu sürece yürürler.",
     anzahl: "Bilgisayar takımları",
     anlegen: "Bilgisayar takımları oluştur",
     angelegt: (n) => (n ? `${n} bilgisayar takımı oluşturuldu` : "Zaten yeterince bilgisayar takımı var"),

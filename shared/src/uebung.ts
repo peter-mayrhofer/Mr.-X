@@ -13,8 +13,12 @@ export interface BotLage {
   richtung: number;
   /** ist dieses Team Mister X? */
   mrx: boolean;
-  /** Jäger: letzte Meldung von Mister X (falls es eine gibt) */
-  ziel?: Point | null | undefined;
+  /** Jäger: letzte Meldung von Mister X (falls es eine gibt), mit Zeitpunkt */
+  ziel?: (Point & { t?: number }) | null | undefined;
+  /** Jäger: wo Mister X gerade wirklich ist – sichtbar erst unter SICHT_M (Straßennetz) */
+  mrxJetzt?: Point | null | undefined;
+  /** jetzt (ms), für das Alter von Meldung und Sichtung */
+  jetzt?: number;
   /** Mister X: Standorte der Jäger */
   jaeger?: Point[];
   field: Field;
@@ -109,8 +113,9 @@ export function strassenNetz(linien: Point[][], field: Field): Netz {
       i = pts.push(p) - 1;
       idx.set(k, i);
       nb.push(new Set());
-      // wie inField, aber mit genauem Abstand statt 32 Prüfpunkten – sonst dauert das Netz über eine Sekunde
-      drin.push(imRahmen(p) && (inPolygon(p, field.base) || distanceToEdgeM(p, field.base) <= field.toleranceM));
+      // wie inField, aber mit genauem Abstand statt 32 Prüfpunkten (sonst dauert das Netz über eine Sekunde) und mit
+      // Sicherheitsabstand: inField zählt knapp unter der Toleranz schon als draußen
+      drin.push(imRahmen(p) && (inPolygon(p, field.base) || distanceToEdgeM(p, field.base) <= field.toleranceM * 0.8));
     }
     return i;
   };
@@ -228,35 +233,77 @@ export interface NetzBot {
   zweck: string;
   /** Schritte seit der Planung */
   alter: number;
+  /** Jäger: wo Mister X zuletzt gesehen wurde */
+  gesehen?: (Point & { t: number }) | undefined;
 }
 
-/** ein Schritt auf dem Straßennetz; plant neu, wenn nötig (Ziel erreicht, neue Meldung, Gefahr, Sperrgebiet) */
+/** so nah sehen sich Jäger und Mister X (Straßenecken, Häuser dazwischen) */
+export const SICHT_M = 150;
+/** Mister X schaut sich um und merkt Jäger etwas früher */
+const MRX_SICHT_M = 250;
+/** wer jemanden sieht, rennt: Jäger etwas schneller als Mister X, sonst fängt nie jemand */
+const SPRINT_JAEGER = 1.4;
+const SPRINT_MRX = 1.2;
+/** unter diesem Abstand läuft ein Jäger direkt auf Mister X zu */
+const NAH_M = 60;
+/** so schnell kann Mister X seit der Meldung weg sein (m/s) – so weit wächst der Suchkreis */
+const SUCH_MS = 1.5;
+
+const zweck0 = (z: string) => z.startsWith("jagd");
+
+/**
+ * ein Schritt auf dem Straßennetz; plant neu, wenn nötig (Ziel erreicht, neue Meldung, Sichtung, Gefahr, Sperrgebiet).
+ * Jäger: Mister X in Sicht → hinterher rennen; sonst zum Neuesten, was sie wissen (Meldung oder letzte Sichtung), und
+ * dort suchen – je älter das Wissen, desto größer der Suchkreis. Mister X: flieht vor Jägern in Sicht, sonst bummeln.
+ */
 export function netzSchritt(l: BotLage & NetzBot & { netz: Netz; gesperrt: Set<number> }): NetzBot {
   const { netz, gesperrt, zufall } = l;
+  const jetzt = l.jetzt ?? 0;
   const knoten = (i: number) => netz.pts[i]!;
+  /** zufälliger Knoten im Ring min–max um `um`; findet sich keiner, der am nächsten dran (nie irgendwo in der Stadt) */
   const zufaellig = (um: Point, min: number, max: number) => {
-    for (let k = 0; k < 30; k++) {
+    let best = -1;
+    let bestF = Infinity;
+    for (let k = 0; k < 60; k++) {
       const i = Math.floor(zufall() * netz.pts.length);
+      if (gesperrt.has(i)) continue;
       const d = distanceM(um, knoten(i));
-      if (d >= min && d <= max && !gesperrt.has(i)) return i;
+      const f = d < min ? min - d : d > max ? d - max : 0;
+      if (!f) return i;
+      if (f < bestF) {
+        best = i;
+        bestF = f;
+      }
     }
-    return Math.floor(zufall() * netz.pts.length);
+    return best;
   };
-  const jagd = !l.mrx && l.ziel ? `jagd:${l.ziel.lat.toFixed(5)},${l.ziel.lng.toFixed(5)}` : "";
+  const sicht = !l.mrx && l.mrxJetzt && distanceM(l.p, l.mrxJetzt) < SICHT_M ? l.mrxJetzt : null;
+  let gesehen = l.mrx ? undefined : sicht ? { lat: sicht.lat, lng: sicht.lng, t: jetzt } : l.gesehen;
+  // Meldung oder Sichtung – was neuer ist
+  const wissen = !l.mrx ? (gesehen && gesehen.t >= (l.ziel?.t ?? 0) ? gesehen : l.ziel) : null;
+  if (wissen !== gesehen) gesehen = undefined;
+  const jagd = wissen ? `jagd:${wissen.lat.toFixed(5)},${wissen.lng.toFixed(5)}` : "";
   const jaeger = l.mrx ? (l.jaeger ?? []) : [];
   const abstand = (q: Point) => Math.min(Infinity, ...jaeger.map((j) => distanceM(q, j)));
-  const gefahr = abstand(l.p) < 400;
+  // eben noch Jäger, jetzt Mister X: den Vorsprung nutzen und gleich weg
+  const neuMrx = l.mrx && zweck0(l.zweck);
+  const gefahr = neuMrx || abstand(l.p) < MRX_SICHT_M;
   let { weg, zweck, alter } = l;
   if (!weg.length || weg.some((i) => gesperrt.has(i)) || (jagd && zweck !== jagd) || (gefahr && (zweck !== "flucht" || alter >= 6))) {
     let nach: number;
-    if (jagd) {
-      // erst zur Meldung, dort angekommen in der Umgebung suchen
-      nach = zweck === jagd && !weg.length ? zufaellig(l.ziel!, 50, 300) : naechsterKnoten(netz, l.ziel!, gesperrt);
+    if (wissen) {
+      // erst dorthin, dann im Umkreis suchen; der Kreis wächst, solange es nichts Neues gibt
+      const alterS = Math.max(0, (jetzt - (wissen.t ?? jetzt)) / 1000);
+      nach =
+        zweck === jagd && !weg.length
+          ? zufaellig(wissen, 30, Math.min(1000, 150 + SUCH_MS * alterS))
+          : naechsterKnoten(netz, wissen, gesperrt);
       zweck = jagd;
     } else if (gefahr) {
       // weit weg von den Jägern, aber nicht ans andere Ende der Stadt
-      const wahl = Array.from({ length: 30 }, () => zufaellig(l.p, 200, 900));
-      nach = wahl.reduce((a, b) => (abstand(knoten(b)) > abstand(knoten(a)) ? b : a));
+      // (-1: nichts Freies gefunden, etwa fast alles gesperrt – dann gibt es keinen Weg und es geht gerade weiter)
+      const wahl = Array.from({ length: 30 }, () => zufaellig(l.p, 200, 900)).filter((i) => i >= 0);
+      nach = wahl.reduce((a, b) => (a < 0 || abstand(knoten(b)) > abstand(knoten(a)) ? b : a), -1);
       zweck = "flucht";
     } else {
       nach = zufaellig(l.p, 150, 700);
@@ -266,25 +313,44 @@ export function netzSchritt(l: BotLage & NetzBot & { netz: Netz; gesperrt: Set<n
     const von = weg.length && !gesperrt.has(weg[0]!) ? weg[0]! : naechsterKnoten(netz, l.p, gesperrt);
     weg = netzWeg(netz, von, nach, gesperrt);
     alter = 0;
-    if (!weg.length) return { ...botSchritt(l), weg: [], zweck: "", alter: 0 };
+    if (!weg.length) return { ...botSchritt(l), weg: [], zweck: "", alter: 0, gesehen };
   }
-  // den Weg entlang gehen, über Knoten hinweg
+  // ganz nah dran: direkt hin – über das Netz ginge es sonst evtl. erst zurück zur letzten Kreuzung
+  if (sicht && distanceM(l.p, sicht) < NAH_M) weg = [];
+  // den Weg entlang gehen, über Knoten hinweg; wer jemanden sieht, rennt
   let p = l.p;
-  let rest = l.schritt;
+  let rest = l.schritt * (sicht ? SPRINT_JAEGER : gefahr ? SPRINT_MRX : 1);
   weg = [...weg];
   let richtung = l.richtung;
-  while (rest > 0 && weg.length) {
-    const q = knoten(weg[0]!);
+  const gehe = (q: Point) => {
     const d = distanceM(p, q);
     if (d > 0.5) richtung = bearingDeg(p, q);
     if (d <= rest) {
       p = q;
       rest -= d;
-      weg.shift();
-    } else {
-      p = { lat: p.lat + ((q.lat - p.lat) * rest) / d, lng: p.lng + ((q.lng - p.lng) * rest) / d };
-      rest = 0;
+      return true;
+    }
+    p = { lat: p.lat + ((q.lat - p.lat) * rest) / d, lng: p.lng + ((q.lng - p.lng) * rest) / d };
+    rest = 0;
+    return false;
+  };
+  while (rest > 0 && weg.length) if (gehe(knoten(weg[0]!))) weg.shift();
+  // die letzten Meter zu Mister X direkt (er steht selten genau auf einem Knoten)
+  if (sicht && rest > 0 && !weg.length) gehe(sicht);
+  return { p, richtung, weg, zweck, alter: alter + 1, gesehen };
+}
+
+/** Fang (Übungsspiel): welches Computer-Team ist Mister X nah genug? Das nächste unter `fangM`, sonst keins. */
+export function werFaengt(mrx: Point | null | undefined, jaeger: Record<string, Point>, fangM: number): string | null {
+  if (!mrx) return null;
+  let best: string | null = null;
+  let bestD = fangM;
+  for (const [id, p] of Object.entries(jaeger)) {
+    const d = distanceM(p, mrx);
+    if (d <= bestD) {
+      best = id;
+      bestD = d;
     }
   }
-  return { p, richtung, weg, zweck, alter: alter + 1 };
+  return best;
 }

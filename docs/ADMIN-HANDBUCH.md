@@ -128,8 +128,11 @@ Spätestens eine Woche vorher mit 3–5 Handys in der Innenstadt testen: [`FELDT
 
 **Üben ohne Leute:** In der **Steuerung** den **Probelauf** einschalten. Dann erscheint die Karte **Übungsspiel mit
 Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen**. Die Computer-Teams gehen von selbst
-durch die Straßen und Wege – die Jäger zur letzten Meldung von Mister X und suchen dort herum, Mister X flieht vor nahen
-Jägern. Sie bleiben im Spielfeld und gehen um Sperrgebiete herum. Übergaben, Sperren,
+durch die Straßen und Wege – die Jäger zur letzten Meldung von Mister X und suchen von dort aus immer weiter (je länger
+keine neue Meldung kommt, desto größer der Suchkreis), Mister X flieht vor nahen Jägern. Sieht ein Jäger Mister X (unter
+150 m), rennt er hinterher; kommt er auf 20 m heran, ist Mister X gefangen: Die Seite der Spielleitung macht die
+Übergabe wie im echten Spiel (Wartezeit, Meldung, im Protokoll unter deinem Namen). Ist ein echtes Team Mister X, kann
+es von Computer-Teams ebenfalls gefangen werden. Sie bleiben im Spielfeld und gehen um Sperrgebiete herum. Übergaben, Sperren,
 Sofort-Meldung und Bonus-Posten übst du wie im echten Spiel. Sie laufen nur, solange die Seite der Spielleitung offen
 ist. **Neue Runde vorbereiten** entfernt sie wieder.
 

@@ -548,7 +548,7 @@ export const T = {
   uebung: {
     titel: "Übungsspiel mit Computer-Teams",
     hinweis:
-      "Nur im Probelauf: Computer-Teams laufen von selbst durch die Straßen – die Jäger zur letzten Meldung, Mister X weg von den Jägern. So könnt ihr Übergaben, Sperren und Bonus-Posten ohne echte Leute üben. Sie laufen, solange diese Seite offen ist.",
+      "Nur im Probelauf: Computer-Teams laufen von selbst durch die Straßen – die Jäger zur letzten Meldung und suchen dort immer weiter, Mister X weg von den Jägern. Wer Mister X sieht (unter 150 m), rennt hinterher; unter 20 m ist er gefangen – Übergabe wie im Spiel. So könnt ihr Übergaben, Sperren und Bonus-Posten ohne echte Leute üben. Sie laufen, solange diese Seite offen ist.",
     anzahl: "Computer-Teams",
     anlegen: "Computer-Teams anlegen",
     angelegt: (n: number) => (n ? `${n} Computer-Teams angelegt` : "Es gibt schon genug Computer-Teams"),

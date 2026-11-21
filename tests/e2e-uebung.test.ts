@@ -97,4 +97,38 @@ describe("Übungsspiel", { timeout: 60_000 }, () => {
       )
       .toMatch(/^Error: Testfehler für das Protokoll.* – #\/spiel – Browser, /);
   });
+
+  it("Computer-Team fängt Mister X von selbst – Übergabe wie im Spiel (E-83)", async () => {
+    const [mrx, jaeger, a, b] = await botIds();
+    // Hauptplatz; vor dem Start hinstellen (im Spiel wäre der Sprung „unplausibel“)
+    const HP = { lat: 48.3059, lng: 14.2862 };
+    await run("setConfig", { config: { headStartMin: 0 } });
+    const hinstellen = {
+      [mrx!]: HP,
+      [jaeger!]: { lat: HP.lat + 0.0001, lng: HP.lng }, // 11 m – sieht Mister X
+      [a!]: { lat: HP.lat + 0.004, lng: HP.lng },
+      [b!]: { lat: HP.lat - 0.004, lng: HP.lng },
+    };
+    // der Server nimmt pro Team höchstens einen Standort pro Sekunde – die letzten Schritte von eben sind evtl. jünger
+    await expect
+      .poll(async () => {
+        await run("uebungZug", { pos: hinstellen });
+        return (await val(`games/${G}/positions/${mrx}`)).lat;
+      })
+      .toBe(HP.lat);
+    await run("startGame", { mrx });
+    const q = await (await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" })).newPage();
+    await q.goto(`http://127.0.0.1:${PORT}/#/staff/admin?g=${G}`);
+    await q.getByLabel(T.staffLogin.name).fill("Peter");
+    await q.getByLabel(T.staffLogin.adminPasswort).fill("admin1234");
+    await q.getByRole("button", { name: T.staffLogin.los, exact: true }).click();
+    await q.getByRole("link", { name: T.admin.nav.steuerung }).click();
+    await q.getByRole("button", { name: T.uebung.loslaufen }).click();
+    await expect.poll(() => val(`games/${G}/state/mrx`), { timeout: 45_000, interval: 1000 }).toBe(jaeger);
+    const h = Object.values(
+      (await val(`games/${G}/handovers`)) as Record<string, { type: string; from: string; to: string; byName: string }>,
+    );
+    expect(h.find((x) => x.type === "fang")).toMatchObject({ from: mrx, to: jaeger, byName: "Peter" });
+    await q.getByRole("button", { name: T.uebung.anhalten }).click();
+  });
 });
