@@ -63,7 +63,8 @@
     return () => stopGps();
   });
   sendPosition(() => !isAdmin && !!phase && phase !== "beendet");
-  keepAwake(() => !isAdmin && prefs.wake && (phase === "laeuft" || phase === "pause"));
+  // Übungsspiel: die Computer-Teams laufen nur, solange dieser Bildschirm an ist (am Handy wichtig)
+  keepAwake(() => uebung.laeuft || (!isAdmin && prefs.wake && (phase === "laeuft" || phase === "pause")));
 
   // Spielleitung: neue Direktnachrichten melden, gelesen-Stand pro Team
   let seen = $state<Record<string, number>>({});

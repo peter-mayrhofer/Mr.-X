@@ -569,7 +569,7 @@ export default {
     vorhanden: (namen) => `Participan: ${namen}`,
     loslaufen: "Ponerlos en marcha",
     anhalten: "Detener",
-    laeuft: "Los equipos de ordenador se mueven: un paso cada 5 segundos.",
+    laeuft: "Los equipos de ordenador se mueven: un paso cada 5 segundos. La pantalla se queda encendida; deja la app abierta.",
   },
   checkliste: {
     titel: "Lista del día de juego",

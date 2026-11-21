@@ -555,7 +555,7 @@ export const T = {
     vorhanden: (namen: string) => `Dabei: ${namen}`,
     loslaufen: "Loslaufen lassen",
     anhalten: "Anhalten",
-    laeuft: "Die Computer-Teams laufen – alle 5 Sekunden ein Schritt.",
+    laeuft: "Die Computer-Teams laufen – alle 5 Sekunden ein Schritt. Der Bildschirm bleibt dabei an; die App offen lassen.",
   },
   checkliste: {
     titel: "Spieltag-Checkliste",

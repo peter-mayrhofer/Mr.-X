@@ -132,6 +132,10 @@ Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen
 Sofort-Meldung und Bonus-Posten übst du wie im echten Spiel. Sie laufen nur, solange die Seite der Spielleitung offen
 ist. **Neue Runde vorbereiten** entfernt sie wieder.
 
+**Am Handy:** Geht genauso – **Steuerung** unten in der Leiste, zum Zuschauen **Live**. Solange die Computer-Teams
+laufen, bleibt der Bildschirm an. Die App offen lassen: Wechselst du in eine andere App oder sperrst das Handy, bleiben
+die Computer-Teams stehen, bis du zurückkommst.
+
 ![Übungsspiel in der Steuerung](screens/neu/uebung-steuerung.jpg)
 
 ![Computer-Teams laufen über die Karte](screens/neu/uebung-karte.jpg)

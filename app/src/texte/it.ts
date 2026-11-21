@@ -575,7 +575,7 @@ export default {
     vorhanden: (namen) => `In gioco: ${namen}`,
     loslaufen: "Falle partire",
     anhalten: "Ferma",
-    laeuft: "Le squadre computer si muovono: un passo ogni 5 secondi.",
+    laeuft: "Le squadre computer si muovono: un passo ogni 5 secondi. Lo schermo resta acceso; lascia aperta l'app.",
   },
   checkliste: {
     titel: "Checklist del giorno di gioco",

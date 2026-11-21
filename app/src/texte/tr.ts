@@ -560,7 +560,7 @@ export default {
     vorhanden: (namen) => `Oyunda: ${namen}`,
     loslaufen: "Yürümeye başlat",
     anhalten: "Durdur",
-    laeuft: "Bilgisayar takımları yürüyor – her 5 saniyede bir adım.",
+    laeuft: "Bilgisayar takımları yürüyor – her 5 saniyede bir adım. Ekran açık kalır; uygulamayı açık bırakın.",
   },
   checkliste: {
     titel: "Oyun günü kontrol listesi",

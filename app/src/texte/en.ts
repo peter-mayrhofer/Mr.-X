@@ -566,7 +566,7 @@ export default {
     vorhanden: (namen) => `Playing: ${namen}`,
     loslaufen: "Let them walk",
     anhalten: "Stop",
-    laeuft: "The computer teams are walking – one step every 5 seconds.",
+    laeuft: "The computer teams are walking – one step every 5 seconds. The screen stays on; keep the app open.",
   },
   checkliste: {
     titel: "Game-day checklist",
