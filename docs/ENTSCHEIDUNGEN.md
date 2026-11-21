@@ -892,3 +892,24 @@ eigenen Straßendienstes: kein neuer Anbieter, keine Wartezeit; zum Lesen der Ka
 **Getestet:** `shared/test/uebung.test.ts` (Raster-Netz: nur Straßen, im Spielfeld, Umweg um Sperren, kein Hin und Her
 beim Neuplanen, Flucht; gerade Schritte bleiben diesseits der Linie). Mit den echten Linzer Kacheln: 4067 Knoten, Netz
 in 0,3 s gebaut, 8 Teams × 30 Minuten nie draußen.
+
+### E-83 Computer-Teams fangen Mister X und suchen weiter
+**Entscheidung:**
+- **Sicht:** Jäger sehen Mister X unter 150 m und rennen hinterher (1,4-fach), Mister X merkt Jäger unter 250 m und
+  rennt (1,2-fach) – sonst holt nie jemand jemanden ein. Unter 60 m geht der Jäger direkt auf ihn zu.
+- **Fang:** Kommt ein Computer-Team auf 20 m an Mister X heran (Computer-Team oder echtes Team), macht die Seite der
+  Spielleitung die Übergabe (`handover`, Art „Fang“) – mit Wartezeit, Meldung und Protokoll wie von Hand. Erst gehen die
+  neuen Standorte an den Server, dann die Übergabe (Übergabeort und Wartezeit-Umkreis stimmen so).
+- **Suchen:** Jäger gehen zum Neuesten, was sie wissen – letzte Meldung oder letzte Sichtung – und suchen dort in einem
+  Kreis, der mit dem Alter dieses Wissens wächst (1,5 m pro Sekunde, 150 m bis 1 km).
+- **Nach dem Fang:** Der neue Mister X läuft sofort davon; Mister X achtet nur auf Jäger, die laufen dürfen (wer nach
+  einem Fang wartet, kann ihn nicht verfolgen).
+- Straßennetz mit Sicherheitsabstand zur Toleranz (80 %), weil die Spielfeld-Prüfung knapp unter der Toleranz schon
+  „draußen“ meldet.
+**Warum so:** Rückmeldung des Organisators nach 3:24 h Übungsspiel: nur eine Übergabe (von Hand), die Jäger konnten
+nicht fangen und blieben an der letzten Meldung. Simulation auf dem echten Linzer Straßennetz (1 Mister X, 7 Jäger,
+Meldung alle 10 min, 5 min Wartezeit im Umkreis von 200 m): 5–13 Fänge in 3 Stunden, nie außerhalb des Spielfelds,
+freie Teams stehen in 0,1 % der Schritte. Ab und zu wird ein neuer Mister X nach 1–2 Minuten wieder gefangen – von einem
+Jäger knapp außerhalb des Wartezeit-Umkreises; das kann im echten Spiel genauso passieren.
+**Getestet:** `shared/test/uebung.test.ts` (Fang, Sicht und Einholen, Suchkreis wächst, letzte Sichtung vor älterer
+Meldung, neuer Mister X flieht), `tests/e2e-uebung.test.ts` (Computer-Team fängt Mister X in der echten App).

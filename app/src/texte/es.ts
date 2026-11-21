@@ -562,7 +562,7 @@ export default {
   uebung: {
     titel: "Partida de práctica con equipos de ordenador",
     hinweis:
-      "Solo en la partida de prueba: los equipos de ordenador recorren las calles solos; los cazadores hacia el último aviso, Mister X lejos de los cazadores. Así podéis practicar entregas, cierres y puestos de bonificación sin gente real. Se mueven mientras esta página esté abierta.",
+      "Solo en la partida de prueba: los equipos de ordenador recorren las calles solos; los cazadores hacia el último aviso y desde allí siguen buscando, Mister X lejos de los cazadores. Quien ve a Mister X (a menos de 150 m) corre tras él; a menos de 20 m queda atrapado: entrega como en el juego. Así podéis practicar entregas, cierres y puestos de bonificación sin gente real. Se mueven mientras esta página esté abierta.",
     anzahl: "Equipos de ordenador",
     anlegen: "Crear equipos de ordenador",
     angelegt: (n) => (n ? `${n} equipos de ordenador creados` : "Ya hay suficientes equipos de ordenador"),

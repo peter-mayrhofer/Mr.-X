@@ -559,7 +559,7 @@ export default {
   uebung: {
     titel: "Practice game with computer teams",
     hinweis:
-      "Trial run only: computer teams walk the streets on their own – hunters towards the last report, Mister X away from the hunters. Practise handovers, closures and bonus posts without real people. They move while this page is open.",
+      "Trial run only: computer teams walk the streets on their own – hunters towards the last report and keep searching from there, Mister X away from the hunters. Whoever sees Mister X (within 150 m) runs after him; within 20 m he is caught – a handover just like in the game. Practise handovers, closures and bonus posts without real people. They move while this page is open.",
     anzahl: "Computer teams",
     anlegen: "Create computer teams",
     angelegt: (n) => (n ? `${n} computer teams created` : "There are already enough computer teams"),

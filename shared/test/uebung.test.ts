@@ -10,7 +10,9 @@ import {
   LINZ_INNENSTADT,
   netzSchritt,
   netzWeg,
+  SICHT_M,
   strassenNetz,
+  werFaengt,
   zoneStatus,
   type NetzBot,
   type Point,
@@ -127,5 +129,84 @@ describe("Computer-Teams auf Straßen", () => {
     expect(b.zweck).toBe("flucht");
     expect(distanceM(b.p, jaeger[0]!)).toBeGreaterThan(250);
     expect(aufStrasse(b.p)).toBe(true);
+  });
+});
+
+describe("Computer-Teams fangen Mister X (E-83)", () => {
+  let s = 17;
+  const zufall = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const gesperrt = new Set<number>();
+  const jaeger = (p: Point, extra = {}): NetzBot & ReturnType<typeof lage> => ({
+    ...lage(p),
+    weg: [],
+    zweck: "",
+    alter: 0,
+    zufall,
+    ...extra,
+  });
+
+  it("wer am nächsten ist und nah genug, fängt", () => {
+    const mrx = rasterPunkt(0, 0);
+    const nah = { lat: mrx.lat + 0.0001, lng: mrx.lng }; // 11 m
+    const naeher = { lat: mrx.lat + 0.00005, lng: mrx.lng }; // 6 m
+    expect(werFaengt(mrx, { a: nah, b: naeher, c: rasterPunkt(1, 1) }, 20)).toBe("b");
+    expect(werFaengt(mrx, { c: rasterPunkt(1, 1) }, 20)).toBeNull();
+    expect(werFaengt(null, { a: nah }, 20)).toBeNull();
+  });
+
+  it("Jäger mit Sicht auf Mister X rennt hin und holt ihn ein", () => {
+    let b: NetzBot = jaeger(rasterPunkt(0, -1)); // gut 110 m westlich
+    let mrx = rasterPunkt(0, 0);
+    const start = distanceM(b.p, mrx);
+    expect(start).toBeLessThan(SICHT_M);
+    b = netzSchritt({ ...jaeger(b.p), ...b, mrxJetzt: mrx, jetzt: 0, netz, gesperrt });
+    expect(distanceM(b.p, mrx)).toBeLessThan(start - 15); // rennt: mehr als ein normaler Schritt
+    expect(b.gesehen).toMatchObject(mrx);
+    // Mister X geht weiter nach Osten, normal schnell – der Jäger holt auf
+    for (let k = 1; k < 30 && distanceM(b.p, mrx) > 20; k++) {
+      mrx = { lat: mrx.lat, lng: mrx.lng + 15 / 74_000 };
+      b = netzSchritt({ ...jaeger(b.p), ...b, mrxJetzt: mrx, jetzt: k * 5000, netz, gesperrt });
+    }
+    expect(distanceM(b.p, mrx)).toBeLessThanOrEqual(20);
+  });
+
+  it("ohne Sicht: Jäger geht zur Meldung und sucht dann immer weiter weg (nicht stehen bleiben)", () => {
+    const meldung = { ...rasterPunkt(1, 1), t: 0 };
+    let b: NetzBot = jaeger(rasterPunkt(-1, -1));
+    const weit: number[] = [];
+    let steht = 0;
+    for (let k = 0; k < 400; k++) {
+      const vorher = b.p;
+      b = netzSchritt({ ...jaeger(b.p), ...b, ziel: meldung, mrxJetzt: rasterPunkt(-5, -5), jetzt: k * 5000, netz, gesperrt });
+      if (distanceM(vorher, b.p) < 1) steht++;
+      weit.push(distanceM(b.p, meldung));
+    }
+    expect(steht).toBeLessThan(5);
+    // anfangs nah an der Meldung, später weiter weg (der Suchkreis wächst mit der Zeit)
+    const schnitt = (a: number[]) => a.reduce((x, y) => x + y, 0) / a.length;
+    expect(schnitt(weit.slice(25, 45))).toBeLessThan(250);
+    expect(schnitt(weit.slice(300))).toBeGreaterThan(1.5 * schnitt(weit.slice(25, 45)));
+  });
+
+  it("verlorene Sicht: erst zur letzten Sichtung, nicht zur älteren Meldung", () => {
+    const meldung = { ...rasterPunkt(-3, -3), t: 0 };
+    const gesehenBei = rasterPunkt(0, 1);
+    let b: NetzBot = jaeger(rasterPunkt(0, 0));
+    b = netzSchritt({ ...jaeger(b.p), ...b, ziel: meldung, mrxJetzt: gesehenBei, jetzt: 10_000, netz, gesperrt });
+    for (let k = 0; k < 5; k++)
+      b = netzSchritt({ ...jaeger(b.p), ...b, ziel: meldung, mrxJetzt: rasterPunkt(5, 5), jetzt: 20_000 + k * 5000, netz, gesperrt });
+    expect(distanceM(b.p, gesehenBei)).toBeLessThan(distanceM(b.p, meldung));
+    expect(b.zweck).toContain(gesehenBei.lat.toFixed(5));
+  });
+
+  it("fast alles gesperrt: kein Absturz, Mister X geht trotzdem weiter", () => {
+    const alles = new Set(netz.pts.map((_, i) => i));
+    const b = netzSchritt({ ...jaeger(rasterPunkt(0, 0)), mrx: true, jaeger: [rasterPunkt(0, 1)], netz, gesperrt: alles });
+    expect(distanceM(b.p, rasterPunkt(0, 0))).toBeGreaterThan(10);
+  });
+
+  it("neuer Mister X (eben noch Jäger) läuft sofort davon", () => {
+    const b = netzSchritt({ ...jaeger(rasterPunkt(0, 0)), zweck: "jagd:x", mrx: true, jaeger: [], netz, gesperrt });
+    expect(b.zweck).toBe("flucht");
   });
 });

@@ -568,7 +568,7 @@ export default {
   uebung: {
     titel: "Partita di prova con squadre computer",
     hinweis:
-      "Solo nella partita di prova: le squadre computer percorrono da sole le strade – i cacciatori verso l'ultima segnalazione, Mister X lontano dai cacciatori. Così potete esercitarvi con passaggi, chiusure e postazioni bonus senza persone vere. Si muovono finché questa pagina è aperta.",
+      "Solo nella partita di prova: le squadre computer percorrono da sole le strade – i cacciatori verso l'ultima segnalazione e da lì continuano a cercare, Mister X lontano dai cacciatori. Chi vede Mister X (entro 150 m) gli corre dietro; entro 20 m è preso: passaggio come nel gioco. Così potete esercitarvi con passaggi, chiusure e postazioni bonus senza persone vere. Si muovono finché questa pagina è aperta.",
     anzahl: "Squadre computer",
     anlegen: "Crea squadre computer",
     angelegt: (n) => (n ? `${n} squadre computer create` : "Ci sono già abbastanza squadre computer"),
