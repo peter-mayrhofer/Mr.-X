@@ -127,8 +127,9 @@ eintragen. Details: [`API.md`](API.md) Abschnitt 5a.
 Spätestens eine Woche vorher mit 3–5 Handys in der Innenstadt testen: [`FELDTEST.md`](FELDTEST.md).
 
 **Üben ohne Leute:** In der **Steuerung** den **Probelauf** einschalten. Dann erscheint die Karte **Übungsspiel mit
-Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen**. Die Computer-Teams laufen von selbst
-über die Karte – die Jäger zur letzten Meldung von Mister X, Mister X weg von den Jägern. Übergaben, Sperren,
+Computer-Teams**: Anzahl wählen, **Computer-Teams anlegen**, **Loslaufen lassen**. Die Computer-Teams gehen von selbst
+durch die Straßen und Wege – die Jäger zur letzten Meldung von Mister X und suchen dort herum, Mister X flieht vor nahen
+Jägern. Sie bleiben im Spielfeld und gehen um Sperrgebiete herum. Übergaben, Sperren,
 Sofort-Meldung und Bonus-Posten übst du wie im echten Spiel. Sie laufen nur, solange die Seite der Spielleitung offen
 ist. **Neue Runde vorbereiten** entfernt sie wieder.
 

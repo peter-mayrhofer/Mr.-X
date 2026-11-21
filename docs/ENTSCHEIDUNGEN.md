@@ -875,3 +875,20 @@ der Browser keine Schritte mehr und die Computer-Teams bleiben stehen. Im Hinter
 nicht; dafür müsste der Server die Teams bewegen (mehr Last im Spielraum) – nicht nötig, solange die Spielleitung
 ohnehin auf die Karte schaut.
 **Getestet:** `tests/e2e-uebung.test.ts` (Bildschirm-Sperre beim Loslaufen an, beim Anhalten wieder frei).
+
+### E-82 Computer-Teams gehen auf Straßen
+**Entscheidung:** Die Computer-Teams im Übungsspiel gehen auf Straßen und Wegen und planen ihren Weg (kürzester Weg,
+an gesperrten Bereichen vorbei). Jäger gehen zur letzten Meldung und suchen dort in der Umgebung, Mister X flieht vor
+Jägern unter 400 m zu einem Punkt weit weg von ihnen und plant alle 30 s neu; sonst bummeln alle zu zufälligen Zielen.
+Das Straßennetz kommt aus denselben Kartenkacheln wie die Karte (OpenFreeMap, Ebene „transportation“, Zoomstufe 14):
+einmal pro Spielfeld geladen, nur Stücke im Spielfeld (mit Toleranz – Grenzstraßen gehören dazu, Regel 9), nur das
+größte zusammenhängende Netz. Bis es geladen ist oder wenn das nicht klappt, gehen sie wie bisher gerade Schritte –
+jetzt aber mindestens 15 m diesseits der Grenzlinie, und an der Grenze drehen sie schrittweise ab statt umzukehren.
+**Warum so:** Rückmeldung des Organisators: Die Computer-Teams liefen nur gerade und am Rand „raus, rein, raus, rein“.
+Ursache: Mister X lief immer wieder direkt vom Jäger weg in die Grenze, wurde zur Mitte umgedreht und lief im nächsten
+Schritt wieder hinaus; dabei nutzten die Teams die 20 m Toleranz jenseits der Linie. Kartenkacheln statt eines
+eigenen Straßendienstes: kein neuer Anbieter, keine Wartezeit; zum Lesen der Kacheln dienen `@mapbox/vector-tile` und
+`pbf`, die mit der Karte (MapLibre) schon installiert sind.
+**Getestet:** `shared/test/uebung.test.ts` (Raster-Netz: nur Straßen, im Spielfeld, Umweg um Sperren, kein Hin und Her
+beim Neuplanen, Flucht; gerade Schritte bleiben diesseits der Linie). Mit den echten Linzer Kacheln: 4067 Knoten, Netz
+in 0,3 s gebaut, 8 Teams × 30 Minuten nie draußen.
