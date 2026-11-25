@@ -264,11 +264,14 @@
 <style>
   .stack {
     display: grid;
+    /* Spalte nie breiter als die Karte: der Laufzeit-Umschalter wischt dann seitlich, statt die Seite zu verbreitern */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-3);
     justify-items: start;
   }
   .stack > :global(*) {
     max-width: 100%;
+    min-width: 0;
   }
   .schmal {
     max-width: 420px;
@@ -290,10 +293,14 @@
   .liste li {
     display: flex;
     flex-wrap: wrap;
+    overflow-wrap: anywhere;
     gap: var(--sp-2) var(--sp-3);
     align-items: center;
     padding-bottom: var(--sp-3);
     border-bottom: 1px solid var(--line);
+  }
+  .liste li > :global(*) {
+    min-width: 0;
   }
   .liste li:last-child {
     border-bottom: 0;

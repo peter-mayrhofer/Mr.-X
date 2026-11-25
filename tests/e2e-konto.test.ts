@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ViteDevServer } from "vite";
 import { chromium, type Browser, type Page } from "playwright";
 import { T } from "../app/src/texte.ts";
-import { resetServer, startApp, SUPER_PW, superAdminToken } from "./helpers.ts";
+import { call, resetServer, startApp, SUPER_PW, superAdminToken } from "./helpers.ts";
 
 const PORT = 5201;
 const URL = `http://127.0.0.1:${PORT}/#/verwaltung`;
@@ -103,5 +103,27 @@ describe("Organisator-Konten mit Gratis-Code", { timeout: 60_000 }, () => {
     await verein.getByLabel(K.passwort, { exact: true }).fill("vereinsheim-2026");
     await verein.getByRole("button", { name: K.anmelden, exact: true }).click();
     await verein.getByText(K.angemeldetAls(VEREIN)).waitFor();
+  });
+
+  it("am Handy (360 px): Seite nie breiter als der Bildschirm – auch mit langer E-Mail-Adresse", async () => {
+    // lange Adresse in einem Stück: „Angemeldet als …“ und die Konten-Liste dürfen die Seite nicht verbreitern
+    const LANG = "organisation-mit-langer-adresse@beispiel-verein.at";
+    await call(await superAdminToken(), { action: "eigentuemerAnlegen", email: LANG, passwort: "eigentuemer-2026" });
+    const handy = async (email: string, passwort: string, warten: string) => {
+      const p = await (
+        await browser.newContext({ viewport: { width: 360, height: 780 }, locale: "de-AT", reducedMotion: "reduce" })
+      ).newPage();
+      await p.goto(URL);
+      await p.getByLabel(K.email).fill(email);
+      await p.getByLabel(K.passwort, { exact: true }).fill(passwort);
+      await p.getByRole("button", { name: K.anmelden, exact: true }).click();
+      await p.getByRole("heading", { name: warten }).waitFor();
+      await p.getByRole("heading", { name: "Verein Linz" }).waitFor();
+      return p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    };
+    expect({
+      eigentuemer: await handy(LANG, "eigentuemer-2026", K.codes),
+      verein: await handy(VEREIN, "vereinsheim-2026", K.meinKonto),
+    }).toEqual({ eigentuemer: 0, verein: 0 });
   });
 });
