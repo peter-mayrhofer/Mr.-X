@@ -7,6 +7,7 @@ import {
   type ApiCall,
   type ApiReason,
   type ApiReply,
+  type ApiRequest,
   type GameListEntry,
   type JoinResult,
   type NativePosIn,
@@ -36,6 +37,9 @@ const STATUS: Record<ApiReason, number> = {
   archived: 409,
   tooLate: 409,
   tooMany: 429,
+  badCode: 403,
+  expired: 403,
+  emailTaken: 409,
 };
 
 /** Android-App (Capacitor) läuft unter eigener Adresse und ruft die API von dort auf */
@@ -62,9 +66,30 @@ const no = (reason: ApiReason, message: string): ApiReply => ({ ok: false, reaso
 const room = (env: Env, g: string) => env.ROOM.get(env.ROOM.idFromName(g));
 const zentrale = (env: Env) => env.ZENTRALE.get(env.ZENTRALE.idFromName("zentrale"));
 
+/** Aktionen der Zentrale für Organisator-Konten und Gratis-Codes (E-84) */
+const KONTO = [
+  "kontoErstellen",
+  "kontoLogin",
+  "kontoInfo",
+  "kontoPasswort",
+  "codeEinloesen",
+  "codeErstellen",
+  "codeListe",
+  "codeSperren",
+  "kontoListe",
+  "kontoSetzen",
+  "kontoLoeschen",
+  "eigentuemerAnlegen",
+] as const satisfies ApiRequest["action"][];
+const istKonto = <T extends { action: string }>(b: T): b is Extract<T, { action: (typeof KONTO)[number] }> =>
+  (KONTO as readonly string[]).includes(b.action);
+
 const bearer = (req: Request) => /^Bearer (.+)$/.exec(req.headers.get("Authorization") ?? "")?.[1];
 
-/** Wer fragt? Gültiges Token für dieses Spiel → Gerät; Organisator-Token mit aktueller Passwort-Version → Super-Admin */
+/**
+ * Wer fragt? Gültiges Token für dieses Spiel → Gerät; Organisator-Token mit aktueller Passwort-Version → Eigentümer;
+ * Konto-Token mit aktueller Version, nicht gesperrt → Organisator-Konto (Eigentümer-Konto: wie Organisator-Passwort)
+ */
 async function who(req: Request, env: Env, g?: string): Promise<Auth> {
   const ip = req.headers.get("cf-connecting-ip") ?? "lokal";
   const token = bearer(req);
@@ -72,6 +97,13 @@ async function who(req: Request, env: Env, g?: string): Promise<Auth> {
   const c = await verify(env.TOKEN_SECRET, token);
   if (!c) return { ip, badToken: true };
   if ("s" in c) return (await zentrale(env).version()) === c.s ? { ip, superAdmin: true } : { ip, badToken: true };
+  if ("k" in c) {
+    const k = await zentrale(env).stand(c.k);
+    if (!k || k.version !== c.v || k.gesperrt) return { ip, badToken: true };
+    return k.rolle === "eigentuemer"
+      ? { ip, superAdmin: true, konto: c.k }
+      : { ip, konto: c.k, kontoAktiv: k.bisAt === null || k.bisAt > Date.now() };
+  }
   // Token eines anderen Spiels (z. B. Startseite eines neuen QR-Links) ist kein Fehler – nur hier kein Mitglied
   return c.g === g ? { ip, uid: c.u } : { ip };
 }
@@ -85,13 +117,17 @@ async function api(req: Request, env: Env): Promise<Response> {
 
   if (body.action === "superSetup") return out(req, await zentrale(env).setup(body.setupSecret, body.password, ip));
   if (body.action === "superLogin") return out(req, await zentrale(env).login(body.password, ip));
+  if (istKonto(body)) return out(req, await zentrale(env).konto(body, await who(req, env), ip));
   if (body.action === "listGames") {
     const a = await who(req, env);
-    if (!a.superAdmin) return out(req, no(a.badToken ? "session" : "forbidden", "Nur für den Organisator"));
+    if (!a.superAdmin && !a.konto) return out(req, no(a.badToken ? "session" : "forbidden", "Nur für Organisatoren"));
     await ensureSchema(env.DB);
-    const r = await env.DB.prepare("SELECT id, name, createdAt, archived, phase, teams FROM games ORDER BY createdAt DESC").all<
-      Omit<GameListEntry, "archived"> & { archived: number }
-    >();
+    // Eigentümer: alle Spiele; Organisator-Konto: nur die eigenen
+    const sql = "SELECT id, name, createdAt, archived, phase, teams FROM games";
+    const q = a.superAdmin
+      ? env.DB.prepare(`${sql} ORDER BY createdAt DESC`)
+      : env.DB.prepare(`${sql} WHERE konto = ?1 ORDER BY createdAt DESC`).bind(a.konto);
+    const r = await q.all<Omit<GameListEntry, "archived"> & { archived: number }>();
     return out(req, { ok: true, result: { games: r.results.map((x) => ({ ...x, archived: x.archived === 1 })) } });
   }
 
@@ -156,6 +192,10 @@ async function test(req: Request, env: Env, path: string): Promise<Response> {
     ]);
     await zentrale(env).reset();
     return Response.json({ ok: true });
+  }
+  if (path === "/__test/konto") {
+    const k = b as { email: string; value: { bisAt?: number | null } };
+    return Response.json({ ok: true, result: await zentrale(env).testKonto(k.email, k.value) });
   }
   return Response.json({ ok: true, result: await room(env, b.g!).test(b.op!, b.path, b.value) });
 }

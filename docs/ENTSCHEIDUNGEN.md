@@ -277,6 +277,8 @@ dasselbe Geheimnis setzt ein vergessenes Passwort zurück und macht dabei alle a
 (Passwort-Version im Token). Rate-Limits: 20 falsche Beitritte je IP und Spiel in 10 Min (großzügig wegen Carrier-NAT),
 5 falsche Organisator-Passwörter je IP in 10 Min.
 **Warum:** Keine E-Mail-Konten für Kinder/Jugendliche, kein Google-Konto nötig, Sitzungen sofort widerrufbar.
+**Später ergänzt:** Organisator-Konten mit E-Mail für Erwachsene, die Spiele anlegen (E-84) – Teams, Schiris und
+Spielleitung bleiben ohne Konto.
 **Verworfen:** JWT-Bibliothek (HMAC mit WebCrypto sind 20 Zeilen), kurze Token-Laufzeit mit Erneuerung (Widerruf läuft
 ohnehin über die Mitgliedschaft; Spielleitungen richten Spiele oft Tage vorher ein).
 
@@ -913,3 +915,31 @@ freie Teams stehen in 0,1 % der Schritte. Ab und zu wird ein neuer Mister X nach
 Jäger knapp außerhalb des Wartezeit-Umkreises; das kann im echten Spiel genauso passieren.
 **Getestet:** `shared/test/uebung.test.ts` (Fang, Sicht und Einholen, Suchkreis wächst, letzte Sichtung vor älterer
 Meldung, neuer Mister X flieht), `tests/e2e-uebung.test.ts` (Computer-Team fängt Mister X in der echten App).
+
+### E-84 Organisator-Konten mit Gratis-Code
+**Entscheidung:**
+- Neben dem Organisator-Passwort gibt es **Organisator-Konten** mit E-Mail + Passwort. Erstellen kann man eines nur
+  mit einem **Gratis-Code** (100 % Rabatt) des Eigentümers; später sollen Konten ein Abo werden.
+- **Codes:** Der Eigentümer wählt je Code, wie oft er eingelöst werden darf (1–1000) und wie lange ein Konto damit gilt
+  (1, 3, 6, 12 Monate oder unbegrenzt). Einlösen in einem bestehenden Konto verlängert es (ab dem bisherigen Ende);
+  jeden Code nur einmal pro Konto. Codes lassen sich sperren. Format `MRX-XXXX-XXXX` ohne 0/O/1/I.
+- **Konten und Codes** liegen in der Zentrale (ein Durable Object): Einlösen ist dort nur Speicherzugriff hintereinander,
+  darum wird ein Code nie öfter benutzt als erlaubt. Passwörter wie bisher als PBKDF2-Hash; 5 Fehlversuche (Anmeldung,
+  falscher Code) je IP in 10 Min. Gleich lange Prüfung für unbekannte E-Mails.
+- **Token** `{ k, v, e }`: Konto und Version. Neues Passwort, Sperre und Löschung erhöhen die Version – alte Sitzungen
+  sind sofort ungültig. Kein neues Geheimnis nötig (`TOKEN_SECRET`).
+- **Rechte:** Ein Konto sieht und steuert nur **eigene Spiele** (Besitzer im Spielraum `secrets.konto`, in D1
+  `games.konto`) und **eigene Vorlagen** (`templates.konto`) – bisher sah jede Spielleitung alle Vorlagen. Das
+  **Eigentümer-Konto** und das Organisator-Passwort sehen alles, erstellen Codes und verwalten Konten (neues Passwort,
+  sperren, löschen). Bestehende Spiele und Vorlagen gehören dem Eigentümer (`NULL`).
+- **Abgelaufen:** keine neuen Spiele; bestehende Spiele laufen weiter, damit kein Spieltag mittendrin abbricht.
+- **Keine Mails:** Passwort vergessen → der Eigentümer setzt ein neues.
+- D1 bekommt die Spalten per kleinem Helfer (`PRAGMA table_info`, dann `ALTER TABLE … ADD COLUMN`) in `ensureSchema()` –
+  weiterhin ohne Befehle für den Organisator.
+**Warum:** Wunsch des Organisators: mehrere Organisatoren (z. B. Vereine) sollen eigene Spiele anlegen können, ohne
+sein Organisator-Passwort zu kennen; das Organisator-Passwort bleibt als Haupt-Zugang, zusätzlich ein Eigentümer-Konto.
+Die E-Mail ist nur der Anmeldename und später für das Abo (Rechnung) nötig. Datenschutzhinweis ergänzt.
+**Bewusst später:** Bezahl-Abo (`bisAt` ist schon das Ablaufdatum), Rabatte unter 100 %, Mails (Bestätigung, Passwort
+vergessen), Grenzen pro Konto, mehrere Organisatoren pro Spiel.
+**Getestet:** `tests/konten.test.ts` (Codes, Anmeldung, eigene Spiele und Vorlagen, Ablauf und Verlängern, Verwaltung
+durch den Eigentümer), `tests/e2e-konto.test.ts` (ganzer Ablauf in der App).

@@ -29,6 +29,10 @@ Die Android-App (Adresse `https://localhost`) darf `/api` über CORS aufrufen; a
 - **Organisator (Super-Admin):** einmal `superSetup` mit dem **Setup-Geheimnis** (Wrangler-Secret, siehe
   [`BETRIEB.md`](BETRIEB.md)) und einem Passwort, danach `superLogin` mit dem Passwort. Das Token trägt die
   Passwort-Version – ein neues Passwort macht alle alten Organisator-Sitzungen ungültig.
+- **Organisator-Konten (E-84):** `kontoErstellen` mit E-Mail, Passwort und **Gratis-Code**, danach `kontoLogin`. Das
+  Token trägt Konto und Version – neues Passwort, Sperre oder Löschung machen alte Sitzungen ungültig. Ein Konto sieht
+  und steuert nur seine eigenen Spiele und Vorlagen; das **Eigentümer-Konto** hat dieselben Rechte wie das
+  Organisator-Passwort.
 - Tokens sind mit `TOKEN_SECRET` (HMAC-SHA-256) unterschrieben, Passwörter/Codes nur als **PBKDF2-Hash** gespeichert
   (100 000 Runden, Salz, Vergleich in konstanter Zeit).
 
@@ -68,9 +72,19 @@ einem Netzabbruch nochmal, antwortet der Spielraum mit dem gespeicherten Ergebni
 |---|---|---|---|
 | `superSetup` | jeder mit Setup-Geheimnis | `setupSecret`, `password` (≥ 10) | `{ token }` |
 | `superLogin` | Organisator | `password` | `{ token }` |
-| `listGames` | Organisator | – | `{ games: [{ id, name, createdAt, archived, phase, teams }] }` |
-| `createGame` | Organisator | `gameId`, `name`, `template` (`linz`/`leer`), `adminPassword` | `{ gameId }` |
-| `archiveGame` / `deleteGame` | Organisator | `gameId`, `archived` | `{}` |
+| `listGames` | Eigentümer (alle) / Konto (eigene) | – | `{ games: [{ id, name, createdAt, archived, phase, teams }] }` |
+| `createGame` | Eigentümer / gültiges Konto (sonst `expired`) | `gameId`, `name`, `template` (`linz`/`leer`), `adminPassword` | `{ gameId }` |
+| `archiveGame` / `deleteGame` | Eigentümer / Konto (eigene Spiele) | `gameId`, `archived` | `{}` |
+| `kontoErstellen` | jeder mit Gratis-Code | `email`, `passwort` (≥ 10), `code` | `{ token }` – Fehler `badCode`, `emailTaken` |
+| `kontoLogin` | Konto | `email`, `passwort` | `{ token }` |
+| `kontoInfo` | Konto / Eigentümer | – | `{ konto: { id, email, rolle, bisAt, gesperrt, codes, createdAt } \| null, eigentuemer }` |
+| `kontoPasswort` | Konto | `alt`, `neu` | `{ token }` (alte Sitzungen ungültig) |
+| `codeEinloesen` | Konto | `code` | `{ bisAt }` (null = unbegrenzt); jeden Code nur einmal pro Konto |
+| `codeErstellen` | Eigentümer | `max` (1–1000), `monate` (1, 3, 6, 12; 0 = unbegrenzt) | `{ code }` (`MRX-XXXX-XXXX`) |
+| `codeListe` / `codeSperren` | Eigentümer | – / `code`, `aktiv` | `{ codes: [{ code, max, benutzt, monate, aktiv, createdAt }] }` / `{}` |
+| `kontoListe` | Eigentümer | – | `{ konten: [… wie kontoInfo, spiele] }` |
+| `kontoSetzen` / `kontoLoeschen` | Eigentümer | `id`, `passwort?`, `gesperrt?` / `id` | `{}` (Spiele eines gelöschten Kontos gehören dann dem Eigentümer) |
+| `eigentuemerAnlegen` | Eigentümer | `email`, `passwort` | `{ id }` |
 | `gameInfo` | jeder | `gameId` | `{ name, phase, createdAt, spectators, archived? }` |
 | `join` | jeder | `gameId`, `role`, `name`, `secret?`, `secondDevice?` | `{ status: "joined", role, teamId?, token, uid }` oder `{ status: "teamExists", teamName }` |
 | `leave` | Mitglied | `gameId` | `{}` |

@@ -143,6 +143,18 @@ export async function superSetup(setupSecret: string, password: string) {
   setSuper((await call({ action: "superSetup", setupSecret, password })).token);
 }
 export const superLogout = () => setSuper(null);
+/** Organisator-Konto (E-84): Anmeldung mit E-Mail + Passwort */
+export async function kontoLogin(email: string, passwort: string) {
+  setSuper((await call({ action: "kontoLogin", email, passwort })).token);
+}
+/** Organisator-Konto mit Gratis-Code erstellen – danach gleich angemeldet */
+export async function kontoErstellen(email: string, passwort: string, code: string) {
+  setSuper((await call({ action: "kontoErstellen", email, passwort, code })).token);
+}
+/** eigenes Passwort geändert: neue Sitzung, die alten sind ungültig */
+export async function kontoPasswort(alt: string, neu: string) {
+  setSuper((await call({ action: "kontoPasswort", alt, neu })).token);
+}
 
 tokens.onSession = (kind) => {
   if (kind === "super") setSuper(null);

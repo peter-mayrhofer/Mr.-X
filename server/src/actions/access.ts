@@ -34,9 +34,15 @@ const MAX_FAILS = 20;
 
 const EMPTY_FIELD: Field = { name: "Neues Spielfeld", toleranceM: 20, base: [], cuts: {} };
 
-/** Neues Spiel (Super-Admin). Der Spielraum zum Spiel-Code ist die Autorität – gibt es ihn schon, ist der Code vergeben. */
+/**
+ * Neues Spiel (Eigentümer oder gültiges Organisator-Konto, E-84). Der Spielraum zum Spiel-Code ist die Autorität – gibt
+ * es ihn schon, ist der Code vergeben.
+ */
 export async function createGame(room: GameRoom, d: D, a: Auth): Promise<ApiResults["createGame"]> {
-  if (!a.superAdmin) fail("forbidden");
+  if (!a.superAdmin && !a.konto) fail(a.badToken ? "session" : "forbidden");
+  if (!a.superAdmin && !a.kontoAktiv) fail("expired", "Konto abgelaufen – bitte einen neuen Code einlösen");
+  // Spiele des Eigentümers gehören niemandem Bestimmten (NULL), Spiele eines Kontos diesem Konto
+  const konto = a.superAdmin ? null : a.konto!;
   const g = gameId(d.gameId);
   const name = str(d.name, LIMITS.gameName, "Name");
   const pw = typeof d.adminPassword === "string" ? d.adminPassword : "";
@@ -47,13 +53,15 @@ export async function createGame(room: GameRoom, d: D, a: Auth): Promise<ApiResu
   if (room.d.info) fail("exists", "Diesen Spiel-Code gibt es schon");
   const now = Date.now();
   await ensureSchema(room.env.DB);
-  await room.env.DB.prepare("INSERT OR REPLACE INTO games (id, name, createdAt) VALUES (?1, ?2, ?3)").bind(g, name, now).run();
+  await room.env.DB.prepare("INSERT OR REPLACE INTO games (id, name, createdAt, konto) VALUES (?1, ?2, ?3, ?4)")
+    .bind(g, name, now, konto)
+    .run();
   room.set("gid", g);
   room.set("info", { name, phase: "vorbereitung", createdAt: now, spectators: DEFAULT_CONFIG.spectators } satisfies GameInfo);
   room.set("config", DEFAULT_CONFIG);
   room.set("field", d.template === "leer" ? EMPTY_FIELD : VORLAGEN[d.template as VorlageId].field);
   room.set("state", { phase: "vorbereitung", rev: 0 });
-  room.set("secrets", { adminPw: hash, screenKey: randomId(18) });
+  room.set("secrets", { adminPw: hash, screenKey: randomId(18), ...(konto ? { konto } : {}) });
   room.audit({ uid: "super", name: P.organisator, role: "superadmin" }, P.spielAngelegt, name);
   return { gameId: g };
 }
@@ -88,8 +96,8 @@ export async function join(room: GameRoom, d: D, a: Auth): Promise<ApiResults["j
     if (!sec.teamPw) fail("noTeamPassword", "Noch kein Team-Passwort festgelegt");
     ok = await verifySecret(secret, sec.teamPw);
   } else if (role === "schiri") ok = await verifySecret(secret, sec.schiriCode);
-  // der Organisator öffnet jedes Spiel ohne Admin-Passwort (Abschnitt 5)
-  else if (role === "admin") ok = !!a.superAdmin || (await verifySecret(secret, sec.adminPw));
+  // der Organisator öffnet seine Spiele ohne Admin-Passwort (Abschnitt 5) – der Eigentümer alle
+  else if (role === "admin") ok = room.istOrganisator(a) || (await verifySecret(secret, sec.adminPw));
   else if (role === "screen") ok = sameText(secret, sec.screenKey);
   else if (room.d.config.spectators === false) fail("noSpectators", "Zuschauer sind in diesem Spiel nicht vorgesehen");
   // Zuschauer brauchen kein Passwort – ohne Obergrenze könnte ein Skript Mitglieder und Protokoll endlos füllen

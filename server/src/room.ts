@@ -89,6 +89,8 @@ export interface Data {
     food?: Record<string, { visits: number; ms: number }>;
     /** Bonus-Posten (E-75): welche Posten jedes Team in diesem Lauf schon eingelöst hat */
     posten?: Record<string, string[]>;
+    /** Organisator-Konto, dem das Spiel gehört (E-84); fehlt = Eigentümer */
+    konto?: string;
   };
   /** Fehlversuche beim Beitritt je IP (gehasht) */
   rate: Record<string, { n: number; since: number }>;
@@ -145,7 +147,12 @@ const AUDIT_IN_VIEW = 500;
 
 export interface Auth {
   uid?: string;
+  /** Eigentümer: Organisator-Passwort oder Eigentümer-Konto – alle Spiele */
   superAdmin?: boolean;
+  /** angemeldetes Organisator-Konto (E-84) – nur eigene Spiele */
+  konto?: string;
+  /** Konto noch gültig (nicht abgelaufen) – nur dann neue Spiele */
+  kontoAktiv?: boolean;
   /** Token mitgeschickt, aber ungültig/abgelaufen/für ein anderes Spiel → „Sitzung abgelaufen“ statt „nicht erlaubt“ */
   badToken?: boolean;
   ip?: string;
@@ -298,13 +305,18 @@ export class GameRoom extends DurableObject<Env> {
     return id;
   }
 
-  /** Mitglied (oder Super-Admin) mit einer dieser Rollen – sonst Ablehnung */
+  /** Eigentümer (alle Spiele) oder das Organisator-Konto, dem dieses Spiel gehört (E-84) */
+  istOrganisator(a: Auth): boolean {
+    return !!a.superAdmin || (!!a.konto && a.konto === this.d.secrets.konto);
+  }
+
+  /** Mitglied (oder Organisator) mit einer dieser Rollen – sonst Ablehnung */
   who(a: Auth, roles: Role[]): Who {
     const m = a.uid ? this.d.members[a.uid] : undefined;
     if (m && roles.includes(m.role)) return { uid: a.uid!, name: m.name, role: m.role };
-    if (a.superAdmin) return { uid: "super", name: "Organisator", role: "superadmin" };
+    if (this.istOrganisator(a)) return { uid: "super", name: "Organisator", role: "superadmin" };
     if ((a.uid && !m) || a.badToken) fail("session", "Sitzung abgelaufen – bitte neu anmelden");
-    fail(a.uid ? "forbidden" : "unauthenticated");
+    fail(a.uid || a.konto ? "forbidden" : "unauthenticated");
   }
 
   /** Gerät aus dem Spiel nehmen; offene Verbindungen bekommen den Grund und werden geschlossen */

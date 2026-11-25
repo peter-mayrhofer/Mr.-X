@@ -27,7 +27,27 @@ export const fehlerText = (e: unknown): string =>
         : T.apiFehler.invalid
       : T.apiFehler[e.reason];
 
-const SUPER_ONLY = new Set<ApiRequest["action"]>(["superSetup", "superLogin", "listGames", "createGame", "archiveGame", "deleteGame"]);
+const SUPER_ONLY = new Set<ApiRequest["action"]>([
+  "superSetup",
+  "superLogin",
+  "listGames",
+  "createGame",
+  "archiveGame",
+  "deleteGame",
+  // Organisator-Konten und Gratis-Codes (E-84)
+  "kontoErstellen",
+  "kontoLogin",
+  "kontoInfo",
+  "kontoPasswort",
+  "codeEinloesen",
+  "codeErstellen",
+  "codeListe",
+  "codeSperren",
+  "kontoListe",
+  "kontoSetzen",
+  "kontoLoeschen",
+  "eigentuemerAnlegen",
+]);
 
 /** Gerät im eigenen Spiel mit seinem Token; Organisator-Aktionen (und fremde Spiele in der Verwaltung) mit dessen Token */
 function tokenFor(req: ApiRequest): string | null {

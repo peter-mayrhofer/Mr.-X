@@ -21,6 +21,20 @@ export type ApiRequest =
   | { action: "superLogin"; password: string }
   | { action: "listGames" }
   | { action: "createGame"; gameId: string; name: string; template: Template; adminPassword: string }
+  // Organisator-Konten (E-84): mit Gratis-Code erstellen, mit E-Mail + Passwort anmelden
+  | { action: "kontoErstellen"; email: string; passwort: string; code: string }
+  | { action: "kontoLogin"; email: string; passwort: string }
+  | { action: "kontoInfo" }
+  | { action: "kontoPasswort"; alt: string; neu: string }
+  | { action: "codeEinloesen"; code: string }
+  // nur Eigentümer (Organisator-Passwort oder Eigentümer-Konto)
+  | { action: "codeErstellen"; max: number; monate: CodeMonate }
+  | { action: "codeListe" }
+  | { action: "codeSperren"; code: string; aktiv: boolean }
+  | { action: "kontoListe" }
+  | { action: "kontoSetzen"; id: string; passwort?: string; gesperrt?: boolean }
+  | { action: "kontoLoeschen"; id: string }
+  | { action: "eigentuemerAnlegen"; email: string; passwort: string }
   // öffentlich: Name/Phase eines Spiels für Startseite und QR-Link
   | { action: "gameInfo"; gameId: string }
   | { action: "join"; gameId: string; role: JoinRole; name: string; secret?: string; secondDevice?: boolean; size?: number }
@@ -109,6 +123,38 @@ export interface GameListEntry {
   teams: number;
 }
 
+/** Laufzeit, die ein Gratis-Code schenkt: Monate, 0 = unbegrenzt */
+export const CODE_MONATE = [1, 3, 6, 12, 0] as const;
+export type CodeMonate = (typeof CODE_MONATE)[number];
+export type KontoRolle = "eigentuemer" | "organisator";
+
+export interface KontoInfo {
+  id: string;
+  email: string;
+  rolle: KontoRolle;
+  /** gültig bis (ms), null = unbegrenzt */
+  bisAt: number | null;
+  gesperrt: boolean;
+  /** eingelöste Gratis-Codes */
+  codes: string[];
+  createdAt: number;
+}
+
+export interface KontoListEntry extends KontoInfo {
+  /** Anzahl Spiele dieses Kontos */
+  spiele: number;
+}
+
+export interface CodeEntry {
+  code: string;
+  /** so viele Konten dürfen ihn einlösen */
+  max: number;
+  benutzt: number;
+  monate: CodeMonate;
+  aktiv: boolean;
+  createdAt: number;
+}
+
 export interface TemplateEntry {
   id: string;
   name: string;
@@ -151,6 +197,19 @@ export interface ApiResults {
   superLogin: { token: string };
   listGames: { games: GameListEntry[] };
   createGame: { gameId: string };
+  kontoErstellen: { token: string };
+  kontoLogin: { token: string };
+  /** konto = null: angemeldet mit dem Organisator-Passwort */
+  kontoInfo: { konto: KontoInfo | null; eigentuemer: boolean };
+  kontoPasswort: { token: string };
+  codeEinloesen: { bisAt: number | null };
+  codeErstellen: { code: string };
+  codeListe: { codes: CodeEntry[] };
+  codeSperren: Record<string, never>;
+  kontoListe: { konten: KontoListEntry[] };
+  kontoSetzen: Record<string, never>;
+  kontoLoeschen: Record<string, never>;
+  eigentuemerAnlegen: { id: string };
   gameInfo: GameInfo;
   join: JoinResult;
   leave: Record<string, never>;
@@ -224,7 +283,13 @@ export type ApiReason =
   /** Spiel ist archiviert – kein Beitritt mehr */
   | "archived"
   /** Sitzung ungültig (abgelaufen, entfernt, neue Runde) – neu anmelden */
-  | "session";
+  | "session"
+  /** Gratis-Code falsch, gesperrt oder aufgebraucht */
+  | "badCode"
+  /** Konto abgelaufen – neuen Code einlösen */
+  | "expired"
+  /** für diese E-Mail gibt es schon ein Konto */
+  | "emailTaken";
 
 /** Ergebnis beim Einlösen eines Bonus-Postens – die App macht daraus den Text in ihrer Sprache */
 export type PostenErgebnis =
