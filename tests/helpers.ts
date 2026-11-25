@@ -101,6 +101,10 @@ export const usage = async (g: string) =>
 /** alle Live-Verbindungen des Spiels trennen (Funkloch) */
 export const drop = async (g: string) => void (await hook({ g, op: "drop" }));
 
+/** Organisator-Konto direkt ändern (z. B. abgelaufen) → Konto-Kennung */
+export const kontoAendern = (email: string, value: { bisAt?: number | null }) =>
+  hook({ email, value }, "/__test/konto") as Promise<string | null>;
+
 export async function resetServer() {
   await hook({}, "/__test/reset");
 }

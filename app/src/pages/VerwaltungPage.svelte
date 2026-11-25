@@ -1,8 +1,10 @@
-<!-- „/verwaltung“: Super-Admin (Organisator) – Anmeldung mit Passwort, Spiele anlegen, öffnen, Admin-Zugang, archivieren, löschen. -->
+<!-- „/verwaltung“: Organisator – Anmeldung mit Konto (E-84) oder Organisator-Passwort, Spiele anlegen, öffnen, Admin-Zugang,
+     archivieren, löschen; Konto, Gratis-Codes und Konten. -->
 <script lang="ts">
   import type { GameListEntry } from "@mrx/shared";
   import SuperAdmin, { type GameRow } from "../screens/SuperAdmin.svelte";
-  import { session, startSession, superLogin, superLogout, superSetup } from "../lib/session.svelte.ts";
+  import KontoKarten from "../screens/parts/KontoKarten.svelte";
+  import { kontoErstellen, kontoLogin, session, startSession, superLogin, superLogout, superSetup } from "../lib/session.svelte.ts";
   import { call, fehlerText } from "../lib/api.ts";
   import { go } from "../lib/router.svelte.ts";
   import { toast } from "../ui/toast.svelte.ts";
@@ -14,6 +16,7 @@
   void ladeDownloads().then((d) => (downloads = d));
 
   let list = $state<GameListEntry[]>([]);
+  let wer = $state<string | undefined>();
   async function load() {
     if (!session.superAdmin) return;
     try {
@@ -49,6 +52,9 @@
   {games}
   onlogin={superLogin}
   onsetup={superSetup}
+  onkontologin={kontoLogin}
+  onkontoerstellen={kontoErstellen}
+  {wer}
   onlogout={superLogout}
   oncreate={async (v) => {
     await call({ action: "createGame", ...v });
@@ -74,4 +80,6 @@
     void run(() => call({ action: "deleteGame", gameId: id }), T.superadmin.geloescht(name));
   }}
   onback={() => go("/")}
-/>
+>
+  {#snippet konto()}<KontoKarten onwer={(t) => (wer = t)} />{/snippet}
+</SuperAdmin>

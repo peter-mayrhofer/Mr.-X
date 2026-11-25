@@ -192,10 +192,15 @@ interface TemplateData {
   field: Field;
 }
 
+/** Vorlagen gehören dem Besitzer des Spiels (E-84): jedes Organisator-Konto sieht nur seine, der Eigentümer seine (NULL) */
+const besitzer = (room: GameRoom) => room.d.secrets.konto ?? null;
+
 export async function templateList(room: GameRoom, _d: D, a: Auth): Promise<ApiResults["templateList"]> {
   room.who(a, ["admin"]);
   await ensureSchema(room.env.DB);
-  const r = await room.env.DB.prepare("SELECT id, name, createdAt FROM templates ORDER BY createdAt DESC").all<TemplateEntry>();
+  const r = await room.env.DB.prepare("SELECT id, name, createdAt FROM templates WHERE konto IS ?1 ORDER BY createdAt DESC")
+    .bind(besitzer(room))
+    .all<TemplateEntry>();
   return { templates: r.results };
 }
 
@@ -207,8 +212,8 @@ export async function templateSave(room: GameRoom, d: D, a: Auth): Promise<ApiRe
   const { trial: _t, ...config } = room.d.config;
   const data: TemplateData = { config, field: room.d.field };
   const id = randomId(12);
-  await room.env.DB.prepare("INSERT INTO templates (id, name, createdAt, data) VALUES (?1, ?2, ?3, ?4)")
-    .bind(id, name, Date.now(), JSON.stringify(data))
+  await room.env.DB.prepare("INSERT INTO templates (id, name, createdAt, data, konto) VALUES (?1, ?2, ?3, ?4, ?5)")
+    .bind(id, name, Date.now(), JSON.stringify(data), besitzer(room))
     .run();
   room.audit(who, P.vorlageGespeichert, name);
   return { id };
@@ -218,8 +223,8 @@ export async function templateLoad(room: GameRoom, d: D, a: Auth): Promise<ApiRe
   const who = room.who(a, ["admin"]);
   if (room.d.state.phase !== "vorbereitung") fail("wrongPhase", "Vorlagen nur vor dem Start laden");
   await ensureSchema(room.env.DB);
-  const row = await room.env.DB.prepare("SELECT name, data FROM templates WHERE id = ?1")
-    .bind(String(d.id ?? ""))
+  const row = await room.env.DB.prepare("SELECT name, data FROM templates WHERE id = ?1 AND konto IS ?2")
+    .bind(String(d.id ?? ""), besitzer(room))
     .first<{ name: string; data: string }>();
   if (!row) fail("notFound", "Vorlage nicht gefunden");
   const data = JSON.parse(row.data) as TemplateData;
@@ -239,7 +244,9 @@ export async function templateDelete(room: GameRoom, d: D, a: Auth): Promise<Api
   const who = room.who(a, ["admin"]);
   await ensureSchema(room.env.DB);
   const id = String(d.id ?? "");
-  const row = await room.env.DB.prepare("SELECT name FROM templates WHERE id = ?1").bind(id).first<{ name: string }>();
+  const row = await room.env.DB.prepare("SELECT name FROM templates WHERE id = ?1 AND konto IS ?2")
+    .bind(id, besitzer(room))
+    .first<{ name: string }>();
   if (!row) return {};
   await room.env.DB.prepare("DELETE FROM templates WHERE id = ?1").bind(id).run();
   room.audit(who, P.vorlageGeloescht, row.name);

@@ -122,8 +122,14 @@ Im Browser öffnen:
 5. **Öffnen** → du bist Spielleitung dieses Spiels → unter **Teams & Zugänge** Team-Passwort und Schiri-Code festlegen,
    QR-Code drucken.
 
-Danach meldest du dich auf anderen Geräten mit dem **Organisator-Passwort** an. Passwort vergessen → Schritt 2–3 mit dem
-Setup-Geheimnis wiederholen (alle alten Organisator-Anmeldungen werden dabei ungültig).
+Danach meldest du dich auf anderen Geräten mit dem **Organisator-Passwort** an (Link **„Mit Organisator-Passwort
+anmelden“**). Passwort vergessen → Schritt 2–3 mit dem Setup-Geheimnis wiederholen (alle alten Organisator-Anmeldungen
+werden dabei ungültig).
+
+**Organisator-Konten (E-84):** Angemeldet mit dem Organisator-Passwort kannst du unter **Eigentümer-Konto anlegen** dir
+selbst ein Konto mit E-Mail und Passwort geben – mit denselben Rechten. Unter **Gratis-Codes** erstellst du Codes, mit
+denen andere (z. B. Vereine) ein eigenes Organisator-Konto erstellen. Dafür braucht es **keine neuen Geheimnisse** und
+keine Einstellung bei Cloudflare: Konten und Codes liegen in der Zentrale, die neue Spalte in D1 legt der Server selbst an.
 
 ## 9. Android-App mit dem Server verbinden
 

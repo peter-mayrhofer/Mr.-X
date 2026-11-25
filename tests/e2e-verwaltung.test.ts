@@ -34,9 +34,10 @@ describe("Organisator: Spiel anlegen, Spielfeld zeichnen, verwalten", { timeout:
     page = await ctx.newPage();
     page.on("pageerror", (e) => console.error("PAGEERROR", e.message));
     await page.goto(`${URL}#/verwaltung`);
+    await page.getByRole("button", { name: T.konto.mitOrganisatorPw }).click();
     await page.getByLabel(T.verwaltung.passwort).fill(SUPER_PW);
     await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
-    await page.getByText(T.superadmin.angemeldet).waitFor();
+    await page.getByText(T.konto.angemeldetEigentuemer).waitFor();
 
     await page.getByRole("button", { name: T.superadmin.neu, exact: true }).click();
     await page.getByLabel(T.superadmin.name).fill("Wels 2028");

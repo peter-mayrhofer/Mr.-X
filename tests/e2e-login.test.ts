@@ -148,6 +148,7 @@ describe("Anmeldung über die App", () => {
     const { page } = await phone();
     await page.goto(`${URL}#/verwaltung`);
     await page.getByText(T.verwaltung.nurOrganisator).waitFor();
+    await page.getByRole("button", { name: T.konto.mitOrganisatorPw }).click();
     await page.getByLabel(T.verwaltung.passwort).fill("falsches-passwort");
     await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
     await page.getByText(T.apiFehler.wrongSecret).waitFor();
@@ -157,11 +158,12 @@ describe("Anmeldung über die App", () => {
   it("Organisator: Passwort mit dem Setup-Geheimnis neu festlegen, Spiel anlegen, bleibt angemeldet", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/verwaltung`);
+    await page.getByRole("button", { name: T.konto.mitOrganisatorPw }).click();
     await page.getByRole("button", { name: T.verwaltung.ersteinrichtung, exact: true }).click();
     await page.getByLabel(T.verwaltung.setupGeheimnis).fill("test-setup-geheimnis");
     await page.getByLabel(T.verwaltung.neuesPasswort).fill(SUPER_PW);
     await page.getByRole("button", { name: T.verwaltung.festlegen, exact: true }).click();
-    await page.getByText(T.superadmin.angemeldet).waitFor();
+    await page.getByText(T.konto.angemeldetEigentuemer).waitFor();
     await page.getByText("E2E Spiel").waitFor();
 
     await page.getByRole("button", { name: T.superadmin.neu, exact: true }).click();
@@ -175,14 +177,15 @@ describe("Anmeldung über die App", () => {
     expect(await val("secrets/wels-2028/adminPw")).toMatch(/^pbkdf2\$/);
 
     await page.reload();
-    await page.getByText(T.superadmin.angemeldet).waitFor();
+    await page.getByText(T.konto.angemeldetEigentuemer).waitFor();
     await page.getByRole("button", { name: T.verwaltung.abmelden, exact: true }).click();
-    await page.getByLabel(T.verwaltung.passwort).waitFor();
+    await page.getByText(T.verwaltung.nurOrganisator).waitFor();
   });
 
   it("Organisator: Anmeldung mit Passwort", async () => {
     const { page } = await phone();
     await page.goto(`${URL}#/verwaltung`);
+    await page.getByRole("button", { name: T.konto.mitOrganisatorPw }).click();
     await page.getByLabel(T.verwaltung.passwort).fill(SUPER_PW);
     await page.getByRole("button", { name: T.verwaltung.anmelden, exact: true }).click();
     await page.getByText("Wels 2028").waitFor();

@@ -15,10 +15,32 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS templates (id TEXT PRIMARY KEY, name TEXT NOT NULL, createdAt INTEGER NOT NULL, data TEXT NOT NULL)`,
 ];
 
+/** Spalten, die später dazukamen – CREATE TABLE IF NOT EXISTS ändert bestehende Tabellen nicht */
+const SPALTEN: [tabelle: string, spalte: string, typ: string][] = [
+  // Organisator-Konto, dem Spiel bzw. Vorlage gehört (E-84); NULL = Eigentümer
+  ["games", "konto", "TEXT"],
+  ["templates", "konto", "TEXT"],
+];
+
+/** Spalte anlegen, falls sie fehlt (zwei Server gleichzeitig: der zweite bekommt „duplicate column“ – auch gut) */
+async function spalte(db: D1Database, tabelle: string, name: string, typ: string) {
+  const r = await db.prepare(`PRAGMA table_info(${tabelle})`).all<{ name: string }>();
+  if (r.results.some((c) => c.name === name)) return;
+  await db
+    .prepare(`ALTER TABLE ${tabelle} ADD COLUMN ${name} ${typ}`)
+    .run()
+    .catch((e: unknown) => {
+      if (!/duplicate column/i.test(String(e))) throw e;
+    });
+}
+
 let ready: Promise<unknown> | null = null;
 export function ensureSchema(db: D1Database): Promise<unknown> {
-  return (ready ??= db.batch(SCHEMA.map((s) => db.prepare(s))).catch((e: unknown) => {
-    ready = null;
-    throw e;
-  }));
+  return (ready ??= db
+    .batch(SCHEMA.map((s) => db.prepare(s)))
+    .then(() => Promise.all(SPALTEN.map(([t, c, typ]) => spalte(db, t, c, typ))))
+    .catch((e: unknown) => {
+      ready = null;
+      throw e;
+    }));
 }

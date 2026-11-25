@@ -24,13 +24,30 @@ ersetzen. Alle Bilder: [`docs/screens/`](screens/) (hell, dunkel und Sonnen-Modu
 
 ### 1.1 Spiel anlegen (Organisator)
 
-1. `https://mister-x.mr-x-ooe.workers.dev/#/verwaltung` öffnen und mit dem **Organisator-Passwort** anmelden.
+1. `https://mister-x.mr-x-ooe.workers.dev/#/verwaltung` öffnen und anmelden: mit **E-Mail und Passwort** deines
+   Organisator-Kontos oder als Eigentümer über **„Mit Organisator-Passwort anmelden“**.
 2. **Neues Spiel** → Name (z. B. „Mister X Linz 2027“), Spiel-Code (wird vorgeschlagen, z. B. `linz-2027`),
    Vorlage **Linz Innenstadt**, **Steyr**, **Wels** oder ein leeres Feld, **Admin-Passwort** für die Spielleitung
    (mindestens 8 Zeichen) → **Anlegen**.
 3. Das Admin-Passwort an die Spielleitung weitergeben (nicht per Gruppenchat mit Kindern!).
 
 ![Spiele verwalten](screens/hell/21-laptop.jpg)
+
+**Organisator-Konto (E-84):** Wer Spiele anlegen will, braucht ein Konto. In der Verwaltung **„Noch kein Konto? Mit
+Gratis-Code erstellen“** → E-Mail, Gratis-Code (bekommst du vom Betreiber der App) und Passwort (mindestens 10 Zeichen).
+Mit einem Konto siehst du nur **deine eigenen** Spiele und Vorlagen. Unter **Mein Konto** steht, bis wann es gilt; dort
+löst du einen neuen Code ein (verlängert das Konto) und änderst dein Passwort. Ist das Konto abgelaufen, kannst du keine
+neuen Spiele anlegen – bestehende Spiele laufen weiter. Passwort vergessen: Der Betreiber setzt dir ein neues (die App
+verschickt keine Mails).
+
+**Als Eigentümer** (Organisator-Passwort oder Eigentümer-Konto) siehst du alle Spiele und zusätzlich:
+- **Gratis-Codes:** wie oft einlösbar (z. B. 1 für eine Person, 20 für einen Verein) und Laufzeit (1, 3, 6, 12 Monate
+  oder unbegrenzt) wählen → **Code erstellen** → **Kopieren** und weitergeben. Die Liste zeigt „x von y benutzt“; ein
+  Code lässt sich sperren und wieder entsperren.
+- **Organisator-Konten:** E-Mail, Gültigkeit, Anzahl Spiele. **Neues Passwort setzen** (sag es der Person selbst),
+  **Sperren** (meldet sofort überall ab) oder **Löschen** – die Spiele eines gelöschten Kontos bleiben bei dir.
+- **Eigentümer-Konto anlegen** (einmal, angemeldet mit dem Organisator-Passwort): danach meldest du dich auch mit E-Mail
+  und Passwort an.
 
 ### 1.2 Als Spielleitung anmelden
 

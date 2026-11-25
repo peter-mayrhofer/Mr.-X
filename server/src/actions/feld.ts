@@ -119,7 +119,7 @@ const running = (room: GameRoom) => room.d.state.phase === "laeuft" || room.d.st
 
 /** Archivieren (Abschnitt 5): Spiel bleibt lesbar (Archiv, Auswertung), aber niemand kann mehr beitreten */
 export function archiveGame(room: GameRoom, d: D, a: Auth): ApiResults["archiveGame"] {
-  if (!a.superAdmin) fail("forbidden");
+  if (!room.istOrganisator(a)) fail(a.badToken ? "session" : "forbidden");
   if (running(room)) fail("wrongPhase", "Zuerst das Spiel beenden");
   const on = d.archived !== false;
   const { archived: _, ...info } = room.d.info!;
@@ -130,7 +130,7 @@ export function archiveGame(room: GameRoom, d: D, a: Auth): ApiResults["archiveG
 
 /** Endgültig löschen – mit allen Daten inkl. Archiv. Geräte im Spiel bekommen den Hinweis „entfernt“. */
 export async function deleteGame(room: GameRoom, _d: D, a: Auth): Promise<ApiResults["deleteGame"]> {
-  if (!a.superAdmin) fail("forbidden");
+  if (!room.istOrganisator(a)) fail(a.badToken ? "session" : "forbidden");
   if (running(room)) fail("wrongPhase", "Zuerst das Spiel beenden");
   const g = room.d.gid;
   await room.env.DB.batch([

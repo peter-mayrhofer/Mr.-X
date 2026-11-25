@@ -1,5 +1,6 @@
-<!-- Screen 21: Super-Admin – Anmeldung mit Organisator-Passwort (Ersteinrichtung mit dem Setup-Geheimnis), Spiele anlegen,
-     Spiel-Admins vergeben (Passwort/Einladungslink), archivieren, löschen. -->
+<!-- Screen 21: Verwaltung – Anmeldung mit Organisator-Konto (E-Mail + Passwort, neu mit Gratis-Code, E-84) oder mit dem
+     Organisator-Passwort (Ersteinrichtung mit dem Setup-Geheimnis), Spiele anlegen, Spiel-Admins vergeben
+     (Passwort/Einladungslink), archivieren, löschen. -->
 <script module lang="ts">
   export interface GameRow {
     id: string;
@@ -10,7 +11,8 @@
 </script>
 
 <script lang="ts">
-  import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, LogOut, Plus, Trash } from "@lucide/svelte";
+  import type { Snippet } from "svelte";
+  import { Archive, ArchiveRestore, ArrowRight, KeyRound, Link, LogIn, LogOut, Plus, Trash, UserPlus } from "@lucide/svelte";
   import { GAME_ID, LIMITS, VORLAGEN, type Downloads, type System, type Template } from "@mrx/shared";
   import AppBar from "../ui/AppBar.svelte";
   import Button from "../ui/Button.svelte";
@@ -22,7 +24,7 @@
   import Modal from "../ui/Modal.svelte";
   import Banner from "../ui/Banner.svelte";
   import { toast } from "../ui/toast.svelte.ts";
-  import { fehlerText } from "../lib/api.ts";
+  import { ApiError, fehlerText } from "../lib/api.ts";
   import { T } from "../texte.ts";
   import AmbientBackdrop from "../ui/AmbientBackdrop.svelte";
   import DownloadKarte from "./parts/DownloadKarte.svelte";
@@ -33,6 +35,13 @@
     onlogin: (password: string) => Promise<void>;
     /** Passwort erstmals (oder neu) festlegen – mit dem Setup-Geheimnis vom Server */
     onsetup: (setupSecret: string, password: string) => Promise<void>;
+    /** Organisator-Konto: Anmeldung bzw. neu mit Gratis-Code (fehlt beides: nur Organisator-Passwort) */
+    onkontologin?: (email: string, passwort: string) => Promise<void>;
+    onkontoerstellen?: (email: string, passwort: string, code: string) => Promise<void>;
+    /** Zeile „Angemeldet als …“ */
+    wer?: string;
+    /** Karten für Konto, Gratis-Codes und Konten über der Spieleliste */
+    konto?: Snippet;
     onlogout?: () => void;
     oncreate: (v: { gameId: string; name: string; template: Template; adminPassword: string }) => Promise<void>;
     onopen?: (id: string) => void;
@@ -52,6 +61,10 @@
     games,
     onlogin,
     onsetup,
+    onkontologin,
+    onkontoerstellen,
+    wer,
+    konto,
     onlogout,
     oncreate,
     onopen,
@@ -66,6 +79,12 @@
   }: Props = $props();
 
   const MIN_PW = 10;
+  // Konto (E-Mail + Passwort), neues Konto mit Gratis-Code oder Organisator-Passwort
+  // nur der Startwert: gibt es Konten, zuerst die Konto-Anmeldung
+  // svelte-ignore state_referenced_locally
+  let art = $state<"konto" | "neu" | "organisator">(onkontologin ? "konto" : "organisator");
+  let email = $state("");
+  let kontoCode = $state("");
   let loginPw = $state("");
   let setupMode = $state(false);
   let setupSecret = $state("");
@@ -123,11 +142,16 @@
     loginBusy = true;
     loginError = undefined;
     try {
-      if (setupMode) await onsetup(setupSecret.trim(), loginPw);
+      if (art === "konto") await onkontologin?.(email.trim(), loginPw);
+      else if (art === "neu") await onkontoerstellen?.(email.trim(), loginPw, kontoCode.trim());
+      else if (setupMode) await onsetup(setupSecret.trim(), loginPw);
       else await onlogin(loginPw);
-      loginPw = setupSecret = "";
+      loginPw = setupSecret = kontoCode = "";
+      // nach dem Abmelden wieder die Anmeldung zeigen, nicht „Konto erstellen“
+      if (art === "neu") art = "konto";
     } catch (e) {
-      loginError = msg(e);
+      // „Passwort falsch“ heißt sonst „fragt bei der Spielleitung“ – hier passt das nicht
+      loginError = art === "konto" && e instanceof ApiError && e.reason === "wrongSecret" ? T.konto.falsch : msg(e);
     } finally {
       loginBusy = false;
     }
@@ -173,36 +197,82 @@
           }}
         >
           <p>{T.verwaltung.nurOrganisator}</p>
-          {#if setupMode}
-            <Banner tone="info">{T.verwaltung.setupHinweis}</Banner>
-            <TextField label={T.verwaltung.setupGeheimnis} bind:value={setupSecret} autocomplete="off" autocapitalize="none" />
+          {#if art === "organisator"}
+            {#if setupMode}
+              <Banner tone="info">{T.verwaltung.setupHinweis}</Banner>
+              <TextField label={T.verwaltung.setupGeheimnis} bind:value={setupSecret} autocomplete="off" autocapitalize="none" />
+            {/if}
+            <TextField
+              label={setupMode ? T.verwaltung.neuesPasswort : T.verwaltung.passwort}
+              type="password"
+              bind:value={loginPw}
+              hint={setupMode ? T.zugang.mindestens(MIN_PW) : undefined}
+              error={loginError}
+              autocomplete={setupMode ? "new-password" : "current-password"}
+            />
+            <Button
+              type="submit"
+              size="l"
+              icon={LogIn}
+              loading={loginBusy}
+              disabled={setupMode ? !setupSecret.trim() || loginPw.length < MIN_PW : !loginPw}
+              >{setupMode ? T.verwaltung.festlegen : T.verwaltung.anmelden}</Button
+            >
+            <button type="button" class="linkish" onclick={() => ((setupMode = !setupMode), (loginError = undefined))}
+              >{setupMode ? T.verwaltung.zurueckZumLogin : T.verwaltung.ersteinrichtung}</button
+            >
+            {#if onkontologin}<button type="button" class="linkish" onclick={() => ((art = "konto"), (loginError = undefined))}
+                >{T.konto.mitKonto}</button
+              >{/if}
+          {:else}
+            <TextField label={T.konto.email} type="email" bind:value={email} autocomplete="username" autocapitalize="none" />
+            {#if art === "neu"}
+              <TextField
+                label={T.konto.code}
+                bind:value={kontoCode}
+                hint={T.konto.codeHinweis}
+                autocomplete="off"
+                autocapitalize="characters"
+                placeholder="MRX-…"
+              />
+            {/if}
+            <TextField
+              label={T.konto.passwort}
+              type="password"
+              bind:value={loginPw}
+              hint={art === "neu" ? T.zugang.mindestens(MIN_PW) : undefined}
+              error={loginError}
+              autocomplete={art === "neu" ? "new-password" : "current-password"}
+            />
+            <Button
+              type="submit"
+              size="l"
+              icon={art === "neu" ? UserPlus : LogIn}
+              loading={loginBusy}
+              disabled={!email.includes("@") || (art === "neu" ? loginPw.length < MIN_PW || !kontoCode.trim() : !loginPw)}
+              >{art === "neu" ? T.konto.erstellen : T.konto.anmelden}</Button
+            >
+            {#if art === "konto"}
+              <p class="muted">{T.konto.vergessen}</p>
+              <button type="button" class="linkish" onclick={() => ((art = "neu"), (loginError = undefined))}>{T.konto.zumErstellen}</button
+              >
+            {:else}
+              <button type="button" class="linkish" onclick={() => ((art = "konto"), (loginError = undefined))}
+                >{T.konto.zumAnmelden}</button
+              >
+            {/if}
+            <button type="button" class="linkish" onclick={() => ((art = "organisator"), (loginError = undefined))}
+              >{T.konto.mitOrganisatorPw}</button
+            >
           {/if}
-          <TextField
-            label={setupMode ? T.verwaltung.neuesPasswort : T.verwaltung.passwort}
-            type="password"
-            bind:value={loginPw}
-            hint={setupMode ? T.zugang.mindestens(MIN_PW) : undefined}
-            error={loginError}
-            autocomplete={setupMode ? "new-password" : "current-password"}
-          />
-          <Button
-            type="submit"
-            size="l"
-            icon={LogIn}
-            loading={loginBusy}
-            disabled={setupMode ? !setupSecret.trim() || loginPw.length < MIN_PW : !loginPw}
-            >{setupMode ? T.verwaltung.festlegen : T.verwaltung.anmelden}</Button
-          >
-          <button type="button" class="linkish" onclick={() => ((setupMode = !setupMode), (loginError = undefined))}
-            >{setupMode ? T.verwaltung.zurueckZumLogin : T.verwaltung.ersteinrichtung}</button
-          >
         </form>
       </Card>
     {:else}
       <div class="who">
-        <span class="avatar" aria-hidden="true">O</span>{T.superadmin.angemeldet}
+        <span class="avatar" aria-hidden="true">O</span>{wer ?? T.superadmin.angemeldet}
         {#if onlogout}<Button size="m" variant="secondary" icon={LogOut} onclick={onlogout}>{T.verwaltung.abmelden}</Button>{/if}
       </div>
+      {@render konto?.()}
       {#each games as g (g.id)}
         <Card>
           <div class="game">

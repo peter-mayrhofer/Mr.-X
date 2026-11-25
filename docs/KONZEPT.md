@@ -40,7 +40,7 @@ flowchart LR
   subgraph CF["Cloudflare (Gratis-Tarif, keine Zahlungsart)"]
     WK["Worker<br/>App-Dateien + /api + /ws"]
     R["Spielraum je Spiel<br/>(Durable Object: Zustand, WebSockets, Alarme)"]
-    Z["Zentrale<br/>(Organisator-Passwort)"]
+    Z["Zentrale<br/>(Organisator-Passwort,<br/>Konten, Gratis-Codes)"]
     D[("D1<br/>Spieleliste, Archiv")]
     C["Cron täglich<br/>Löschfristen"]
   end
@@ -71,7 +71,7 @@ Meldungen, Wartezeiten und das Spielende löst der Spielraum per **Alarm** selbs
 | **Worker** | Cloudflare Worker mit Static Assets (`server/src/index.ts`) | liefert die App aus, prüft Tokens, leitet Befehle und Verbindungen an den Spielraum |
 | **Spielraum** | Durable Object mit SQLite-Speicher, WebSocket-Hibernation, Alarm (`server/src/room.ts`) | Zustand, Regeln, Rechte, Live-Verteilung, Zeitsteuerung, Web Push |
 | **Datenbank** | D1 (`server/src/d1.ts`) | Spieleliste der Verwaltung, Archiv (mit Löschfristen) |
-| **Login** | eigene Sitzungs-Tokens (HMAC), Passwörter mit PBKDF2; Organisator mit Setup-Geheimnis + Passwort | keine E-Mail-Konten, kein Google-Konto nötig |
+| **Login** | eigene Sitzungs-Tokens (HMAC), Passwörter mit PBKDF2; Eigentümer mit Setup-Geheimnis + Passwort; Organisator-Konten mit E-Mail + Passwort, erstellt mit Gratis-Code (E-84) | Teams, Schiris, Spielleitung ohne Konto; kein Google-Konto nötig |
 | **Push** | Web Push mit VAPID (Browser, iPhone-Web-App ab iOS 16.4); Android-App: lokale Benachrichtigungen aus der Verbindung | Meldung, Übergabe, Wartezeit, Durchsage … |
 | **Karte** | MapLibre GL + OpenFreeMap-Vektorkacheln, **eigener Kartenstil** (hell/dunkel/Sonne) | kostenlos, ohne Schlüssel, ohne Tracking; Fallback OSM-Raster |
 | **Gemeinsamer Code** | `shared/` – reine TypeScript-Module | Meldeplan, Geometrie/Zonen, Wartezeit-Umkreis, Standortquellen, Auswertung, Push-Empfänger, Typen, Protokoll, Client-Bibliothek. Von App **und** Server genutzt, mit Unit-Tests |
@@ -100,7 +100,8 @@ promo/       Videos, Screenshots und ihre Quellen
 
 | Rolle | Zugang | Technisch |
 |---|---|---|
-| **Super-Admin** (Organisator) | Organisator-Passwort (einmalig mit dem **Setup-Geheimnis** festgelegt) | Zentrale prüft den PBKDF2-Hash → Organisator-Token mit Passwort-Version |
+| **Eigentümer** (Super-Admin) | Organisator-Passwort (einmalig mit dem **Setup-Geheimnis** festgelegt) oder Eigentümer-Konto | Zentrale prüft den PBKDF2-Hash → Token mit Passwort- bzw. Konto-Version; alle Spiele, Gratis-Codes, Konten |
+| **Organisator-Konto** (E-84) | E-Mail + Passwort, erstellt mit einem **Gratis-Code** des Eigentümers | Konto-Token mit Version; nur eigene Spiele und Vorlagen; abgelaufen → keine neuen Spiele |
 | **Spiel-Admin** | Spiel-Code + Name + **Admin-Passwort** (vom Super-Admin pro Spiel vergeben) | Spielraum prüft den Hash → Mitglied `admin` + Sitzungs-Token |
 | **Schiri** | Spiel-Code + Name + **Schiri-Code** | wie oben, Rolle `schiri` |
 | **Team** | QR-Code/Link (enthält Spiel-Code) + Teamname + **Team-Passwort** | wie oben, Rolle `team`; ein zweites Handy kann demselben Team beitreten (Ersatzgerät) |

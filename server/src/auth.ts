@@ -17,8 +17,11 @@ export function same(a: Uint8Array, b: Uint8Array): boolean {
 }
 export const sameText = (a: string, b: string | undefined) => !!b && same(enc.encode(a), enc.encode(b));
 
-/** Inhalt eines Sitzungs-Tokens: Spiel + Gerät (Rolle steht im Spielraum) oder Organisator mit Passwort-Version */
-export type Claims = { g: string; u: string; e: number } | { s: number; e: number };
+/**
+ * Inhalt eines Sitzungs-Tokens: Spiel + Gerät (Rolle steht im Spielraum), Organisator mit Passwort-Version oder
+ * Organisator-Konto mit Version (E-84)
+ */
+export type Claims = { g: string; u: string; e: number } | { s: number; e: number } | { k: string; v: number; e: number };
 
 const keys = new Map<string, Promise<CryptoKey>>();
 const hmacKey = (secret: string) => {
