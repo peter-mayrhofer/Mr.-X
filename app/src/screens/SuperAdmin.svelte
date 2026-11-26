@@ -269,7 +269,7 @@
       </Card>
     {:else}
       <div class="who">
-        <span class="avatar" aria-hidden="true">O</span>{wer ?? T.superadmin.angemeldet}
+        <span class="ich"><span class="avatar" aria-hidden="true">O</span><span>{wer ?? T.superadmin.angemeldet}</span></span>
         {#if onlogout}<Button size="m" variant="secondary" icon={LogOut} onclick={onlogout}>{T.verwaltung.abmelden}</Button>{/if}
       </div>
       {@render konto?.()}
@@ -379,6 +379,8 @@
   }
   .body {
     display: grid;
+    /* nie breiter als der Bildschirm – lange Inhalte brechen um oder wischen seitlich */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-4);
     padding: var(--sp-4) var(--gutter) var(--sp-8);
     max-width: 1000px;
@@ -402,11 +404,21 @@
   }
   .who {
     display: flex;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
     align-items: center;
     gap: var(--sp-3);
     color: var(--text-2);
   }
+  /* Kreis und Text bleiben zusammen; wird es eng, bricht der Text um und „Abmelden“ rutscht darunter */
+  .ich {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-width: 0;
+  }
   .avatar {
+    flex: none;
     width: 40px;
     height: 40px;
     border-radius: 50%;
